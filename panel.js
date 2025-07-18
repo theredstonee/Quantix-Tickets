@@ -85,15 +85,6 @@ module.exports = (client) => {
       if(req.body.formFieldsJson){
         cfg.formFields = JSON.parse(req.body.formFieldsJson || '[]');
       }
-      // Ticket Embed Felder
-      cfg.ticketEmbed = {
-        title:       req.body.embedTitle       || '🎫 Ticket erstellt',
-        description: req.body.embedDescription || 'Hallo {userMention}\n**Thema:** {topicLabel}',
-        color:       req.body.embedColor       || '#2b90d9',
-        footer:      req.body.embedFooter      || 'Ticket #{ticketNumber}'
-      };
-      fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
-      res.redirect('/panel?msg=saved');
     } catch(e){
       console.error(e);
       res.redirect('/panel?msg=jsonerror');

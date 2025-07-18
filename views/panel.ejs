@@ -37,26 +37,7 @@
   <form action="/panel/edit" method="POST">
     <button>🔄 Bearbeiten&nbsp;(bestehende Panel‑Nachricht)</button>
   </form>
-
-  <h2>Ticket Embed Vorlage</h2>
-  <p>Platzhalter: {userMention} {topicLabel} {ticketNumber} {userId} {topicValue}</p>
-
-  <label>Titel
-    <input name="embedTitle" value="<%= (cfg.ticketEmbed && cfg.ticketEmbed.title) || '' %>">
-  </label>
-
-  <label>Beschreibung
-    <textarea name="embedDescription" rows="4"><%= (cfg.ticketEmbed && cfg.ticketEmbed.description) || '' %></textarea>
-  </label>
-
-  <label>Farbe (Hex)
-    <input name="embedColor" value="<%= (cfg.ticketEmbed && cfg.ticketEmbed.color) || '#2b90d9' %>" placeholder="#2b90d9">
-  </label>
-
-  <label>Footer
-    <input name="embedFooter" value="<%= (cfg.ticketEmbed && cfg.ticketEmbed.footer) || '' %>">
-  </label>
-
+  
 <h3>Themen (JSON)</h3>
 <textarea name="topicsJson" rows="6"><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
 
