@@ -1,4 +1,4 @@
-// --- panel.js | Router‑Factory: senden & bearbeiten Panel‑Nachricht, Fehlermeldung sauber ---
+// --- panel.js | Router‑Factory mit Admin‑Auth + Panel‑Nachricht senden & bearbeiten ---
 require('dotenv').config();
 const express   = require('express');
 const session   = require('express-session');
@@ -6,25 +6,28 @@ const passport  = require('passport');
 const { Strategy } = require('passport-discord');
 const fs        = require('fs');
 const path      = require('path');
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const {
+  EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ComponentType
+} = require('discord.js');
 
 const CONFIG = path.join(__dirname, 'config.json');
 let   cfg    = require(CONFIG);
 
-/* ───── Passport Setup ───── */
+/* ───── Passport‑Grundsetup ───── */
 passport.serializeUser((u, d) => d(null, u));
 passport.deserializeUser((u, d) => d(null, u));
+
 passport.use(new Strategy({
   clientID:     process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
   callbackURL:  '/auth/discord/callback',
   scope: ['identify', 'guilds', 'guilds.members.read']
-}, (_a,_b,profile,done)=>done(null,profile)));
+}, (_a, _b, profile, done) => done(null, profile)));
 
+/* ───── Router‑Factory ───── */
 module.exports = (client) => {
   const router = express.Router();
 
-  /* ── Middlewares ── */
   router.use(session({
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
@@ -32,69 +35,81 @@ module.exports = (client) => {
   }));
   router.use(passport.initialize());
   router.use(passport.session());
-  router.use(express.urlencoded({ extended:true }));
+  router.use(express.urlencoded({ extended: true }));
 
-  /* ── Auth helper ── */
-  function isAuth(req,res,next){
-    if(!req.isAuthenticated()) return res.redirect('/login');
-    const m=req.user.guilds.find(g=>g.id===cfg.guildId);
-    const ALLOWED=0x8n|0x20n;
-    if(!m||!(BigInt(m.permissions)&ALLOWED)) return res.send('Keine Berechtigung');
+  /* ── Auth‑Middleware (Admin oder Manage Guild) ── */
+  function isAuth(req, res, next) {
+    if (!req.isAuthenticated()) return res.redirect('/login');
+    const m = req.user.guilds.find(g => g.id === cfg.guildId);
+    const ALLOWED = 0x8n | 0x20n;
+    if (!m || !(BigInt(m.permissions) & ALLOWED)) return res.send('Keine Berechtigung');
     next();
   }
 
-  /* ── Panel Nachricht builder ── */
-  async function buildPanel(channelId,msgId=null){
+  /* ───── Discord Panel‑Nachricht senden oder bearbeiten ───── */
+  async function buildPanelMessage(channelId, messageId = null) {
     const guild   = await client.guilds.fetch(cfg.guildId);
     const channel = await guild.channels.fetch(channelId);
-    const menu = new StringSelectMenuBuilder().setCustomId('topic').setPlaceholder('Thema wählen …').addOptions(cfg.topics);
+
+    const menu = new StringSelectMenuBuilder()
+      .setCustomId('topic')
+      .setPlaceholder('Thema wählen …')
+      .addOptions(cfg.topics);
+
     const payload = {
-      embeds:[ new EmbedBuilder().setTitle('🎫 Ticket‑System').setDescription('Bitte Thema auswählen') ],
-      components:[ new ActionRowBuilder().addComponents(menu) ]
+      embeds: [ new EmbedBuilder().setTitle('🎫 Ticket‑System').setDescription('Bitte Thema auswählen') ],
+      components: [ new ActionRowBuilder().addComponents(menu) ]
     };
-    if(msgId){
-      const msg = await channel.messages.fetch(msgId);
+
+    if (messageId) {
+      const msg = await channel.messages.fetch(messageId);
       return msg.edit(payload);
     }
     const sent = await channel.send(payload);
-    return sent.id;
+    return sent.id; // neue Message‑ID zurückgeben
   }
 
-  /* ── Auth routes ── */
+  /* ── Auth Routen ── */
   router.get('/login', passport.authenticate('discord'));
   router.get('/auth/discord/callback', passport.authenticate('discord', { failureRedirect:'/' }), (_req,res)=>res.redirect('/panel'));
 
-  /* ── Panel UI ── */
-  router.get('/panel', isAuth, (req,res)=> res.render('panel', { cfg, msg:req.query.msg||null }) );
+  /* ── Panel Hauptseite ── */
+  router.get('/panel', isAuth, (_req, res) => res.render('panel', { cfg }));
 
-  /* Save topics/form fields */
+  /* Update Themen/Formular */
   router.post('/panel', isAuth, (req,res)=>{
-    try{
+    try {
       cfg.topics     = JSON.parse(req.body.topics     || '[]');
       cfg.formFields = JSON.parse(req.body.formFields || '[]');
       fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
-      res.redirect('/panel?msg=saved');
-    }catch(e){ res.redirect('/panel?msg=jsonerror'); }
+      res.redirect('/panel');
+    } catch(e){ res.status(400).send('❌ JSON Fehler'); }
   });
 
-  /* Send new panel message */
+  /* Panel‑Nachricht Senden */
   router.post('/panel/send', isAuth, async (req,res)=>{
-    try{
-      const id = await buildPanel(req.body.channelId);
-      cfg.panelChannelId=req.body.channelId;
-      cfg.panelMessageId=id;
+    try {
+      const id = await buildPanelMessage(req.body.channelId, null);
+      cfg.panelMessageId   = id;
+      cfg.panelChannelId   = req.body.channelId;
       fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
-      res.redirect('/panel?msg=sent');
-    }catch(e){ res.redirect('/panel?msg=error'); }
+      res.redirect('/panel');
+    } catch(err){ res.status(500).send('Fehler beim Senden: '+err.message); }
   });
 
-  /* Edit existing panel message */
-  router.post('/panel/edit', isAuth, async (_req,res)=>{
-    if(!cfg.panelChannelId||!cfg.panelMessageId) return res.redirect('/panel?msg=nopanel');
-    try{
-      await buildPanel(cfg.panelChannelId,cfg.panelMessageId);
-      res.redirect('/panel?msg=edited');
-    }catch(e){ res.redirect('/panel?msg=error'); }
+  /* Panel‑Nachricht Bearbeiten */
+  router.post('/panel/edit', isAuth, async (req,res)=>{
+    if(!cfg.panelChannelId || !cfg.panelMessageId) return res.send('Keine gespeicherte Panel‑Nachricht.');
+    try {
+      await buildPanelMessage(cfg.panelChannelId, cfg.panelMessageId);
+      res.redirect('/panel');
+    } catch(err){ res.status(500).send('Bearbeiten fehlgeschlagen: '+err.message); }
+  });
+
+  /* Ticket‑Übersicht */
+  router.get('/tickets', isAuth, (_req,res)=>{
+    const tickets = JSON.parse(fs.readFileSync(path.join(__dirname,'tickets.json'),'utf8'));
+    res.render('tickets', { tickets });
   });
 
   return router;
