@@ -1,4 +1,13 @@
-// --- panel.js | Router‑Factory mit Admin‑Auth + Panel‑Nachricht senden & bearbeiten ---
+// === Ticket Embed Customization Update ===
+// Enthält: panel.js (Erweiterung), panel.ejs (Erweiterung), index.js Änderungen, Beispiel config.json Abschnitt.
+// Kopiere die jeweiligen Teile in deine Dateien.
+
+/* ======================= 1) panel.js (ersetzen) ======================= */
+/*
+Fügt Formularfelder für das Ticket-Embed hinzu (Titel, Beschreibung, Farbe, Footer) + Platzhalter-Hinweis.
+*/
+
+// panel.js
 require('dotenv').config();
 const express   = require('express');
 const session   = require('express-session');
@@ -6,14 +15,11 @@ const passport  = require('passport');
 const { Strategy } = require('passport-discord');
 const fs        = require('fs');
 const path      = require('path');
-const {
-  EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ComponentType
-} = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const CONFIG = path.join(__dirname, 'config.json');
 let   cfg    = require(CONFIG);
 
-/* ───── Passport‑Grundsetup ───── */
 passport.serializeUser((u, d) => d(null, u));
 passport.deserializeUser((u, d) => d(null, u));
 
@@ -24,7 +30,6 @@ passport.use(new Strategy({
   scope: ['identify', 'guilds', 'guilds.members.read']
 }, (_a, _b, profile, done) => done(null, profile)));
 
-/* ───── Router‑Factory ───── */
 module.exports = (client) => {
   const router = express.Router();
 
@@ -37,80 +42,183 @@ module.exports = (client) => {
   router.use(passport.session());
   router.use(express.urlencoded({ extended: true }));
 
-  /* ── Auth‑Middleware (Admin oder Manage Guild) ── */
-  function isAuth(req, res, next) {
-    if (!req.isAuthenticated()) return res.redirect('/login');
-    const m = req.user.guilds.find(g => g.id === cfg.guildId);
-    const ALLOWED = 0x8n | 0x20n;
-    if (!m || !(BigInt(m.permissions) & ALLOWED)) return res.send('Keine Berechtigung');
+  function isAuth(req,res,next){
+    if(!req.isAuthenticated()) return res.redirect('/login');
+    const g = req.user.guilds.find(g=>g.id===cfg.guildId);
+    const ALLOWED = 0x8n | 0x20n; // Admin | ManageGuild
+    if(!g || !(BigInt(g.permissions)&ALLOWED)) return res.send('Keine Berechtigung');
     next();
   }
 
-  /* ───── Discord Panel‑Nachricht senden oder bearbeiten ───── */
-  async function buildPanelMessage(channelId, messageId = null) {
+  // Panel Nachricht bauen (Dropdown)
+  async function buildPanelMessage(channelId, messageId=null){
     const guild   = await client.guilds.fetch(cfg.guildId);
     const channel = await guild.channels.fetch(channelId);
-
-    const menu = new StringSelectMenuBuilder()
-      .setCustomId('topic')
-      .setPlaceholder('Thema wählen …')
-      .addOptions(cfg.topics);
-
+    const menu = new StringSelectMenuBuilder().setCustomId('topic').setPlaceholder('Wähle dein Thema …').addOptions(cfg.topics);
     const payload = {
-      embeds: [ new EmbedBuilder().setTitle('🎫 Ticket‑System').setDescription('Bitte Thema auswählen') ],
-      components: [ new ActionRowBuilder().addComponents(menu) ]
+      embeds:[ new EmbedBuilder().setTitle(cfg.panelTitle || '🎫 Ticket-System').setDescription(cfg.panelDescription || 'Bitte Thema auswählen') ],
+      components:[ new ActionRowBuilder().addComponents(menu) ]
     };
-
-    if (messageId) {
+    if(messageId){
       const msg = await channel.messages.fetch(messageId);
       return msg.edit(payload);
     }
     const sent = await channel.send(payload);
-    return sent.id; // neue Message‑ID zurückgeben
+    return sent.id;
   }
 
-  /* ── Auth Routen ── */
   router.get('/login', passport.authenticate('discord'));
   router.get('/auth/discord/callback', passport.authenticate('discord', { failureRedirect:'/' }), (_req,res)=>res.redirect('/panel'));
 
-  /* ── Panel Hauptseite ── */
-  router.get('/panel', isAuth, (_req, res) => res.render('panel', { cfg }));
+  router.get('/panel', isAuth, (req,res)=>{
+    // Defaults für Embed Werte
+    if(!cfg.ticketEmbed) cfg.ticketEmbed = { title:'🎫 Ticket erstellt', description:'Hallo {userMention}\n**Thema:** {topicLabel}', color:'#2b90d9', footer:'Ticket #{ticketNumber}' };
+    res.render('panel', { cfg, msg:req.query.msg||null });
+  });
 
-  /* Update Themen/Formular */
   router.post('/panel', isAuth, (req,res)=>{
     try {
-      cfg.topics     = JSON.parse(req.body.topics     || '[]');
-      cfg.formFields = JSON.parse(req.body.formFields || '[]');
+      // Themen & Formularfelder (JSON Textareas) optional
+      if(req.body.topicsJson){
+        cfg.topics = JSON.parse(req.body.topicsJson || '[]');
+      }
+      if(req.body.formFieldsJson){
+        cfg.formFields = JSON.parse(req.body.formFieldsJson || '[]');
+      }
+      // Ticket Embed Felder
+      cfg.ticketEmbed = {
+        title:       req.body.embedTitle       || '🎫 Ticket erstellt',
+        description: req.body.embedDescription || 'Hallo {userMention}\n**Thema:** {topicLabel}',
+        color:       req.body.embedColor       || '#2b90d9',
+        footer:      req.body.embedFooter      || 'Ticket #{ticketNumber}'
+      };
       fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
-      res.redirect('/panel');
-    } catch(e){ res.status(400).send('❌ JSON Fehler'); }
+      res.redirect('/panel?msg=saved');
+    } catch(e){
+      console.error(e);
+      res.redirect('/panel?msg=jsonerror');
+    }
   });
 
-  /* Panel‑Nachricht Senden */
   router.post('/panel/send', isAuth, async (req,res)=>{
     try {
-      const id = await buildPanelMessage(req.body.channelId, null);
-      cfg.panelMessageId   = id;
-      cfg.panelChannelId   = req.body.channelId;
+      const id = await buildPanelMessage(req.body.channelId || cfg.panelChannelId, null);
+      cfg.panelChannelId = req.body.channelId || cfg.panelChannelId;
+      cfg.panelMessageId = id;
       fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
-      res.redirect('/panel');
-    } catch(err){ res.status(500).send('Fehler beim Senden: '+err.message); }
+      res.redirect('/panel?msg=sent');
+    } catch(err){ console.error(err); res.redirect('/panel?msg=error'); }
   });
 
-  /* Panel‑Nachricht Bearbeiten */
-  router.post('/panel/edit', isAuth, async (req,res)=>{
-    if(!cfg.panelChannelId || !cfg.panelMessageId) return res.send('Keine gespeicherte Panel‑Nachricht.');
-    try {
-      await buildPanelMessage(cfg.panelChannelId, cfg.panelMessageId);
-      res.redirect('/panel');
-    } catch(err){ res.status(500).send('Bearbeiten fehlgeschlagen: '+err.message); }
-  });
-
-  /* Ticket‑Übersicht */
-  router.get('/tickets', isAuth, (_req,res)=>{
-    const tickets = JSON.parse(fs.readFileSync(path.join(__dirname,'tickets.json'),'utf8'));
-    res.render('tickets', { tickets });
+  router.post('/panel/edit', isAuth, async (_req,res)=>{
+    if(!cfg.panelChannelId || !cfg.panelMessageId) return res.redirect('/panel?msg=nopanel');
+    try { await buildPanelMessage(cfg.panelChannelId,cfg.panelMessageId); res.redirect('/panel?msg=edited'); }
+    catch(err){ console.error(err); res.redirect('/panel?msg=error'); }
   });
 
   return router;
 };
+
+/* ======================= 2) panel.ejs (Erweiterung) ======================= */
+/* Füge innerhalb deines bestehenden <form> oder als eigener Abschnitt hinzu. */
+/* Beispiel: */
+/*
+<h2>Ticket Embed Vorlage</h2>
+<p>Platzhalter: {userMention} {topicLabel} {ticketNumber} {userId} {topicValue}</p>
+<label>Titel
+  <input name="embedTitle" value="<%= (cfg.ticketEmbed && cfg.ticketEmbed.title) || '' %>">
+</label>
+<label>Beschreibung
+  <textarea name="embedDescription" rows="4"><%= (cfg.ticketEmbed && cfg.ticketEmbed.description) || '' %></textarea>
+</label>
+<label>Farbe (Hex)
+  <input name="embedColor" value="<%= (cfg.ticketEmbed && cfg.ticketEmbed.color) || '#2b90d9' %>" placeholder="#2b90d9">
+</label>
+<label>Footer
+  <input name="embedFooter" value="<%= (cfg.ticketEmbed && cfg.ticketEmbed.footer) || '' %>">
+</label>
+
+<!-- Falls du Topics/FormFields als JSON bearbeiten willst -->
+<h3>Themen (JSON)</h3>
+<textarea name="topicsJson" rows="6"><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
+<h3>Formularfelder (JSON)</h3>
+<textarea name="formFieldsJson" rows="6"><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
+
+<button type="submit">💾 Speichern</button>
+*/
+
+/* ======================= 3) index.js (nur kleine Änderung) ======================= */
+/* Ersetze in deiner index.js beim Erstellen eines Tickets den Embed-Build Block. (Suche nach: await ch.send({embeds:[new EmbedBuilder()...) */
+/* ALT: */
+// await ch.send({embeds:[new EmbedBuilder().setTitle('🎫 Ticket erstellt').setDescription(`Hallo <@${i.user.id}>\n**Thema:** ${topic.label}`)],components:buttonRows(false)});
+/* NEU: */
+/*
+// Sicherstellen, dass cfg.ticketEmbed existiert
+if(!cfg.ticketEmbed) cfg.ticketEmbed = { title:'🎫 Ticket erstellt', description:'Hallo {userMention}\n**Thema:** {topicLabel}', color:'#2b90d9', footer:'Ticket #{ticketNumber}' };
+
+const ticketEmbedData = cfg.ticketEmbed;
+const replacedDescription = (ticketEmbedData.description || '')
+  .replace(/\{userMention\}/g, `<@${i.user.id}>`)
+  .replace(/\{userId\}/g, i.user.id)
+  .replace(/\{topicLabel\}/g, topic.label)
+  .replace(/\{topicValue\}/g, topic.value)
+  .replace(/\{ticketNumber\}/g, nr.toString());
+
+const replacedTitle = (ticketEmbedData.title || '')
+  .replace(/\{ticketNumber\}/g, nr.toString())
+  .replace(/\{topicLabel\}/g, topic.label);
+
+const replacedFooter = (ticketEmbedData.footer || '')
+  .replace(/\{ticketNumber\}/g, nr.toString())
+  .replace(/\{topicLabel\}/g, topic.label);
+
+const embed = new EmbedBuilder()
+  .setTitle(replacedTitle || '🎫 Ticket')
+  .setDescription(replacedDescription || `Hallo <@${i.user.id}>`);
+
+if(ticketEmbedData.color && /^#?[0-9a-fA-F]{6}$/.test(ticketEmbedData.color)){
+  embed.setColor(parseInt(ticketEmbedData.color.replace('#',''),16));
+}
+if(replacedFooter) embed.setFooter({ text: replacedFooter });
+
+await ch.send({ embeds:[embed], components:buttonRows(false) });
+*/
+
+/* ======================= 4) config.json Beispiel Ergänzung ======================= */
+/*
+{
+  "guildId": "123456789012345678",
+  "ticketCategoryId": "123456789012345678",
+  "supportRoleId": "123456789012345678",
+  "topics": [
+    {"label":"Allgemein","value":"allgemein","emoji":"💬"},
+    {"label":"Kauf","value":"kauf","emoji":"💰"}
+  ],
+  "ticketEmbed": {
+    "title": "🎫 Ticket #{ticketNumber}",
+    "description": "Hallo {userMention}\nDu hast **{topicLabel}** gewählt.",
+    "color": "#2b90d9",
+    "footer": "Support Ticket #{ticketNumber}"
+  }
+}
+*/
+
+/* ======================= 5) Platzhalter Übersicht ======================= */
+/*
+{userMention}   -> @User
+{userId}        -> Zahl der User ID
+{topicLabel}    -> Angezeigter Name des gewählten Themas
+{topicValue}    -> value Feld des Themas
+{ticketNumber}  -> fortlaufende Ticketnummer
+*/
+
+/* ======================= 6) Schritte ======================= */
+/*
+1. panel.js durch neue Version ersetzen.
+2. panel.ejs Formularabschnitt einfügen (oder erweitern) -> Speichern.
+3. index.js Embed‑Block austauschen wie oben beschrieben.
+4. Bot neu starten.
+5. Im Panel Werte anpassen, speichern, neue Ticket Erstellung testen.
+*/
+
+// Ende der Update-Datei
