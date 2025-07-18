@@ -37,7 +37,7 @@ app.use('/', panelFactory(client));             // liefert Router
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
 const TOKEN = process.env.DISCORD_TOKEN;
-const PANEL_HOST = process.env.PANEL_URL || '192.168.178.141:3000:3000';
+const PANEL_HOST = process.env.PANEL_URL || 'localhost:3000:3000';
 
 /* ── Helpers ── */
 function nextTicket(){
@@ -67,7 +67,7 @@ client.on(Events.InteractionCreate, async i=>{
   try{
     /* Dashboard link */
     if(i.isChatInputCommand() && i.commandName==='dashboard'){
-      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(`http://${PANEL_HOST}/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard')) ], ephemeral:true });
+      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(`http://192.168.178.141:3000/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard')) ], ephemeral:true });
     }
 
     /* Thema Auswahl */
