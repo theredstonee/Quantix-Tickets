@@ -110,5 +110,5 @@ client.on(Events.InteractionCreate, async i=>{
 
 client.login(TOKEN);
 
-/* Einmal Panel-Dropdown senden
-sendPanelMessage('1357443439079329874'); */
+/*Einmal Panel-Dropdown senden*/
+sendPanelMessage('1357443439079329874')
