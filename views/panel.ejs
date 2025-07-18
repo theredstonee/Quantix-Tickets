@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <title>Ticket‑Bot Panel</title>
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
 </head>
 <body class="container">
   <h1>🎫 Ticket‑Kategorien</h1>
 
+  <!-- Kategorien als Tabelle editierbar -->
   <form method="POST">
     <table>
       <thead><tr><th>Label</th><th>Value</th><th>Emoji</th></tr></thead>
@@ -26,16 +26,17 @@
     <button type="button" onclick="addRow()">➕ Neue Zeile</button>
     <button type="submit">💾 Speichern</button>
   </form>
-<h2>Panel‑Nachricht</h2>
-<form action="/panel/send" method="POST">
-  <input name="channelId" placeholder="Channel‑ID" value="<%= cfg.panelChannelId || '' %>" required>
-  <button>Senden</button>
-</form>
 
-<form action="/panel/edit" method="POST" style="margin-top:1rem">
-  <button>Bearbeiten&nbsp;(bestehende Panel‑Nachricht)</button>
-</form>
+  <!-- Panel‑Nachricht steuern -->
+  <h2>Panel‑Nachricht</h2>
+  <form action="/panel/send" method="POST" style="margin-bottom:1rem">
+    <input name="channelId" placeholder="Channel‑ID" value="<%= cfg.panelChannelId || '' %>" required>
+    <button>📨 Senden</button>
+  </form>
 
+  <form action="/panel/edit" method="POST">
+    <button>🔄 Bearbeiten&nbsp;(bestehende Panel‑Nachricht)</button>
+  </form>
 
   <script>
     function addRow () {
