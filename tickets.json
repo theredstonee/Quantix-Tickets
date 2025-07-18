@@ -1,1 +1,101 @@
-
+[
+  {
+    "id": 6,
+    "channelId": "1395796496179265646",
+    "userId": "1159182333316968530",
+    "topic": "allgemein",
+    "status": "geschlossen",
+    "timestamp": 1752854218120
+  },
+  {
+    "id": 7,
+    "channelId": "1395796799762993215",
+    "userId": "1159182333316968530",
+    "topic": "server",
+    "status": "geschlossen",
+    "timestamp": 1752854290334
+  },
+  {
+    "id": 8,
+    "channelId": "1395798279169638504",
+    "userId": "903307841333514310",
+    "topic": "event",
+    "status": "geschlossen",
+    "timestamp": 1752854643322,
+    "claimer": "903307841333514310"
+  },
+  {
+    "id": 9,
+    "channelId": "1395800106975891579",
+    "userId": "903307841333514310",
+    "topic": "event",
+    "status": "geschlossen",
+    "timestamp": 1752855078908
+  },
+  {
+    "id": 10,
+    "channelId": "1395803132507852891",
+    "userId": "1159182333316968530",
+    "topic": "server",
+    "status": "geschlossen",
+    "timestamp": 1752855800115
+  },
+  {
+    "id": 11,
+    "channelId": "1395806972976038041",
+    "userId": "1159182333316968530",
+    "topic": "allgemein",
+    "status": "geschlossen",
+    "timestamp": 1752856715683
+  },
+  {
+    "id": 12,
+    "channelId": "1395807223640227981",
+    "userId": "1159182333316968530",
+    "topic": "server",
+    "status": "geschlossen",
+    "timestamp": 1752856775426,
+    "claimer": "1159182333316968530"
+  },
+  {
+    "id": 13,
+    "channelId": "1395807629845987421",
+    "userId": "1159182333316968530",
+    "topic": "allgemein",
+    "status": "offen",
+    "timestamp": 1752856872344
+  },
+  {
+    "id": 14,
+    "channelId": "1395810079705530382",
+    "userId": "1389316008589922316",
+    "topic": "event",
+    "status": "geschlossen",
+    "timestamp": 1752857456635,
+    "claimer": "1159182333316968530"
+  },
+  {
+    "id": 15,
+    "channelId": "1395859990077509786",
+    "userId": "1159182333316968530",
+    "topic": "server",
+    "status": "geschlossen",
+    "timestamp": 1752869355989
+  },
+  {
+    "id": 16,
+    "channelId": "1395860366445248583",
+    "userId": "1159182333316968530",
+    "topic": "bug",
+    "status": "geschlossen",
+    "timestamp": 1752869445942
+  },
+  {
+    "id": 17,
+    "channelId": "1395861244375732307",
+    "userId": "1159182333316968530",
+    "topic": "server",
+    "status": "geschlossen",
+    "timestamp": 1752869655490
+  }
+]
