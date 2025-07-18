@@ -26,6 +26,11 @@
     <button type="button" onclick="addRow()">➕ Neue Zeile</button>
     <button type="submit">💾 Speichern</button>
   </form>
+  <form action="/panel/send" method="POST">
+  <input name="channelId" placeholder="Channel‑ID" value="<%= cfg.panelChannelId || '' %>">
+  <button type="submit">Panel‑Nachricht senden</button>
+  </form>
+
 
   <script>
     function addRow () {
