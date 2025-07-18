@@ -37,7 +37,7 @@ app.use('/', panelFactory(client));             // liefert Router
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
 const TOKEN = process.env.DISCORD_TOKEN;
-const PANEL_HOST = process.env.PANEL_URL || 'localhost:3000';
+const PANEL_HOST = process.env.PANEL_URL || '192.168.178.141:3000:3000';
 
 /* ── Helpers ── */
 function nextTicket(){
