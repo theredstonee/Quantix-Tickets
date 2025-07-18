@@ -1,4 +1,4 @@
-// --- index.js | Ticket‑Bot v5.5 (Team‑only Buttons, Ping & Team‑Close on Request) ---
+// --- index.js | Ticket‑Bot v5.7 (Add‑User Robust Fix, ID Validation, Permission Checks) ---
 require('dotenv').config();
 
 const path = require('path');
@@ -9,22 +9,25 @@ const {
   Routes, REST, SlashCommandBuilder,
   EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle,
-  PermissionsBitField, ChannelType, Events
+  PermissionsBitField, ChannelType, Events, PermissionFlagsBits
 } = require('discord.js');
 
-const TEAM_ROLE = '1387525699908272218';
-const PREFIX    = '🎫│';
+/* ===== Konstante Einstellungen ===== */
+const TEAM_ROLE = '1387525699908272218';        // Team‑Rolle
+const PREFIX    = '🎫│';                        // Prefix vor Ticket‑Channel
 
+/* ===== Dateien & Config ===== */
 const CFG_PATH     = path.join(__dirname,'config.json');
 const COUNTER_PATH = path.join(__dirname,'ticketCounter.json');
 const TICKETS_PATH = path.join(__dirname,'tickets.json');
-let cfg            = require(CFG_PATH);
+let cfg; try { cfg = require(CFG_PATH); } catch { cfg = {}; }
 if(!fs.existsSync(COUNTER_PATH)) fs.writeFileSync(COUNTER_PATH, JSON.stringify({last:0},null,2));
 if(!fs.existsSync(TICKETS_PATH)) fs.writeFileSync(TICKETS_PATH,'[]');
 
 const safeRead  = (p,f)=>{try{const d=fs.readFileSync(p,'utf8');return d?JSON.parse(d):f}catch{return f}};
 const safeWrite = (p,o)=>fs.writeFileSync(p,JSON.stringify(o,null,2));
 
+/* ===== Express & Panel ===== */
 const app=express();
 app.set('view engine','ejs');
 app.set('views', path.join(__dirname,'views'));
@@ -38,6 +41,7 @@ app.listen(3000,()=>console.log('🌐 Panel listening on :3000'));
 const TOKEN=process.env.DISCORD_TOKEN;
 const PANEL_HOST=process.env.PANEL_URL||'localhost:3000';
 
+/* ===== Helper ===== */
 const nextTicket=()=>{const c=safeRead(COUNTER_PATH,{last:0});c.last++;safeWrite(COUNTER_PATH,c);return c.last;};
 
 function buttonRows(claimed){
@@ -57,81 +61,135 @@ function buttonRows(claimed){
   return [row1,row2,row3];
 }
 
+/* ===== Slash Command Deploy ===== */
 client.once('ready',async()=>{
   const rest=new REST({version:'10'}).setToken(TOKEN);
-  await rest.put(Routes.applicationGuildCommands(client.user.id,cfg.guildId),{body:[new SlashCommandBuilder().setName('dashboard').setDescription('Admin‑Panel').toJSON()]});
-  console.log('Bot ready');
+  await rest.put(
+    Routes.applicationGuildCommands(client.user.id,cfg.guildId),
+    {body:[ new SlashCommandBuilder().setName('dashboard').setDescription('Link zum Admin‑Panel')
+      // optional Berechtigung beschränken:
+      //.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+      .toJSON() ]}
+  );
+  console.log(`🤖 ${client.user.tag} bereit`);
 });
 
-client.on(Events.InteractionCreate,async i=>{
-  try{
-    /* dashboard */
-    if(i.isChatInputCommand()&&i.commandName==='dashboard'){
-      return i.reply({components:[new ActionRowBuilder().addComponents(new ButtonBuilder().setURL(`http://192.168.178.141:3000/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard'))],ephemeral:true});
+/* ===== Interaction Handling ===== */
+client.on(Events.InteractionCreate, async i => {
+  try {
+    /* /dashboard */
+    if(i.isChatInputCommand() && i.commandName==='dashboard'){
+      return i.reply({
+        components:[ new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setURL(`http://192.168.178.141:3000/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard')
+        )],
+        ephemeral:true
+      });
     }
 
-    /* topic select */
-    if(i.isStringSelectMenu()&&i.customId==='topic'){
-      const topic=cfg.topics.find(t=>t.value===i.values[0]); if(!topic) return;
+    /* Themen‑Select */
+    if(i.isStringSelectMenu() && i.customId==='topic'){
+      const topic=cfg.topics?.find(t=>t.value===i.values[0]);
+      if(!topic) return i.reply({content:'Unbekanntes Thema',ephemeral:true});
       const nr=nextTicket();
-      const ch=await i.guild.channels.create({name:`${PREFIX}ticket-${nr.toString().padStart(5,'0')}`,type:ChannelType.GuildText,parent:cfg.ticketCategoryId,permissionOverwrites:[{id:i.guild.id,deny:PermissionsBitField.Flags.ViewChannel},{id:i.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages]},{id:TEAM_ROLE,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages]}]});
-      await ch.send({embeds:[new EmbedBuilder().setTitle('🎫 Ticket erstellt').setDescription(`Hallo <@${i.user.id}>\n**Thema:** ${topic.label}`)],components:buttonRows(false)});
+      const channelName=`${PREFIX}ticket-${nr.toString().padStart(5,'0')}`;
+      const ch=await i.guild.channels.create({
+        name:channelName,
+        type:ChannelType.GuildText,
+        parent:cfg.ticketCategoryId,
+        permissionOverwrites:[
+          {id:i.guild.id,deny:PermissionsBitField.Flags.ViewChannel},
+          {id:i.user.id,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages]},
+          {id:TEAM_ROLE,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages]}
+        ]
+      });
+      await ch.send({embeds:[ new EmbedBuilder().setTitle('🎫 Ticket erstellt').setDescription(`Hallo <@${i.user.id}>\n**Thema:** ${topic.label}`)], components:buttonRows(false)});
       i.reply({content:`Ticket erstellt: ${ch}`,ephemeral:true});
-      const log=safeRead(TICKETS_PATH,[]);log.push({id:nr,channelId:ch.id,userId:i.user.id,topic:topic.value,status:'offen',timestamp:Date.now()});safeWrite(TICKETS_PATH,log);
+      const log=safeRead(TICKETS_PATH,[]); log.push({id:nr,channelId:ch.id,userId:i.user.id,topic:topic.value,status:'offen',timestamp:Date.now()}); safeWrite(TICKETS_PATH,log);
       return;
     }
 
-    /* button interactions */
+    /* Buttons */
     if(i.isButton()){
-      const log=safeRead(TICKETS_PATH,[]);const t=log.find(x=>x.channelId===i.channel.id);
+      const log=safeRead(TICKETS_PATH,[]);
+      const t=log.find(x=>x.channelId===i.channel.id);
       if(!t) return i.reply({ephemeral:true,content:'Kein Log'});
+
       const isTeam=i.member.roles.cache.has(TEAM_ROLE);
 
+      // Frei für jeden: nur Schließungsanfrage
+      if(i.customId==='request_close'){
+        await i.channel.send({
+          content:`❓ Schließungsanfrage von <@${i.user.id}> <@&${TEAM_ROLE}>`,
+          components:[ new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel('Schließen').setStyle(ButtonStyle.Danger)
+          )]
+        });
+        return i.reply({ephemeral:true,content:'Schließungsanfrage gesendet'});
+      }
+
+      // Ab hier nur Team
+      if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team darf diesen Button verwenden'});
+
       switch(i.customId){
-        case 'request_close':
-          await i.channel.send({content:`❓ Schließungsanfrage von <@${i.user.id}> <@&${TEAM_ROLE}>`, components:[new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel('Schließen').setStyle(ButtonStyle.Danger))]});
-          return i.reply({ephemeral:true,content:'Schließungsanfrage gesendet'});
         case 'team_close':
         case 'close':
-          if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team darf schließen'});
           t.status='geschlossen'; safeWrite(TICKETS_PATH,log);
           await i.channel.send(`🔒 Ticket geschlossen von <@${i.user.id}> <@&${TEAM_ROLE}>`);
           return i.channel.delete();
         case 'claim':
+          t.claimer=i.user.id; await i.update({components:buttonRows(true)}); break;
         case 'unclaim':
+          delete t.claimer; await i.update({components:buttonRows(false)}); break;
         case 'priority_down':
-        case 'priority_up':
-        case 'add_user':
-          if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team darf diesen Button verwenden'});
-      }
-
-      // Team‑only actions
-      switch(i.customId){
-        case 'claim': t.claimer=i.user.id; await i.update({components:buttonRows(true)}); break;
-        case 'unclaim': delete t.claimer; await i.update({components:buttonRows(false)}); break;
-        case 'priority_down':
-        case 'priority_up':
+        case 'priority_up': {
           const msg=await i.channel.messages.fetch({limit:5}).then(c=>c.find(m=>m.embeds.length));
           if(msg){ const e=EmbedBuilder.from(msg.embeds[0]); e.setColor(i.customId==='priority_up'?0xd92b2b:0x2bd94a); await msg.edit({embeds:[e]}); }
-          await i.reply({ephemeral:true,content:'Priorität geändert'}); break;
-        case 'add_user':
+          await i.reply({ephemeral:true,content:'Priorität geändert'});
+          break;
+        }
+        case 'add_user': {
           const modal=new ModalBuilder().setCustomId('modal_add_user').setTitle('Nutzer hinzufügen');
-          modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('user').setLabel('User @ oder ID').setRequired(true).setStyle(TextInputStyle.Short)));
+          modal.addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('user').setLabel('User @ oder ID').setRequired(true).setStyle(TextInputStyle.Short)
+          ));
           return i.showModal(modal);
+        }
       }
       safeWrite(TICKETS_PATH,log);
     }
 
-    /* modal submit */
-    if(i.isModalSubmit()&&i.customId==='modal_add_user'){
-      if(!i.member.roles.cache.has(TEAM_ROLE)) return i.reply({ephemeral:true,content:'Nur Team darf Nutzer hinzufügen'});
-      const val=i.fields.getTextInputValue('user').trim();
-      const uid=(val.match(/\d{17,20}/)||[])[0];
-      if(!uid) return i.reply({ephemeral:true,content:'Ungültige Eingabe'});
-      await i.channel.permissionOverwrites.edit(uid,{ViewChannel:true,SendMessages:true});
-      await i.reply({ephemeral:true,content:`<@${uid}> wurde hinzugefügt.`});
+    /* Modal Add User */
+    if(i.isModalSubmit() && i.customId==='modal_add_user'){
+      if(!i.member.roles.cache.has(TEAM_ROLE)) return i.reply({ephemeral:true,content:'Nur Team'});
+
+      const raw=i.fields.getTextInputValue('user').trim();
+      // Entferne <@, <@!, > falls Mention
+      const cleaned = raw.replace(/<@!?|(>)/g,'');
+      const uidMatch = cleaned.match(/\d{17,20}/);
+      const uid = uidMatch?uidMatch[0]:null;
+      if(!uid) return i.reply({ephemeral:true,content:'Ungültige ID / Mention'});
+
+      try {
+        // Validieren: User existiert im Guild?
+        const member = await i.guild.members.fetch(uid).catch(()=>null);
+        if(!member) return i.reply({ephemeral:true,content:'User nicht im Server'});
+
+        // Bereits Zugriff?
+        if(i.channel.permissionOverwrites.cache.get(uid))
+          return i.reply({ephemeral:true,content:'User hat bereits Zugriff'});
+
+        await i.channel.permissionOverwrites.edit(uid,{ViewChannel:true,SendMessages:true});
+        await i.reply({ephemeral:true,content:`<@${uid}> hinzugefügt`});
+      } catch(err){
+        console.error('AddUser Fehler', err);
+        return i.reply({ephemeral:true,content:'Fehler beim Hinzufügen (Rechte / ID?)'});
+      }
     }
-  }catch(err){ console.error(err); if(!i.replied&&!i.deferred) i.reply({ephemeral:true,content:'Fehler'});}  
+  } catch(err) {
+    console.error(err);
+    if(!i.replied && !i.deferred) i.reply({ephemeral:true,content:'Fehler'});
+  }
 });
 
 client.login(TOKEN);
