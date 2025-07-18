@@ -1,4 +1,4 @@
-// --- panel.js | Router‑Factory mit Admin‑Auth + Panel‑Nachricht senden/bearbeiten ---
+// --- panel.js | Router‑Factory mit Admin‑Auth + Panel‑Nachricht senden & bearbeiten ---
 require('dotenv').config();
 const express   = require('express');
 const session   = require('express-session');
@@ -7,7 +7,7 @@ const { Strategy } = require('passport-discord');
 const fs        = require('fs');
 const path      = require('path');
 const {
-  EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder
+  EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ComponentType
 } = require('discord.js');
 
 const CONFIG = path.join(__dirname, 'config.json');
@@ -46,15 +46,27 @@ module.exports = (client) => {
     next();
   }
 
-  /* ───── Discord Panel‑Nachricht posten ───── */
-  async function sendPanelMessage(channelId) {
+  /* ───── Discord Panel‑Nachricht senden oder bearbeiten ───── */
+  async function buildPanelMessage(channelId, messageId = null) {
     const guild   = await client.guilds.fetch(cfg.guildId);
     const channel = await guild.channels.fetch(channelId);
-    const menu = new StringSelectMenuBuilder().setCustomId('topic').setPlaceholder('Wähle dein Thema …').addOptions(cfg.topics);
-    await channel.send({
-      embeds:[ new EmbedBuilder().setTitle('🎫 Ticket‑System').setDescription('Bitte Thema auswählen') ],
-      components:[ new ActionRowBuilder().addComponents(menu) ]
-    });
+
+    const menu = new StringSelectMenuBuilder()
+      .setCustomId('topic')
+      .setPlaceholder('Thema wählen …')
+      .addOptions(cfg.topics);
+
+    const payload = {
+      embeds: [ new EmbedBuilder().setTitle('🎫 Ticket‑System').setDescription('Bitte Thema auswählen') ],
+      components: [ new ActionRowBuilder().addComponents(menu) ]
+    };
+
+    if (messageId) {
+      const msg = await channel.messages.fetch(messageId);
+      return msg.edit(payload);
+    }
+    const sent = await channel.send(payload);
+    return sent.id; // neue Message‑ID zurückgeben
   }
 
   /* ── Auth Routen ── */
@@ -71,16 +83,27 @@ module.exports = (client) => {
       cfg.formFields = JSON.parse(req.body.formFields || '[]');
       fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
       res.redirect('/panel');
-    } catch(e){ res.status(400).send('JSON Fehler'); }
+    } catch(e){ res.status(400).send('❌ JSON Fehler'); }
   });
 
-  /* ── Panel‑Nachricht senden (Button im Web) ── */
+  /* Panel‑Nachricht Senden */
   router.post('/panel/send', isAuth, async (req,res)=>{
-    const chanId = req.body.channelId || cfg.panelChannelId;
     try {
-      await sendPanelMessage(chanId);
+      const id = await buildPanelMessage(req.body.channelId, null);
+      cfg.panelMessageId   = id;
+      cfg.panelChannelId   = req.body.channelId;
+      fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
       res.redirect('/panel');
     } catch(err){ res.status(500).send('Fehler beim Senden: '+err.message); }
+  });
+
+  /* Panel‑Nachricht Bearbeiten */
+  router.post('/panel/edit', isAuth, async (req,res)=>{
+    if(!cfg.panelChannelId || !cfg.panelMessageId) return res.send('Keine gespeicherte Panel‑Nachricht.');
+    try {
+      await buildPanelMessage(cfg.panelChannelId, cfg.panelMessageId);
+      res.redirect('/panel');
+    } catch(err){ res.status(500).send('Bearbeiten fehlgeschlagen: '+err.message); }
   });
 
   /* Ticket‑Übersicht */
