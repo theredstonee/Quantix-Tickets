@@ -83,7 +83,7 @@ client.on(Events.InteractionCreate, async (i) => {
       return i.reply({
         components: [
           new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setURL(`http://${PANEL_HOST}/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard'),
+            new ButtonBuilder().setURL(`http://192.168.178.141:3000/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard'),
           ),
         ],
         ephemeral: true,
