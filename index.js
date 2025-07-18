@@ -103,7 +103,41 @@ client.on(Events.InteractionCreate, async i => {
           {id:TEAM_ROLE,allow:[PermissionsBitField.Flags.ViewChannel,PermissionsBitField.Flags.SendMessages]}
         ]
       });
-      await ch.send({embeds:[ new EmbedBuilder().setTitle('🎫 Ticket erstellt').setDescription(`Hallo <@${i.user.id}>\n**Thema:** ${topic.label}`)], components:buttonRows(false)});
+      // Defaults falls nicht gesetzt
+if(!cfg.ticketEmbed){
+  cfg.ticketEmbed = { 
+    title:'🎫 Ticket erstellt',
+    description:'Hallo {userMention}\\n**Thema:** {topicLabel}',
+    color:'#2b90d9',
+    footer:'Ticket #{ticketNumber}'
+  };
+}
+
+// Platzhalter ersetzen
+const tData = cfg.ticketEmbed;
+const desc = (tData.description || '')
+  .replace(/\{userMention\}/g, `<@${i.user.id}>`)
+  .replace(/\{userId\}/g, i.user.id)
+  .replace(/\{topicLabel\}/g, topic.label)
+  .replace(/\{topicValue\}/g, topic.value)
+  .replace(/\{ticketNumber\}/g, nr.toString());
+
+const title = (tData.title || '')
+  .replace(/\{ticketNumber\}/g, nr.toString())
+  .replace(/\{topicLabel\}/g, topic.label);
+
+const footer = (tData.footer || '')
+  .replace(/\{ticketNumber\}/g, nr.toString())
+  .replace(/\{topicLabel\}/g, topic.label);
+
+const embed = new EmbedBuilder().setTitle(title || '🎫 Ticket').setDescription(desc);
+
+if(tData.color && /^#?[0-9a-fA-F]{6}$/.test(tData.color)) {
+  embed.setColor(parseInt(tData.color.replace('#',''),16));
+}
+if(footer) embed.setFooter({ text: footer });
+
+await ch.send({ embeds:[embed], components:buttonRows(false) });
       i.reply({content:`Ticket erstellt: ${ch}`,ephemeral:true});
       const log=safeRead(TICKETS_PATH,[]); log.push({id:nr,channelId:ch.id,userId:i.user.id,topic:topic.value,status:'offen',timestamp:Date.now()}); safeWrite(TICKETS_PATH,log);
       return;
