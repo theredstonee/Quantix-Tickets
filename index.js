@@ -67,7 +67,7 @@ client.on(Events.InteractionCreate,async i=>{
   try{
     /* dashboard */
     if(i.isChatInputCommand()&&i.commandName==='dashboard'){
-      return i.reply({components:[new ActionRowBuilder().addComponents(new ButtonBuilder().setURL(`http://${PANEL_HOST}/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard'))],ephemeral:true});
+      return i.reply({components:[new ActionRowBuilder().addComponents(new ButtonBuilder().setURL(`http://192.168.178.141:3000/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard'))],ephemeral:true});
     }
 
     /* topic select */
