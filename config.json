@@ -46,6 +46,13 @@
      "color": "#2b90d9",
      "footer": "Support Ticket #{ticketNumber}"
      }
+    },
+    {"panelEmbed": {
+  "title": "🎟️ Ticket erstellen",
+  "description": "Wähle unten dein Thema aus.",
+  "color": "#5865F2",
+  "footer": "Support Panel"
+     }
     }
 
   ]
