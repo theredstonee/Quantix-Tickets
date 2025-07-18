@@ -1,0 +1,34 @@
+<!-- views/ticketDetail.ejs -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket #<%= ticket.id.toString().padStart(5, '0') %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+</head>
+<body class="container">
+  <h1>Ticket #<%= ticket.id.toString().padStart(5, '0') %></h1>
+  <p>Status: <strong><%= ticket.status %></strong></p>
+  <p>Thema: <strong><%= ticket.topic %></strong></p>
+  <p>Erstellt von: <code><%= ticket.userId %></code></p>
+  <p>Datum: <%= new Date(ticket.timestamp).toLocaleString() %></p>
+  
+  <h2>Formulardaten</h2>
+  <ul>
+    <% if (ticket.formData) { %>
+      <% Object.entries(ticket.formData).forEach(([key, value]) => { %>
+        <li><strong><%= key %>:</strong> <%= value || '-' %></li>
+      <% }) %>
+    <% } else { %>
+      <li><em>Keine Daten gespeichert</em></li>
+    <% } %>
+  </ul>
+
+  <h2>Aktionen</h2>
+  <a href="/tickets">⬅️ Zur Übersicht</a>
+  <!-- Platzhalter für spätere Export-Links -->
+  <% if (ticket.transcript) { %>
+    | <a href="/transcripts/<%= ticket.transcript %>" target="_blank">📄 Transcript</a>
+  <% } %>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!-- views/tickets.ejs -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticketübersicht</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+<body class="container">
+  <h1>📋 Alle Tickets</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>User</th>
+        <th>Thema</th>
+        <th>Status</th>
+        <th>Datum</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% tickets.forEach(ticket => { %>
+        <tr>
+          <td>#<%= ticket.id.toString().padStart(5, '0') %></td>
+          <td><%= ticket.userId %></td>
+          <td><%= ticket.topic %></td>
+          <td><%= ticket.status %></td>
+          <td><%= new Date(ticket.timestamp).toLocaleString() %></td>
+          <td><a href="/ticket/<%= ticket.id %>">Ansehen</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <p><a href="/panel">⬅️ Zurück zum Panel</a></p>
+</body>
+</html>

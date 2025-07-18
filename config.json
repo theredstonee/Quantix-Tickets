@@ -1,0 +1,44 @@
+{
+  "guildId": "1291125037876904026",
+  "supportRoleId": "1291134758696521781",
+  "ticketCategoryId": "1357443316110594169",
+  "topics": [
+    {
+      "label": "Server‑Probleme",
+      "value": "server",
+      "emoji": "🛠️"
+    },
+    {
+      "label": "Bug‑Report",
+      "value": "bug",
+      "emoji": "🐞"
+    },
+    {
+      "label": "Allgemein",
+      "value": "allgemein",
+      "emoji": "💬"
+    },
+    {
+      "label": "Event/Projekt",
+      "value": "event",
+      "emoji": "📅"
+    }
+  ],
+  "formFields": [
+    {
+      "label": "Wie heißt du in Minecraft?",
+      "id": "mcname",
+      "emoji": "🎮"
+    },
+    {
+      "label": "Welcher Dienst ist betroffen?",
+      "id": "service",
+      "emoji": "🛠️"
+    },
+    {
+      "label": "Beschreibe dein Anliegen",
+      "id": "desc",
+      "emoji": "💬"
+    }
+  ]
+}
