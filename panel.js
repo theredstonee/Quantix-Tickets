@@ -1,4 +1,4 @@
-/* Ticket‑Bot | Web‑Panel (Express) */
+// --- panel.js | Router‑Factory mit Passport & Admin‑Auth ---
 require('dotenv').config();
 const express   = require('express');
 const session   = require('express-session');
@@ -8,75 +8,71 @@ const fs        = require('fs');
 const path      = require('path');
 
 const CONFIG = path.join(__dirname, 'config.json');
-const cfg     = require(CONFIG);
-const app     = express();
+let   cfg    = require(CONFIG);
 
-/* ───── Passport‑Setup ───── */
+/* ───── Passport‑Grundsetup (einmal global) ───── */
 passport.serializeUser((u, d) => d(null, u));
 passport.deserializeUser((u, d) => d(null, u));
 
 passport.use(new Strategy({
   clientID:     process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
-  callbackURL:  '/auth/discord/callback',
+  callbackURL:  '/auth/discord/callback',   // relativ, da Router gemountet
   scope: ['identify', 'guilds', 'guilds.members.read']
 }, (_a, _b, profile, done) => done(null, profile)));
 
-app
-  .set('view engine', 'ejs')
-  .use(session({
-    secret: process.env.SESSION_SECRET,
+/* ───── Router‑Factory ───── */
+module.exports = (_client) => {
+  const router = express.Router();
+
+  /* View‑Engine ist im Haupt‑Express‑App bereits gesetzt */
+
+  /* ── Middlewares ── */
+  router.use(session({
+    secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
     saveUninitialized: false
-  }))
-  .use(passport.initialize())
-  .use(passport.session())
-  .use(express.urlencoded({ extended: true }));
+  }));
+  router.use(passport.initialize());
+  router.use(passport.session());
+  router.use(express.urlencoded({ extended: true }));
 
-/* ───── Auth‑Middleware (nur Admins) ───── */
-// panel.js
-function isAuthorized (req, res, next) {
-  // 1) überhaupt eingeloggt?
-  if (!req.isAuthenticated()) return res.redirect('/login');
+  /* ── Auth‑Check (Admin oder Manage Guild) ── */
+  function isAuthorized(req, res, next) {
+    if (!req.isAuthenticated()) return res.redirect('/login');
+    const member = req.user.guilds.find(g => g.id === cfg.guildId);
+    const ALLOWED = 0x8n | 0x20n; // Administrator oder Manage Guild
+    if (!member || !(BigInt(member.permissions) & ALLOWED))
+      return res.send('Keine Berechtigung');
+    next();
+  }
 
-  // 2) Member-Objekt des Users im Ziel-Guild ermitteln
-  const member = req.user.guilds.find(g => g.id === cfg.guildId);
+  /* ── Routen ── */
+  router.get('/login', passport.authenticate('discord'));
 
-  // 3) Berechtigung prüfen (Admin ODER „Server verwalten“)
-  const ALLOWED = 0x8n | 0x20n;          // 0x8 = Administrator, 0x20 = Manage Guild
-  if (!member || !(BigInt(member.permissions) & ALLOWED))
-    return res.send('Keine Berechtigung');
+  router.get('/auth/discord/callback',
+    passport.authenticate('discord', { failureRedirect: '/' }),
+    (_req, res) => res.redirect('/panel')
+  );
 
-  // alles gut → weiter
-  next();
-}
+  router.get('/panel', isAuthorized, (_req, res) => res.render('panel', { cfg }));
 
-
-/* ───── Routen ───── */
-app.get('/login', passport.authenticate('discord'));
-
-app.get('/auth/discord/callback',
-  passport.authenticate('discord', { failureRedirect: '/' }),
-  (_req, res) => res.redirect('/panel')
-);
-
-app.get('/panel', isAuthorized, (_req, res) =>
-  res.render('panel', { cfg })
-);
-
-app.post('/panel', isAuthorized, (req, res) => {
-  const t = [];
-  req.body.label.forEach((label, i) => {
-    if (!label.trim()) return;
-    t.push({
-      label,
-      value:  req.body.value[i]  || label.toLowerCase(),
-      emoji:  req.body.emoji[i]  || ''
-    });
+  router.post('/panel', isAuthorized, (req, res) => {
+    try {
+      cfg.topics     = JSON.parse(req.body.topics     || '[]');
+      cfg.formFields = JSON.parse(req.body.formFields || '[]');
+      fs.writeFileSync(CONFIG, JSON.stringify(cfg, null, 2));
+      res.redirect('/panel');
+    } catch(err) {
+      res.status(400).send('❌ JSON Fehler in Eingabefeldern');
+    }
   });
-  cfg.topics = t;
-  fs.writeFileSync(CONFIG, JSON.stringify(cfg, null, 2));
-  res.redirect('/panel');
-});
 
-module.exports = app;
+  /* Tickets Übersicht (optional) */
+  router.get('/tickets', isAuthorized, (_req,res)=>{
+    const tickets = JSON.parse(fs.readFileSync(path.join(__dirname,'tickets.json'),'utf8'));
+    res.render('tickets', { tickets });
+  });
+
+  return router; // wichtig!
+};
