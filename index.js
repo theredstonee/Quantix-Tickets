@@ -62,6 +62,7 @@ app.use(express.urlencoded({ extended:true }));
 app.use(express.static('public')); // für CSS/JS
 
 const client = new Client({ intents:[GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages], partials:[Partials.Channel, Partials.Message] });
+app.set('trust proxy', 1);
 app.use('/', require('./panel')(client));
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
