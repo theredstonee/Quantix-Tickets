@@ -1,13 +1,9 @@
-// --- index.js | Ticket-Bot v6.3.2 (Fix: Panel-Dropdown Reset nach Ticket + Host Link + Ephemeral Nachricht bleibt) ---
-// Änderungen ggü. deiner zuletzt geposteten v6.3.1:
-//  1. PANEL_HOST fest auf "trstickets.theredstonee.de" gesetzt (wie gewünscht).
-//  2. Login-Loop Schutz NICHT hier – der Loop kommt aus panel.js (Weiterleitungen). Stelle sicher:
-//       - In panel.js wird nur auf /login redirectet wenn !req.isAuthenticated().
-//       - Nach erfolgreichem Login redirect nach /panel (nicht wieder /login).
-//  3. Panel-Dropdown Reset nach Ticket-Erstellung wieder hinzugefügt (die Komponente wird erneut gesetzt,
-//     damit der Benutzer sofort wieder wählen kann). Die ephemeral Ticket-Erstellungs-Nachricht bleibt unangetastet.
-//  4. Ticket-Erstellungs-Nachricht (im Ticket-Kanal) NICHT auto-löschen (dein letzter Wunsch).
-//  5. Minimal invasive Änderungen – restlicher Code unverändert.
+// --- index.js | Ticket‑Bot v6.3.1 (minimal angepasst: feste Domain + Panel-Reset nach Auswahl) ---
+// Änderungen gegenüber deiner zuletzt geposteten Version:
+//  1) Dashboard‑Link benutzt jetzt fest: https://trstickets.theredstonee.de/panel
+//  2) Nach Ticket-Erstellung wird die ursprüngliche Panel-Nachricht (Dropdown) wieder
+//     auf den ursprünglichen Zustand zurückgesetzt (erneut auswählbar), wie von dir gewünscht.
+//  3) Restlicher Code unverändert gelassen.
 
 require('dotenv').config();
 
@@ -20,12 +16,13 @@ const {
   Routes, REST, SlashCommandBuilder,
   EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle,
-  PermissionsBitField, ChannelType, Events, AttachmentBuilder
+  PermissionsBitField, ChannelType, Events, AttachmentBuilder,
+  StringSelectMenuBuilder
 } = require('discord.js');
 
 /* ================= Konstanten ================= */
-const TEAM_ROLE = '1387525699908272218';           // Team Rolle
-const PREFIX    = '🎫│';
+const TEAM_ROLE = '1387525699908272218';           // Team Rolle (anpassen)
+const PREFIX    = '🎫│';                           // Präfix vor Ticket Channels
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },
   { dot: '🟠', embedColor: 0xff9900, label: 'Orange' },
@@ -68,8 +65,8 @@ app.use('/', require('./panel')(client));
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
 const TOKEN      = process.env.DISCORD_TOKEN;
-// Fest auf gewünschte Domain setzen
-const PANEL_HOST = 'trstickets.theredstonee.de';
+// Feste Domain wie gewünscht – nicht mehr aus ENV
+const PANEL_FULL_URL = 'https://trstickets.theredstonee.de/panel';
 
 /* ================= Counter ================= */
 function nextTicket(){ const c=safeRead(COUNTER_PATH,{last:0}); c.last++; safeWrite(COUNTER_PATH,c); return c.last; }
@@ -94,7 +91,6 @@ function buttonRows(claimed){
 
 /* ================= Panel Select ================= */
 function buildPanelSelect(){
-  const { StringSelectMenuBuilder } = require('discord.js');
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('topic')
@@ -177,7 +173,7 @@ async function createTranscript(channel, ticket){
 client.on(Events.InteractionCreate, async i => {
   try {
     if(i.isChatInputCommand() && i.commandName==='dashboard'){
-      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(`http://${PANEL_HOST}/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
+      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(PANEL_FULL_URL).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
     }
 
     if(i.isStringSelectMenu() && i.customId==='topic'){
@@ -203,22 +199,28 @@ client.on(Events.InteractionCreate, async i => {
       safeWrite(TICKETS_PATH, log);
       logEvent(i.guild, `🆕 Ticket #${nr} erstellt von <@${i.user.id}> (${topic.label})`);
 
-      // === Panel Dropdown Reset (wieder auswählbar) ===
+      // === Panel Reset (Dropdown wieder aktiv) ===
       try {
-        const row = buildPanelSelect();
-        if(i.message){
-          // Setze wieder das Placeholder (Menü unverändert, Discord erlaubt erneute Auswahl nach Menü-Interaction automatisch)
-          if(cfg.panelEmbed){
-            const p = cfg.panelEmbed;
-            const pEmbed = new EmbedBuilder().setTitle(p.title||'🎟️ Ticket erstellen').setDescription(p.description||'Wähle unten dein Thema aus.');
-            if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) pEmbed.setColor(parseInt(p.color.replace('#',''),16));
-            if(p.footer) pEmbed.setFooter({ text: p.footer });
-            await i.message.edit({ embeds:[pEmbed], components:[row] });
-          } else {
-            await i.message.edit({ components:[row] });
+        cfg = safeRead(CFG_PATH, cfg); // aktualisieren
+        if(cfg.panelMessageId && cfg.panelChannelId){
+          const panelChannel = await i.guild.channels.fetch(cfg.panelChannelId).catch(()=>null);
+          if(panelChannel){
+            const panelMsg = await panelChannel.messages.fetch(cfg.panelMessageId).catch(()=>null);
+            if(panelMsg){
+              const row = buildPanelSelect();
+              let panelEmbed = undefined;
+              if(cfg.panelEmbed && (cfg.panelEmbed.title || cfg.panelEmbed.description)){
+                panelEmbed = new EmbedBuilder();
+                if(cfg.panelEmbed.title) panelEmbed.setTitle(cfg.panelEmbed.title);
+                if(cfg.panelEmbed.description) panelEmbed.setDescription(cfg.panelEmbed.description);
+                if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) panelEmbed.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
+                if(cfg.panelEmbed.footer) panelEmbed.setFooter({ text: cfg.panelEmbed.footer });
+              }
+              await panelMsg.edit({ embeds: panelEmbed? [panelEmbed]: panelMsg.embeds, components:[row] });
+            }
           }
         }
-      } catch {/* ignorieren */}
+      } catch(e){ /* Reset Fehler ignorieren */ }
       return;
     }
 
