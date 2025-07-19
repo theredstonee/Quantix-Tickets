@@ -1,22 +1,42 @@
-// --- index.js | Ticket‑Bot v6.2 (3-stufige Priorität + farbiger Punkt im Channelnamen + Panel-Reset) ---
+// --- index.js | Ticket‑Bot v6.3 (Prioritäten + Transcript-Erstellung + Log-Channel) ---
+// Features:
+//  - 3-stufige Priorität (🟢 🟠 🔴) mit Farbpunkt im Channelnamen
+//  - Panel-/Ticket-Embeds konfigurierbar (aus config.json / Panel)
+//  - Claim / Unclaim / Add User / Schließungsanfrage
+//  - Panel-Reset nach Themenauswahl
+//  - Transcript beim Schließen (HTML + kurzer Plaintext) und Upload ins Log
+//  - Log-Channel für: Erstellung, Claim/Unclaim, Priorität, Schließen
+//  - Robust gegen fehlende Dateien
+//  - Konfigurierbar: logChannelId, transcriptChannelId (optional; sonst logChannel)
+//
+//  Ergänze in deiner config.json (IDs Beispiele ersetzen):
+//  {
+//    "logChannelId": "123456789012345678",
+//    "transcriptChannelId": "123456789012345678"  // optional, sonst gleicher wie logChannelId
+//  }
+//
+//  ENV: DISCORD_TOKEN, CLIENT_ID, CLIENT_SECRET, SESSION_SECRET, PANEL_URL(optional)
+
 require('dotenv').config();
 
 /* ================= Imports ================= */
 const path = require('path');
 const fs   = require('fs');
 const express = require('express');
+const { DateTime } = require('luxon'); // OPTIONAL: Falls nicht installiert -> `npm i luxon` (ansonsten ISO Zeit ohne Formatierung)
+let luxonAvailable = true; try{ require.resolve('luxon'); } catch { luxonAvailable=false; }
+
 const {
   Client, GatewayIntentBits, Partials,
   Routes, REST, SlashCommandBuilder,
   EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle,
-  PermissionsBitField, ChannelType, Events
+  PermissionsBitField, ChannelType, Events, AttachmentBuilder
 } = require('discord.js');
 
 /* ================= Konstanten ================= */
-const TEAM_ROLE = '1387525699908272218';              // Teamrolle
-const PREFIX    = '🎫│';                               // Basispräfix
-// Drei Prioritätsstufen: Index 0..2
+const TEAM_ROLE = '1387525699908272218';         // Support / Team Rolle
+const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },
   { dot: '🟠', embedColor: 0xff9900, label: 'Orange' },
@@ -28,7 +48,7 @@ const CFG_PATH     = path.join(__dirname,'config.json');
 const COUNTER_PATH = path.join(__dirname,'ticketCounter.json');
 const TICKETS_PATH = path.join(__dirname,'tickets.json');
 
-/* ================= Safe JSON Helper ================= */
+/* ================= Safe JSON Helpers ================= */
 function safeRead(file, fallback){
   try { const raw = fs.readFileSync(file,'utf8'); return raw?JSON.parse(raw):fallback; } catch { return fallback; }
 }
@@ -54,7 +74,7 @@ app.set('views', path.join(__dirname,'views'));
 app.use(express.urlencoded({ extended:true }));
 app.use(express.static('public'));
 
-const client = new Client({ intents:[GatewayIntentBits.Guilds], partials:[Partials.Channel] });
+const client = new Client({ intents:[GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages], partials:[Partials.Channel, Partials.Message] });
 app.use('/', require('./panel')(client));
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
@@ -62,9 +82,9 @@ const TOKEN      = process.env.DISCORD_TOKEN;
 const PANEL_HOST = process.env.PANEL_URL || 'localhost:3000';
 
 /* ================= Counter ================= */
-function nextTicket(){ const c = safeRead(COUNTER_PATH,{last:0}); c.last++; safeWrite(COUNTER_PATH,c); return c.last; }
+function nextTicket(){ const c=safeRead(COUNTER_PATH,{last:0}); c.last++; safeWrite(COUNTER_PATH,c); return c.last; }
 
-/* ================= Buttons ================= */
+/* ================= Button Rows ================= */
 function buttonRows(claimed){
   const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('request_close').setEmoji('❓').setLabel('Schließungsanfrage').setStyle(ButtonStyle.Secondary)
@@ -82,18 +102,18 @@ function buttonRows(claimed){
   return [row1,row2,row3];
 }
 
-/* ================= Panel Select Builder (Reset) ================= */
+/* ================= Panel Select Builder ================= */
 function buildPanelSelect(cfg){
   const { StringSelectMenuBuilder } = require('discord.js');
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('topic')
       .setPlaceholder('Wähle dein Thema …')
-      .addOptions((cfg.topics||[]).map(t => ({ label:t.label, value:t.value, emoji: t.emoji || undefined })))
+      .addOptions((cfg.topics||[]).map(t=>({ label:t.label, value:t.value, emoji:t.emoji||undefined })))
   );
 }
 
-/* ================= Slash Commands ================= */
+/* ================= Slash Command Deploy ================= */
 client.once('ready', async () => {
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   await rest.put(
@@ -103,29 +123,24 @@ client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} bereit`);
 });
 
-/* ================= Ticket Embed Builder ================= */
+/* ================= Embed Builder ================= */
 function buildTicketEmbedData(i, topic, nr){
   cfg = safeRead(CFG_PATH, cfg);
-  const tData = cfg.ticketEmbed || {};
-  const title = (tData.title||'').replace(/\{ticketNumber\}/g,nr).replace(/\{topicLabel\}/g,topic.label).replace(/\{topicValue\}/g,topic.value);
-  const desc  = (tData.description||'')
-    .replace(/\{userMention\}/g, `<@${i.user.id}>`)
-    .replace(/\{userId\}/g, i.user.id)
+  if(!cfg.ticketEmbed){ cfg.ticketEmbed = { title:'🎫 Ticket #{ticketNumber}', description:'Hallo {userMention}\n**Thema:** {topicLabel}', color:'#2b90d9', footer:'Ticket #{ticketNumber}' }; }
+  const tData = cfg.ticketEmbed;
+  const rep = (str='')=>str
+    .replace(/\{ticketNumber\}/g, nr.toString())
     .replace(/\{topicLabel\}/g, topic.label)
     .replace(/\{topicValue\}/g, topic.value)
-    .replace(/\{ticketNumber\}/g, nr);
-  const footer= (tData.footer||'')
-    .replace(/\{ticketNumber\}/g, nr)
-    .replace(/\{topicLabel\}/g, topic.label)
-    .replace(/\{topicValue\}/g, topic.value);
-
-  const embed = new EmbedBuilder().setTitle(title||'🎫 Ticket').setDescription(desc||`<@${i.user.id}>`).setColor(0x2b90d9);
+    .replace(/\{userMention\}/g, `<@${i.user.id}>`)
+    .replace(/\{userId\}/g, i.user.id);
+  const embed = new EmbedBuilder().setTitle(rep(tData.title)||'🎫 Ticket').setDescription(rep(tData.description)||`<@${i.user.id}>`);
   if(tData.color && /^#?[0-9a-fA-F]{6}$/.test(tData.color)) embed.setColor(parseInt(tData.color.replace('#',''),16));
-  if(footer) embed.setFooter({ text: footer });
+  if(tData.footer) embed.setFooter({ text: rep(tData.footer) });
   return embed;
 }
 
-/* ================= Channel Name Helper ================= */
+/* ================= Channel Name Helpers ================= */
 function buildChannelName(ticketNumber, priorityIndex){
   const num = ticketNumber.toString().padStart(5,'0');
   const state = PRIORITY_STATES[priorityIndex] || PRIORITY_STATES[0];
@@ -133,31 +148,80 @@ function buildChannelName(ticketNumber, priorityIndex){
 }
 function renameChannelIfNeeded(channel, ticket){
   const desired = buildChannelName(ticket.id, ticket.priority||0);
-  if(channel.name !== desired){
-    return channel.setName(desired).catch(()=>{});
-  }
+  if(channel.name !== desired){ return channel.setName(desired).catch(()=>{}); }
 }
 
-/* ================= Priority Visual Update ================= */
-async function handlePriorityVisuals(interaction, ticket, log){
-  renameChannelIfNeeded(interaction.channel, ticket);
-  const msg = await interaction.channel.messages.fetch({limit:10}).then(c=>c.find(m=>m.embeds.length));
-  const state = PRIORITY_STATES[ticket.priority||0] || PRIORITY_STATES[0];
-  if(msg){
-    const e = EmbedBuilder.from(msg.embeds[0]);
-    e.setColor(state.embedColor);
-    await msg.edit({ embeds:[e] });
-  } else {
-    await interaction.channel.send(`Priorität jetzt: **${state.label}**`);
-  }
-  safeWrite(TICKETS_PATH, log);
-  await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
+/* ================= Logging ================= */
+async function logEvent(guild, content, embed=null){
+  if(!cfg.logChannelId) return; // optional
+  try {
+    const ch = await guild.channels.fetch(cfg.logChannelId); if(!ch) return;
+    await ch.send({ content, embeds: embed? [embed]: undefined });
+  } catch(err){ console.error('Log Fehler:', err); }
 }
 
-/* ================= Interaction Handling ================= */
+/* ================= Transcript Erstellung ================= */
+async function createTranscript(channel, ticket){
+  // Limit: Wir holen bis zu 1000 Nachrichten (rückwärts)
+  let messages = [];
+  let lastId;
+  while(messages.length < 1000){
+    const fetched = await channel.messages.fetch({ limit:100, before:lastId }).catch(()=>null);
+    if(!fetched || fetched.size===0) break;
+    messages.push(...fetched.values());
+    lastId = fetched.last().id;
+  }
+  messages = messages.sort((a,b)=>a.createdTimestamp - b.createdTimestamp);
+
+  const lines = [];
+  lines.push(`# Transcript für Ticket ${ticket.id}`);
+  lines.push(`Channel: ${channel.name}`);
+  lines.push(`Erstellt: ${new Date(ticket.timestamp).toISOString()}`);
+  lines.push('');
+  for(const m of messages){
+    const time = new Date(m.createdTimestamp).toISOString();
+    const author = `${m.author?.tag||m.author?.id||'Unbekannt'}`;
+    const content = (m.content||'').replace(/\n/g,'\\n');
+    lines.push(`[${time}] ${author}: ${content}`);
+    if(m.attachments.size){
+      m.attachments.forEach(att=>lines.push(`  [Anhang] ${att.name} -> ${att.url}`));
+    }
+  }
+  const plainText = lines.join('\n');
+
+  // Einfaches HTML
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Transcript Ticket ${ticket.id}</title>
+<style>body{font-family:Arial, sans-serif; background:#111; color:#eee;}
+.msg{margin:4px 0;}
+.time{color:#888;font-size:11px;margin-right:6px;}
+.author{color:#4ea1ff;font-weight:bold;margin-right:4px;}
+.attach{color:#ffa500; font-size:11px; display:block; margin-left:2rem;}
+</style></head><body>
+<h1>Transcript Ticket ${ticket.id}</h1>
+<p>Channel: ${channel.name}<br>Erstellt: ${new Date(ticket.timestamp).toISOString()}<br>Nachrichten: ${messages.length}</p>
+<hr>
+${messages.map(m=>{
+  const atts = m.attachments.size ? [...m.attachments.values()].map(a=>`<span class="attach">📎 <a href="${a.url}">${a.name}</a></span>`).join('') : '';
+  return `<div class="msg"><span class="time">${new Date(m.createdTimestamp).toISOString()}</span><span class="author">${m.author?.tag||m.author?.id}</span><span class="content">${(m.content||'').replace(/</g,'&lt;')}</span>${atts}</div>`;
+}).join('\n')}
+</body></html>`;
+
+  // Speichern temporär
+  const transcriptTxtPath  = path.join(__dirname, `transcript_${ticket.id}.txt`);
+  const transcriptHtmlPath = path.join(__dirname, `transcript_${ticket.id}.html`);
+  fs.writeFileSync(transcriptTxtPath, plainText);
+  fs.writeFileSync(transcriptHtmlPath, html);
+
+  return {
+    txt: new AttachmentBuilder(transcriptTxtPath),
+    html: new AttachmentBuilder(transcriptHtmlPath)
+  };
+}
+
+/* ================= Interactions ================= */
 client.on(Events.InteractionCreate, async i => {
   try {
-    // /dashboard
+    /* /dashboard */
     if(i.isChatInputCommand() && i.commandName==='dashboard'){
       return i.reply({
         components:[ new ActionRowBuilder().addComponents(
@@ -167,11 +231,10 @@ client.on(Events.InteractionCreate, async i => {
       });
     }
 
-    // Themen-Auswahl
+    /* Thema Auswahl */
     if(i.isStringSelectMenu() && i.customId==='topic'){
-      const topic = (cfg.topics||[]).find(t=>t.value===i.values[0]);
+      const topic = cfg.topics?.find(t=>t.value===i.values[0]);
       if(!topic) return i.reply({content:'Unbekanntes Thema',ephemeral:true});
-
       const nr = nextTicket();
       const ch = await i.guild.channels.create({
         name: buildChannelName(nr,0),
@@ -183,77 +246,92 @@ client.on(Events.InteractionCreate, async i => {
           { id:TEAM_ROLE, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
         ]
       });
-
       const embed = buildTicketEmbedData(i, topic, nr);
       await ch.send({ embeds:[embed], components: buttonRows(false) });
+      i.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
 
-      // Loggen
       const log = safeRead(TICKETS_PATH, []);
       log.push({ id:nr, channelId:ch.id, userId:i.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now() });
       safeWrite(TICKETS_PATH, log);
+      logEvent(i.guild, `🆕 Ticket **#${nr}** erstellt von <@${i.user.id}> (Thema: ${topic.label})`);
 
-      await i.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
-
-      // Panel Nachricht zurücksetzen (Select ohne Auswahl)
+      // Panel-Dropdown resetten
       try {
-        const freshRow = buildPanelSelect(cfg);
+        const row = buildPanelSelect(cfg);
         if(cfg.panelEmbed){
           const p = cfg.panelEmbed;
-          const pe = new EmbedBuilder().setTitle(p.title||'🎟️ Ticket erstellen').setDescription(p.description||'Wähle unten dein Thema aus.');
-          if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) pe.setColor(parseInt(p.color.replace('#',''),16));
-          if(p.footer) pe.setFooter({ text:p.footer });
-          await i.message.edit({ embeds:[pe], components:[freshRow] });
+          const pEmbed = new EmbedBuilder().setTitle(p.title||'🎟️ Ticket erstellen').setDescription(p.description||'Wähle unten dein Thema aus.');
+          if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) pEmbed.setColor(parseInt(p.color.replace('#',''),16));
+          if(p.footer) pEmbed.setFooter({ text:p.footer });
+          await i.message.edit({ embeds:[pEmbed], components:[row] });
         } else {
-          await i.message.edit({ components:[freshRow] });
+          await i.message.edit({ components:[row] });
         }
-      } catch(e){ console.error('Panel Reset Fehler:', e); }
+      } catch(e){ /* ignorieren */ }
       return;
     }
 
-    // Buttons
+    /* Buttons */
     if(i.isButton()){
       const log = safeRead(TICKETS_PATH, []);
-      const ticket = log.find(t=>t.channelId===i.channel?.id);
-      if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz gefunden.'});
-
+      const ticket = log.find(t=>t.channelId===i.channel.id);
+      if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz'});
       const isTeam = i.member.roles.cache.has(TEAM_ROLE);
 
       if(i.customId==='request_close'){
-        await i.channel.send({
-          content:`❓ Schließungsanfrage von <@${i.user.id}> <@&${TEAM_ROLE}>`,
-          components:[ new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel('Schließen').setStyle(ButtonStyle.Danger)
-          )]
-        });
-        return i.reply({ephemeral:true,content:'Schließungsanfrage gesendet'});
+        await i.channel.send({ content:`❓ Schließungsanfrage von <@${i.user.id}> <@&${TEAM_ROLE}>`, components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel('Schließen').setStyle(ButtonStyle.Danger) ) ] });
+        logEvent(i.guild, `❓ Schließungsanfrage Ticket #${ticket.id} von <@${i.user.id}>`);
+        return i.reply({ephemeral:true,content:'Anfrage gesendet'});
       }
 
-      // Rest nur Team
-      if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team darf diesen Button verwenden'});
+      if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team darf diesen Button nutzen'});
 
       switch(i.customId){
         case 'team_close':
-        case 'close':
-          ticket.status='geschlossen';
-          safeWrite(TICKETS_PATH, log);
+        case 'close': {
+          ticket.status='geschlossen'; safeWrite(TICKETS_PATH, log);
+          await i.reply({ephemeral:true,content:'Ticket wird geschlossen…'});
           await i.channel.send(`🔒 Ticket geschlossen von <@${i.user.id}> <@&${TEAM_ROLE}>`);
-          return i.channel.delete();
+          // Transcript erstellen
+          let attachments=null; try { attachments = await createTranscript(i.channel, ticket); } catch(err){ console.error('Transcript Fehler', err); }
+          const tEmbed = new EmbedBuilder()
+            .setTitle(`📁 Transcript Ticket #${ticket.id}`)
+            .setDescription(`Ersteller: <@${ticket.userId}>\nGeschlossen von: <@${i.user.id}>`)
+            .setTimestamp(new Date())
+            .setColor(0x5865F2);
+          const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
+          if(transcriptChannelId){
+            try {
+              const tCh = await i.guild.channels.fetch(transcriptChannelId);
+              if(tCh){
+                await tCh.send({ content:`📁 Transcript Ticket #${ticket.id}`, embeds:[tEmbed], files: attachments? [attachments.txt, attachments.html]: undefined });
+              }
+            } catch(err){ console.error('Transcript Upload Fehler', err); }
+          }
+          logEvent(i.guild, `🔒 Ticket #${ticket.id} geschlossen von <@${i.user.id}>`);
+          setTimeout(()=>{ i.channel.delete().catch(()=>{}); }, 2500);
+          return;
+        }
         case 'claim':
-          ticket.claimer = i.user.id;
-          await i.update({components:buttonRows(true)});
+          ticket.claimer = i.user.id; safeWrite(TICKETS_PATH, log);
+          await i.update({ components: buttonRows(true) });
+          logEvent(i.guild, `✅ Ticket #${ticket.id} claimed von <@${i.user.id}>`);
           break;
         case 'unclaim':
-          delete ticket.claimer;
-          await i.update({components:buttonRows(false)});
+          delete ticket.claimer; safeWrite(TICKETS_PATH, log);
+          await i.update({ components: buttonRows(false) });
+          logEvent(i.guild, `🔄 Ticket #${ticket.id} unclaimed von <@${i.user.id}>`);
           break;
-        case 'priority_up':
-          ticket.priority = Math.min(2,(ticket.priority||0)+1);
-          await handlePriorityVisuals(i, ticket, log);
-          return; // schon geantwortet
-        case 'priority_down':
-          ticket.priority = Math.max(0,(ticket.priority||0)-1);
-          await handlePriorityVisuals(i, ticket, log);
-          return;
+        case 'priority_up': {
+          ticket.priority = Math.min(2, (ticket.priority||0)+1);
+          await handlePriorityVisuals(i, ticket, log, 'hoch');
+          break;
+        }
+        case 'priority_down': {
+          ticket.priority = Math.max(0, (ticket.priority||0)-1);
+          await handlePriorityVisuals(i, ticket, log, 'herab');
+          break;
+        }
         case 'add_user': {
           const modal = new ModalBuilder().setCustomId('modal_add_user').setTitle('Nutzer hinzufügen');
           modal.addComponents(new ActionRowBuilder().addComponents(
@@ -262,33 +340,46 @@ client.on(Events.InteractionCreate, async i => {
           return i.showModal(modal);
         }
       }
-      safeWrite(TICKETS_PATH, log);
     }
 
-    // Modal: Nutzer hinzufügen
+    /* Modal Submit Add User */
     if(i.isModalSubmit() && i.customId==='modal_add_user'){
       if(!i.member.roles.cache.has(TEAM_ROLE)) return i.reply({ephemeral:true,content:'Nur Team'});
       const raw = i.fields.getTextInputValue('user').trim();
-      const cleaned = raw.replace(/<@!?|>/g,'');
-      const uidMatch = cleaned.match(/\d{17,20}/);
-      const uid = uidMatch ? uidMatch[0] : null;
-      if(!uid) return i.reply({ephemeral:true,content:'Ungültige ID / Mention'});
+      const id = (raw.replace(/<@!?|>/g,'').match(/\d{17,20}/)||[])[0];
+      if(!id) return i.reply({ephemeral:true,content:'Ungültige ID / Mention'});
       try {
-        await i.guild.members.fetch(uid); // Validate
-        if(i.channel.permissionOverwrites.cache.get(uid))
-          return i.reply({ephemeral:true,content:'User hat bereits Zugriff'});
-        await i.channel.permissionOverwrites.edit(uid,{ViewChannel:true,SendMessages:true});
-        await i.reply({ephemeral:true,content:`<@${uid}> hinzugefügt`});
+        await i.guild.members.fetch(id);
+        if(i.channel.permissionOverwrites.cache.get(id))
+          return i.reply({ephemeral:true,content:'User hat schon Zugriff'});
+        await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
+        await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`});
+        logEvent(i.guild, `➕ User <@${id}> zu Ticket #${safeRead(TICKETS_PATH,[]).find(t=>t.channelId===i.channel.id)?.id || '?'} hinzugefügt`);
       } catch(err){
-        console.error('AddUser Fehler', err);
+        console.error(err);
         return i.reply({ephemeral:true,content:'Fehler beim Hinzufügen'});
       }
     }
+
   } catch(err){
     console.error(err);
     if(!i.replied && !i.deferred) i.reply({ephemeral:true,content:'Fehler'});
   }
 });
 
-/* ================= Login ================= */
+/* ================= Priority Visuals ================= */
+async function handlePriorityVisuals(interaction, ticket, log, direction){
+  renameChannelIfNeeded(interaction.channel, ticket);
+  const msg = await interaction.channel.messages.fetch({limit:10}).then(col=>col.find(m=>m.embeds.length)).catch(()=>null);
+  const state = PRIORITY_STATES[ticket.priority||0];
+  if(msg){
+    const e = EmbedBuilder.from(msg.embeds[0]);
+    e.setColor(state.embedColor);
+    await msg.edit({ embeds:[e] });
+  }
+  safeWrite(TICKETS_PATH, log);
+  logEvent(interaction.guild, `⚙️ Ticket #${ticket.id} Priorität ${direction}: **${state.label}**`);
+  await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
+}
+
 client.login(TOKEN);
