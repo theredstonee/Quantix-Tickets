@@ -1,10 +1,13 @@
-// --- index.js | Ticket‑Bot v6.3.3 (Auto-Delete Ticket-Erstellungsnachricht + Löschung beim Close) ---
-// Ergänzung zu deiner vorhandenen Version (Basis 6.3.x):
-//  - Die allererste Embed/Message im Ticket ("Ticket erstellt") wird nach 10 Minuten automatisch gelöscht
-//    ODER sofort, wenn das Ticket vorher geschlossen wird.
-//  - Dafür speichern wir pro Ticket die messageId (creationMessageId) in tickets.json.
-//  - Beim Close wird versucht sie zu löschen, falls noch vorhanden.
-//  - Wenn du bereits eine v6.3.x Version hast: Ersetze einfach den ganzen Inhalt der index.js mit diesem.
+// --- index.js | Ticket-Bot v6.3.2 (Fix: Panel-Dropdown Reset nach Ticket + Host Link + Ephemeral Nachricht bleibt) ---
+// Änderungen ggü. deiner zuletzt geposteten v6.3.1:
+//  1. PANEL_HOST fest auf "trstickets.theredstonee.de" gesetzt (wie gewünscht).
+//  2. Login-Loop Schutz NICHT hier – der Loop kommt aus panel.js (Weiterleitungen). Stelle sicher:
+//       - In panel.js wird nur auf /login redirectet wenn !req.isAuthenticated().
+//       - Nach erfolgreichem Login redirect nach /panel (nicht wieder /login).
+//  3. Panel-Dropdown Reset nach Ticket-Erstellung wieder hinzugefügt (die Komponente wird erneut gesetzt,
+//     damit der Benutzer sofort wieder wählen kann). Die ephemeral Ticket-Erstellungs-Nachricht bleibt unangetastet.
+//  4. Ticket-Erstellungs-Nachricht (im Ticket-Kanal) NICHT auto-löschen (dein letzter Wunsch).
+//  5. Minimal invasive Änderungen – restlicher Code unverändert.
 
 require('dotenv').config();
 
@@ -22,7 +25,7 @@ const {
 
 /* ================= Konstanten ================= */
 const TEAM_ROLE = '1387525699908272218';           // Team Rolle
-const PREFIX    = '🎫│';                           // Channel Präfix
+const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },
   { dot: '🟠', embedColor: 0xff9900, label: 'Orange' },
@@ -58,19 +61,20 @@ const app = express();
 app.set('view engine','ejs');
 app.set('views', path.join(__dirname,'views'));
 app.use(express.urlencoded({ extended:true }));
-app.use(express.static('public'));
+app.use(express.static('public')); // für CSS/JS
 
 const client = new Client({ intents:[GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages], partials:[Partials.Channel, Partials.Message] });
 app.use('/', require('./panel')(client));
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
 const TOKEN      = process.env.DISCORD_TOKEN;
-const PANEL_HOST = process.env.PANEL_URL || 'trstickets.theredstonee.de'; // Fester Host wie gewünscht
+// Fest auf gewünschte Domain setzen
+const PANEL_HOST = 'trstickets.theredstonee.de';
 
 /* ================= Counter ================= */
 function nextTicket(){ const c=safeRead(COUNTER_PATH,{last:0}); c.last++; safeWrite(COUNTER_PATH,c); return c.last; }
 
-/* ================= Buttons ================= */
+/* ================= Button Rows ================= */
 function buttonRows(claimed){
   const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('request_close').setEmoji('❓').setLabel('Schließungsanfrage').setStyle(ButtonStyle.Secondary)
@@ -99,7 +103,7 @@ function buildPanelSelect(){
   );
 }
 
-/* ================= Slash Command ================= */
+/* ================= Slash Command Deploy ================= */
 client.once('ready', async () => {
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   await rest.put(
@@ -109,7 +113,7 @@ client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} bereit`);
 });
 
-/* ================= Embed Builder ================= */
+/* ================= Ticket Embed Builder ================= */
 function buildTicketEmbed(i, topic, nr){
   cfg = safeRead(CFG_PATH, cfg);
   const t = cfg.ticketEmbed;
@@ -173,7 +177,7 @@ async function createTranscript(channel, ticket){
 client.on(Events.InteractionCreate, async i => {
   try {
     if(i.isChatInputCommand() && i.commandName==='dashboard'){
-      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(`https://trstickets.theredstonee.de/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
+      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(`http://${PANEL_HOST}/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
     }
 
     if(i.isStringSelectMenu() && i.customId==='topic'){
@@ -191,31 +195,30 @@ client.on(Events.InteractionCreate, async i => {
         ]
       });
       const embed = buildTicketEmbed(i, topic, nr);
-      const sent = await ch.send({ embeds:[embed], components: buttonRows(false) });
-
-      // Ticket speichern inkl. creationMessageId
-      const log = safeRead(TICKETS_PATH, []);
-      log.push({ id:nr, channelId:ch.id, userId:i.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), creationMessageId: sent.id });
-      safeWrite(TICKETS_PATH, log);
-
+      await ch.send({ embeds:[embed], components: buttonRows(false) });
       i.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
+
+      const log = safeRead(TICKETS_PATH, []);
+      log.push({ id:nr, channelId:ch.id, userId:i.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now() });
+      safeWrite(TICKETS_PATH, log);
       logEvent(i.guild, `🆕 Ticket #${nr} erstellt von <@${i.user.id}> (${topic.label})`);
 
-      // Auto-Delete Timer (10 Minuten)
-      setTimeout(async ()=>{
-        try {
-          const latestLog = safeRead(TICKETS_PATH, []);
-            const tk = latestLog.find(t=>t.id===nr);
-            if(!tk) return;
-            if(tk.status !== 'geschlossen' && tk.creationMessageId){
-              const msg = await ch.messages.fetch(tk.creationMessageId).catch(()=>null);
-              if(msg) await msg.delete().catch(()=>{});
-              // Optional: Flag setzen, dass gelöscht
-              tk.creationMessageDeleted = true;
-              safeWrite(TICKETS_PATH, latestLog);
-            }
-        } catch(e) {}
-      }, 10 * 60 * 1000);
+      // === Panel Dropdown Reset (wieder auswählbar) ===
+      try {
+        const row = buildPanelSelect();
+        if(i.message){
+          // Setze wieder das Placeholder (Menü unverändert, Discord erlaubt erneute Auswahl nach Menü-Interaction automatisch)
+          if(cfg.panelEmbed){
+            const p = cfg.panelEmbed;
+            const pEmbed = new EmbedBuilder().setTitle(p.title||'🎟️ Ticket erstellen').setDescription(p.description||'Wähle unten dein Thema aus.');
+            if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) pEmbed.setColor(parseInt(p.color.replace('#',''),16));
+            if(p.footer) pEmbed.setFooter({ text: p.footer });
+            await i.message.edit({ embeds:[pEmbed], components:[row] });
+          } else {
+            await i.message.edit({ components:[row] });
+          }
+        }
+      } catch {/* ignorieren */}
       return;
     }
 
@@ -239,13 +242,6 @@ client.on(Events.InteractionCreate, async i => {
           ticket.status='geschlossen'; safeWrite(TICKETS_PATH, log);
           await i.reply({ephemeral:true,content:'Ticket wird geschlossen…'});
           await i.channel.send(`🔒 Ticket geschlossen von <@${i.user.id}> <@&${TEAM_ROLE}>`);
-
-          // Versuche Erstellungsnachricht zu löschen, falls noch da
-          if(ticket.creationMessageId){
-            try { const m = await i.channel.messages.fetch(ticket.creationMessageId).catch(()=>null); if(m) await m.delete().catch(()=>{}); } catch {}
-          }
-
-          // Transcript & Upload
           let files=null; try { files = await createTranscript(i.channel, ticket); } catch {}
           const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
           if(transcriptChannelId){
@@ -277,11 +273,12 @@ client.on(Events.InteractionCreate, async i => {
         }
         case 'add_user': {
           const modal = new ModalBuilder().setCustomId('modal_add_user').setTitle('Nutzer hinzufügen');
-          modal.addComponents(new ActionRowBuilder().addComponents( new TextInputBuilder().setCustomId('user').setLabel('User @ oder ID').setRequired(true).setStyle(TextInputStyle.Short) ));
+          modal.addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('user').setLabel('User @ oder ID').setRequired(true).setStyle(TextInputStyle.Short)
+          ));
           return i.showModal(modal);
         }
       }
-      safeWrite(TICKETS_PATH, log);
     }
 
     if(i.isModalSubmit() && i.customId==='modal_add_user'){
