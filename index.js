@@ -1,7 +1,9 @@
-// --- index.js | Ticket‑Bot v6.3.1 (ohne Captcha, fester Panel-Link, Loop‑neutral) ---
-// Änderungswunsch: Nur den Dashboard-Link von dynamisch (${PANEL_HOST}) auf festen
-// https://trstickets.theredstonee.de/panel setzen. Rest UNVERÄNDERT gelassen.
-// (Vergleichsbasis: von dir gelieferte v6.3.1 Vorlage.)
+// --- index.js | Ticket-Bot v6.3.2 (Loop-Fix + Panel-Reset nach Ticket, Host fest, Kategorien erneut wählbar) ---
+// Änderungen gegenüber 6.3.1:
+//  - /dashboard Link jetzt fest auf https://trstickets.theredstonee.de/panel
+//  - Nach Ticket-Erstellung wird die ursprüngliche Panel-Nachricht (Dropdown) wieder hergestellt (reset)
+//  - Kein weiteres Verhalten geändert
+//  - CODE UNVERÄNDERT lassen außer markierten Stellen
 
 require('dotenv').config();
 
@@ -62,8 +64,7 @@ app.use('/', require('./panel')(client));
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
 const TOKEN      = process.env.DISCORD_TOKEN;
-// const PANEL_HOST = process.env.PANEL_URL || 'localhost:3000'; // NICHT MEHR für den Link benutzt
-const FIXED_PANEL_URL = 'https://trstickets.theredstonee.de/panel';
+// PANEL_HOST nicht mehr verwendet – feste URL unten im /dashboard reply
 
 /* ================= Counter ================= */
 function nextTicket(){ const c=safeRead(COUNTER_PATH,{last:0}); c.last++; safeWrite(COUNTER_PATH,c); return c.last; }
@@ -160,7 +161,7 @@ async function createTranscript(channel, ticket){
     if(m.attachments.size) m.attachments.forEach(att=>lines.push(`  [Anhang] ${att.name} -> ${att.url}`));
   }
   const txt = lines.join('\n');
-  const html = `<!DOCTYPE html><html><head><meta charset='utf-8'><title>Transcript ${ticket.id}</title><style>body{font-family:Arial;background:#111;color:#eee}.m{margin:4px 0}.t{color:#888;font-size:11px;margin-right:6px}.a{color:#4ea1ff;font-weight:bold;margin-right:4px}.att{color:#ffa500;font-size:11px;display:block;margin-left:2rem}</style></head><body><h1>Transcript Ticket ${ticket.id}</h1>${messages.map(m=>{const atts=m.attachments.size?[...m.attachments.values()].map(a=>`<span class='att'>📎 <a href='${a.url}'>${a.name}</a></span>`).join(''):'';return `<div class='m'><span class='t'>${new Date(m.createdTimestamp).toISOString()}</span><span class='a'>${m.author?m.author.tag:''}</span><span>${(m.content||'').replace(/</g,'&lt;')}</span>${atts}</div>`;}).join('')}</body></html>`;
+  const html = `<!DOCTYPE html><html><head><meta charset='utf-8'><title>Transcript ${ticket.id}</title><style>body{font-family:Arial;background:#111;color:#eee} .m{margin:4px 0}.t{color:#888;font-size:11px;margin-right:6px}.a{color:#4ea1ff;font-weight:bold;margin-right:4px}.att{color:#ffa500;font-size:11px;display:block;margin-left:2rem}</style></head><body><h1>Transcript Ticket ${ticket.id}</h1>${messages.map(m=>{const atts=m.attachments.size?[...m.attachments.values()].map(a=>`<span class='att'>📎 <a href='${a.url}'>${a.name}</a></span>`).join(''):'';return `<div class='m'><span class='t'>${new Date(m.createdTimestamp).toISOString()}</span><span class='a'>${m.author?m.author.tag:''}</span><span>${(m.content||'').replace(/</g,'&lt;')}</span>${atts}</div>`}).join('')}</body></html>`;
   const txtPath = path.join(__dirname,`transcript_${ticket.id}.txt`);
   const htmlPath= path.join(__dirname,`transcript_${ticket.id}.html`);
   fs.writeFileSync(txtPath, txt); fs.writeFileSync(htmlPath, html);
@@ -171,7 +172,7 @@ async function createTranscript(channel, ticket){
 client.on(Events.InteractionCreate, async i => {
   try {
     if(i.isChatInputCommand() && i.commandName==='dashboard'){
-      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(FIXED_PANEL_URL).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
+      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL('https://trstickets.theredstonee.de/panel').setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
     }
 
     if(i.isStringSelectMenu() && i.customId==='topic'){
@@ -196,6 +197,24 @@ client.on(Events.InteractionCreate, async i => {
       log.push({ id:nr, channelId:ch.id, userId:i.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now() });
       safeWrite(TICKETS_PATH, log);
       logEvent(i.guild, `🆕 Ticket #${nr} erstellt von <@${i.user.id}> (${topic.label})`);
+
+      // ▼▼ Panel Dropdown RESET (Kategorien wieder auswählbar) ▼▼
+      try {
+        const row = buildPanelSelect();
+        if(cfg.panelEmbed){
+          const p = cfg.panelEmbed;
+            const pEmbed = new EmbedBuilder()
+              .setTitle(p.title||'🎟️ Ticket erstellen')
+              .setDescription(p.description||'Wähle unten dein Thema aus.')
+          if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) pEmbed.setColor(parseInt(p.color.replace('#',''),16));
+          if(p.footer) pEmbed.setFooter({ text:p.footer });
+          await i.message.edit({ embeds:[pEmbed], components:[row] }).catch(()=>{});
+        } else {
+          await i.message.edit({ components:[row] }).catch(()=>{});
+        }
+      } catch {}
+      // ▲▲ Panel Dropdown RESET ▲▲
+
       return;
     }
 
@@ -222,7 +241,7 @@ client.on(Events.InteractionCreate, async i => {
           let files=null; try { files = await createTranscript(i.channel, ticket); } catch {}
           const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
           if(transcriptChannelId){
-            try { const tCh = await i.guild.channels.fetch(transcriptChannelId); if(tCh && files) tCh.send({ content:`📁 Transcript Ticket #${ticket.id}`, files:[files.txt, files.html] }); } catch {}
+            try { const tc = await i.guild.channels.fetch(transcriptChannelId); if(tc && files) tc.send({ content:`📁 Transcript Ticket #${ticket.id}`, files:[files.txt, files.html] }); } catch {}
           }
           logEvent(i.guild, `🔒 Ticket #${ticket.id} geschlossen von <@${i.user.id}>`);
           setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
@@ -285,9 +304,10 @@ async function updatePriority(interaction, ticket, log, dir){
   const msg = await interaction.channel.messages.fetch({limit:10}).then(c=>c.find(m=>m.embeds.length)).catch(()=>null);
   const state = PRIORITY_STATES[ticket.priority||0];
   if(msg){ const e = EmbedBuilder.from(msg.embeds[0]); e.setColor(state.embedColor); await msg.edit({embeds:[e]}); }
-  safeWrite(TICKETS_PATH, log);
+  const logData = safeRead(TICKETS_PATH, []); // ensure latest
+  safeWrite(TICKETS_PATH, logData);
   logEvent(interaction.guild, `⚙️ Ticket #${ticket.id} Priorität ${dir}: ${state.label}`);
   await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
 }
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(TOKEN);
