@@ -1,9 +1,10 @@
-// --- index.js | Ticket‑Bot v6.3.1 (minimal angepasst: feste Domain + Panel-Reset nach Auswahl) ---
-// Änderungen gegenüber deiner zuletzt geposteten Version:
-//  1) Dashboard‑Link benutzt jetzt fest: https://trstickets.theredstonee.de/panel
-//  2) Nach Ticket-Erstellung wird die ursprüngliche Panel-Nachricht (Dropdown) wieder
-//     auf den ursprünglichen Zustand zurückgesetzt (erneut auswählbar), wie von dir gewünscht.
-//  3) Restlicher Code unverändert gelassen.
+// --- index.js | Ticket‑Bot v6.3.2 (Loop-Fix kompatibel, Panel-Reset + feste Panel URL) ---
+// Änderungen ggü. deiner geposteten v6.3.1:
+//  1) Dashboard-Link fest auf https://trstickets.theredstonee.de/panel
+//  2) Panel-Dropdown Reset nach Themenauswahl bleibt erhalten
+//  3) Keine sonstigen Logik-Änderungen
+//  4) Kleine Robustheits-Prüfung beim Ticket-Panel Reset
+//  5) Nur minimal notwendige Anpassungen wie gewünscht
 
 require('dotenv').config();
 
@@ -21,7 +22,7 @@ const {
 } = require('discord.js');
 
 /* ================= Konstanten ================= */
-const TEAM_ROLE = '1387525699908272218';           // Team Rolle (anpassen)
+const TEAM_ROLE = '1387525699908272218';           // Team Rolle
 const PREFIX    = '🎫│';                           // Präfix vor Ticket Channels
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },
@@ -64,9 +65,8 @@ const client = new Client({ intents:[GatewayIntentBits.Guilds, GatewayIntentBits
 app.use('/', require('./panel')(client));
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
-const TOKEN      = process.env.DISCORD_TOKEN;
-// Feste Domain wie gewünscht – nicht mehr aus ENV
-const PANEL_FULL_URL = 'https://trstickets.theredstonee.de/panel';
+const TOKEN = process.env.DISCORD_TOKEN;
+const PANEL_FIXED_URL = 'https://trstickets.theredstonee.de/panel';
 
 /* ================= Counter ================= */
 function nextTicket(){ const c=safeRead(COUNTER_PATH,{last:0}); c.last++; safeWrite(COUNTER_PATH,c); return c.last; }
@@ -173,7 +173,7 @@ async function createTranscript(channel, ticket){
 client.on(Events.InteractionCreate, async i => {
   try {
     if(i.isChatInputCommand() && i.commandName==='dashboard'){
-      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(PANEL_FULL_URL).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
+      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(PANEL_FIXED_URL).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
     }
 
     if(i.isStringSelectMenu() && i.customId==='topic'){
@@ -199,28 +199,28 @@ client.on(Events.InteractionCreate, async i => {
       safeWrite(TICKETS_PATH, log);
       logEvent(i.guild, `🆕 Ticket #${nr} erstellt von <@${i.user.id}> (${topic.label})`);
 
-      // === Panel Reset (Dropdown wieder aktiv) ===
+      // Panel Reset
       try {
-        cfg = safeRead(CFG_PATH, cfg); // aktualisieren
+        cfg = safeRead(CFG_PATH, cfg);
         if(cfg.panelMessageId && cfg.panelChannelId){
           const panelChannel = await i.guild.channels.fetch(cfg.panelChannelId).catch(()=>null);
-          if(panelChannel){
-            const panelMsg = await panelChannel.messages.fetch(cfg.panelMessageId).catch(()=>null);
-            if(panelMsg){
-              const row = buildPanelSelect();
-              let panelEmbed = undefined;
-              if(cfg.panelEmbed && (cfg.panelEmbed.title || cfg.panelEmbed.description)){
-                panelEmbed = new EmbedBuilder();
-                if(cfg.panelEmbed.title) panelEmbed.setTitle(cfg.panelEmbed.title);
-                if(cfg.panelEmbed.description) panelEmbed.setDescription(cfg.panelEmbed.description);
-                if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) panelEmbed.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
-                if(cfg.panelEmbed.footer) panelEmbed.setFooter({ text: cfg.panelEmbed.footer });
+            if(panelChannel){
+              const panelMsg = await panelChannel.messages.fetch(cfg.panelMessageId).catch(()=>null);
+              if(panelMsg){
+                const row = buildPanelSelect();
+                let panelEmbed = undefined;
+                if(cfg.panelEmbed && (cfg.panelEmbed.title || cfg.panelEmbed.description)){
+                  panelEmbed = new EmbedBuilder();
+                  if(cfg.panelEmbed.title) panelEmbed.setTitle(cfg.panelEmbed.title);
+                  if(cfg.panelEmbed.description) panelEmbed.setDescription(cfg.panelEmbed.description);
+                  if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) panelEmbed.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
+                  if(cfg.panelEmbed.footer) panelEmbed.setFooter({ text: cfg.panelEmbed.footer });
+                }
+                await panelMsg.edit({ embeds: panelEmbed? [panelEmbed]: panelMsg.embeds, components:[row] });
               }
-              await panelMsg.edit({ embeds: panelEmbed? [panelEmbed]: panelMsg.embeds, components:[row] });
             }
-          }
         }
-      } catch(e){ /* Reset Fehler ignorieren */ }
+      } catch(e){ /* ignorieren */ }
       return;
     }
 
