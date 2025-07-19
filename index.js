@@ -225,7 +225,7 @@ client.on(Events.InteractionCreate, async i => {
     if(i.isChatInputCommand() && i.commandName==='dashboard'){
       return i.reply({
         components:[ new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setURL(`http://${PANEL_HOST}/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard')
+          new ButtonBuilder().setURL(`https://trstickets.theredstonee.de`).setStyle(ButtonStyle.Link).setLabel('Dashboard')
         )],
         ephemeral:true
       });
