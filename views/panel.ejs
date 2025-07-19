@@ -9,116 +9,138 @@
     table { width:100%; }
     table input { width:100%; }
     .grid { display:flex; flex-wrap:wrap; gap:1.5rem; }
-    fieldset { flex:1 1 340px; min-width:320px; }
-    textarea { width:100%; }
-    code { background:#222; color:#eee; padding:2px 4px; border-radius:4px; }
-    .actions { display:flex; gap:1rem; flex-wrap:wrap; margin-top:.5rem; }
-    header h1 { margin-bottom:.2rem; }
-    .msg { border:1px solid #2d6; padding:.5rem .8rem; border-radius:6px; background:#132; }
-    .msg.err { border-color:#a44; background:#311; }
+    fieldset { flex:1 1 360px; min-width:340px; }
+    textarea { width:100%; font-family: monospace; }
+    .bad { border:1px solid #c33; padding:.5rem .75rem; }
+    .good { border:1px solid #2b7; padding:.5rem .75rem; }
+    .actions form { display:inline-block; margin-right:1rem; }
+    footer { margin-top:3rem; font-size:.75rem; opacity:.6; }
+    .placeholder-list code { margin-right:.4rem; }
   </style>
 </head>
 <body class="container">
-<header>
   <h1>🎫 Ticket‑Bot Panel</h1>
-  <p>Verwalte Kategorien, Embeds & die Panel‑Nachricht.</p>
-</header>
 
-<% if (msg==='saved') { %><p class="msg">✅ Gespeichert.</p><% } %>
-<% if (msg==='sent') { %><p class="msg">📤 Panel‑Nachricht gesendet.</p><% } %>
-<% if (msg==='edited') { %><p class="msg">✏️ Panel‑Nachricht aktualisiert.</p><% } %>
-<% if (msg==='nopanel') { %><p class="msg err">⚠️ Keine gespeicherte Panel‑Nachricht.</p><% } %>
-<% if (msg==='error') { %><p class="msg err">❌ Fehler beim Vorgang.</p><% } %>
+  <% if (msg==='saved')  { %><p class="good">✅ Gespeichert.</p><% } %>
+  <% if (msg==='sent')   { %><p class="good">📤 Panel‑Nachricht gesendet.</p><% } %>
+  <% if (msg==='edited') { %><p class="good">✏️ Panel‑Nachricht aktualisiert.</p><% } %>
+  <% if (msg==='nopanel'){ %><p class="bad">⚠️ Keine gespeicherte Panel‑Nachricht vorhanden.</p><% } %>
+  <% if (msg==='error')  { %><p class="bad">❌ Fehler beim Vorgang – Konsole prüfen.</p><% } %>
 
-<form method="POST">
-  <div class="grid">
-    <!-- Kategorien -->
-    <fieldset>
-      <legend>Kategorien (Topics)</legend>
-      <table>
-        <thead><tr><th>Label</th><th>Value</th><th>Emoji</th></tr></thead>
-        <tbody id="rows">
-        <% (cfg.topics||[]).forEach(t => { %>
-          <tr>
-            <td><input name="label" value="<%= t.label %>" required></td>
-            <td><input name="value" value="<%= t.value %>"></td>
-            <td><input name="emoji" value="<%= t.emoji %>"></td>
-          </tr>
-        <% }) %>
-        </tbody>
-      </table>
-      <button type="button" onclick="addRow()">➕ Zeile</button>
-    </fieldset>
+  <form method="POST" autocomplete="off">
+    <div class="grid">
 
-    <!-- Ticket Embed -->
-    <fieldset>
-      <legend>Ticket Embed</legend>
-      <p style="font-size:.8rem">Platzhalter: <code>{userMention}</code> <code>{userId}</code> <code>{topicLabel}</code> <code>{topicValue}</code> <code>{ticketNumber}</code></p>
-      <label>Titel
-        <input name="embedTitle" value="<%= cfg.ticketEmbed?.title || '' %>">
-      </label>
-      <label>Beschreibung
-        <textarea name="embedDescription" rows="5"><%= cfg.ticketEmbed?.description || '' %></textarea>
-      </label>
-      <label>Farbe (Hex)
-        <input name="embedColor" value="<%= cfg.ticketEmbed?.color || '#2b90d9' %>">
-      </label>
-      <label>Footer
-        <input name="embedFooter" value="<%= cfg.ticketEmbed?.footer || '' %>">
-      </label>
-    </fieldset>
+      <!-- Kategorien -->
+      <fieldset>
+        <legend>Kategorien (Topics)</legend>
+        <table>
+          <thead>
+            <tr><th>Label</th><th>Value</th><th>Emoji</th></tr>
+          </thead>
+            <tbody id="rows">
+            <% (cfg.topics||[]).forEach(t => { %>
+              <tr>
+                <td><input name="label" value="<%= t.label %>" required></td>
+                <td><input name="value" value="<%= t.value %>"></td>
+                <td><input name="emoji" value="<%= t.emoji %>"></td>
+              </tr>
+            <% }) %>
+            </tbody>
+        </table>
+        <button type="button" onclick="addRow()">➕ Zeile</button>
+        <p style="font-size:.75rem;opacity:.7;margin-top:.5rem">
+          * <b>Value</b> leer ⇒ wird automatisch aus Label (klein) generiert.
+        </p>
+      </fieldset>
 
-    <!-- Panel Embed -->
-    <fieldset>
-      <legend>Panel Embed (Dropdown)</legend>
-      <label>Titel
-        <input name="panelTitle" value="<%= cfg.panelEmbed?.title || '' %>">
-      </label>
-      <label>Beschreibung
-        <textarea name="panelDescription" rows="4"><%= cfg.panelEmbed?.description || '' %></textarea>
-      </label>
-      <label>Farbe (Hex)
-        <input name="panelColor" value="<%= cfg.panelEmbed?.color || '#5865F2' %>">
-      </label>
-      <label>Footer
-        <input name="panelFooter" value="<%= cfg.panelEmbed?.footer || '' %>">
-      </label>
-    </fieldset>
+      <!-- Ticket Embed -->
+      <fieldset>
+        <legend>Ticket Embed Vorlage</legend>
+        <p class="placeholder-list" style="font-size:.75rem">
+          Platzhalter:
+          <code>{userMention}</code>
+          <code>{userId}</code>
+          <code>{topicLabel}</code>
+          <code>{topicValue}</code>
+          <code>{ticketNumber}</code>
+        </p>
+        <label>Titel
+          <input name="embedTitle" value="<%= cfg.ticketEmbed?.title || '' %>">
+        </label>
+        <label>Beschreibung
+          <textarea name="embedDescription" rows="6"><%= cfg.ticketEmbed?.description || '' %></textarea>
+        </label>
+        <label>Farbe (Hex)
+          <input name="embedColor" value="<%= cfg.ticketEmbed?.color || '#2b90d9' %>" placeholder="#2b90d9">
+        </label>
+        <label>Footer
+          <input name="embedFooter" value="<%= cfg.ticketEmbed?.footer || '' %>">
+        </label>
+      </fieldset>
+
+      <!-- Panel Embed -->
+      <fieldset>
+        <legend>Panel (Dropdown) Embed</legend>
+        <label>Panel Titel
+          <input name="panelTitle" value="<%= cfg.panelEmbed?.title || '' %>">
+        </label>
+        <label>Panel Beschreibung
+          <textarea name="panelDescription" rows="5"><%= cfg.panelEmbed?.description || '' %></textarea>
+        </label>
+        <label>Panel Farbe (Hex)
+          <input name="panelColor" value="<%= cfg.panelEmbed?.color || '#5865F2' %>" placeholder="#5865F2">
+        </label>
+        <label>Panel Footer
+          <input name="panelFooter" value="<%= cfg.panelEmbed?.footer || '' %>">
+        </label>
+      </fieldset>
+
+      <!-- RAW JSON -->
+      <fieldset>
+        <legend>RAW JSON (Optional)</legend>
+        <p style="font-size:.75rem;opacity:.8">
+          Nur nutzen, wenn du komplette Arrays manuell pflegen willst.
+        </p>
+        <label>Topics (JSON)
+          <textarea name="topicsJson" rows="8"><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
+        </label>
+        <label>FormFields (JSON)
+          <textarea name="formFieldsJson" rows="8"><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
+        </label>
+      </fieldset>
+
+    </div>
+
+    <button type="submit">💾 Speichern</button>
+  </form>
+
+  <hr>
+
+  <h2>Panel‑Nachricht Aktionen</h2>
+  <div class="actions">
+    <form action="/panel/send" method="POST">
+      <input name="channelId" placeholder="Channel‑ID" value="<%= cfg.panelChannelId || '' %>" required>
+      <button>📤 Senden</button>
+    </form>
+
+    <form action="/panel/edit" method="POST">
+      <button>✏️ Bestehende bearbeiten</button>
+    </form>
   </div>
 
-  <details style="margin-top:1rem">
-    <summary>🧪 Rohdaten (optional JSON Edit)</summary>
-    <label>Topics (JSON)
-      <textarea class="mono" name="topicsJson" rows="6"><%= JSON.stringify(cfg.topics||[],null,2) %></textarea>
-    </label>
-    <label>Formularfelder (JSON)
-      <textarea class="mono" name="formFieldsJson" rows="6"><%= JSON.stringify(cfg.formFields||[],null,2) %></textarea>
-    </label>
-  </details>
+  <footer>
+    <p>Ticket‑Bot Panel • Änderungen werden sofort in <code>config.json</code> gespeichert • Stelle sicher, dass der Bot Schreibrechte hat.</p>
+  </footer>
 
-  <button type="submit">💾 Speichern</button>
-</form>
-
-<hr>
-<h2>Panel‑Nachricht Aktionen</h2>
-<div class="actions">
-  <form action="/panel/send" method="POST">
-    <input name="channelId" placeholder="Channel‑ID" value="<%= cfg.panelChannelId || '' %>" required>
-    <button>📤 Senden</button>
-  </form>
-  <form action="/panel/edit" method="POST">
-    <button>✏️ Bearbeiten</button>
-  </form>
-</div>
-
-<script>
-function addRow(){
-  const tr=document.createElement('tr');
-  tr.innerHTML=`<td><input name="label" required></td>
-                <td><input name="value"></td>
-                <td><input name="emoji"></td>`;
-  document.getElementById('rows').appendChild(tr);
-}
-</script>
+  <script>
+    function addRow(){
+      const tr=document.createElement('tr');
+      tr.innerHTML = `
+        <td><input name="label" required></td>
+        <td><input name="value"></td>
+        <td><input name="emoji"></td>`;
+      document.getElementById('rows').appendChild(tr);
+    }
+  </script>
 </body>
 </html>
