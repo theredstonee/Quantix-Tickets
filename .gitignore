@@ -1,2 +1,4 @@
 ~/ticketbot/
 /node_modules
+/config.json
+/ticketCounter.json

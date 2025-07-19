@@ -41,13 +41,12 @@
       "emoji": "💬"
     }
   ],
-   "ticketEmbed": [{
-     "title": "🎫 Ticket #{ticketNumber}",
-     "description": "Hallo {userMention}\\nDu hast **{topicLabel}** gewählt.",
-     "color": "#2b90d9",
-     "footer": TRS Tickets ©️
-    }
-  ],
+  "ticketEmbed": {
+    "title": "🎫 Ticket #{ticketNumber}",
+    "description": "Hallo {userMention}\\nDu hast **{topicLabel}** gewählt.",
+    "color": "#2b90d9",
+    "footer": "Support Ticket #{ticketNumber}"
+  },
   "panelMessageId": "1395780327233818797",
   "panelChannelId": "1357443439079329874"
 }
