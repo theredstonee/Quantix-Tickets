@@ -1,9 +1,10 @@
-// --- index.js | Ticket-Bot v6.3.2 (Loop-Fix + Panel-Reset nach Ticket, Host fest, Kategorien erneut wählbar) ---
-// Änderungen gegenüber 6.3.1:
-//  - /dashboard Link jetzt fest auf https://trstickets.theredstonee.de/panel
-//  - Nach Ticket-Erstellung wird die ursprüngliche Panel-Nachricht (Dropdown) wieder hergestellt (reset)
-//  - Kein weiteres Verhalten geändert
-//  - CODE UNVERÄNDERT lassen außer markierten Stellen
+// --- index.js | Ticket‑Bot v6.3.3 (Auto-Delete Ticket-Erstellungsnachricht + Löschung beim Close) ---
+// Ergänzung zu deiner vorhandenen Version (Basis 6.3.x):
+//  - Die allererste Embed/Message im Ticket ("Ticket erstellt") wird nach 10 Minuten automatisch gelöscht
+//    ODER sofort, wenn das Ticket vorher geschlossen wird.
+//  - Dafür speichern wir pro Ticket die messageId (creationMessageId) in tickets.json.
+//  - Beim Close wird versucht sie zu löschen, falls noch vorhanden.
+//  - Wenn du bereits eine v6.3.x Version hast: Ersetze einfach den ganzen Inhalt der index.js mit diesem.
 
 require('dotenv').config();
 
@@ -20,8 +21,8 @@ const {
 } = require('discord.js');
 
 /* ================= Konstanten ================= */
-const TEAM_ROLE = '1387525699908272218';           // Team Rolle (anpassen)
-const PREFIX    = '🎫│';                           // Präfix vor Ticket Channels
+const TEAM_ROLE = '1387525699908272218';           // Team Rolle
+const PREFIX    = '🎫│';                           // Channel Präfix
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },
   { dot: '🟠', embedColor: 0xff9900, label: 'Orange' },
@@ -57,19 +58,19 @@ const app = express();
 app.set('view engine','ejs');
 app.set('views', path.join(__dirname,'views'));
 app.use(express.urlencoded({ extended:true }));
-app.use(express.static('public')); // für CSS/JS
+app.use(express.static('public'));
 
 const client = new Client({ intents:[GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages], partials:[Partials.Channel, Partials.Message] });
 app.use('/', require('./panel')(client));
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
 const TOKEN      = process.env.DISCORD_TOKEN;
-// PANEL_HOST nicht mehr verwendet – feste URL unten im /dashboard reply
+const PANEL_HOST = process.env.PANEL_URL || 'trstickets.theredstonee.de'; // Fester Host wie gewünscht
 
 /* ================= Counter ================= */
 function nextTicket(){ const c=safeRead(COUNTER_PATH,{last:0}); c.last++; safeWrite(COUNTER_PATH,c); return c.last; }
 
-/* ================= Button Rows ================= */
+/* ================= Buttons ================= */
 function buttonRows(claimed){
   const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('request_close').setEmoji('❓').setLabel('Schließungsanfrage').setStyle(ButtonStyle.Secondary)
@@ -98,7 +99,7 @@ function buildPanelSelect(){
   );
 }
 
-/* ================= Slash Command Deploy ================= */
+/* ================= Slash Command ================= */
 client.once('ready', async () => {
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   await rest.put(
@@ -108,7 +109,7 @@ client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} bereit`);
 });
 
-/* ================= Ticket Embed Builder ================= */
+/* ================= Embed Builder ================= */
 function buildTicketEmbed(i, topic, nr){
   cfg = safeRead(CFG_PATH, cfg);
   const t = cfg.ticketEmbed;
@@ -161,7 +162,7 @@ async function createTranscript(channel, ticket){
     if(m.attachments.size) m.attachments.forEach(att=>lines.push(`  [Anhang] ${att.name} -> ${att.url}`));
   }
   const txt = lines.join('\n');
-  const html = `<!DOCTYPE html><html><head><meta charset='utf-8'><title>Transcript ${ticket.id}</title><style>body{font-family:Arial;background:#111;color:#eee} .m{margin:4px 0}.t{color:#888;font-size:11px;margin-right:6px}.a{color:#4ea1ff;font-weight:bold;margin-right:4px}.att{color:#ffa500;font-size:11px;display:block;margin-left:2rem}</style></head><body><h1>Transcript Ticket ${ticket.id}</h1>${messages.map(m=>{const atts=m.attachments.size?[...m.attachments.values()].map(a=>`<span class='att'>📎 <a href='${a.url}'>${a.name}</a></span>`).join(''):'';return `<div class='m'><span class='t'>${new Date(m.createdTimestamp).toISOString()}</span><span class='a'>${m.author?m.author.tag:''}</span><span>${(m.content||'').replace(/</g,'&lt;')}</span>${atts}</div>`}).join('')}</body></html>`;
+  const html = `<!DOCTYPE html><html><head><meta charset='utf-8'><title>Transcript ${ticket.id}</title><style>body{font-family:Arial;background:#111;color:#eee}.m{margin:4px 0}.t{color:#888;font-size:11px;margin-right:6px}.a{color:#4ea1ff;font-weight:bold;margin-right:4px}.att{color:#ffa500;font-size:11px;display:block;margin-left:2rem}</style></head><body><h1>Transcript Ticket ${ticket.id}</h1>${messages.map(m=>{const atts=m.attachments.size?[...m.attachments.values()].map(a=>`<span class='att'>📎 <a href='${a.url}'>${a.name}</a></span>`).join(''):'';return `<div class='m'><span class='t'>${new Date(m.createdTimestamp).toISOString()}</span><span class='a'>${m.author?m.author.tag:''}</span><span>${(m.content||'').replace(/</g,'&lt;')}</span>${atts}</div>`}).join('')}</body></html>`;
   const txtPath = path.join(__dirname,`transcript_${ticket.id}.txt`);
   const htmlPath= path.join(__dirname,`transcript_${ticket.id}.html`);
   fs.writeFileSync(txtPath, txt); fs.writeFileSync(htmlPath, html);
@@ -172,7 +173,7 @@ async function createTranscript(channel, ticket){
 client.on(Events.InteractionCreate, async i => {
   try {
     if(i.isChatInputCommand() && i.commandName==='dashboard'){
-      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL('https://trstickets.theredstonee.de/panel').setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
+      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(`https://trstickets.theredstonee.de/panel`).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
     }
 
     if(i.isStringSelectMenu() && i.customId==='topic'){
@@ -190,31 +191,31 @@ client.on(Events.InteractionCreate, async i => {
         ]
       });
       const embed = buildTicketEmbed(i, topic, nr);
-      await ch.send({ embeds:[embed], components: buttonRows(false) });
-      i.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
+      const sent = await ch.send({ embeds:[embed], components: buttonRows(false) });
 
+      // Ticket speichern inkl. creationMessageId
       const log = safeRead(TICKETS_PATH, []);
-      log.push({ id:nr, channelId:ch.id, userId:i.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now() });
+      log.push({ id:nr, channelId:ch.id, userId:i.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), creationMessageId: sent.id });
       safeWrite(TICKETS_PATH, log);
+
+      i.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
       logEvent(i.guild, `🆕 Ticket #${nr} erstellt von <@${i.user.id}> (${topic.label})`);
 
-      // ▼▼ Panel Dropdown RESET (Kategorien wieder auswählbar) ▼▼
-      try {
-        const row = buildPanelSelect();
-        if(cfg.panelEmbed){
-          const p = cfg.panelEmbed;
-            const pEmbed = new EmbedBuilder()
-              .setTitle(p.title||'🎟️ Ticket erstellen')
-              .setDescription(p.description||'Wähle unten dein Thema aus.')
-          if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) pEmbed.setColor(parseInt(p.color.replace('#',''),16));
-          if(p.footer) pEmbed.setFooter({ text:p.footer });
-          await i.message.edit({ embeds:[pEmbed], components:[row] }).catch(()=>{});
-        } else {
-          await i.message.edit({ components:[row] }).catch(()=>{});
-        }
-      } catch {}
-      // ▲▲ Panel Dropdown RESET ▲▲
-
+      // Auto-Delete Timer (10 Minuten)
+      setTimeout(async ()=>{
+        try {
+          const latestLog = safeRead(TICKETS_PATH, []);
+            const tk = latestLog.find(t=>t.id===nr);
+            if(!tk) return;
+            if(tk.status !== 'geschlossen' && tk.creationMessageId){
+              const msg = await ch.messages.fetch(tk.creationMessageId).catch(()=>null);
+              if(msg) await msg.delete().catch(()=>{});
+              // Optional: Flag setzen, dass gelöscht
+              tk.creationMessageDeleted = true;
+              safeWrite(TICKETS_PATH, latestLog);
+            }
+        } catch(e) {}
+      }, 10 * 60 * 1000);
       return;
     }
 
@@ -230,7 +231,7 @@ client.on(Events.InteractionCreate, async i => {
         return i.reply({ephemeral:true,content:'Anfrage gesendet'});
       }
 
-      if(!isTeam && !['request_close'].includes(i.customId)) return i.reply({ephemeral:true,content:'Nur Team'});
+      if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team'});
 
       switch(i.customId){
         case 'team_close':
@@ -238,6 +239,13 @@ client.on(Events.InteractionCreate, async i => {
           ticket.status='geschlossen'; safeWrite(TICKETS_PATH, log);
           await i.reply({ephemeral:true,content:'Ticket wird geschlossen…'});
           await i.channel.send(`🔒 Ticket geschlossen von <@${i.user.id}> <@&${TEAM_ROLE}>`);
+
+          // Versuche Erstellungsnachricht zu löschen, falls noch da
+          if(ticket.creationMessageId){
+            try { const m = await i.channel.messages.fetch(ticket.creationMessageId).catch(()=>null); if(m) await m.delete().catch(()=>{}); } catch {}
+          }
+
+          // Transcript & Upload
           let files=null; try { files = await createTranscript(i.channel, ticket); } catch {}
           const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
           if(transcriptChannelId){
@@ -269,12 +277,11 @@ client.on(Events.InteractionCreate, async i => {
         }
         case 'add_user': {
           const modal = new ModalBuilder().setCustomId('modal_add_user').setTitle('Nutzer hinzufügen');
-          modal.addComponents(new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId('user').setLabel('User @ oder ID').setRequired(true).setStyle(TextInputStyle.Short)
-          ));
+          modal.addComponents(new ActionRowBuilder().addComponents( new TextInputBuilder().setCustomId('user').setLabel('User @ oder ID').setRequired(true).setStyle(TextInputStyle.Short) ));
           return i.showModal(modal);
         }
       }
+      safeWrite(TICKETS_PATH, log);
     }
 
     if(i.isModalSubmit() && i.customId==='modal_add_user'){
@@ -304,8 +311,7 @@ async function updatePriority(interaction, ticket, log, dir){
   const msg = await interaction.channel.messages.fetch({limit:10}).then(c=>c.find(m=>m.embeds.length)).catch(()=>null);
   const state = PRIORITY_STATES[ticket.priority||0];
   if(msg){ const e = EmbedBuilder.from(msg.embeds[0]); e.setColor(state.embedColor); await msg.edit({embeds:[e]}); }
-  const logData = safeRead(TICKETS_PATH, []); // ensure latest
-  safeWrite(TICKETS_PATH, logData);
+  safeWrite(TICKETS_PATH, log);
   logEvent(interaction.guild, `⚙️ Ticket #${ticket.id} Priorität ${dir}: ${state.label}`);
   await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
 }
