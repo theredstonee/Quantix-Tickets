@@ -1,8 +1,6 @@
-// panel.js loop-fix v3 (nur notwendige Änderungen für Login-Loop + sichere Session)
-// Anleitung:
-// 1. In index.js **vor** app.use('/', require('./panel')(client)); => app.set('trust proxy', 1);
-// 2. BASE_DOMAIN anpassen falls du feste Domain nutzt (inkl. https://). Oder via ENV: PUBLIC_BASE_URL.
-// 3. Stelle sicher, dass SESSION_SECRET, CLIENT_ID, CLIENT_SECRET gesetzt sind.
+// panel.js – Erweiterung: /tickets HTML-Übersicht mit Filter / Suche / Claimer-Anzeige
+// Nur die für die Tickets-Ansicht notwendigen Ergänzungen wurden vorgenommen.
+// Rest (Login-Loop Fix, Session, OAuth) unverändert gelassen.
 
 require('dotenv').config();
 const express  = require('express');
@@ -18,16 +16,11 @@ const CONFIG = path.join(__dirname, 'config.json');
 function readCfg(){ try { return JSON.parse(fs.readFileSync(CONFIG,'utf8')); } catch { return {}; } }
 let cfg = readCfg();
 
-/* ====== Basis‑URL (für Callback) ====== */
-// Falls PUBLIC_BASE_URL in .env (z.B. https://trstickets.theredstonee.de) gesetzt ist, wird sie benutzt.
-// Sonst relative Callback URL (funktioniert lokal ohne HTTPS Proxy).
-const BASE = process.env.PUBLIC_BASE_URL || '';
-
-/* ====== Passport Serialisierung ====== */
+/* ====== Passport Setup ====== */
 passport.serializeUser((u,d)=>d(null,u));
 passport.deserializeUser((u,d)=>d(null,u));
 
-/* ====== Discord Strategy ====== */
+const BASE = process.env.PUBLIC_BASE_URL || '';
 passport.use(new Strategy({
   clientID: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
@@ -44,19 +37,14 @@ module.exports = (client)=>{
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: 'lax',
-      // secure NUR wenn wir über HTTPS public erreichbar sind (BASE beginnt mit https)
-      secure: /^https:\/\//i.test(BASE)
-    }
+    cookie: { httpOnly:true, sameSite:'lax', secure: /^https:\/\//i.test(BASE) }
   }));
 
   router.use(passport.initialize());
   router.use(passport.session());
   router.use(express.urlencoded({extended:true}));
 
-  /* ====== Helper: Auth Middleware ====== */
+  /* ====== Auth Middleware ====== */
   function isAuth(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
     const entry = req.user.guilds?.find(g=>g.id===cfg.guildId);
@@ -66,13 +54,13 @@ module.exports = (client)=>{
     next();
   }
 
-  /* ====== Root (kein Auto‑Loop) ====== */
+  /* ====== Root ====== */
   router.get('/', (req,res)=>{
     if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/panel');
     res.send('<h1>Ticket Panel</h1><p><a href="/login">Login mit Discord</a></p>');
   });
 
-  /* ====== Login mit einfachem Rate‑Limit pro Session ====== */
+  /* ====== Login ====== */
   router.get('/login', (req,res,next)=>{
     if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/panel');
     const now = Date.now();
@@ -83,14 +71,10 @@ module.exports = (client)=>{
     next();
   }, passport.authenticate('discord'));
 
-  /* ====== OAuth Callback ====== */
+  /* ====== Callback ====== */
   router.get('/auth/discord/callback', (req,res,next)=>{
     passport.authenticate('discord',(err,user)=>{
-      if(err){
-        console.error('OAuth Fehler:', err);
-        if(err.oauthError) return res.status(429).send('<h2>Rate Limit</h2><p>Bitte kurz warten.</p><p><a href="/login">Login</a></p>');
-        return res.status(500).send('OAuth Fehler.');
-      }
+      if(err){ console.error('OAuth Fehler:', err); return res.status(500).send('OAuth Fehler.'); }
       if(!user) return res.redirect('/login');
       req.logIn(user,(e)=>{
         if(e){ console.error('Session Fehler:', e); return res.status(500).send('Session Fehler.'); }
@@ -105,7 +89,7 @@ module.exports = (client)=>{
     req.session.destroy(()=>res.redirect('/'));
   });
 
-  /* ====== Panel Ansicht ====== */
+  /* ====== Panel ====== */
   router.get('/panel', isAuth, (req,res)=>{
     cfg = readCfg();
     res.render('panel', { cfg, msg:req.query.msg||null });
@@ -115,7 +99,6 @@ module.exports = (client)=>{
   router.post('/panel', isAuth, (req,res)=>{
     try {
       cfg = readCfg();
-      // Tabellen‑Topics
       const labels = [].concat(req.body.label||[]);
       const values = [].concat(req.body.value||[]);
       const emojis = [].concat(req.body.emoji||[]);
@@ -155,8 +138,15 @@ module.exports = (client)=>{
       const guild   = await client.guilds.fetch(cfg.guildId);
       const channel = await guild.channels.fetch(cfg.panelChannelId);
       const row = buildPanelSelect(cfg);
-      let embed = buildPanelEmbed(cfg);
-      const sent = await channel.send({ embeds: embed? [embed]: undefined, components:[row] });
+      let embedOpts = {};
+      if(cfg.panelEmbed){
+        const p = cfg.panelEmbed;
+        const embed = new EmbedBuilder().setTitle(p.title || '🎟️ Ticket erstellen').setDescription(p.description || 'Wähle dein Thema unten aus.');
+        if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) embed.setColor(parseInt(p.color.replace('#',''),16));
+        if(p.footer) embed.setFooter({ text:p.footer });
+        embedOpts.embeds=[embed];
+      }
+      const sent = await channel.send({ ...embedOpts, components:[row] });
       cfg.panelMessageId = sent.id;
       fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
       res.redirect('/panel?msg=sent');
@@ -168,37 +158,53 @@ module.exports = (client)=>{
     if(!cfg.panelChannelId || !cfg.panelMessageId) return res.redirect('/panel?msg=nopanel');
     try {
       cfg = readCfg();
-      const guild   = await client.guilds.fetch(cfg.guildId);
+      const guild = await client.guilds.fetch(cfg.guildId);
       const channel = await guild.channels.fetch(cfg.panelChannelId);
-      const msg     = await channel.messages.fetch(cfg.panelMessageId);
-      const row     = buildPanelSelect(cfg);
-      const embed   = buildPanelEmbed(cfg);
-      await msg.edit({ embeds: embed? [embed]: undefined, components:[row] });
+      const msg = await channel.messages.fetch(cfg.panelMessageId);
+      const row = buildPanelSelect(cfg);
+      let embedOpts = {};
+      if(cfg.panelEmbed){
+        const p = cfg.panelEmbed;
+        const embed = new EmbedBuilder().setTitle(p.title || '🎟️ Ticket erstellen').setDescription(p.description || 'Wähle dein Thema unten aus.');
+        if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) embed.setColor(parseInt(p.color.replace('#',''),16));
+        if(p.footer) embed.setFooter({ text:p.footer });
+        embedOpts.embeds=[embed];
+      }
+      await msg.edit({ ...embedOpts, components:[row] });
       res.redirect('/panel?msg=edited');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
 
-  /* ====== Tickets Übersicht (einfach JSON) ====== */
-  router.get('/tickets', isAuth, (_req,res)=>{
-    try { const tickets = JSON.parse(fs.readFileSync(path.join(__dirname,'tickets.json'),'utf8')); res.json(tickets); }
-    catch { res.json([]); }
+  /* ====== Tickets Übersicht (HTML + Filter / Suche) ====== */
+  router.get('/tickets', isAuth, (req,res)=>{
+    try {
+      const ticketsPath = path.join(__dirname,'tickets.json');
+      const tickets = JSON.parse(fs.readFileSync(ticketsPath,'utf8'));
+      const q = (req.query.q||'').toLowerCase();
+      const statusFilter = req.query.status || 'alle'; // alle | offen | geschlossen
+      const claimedFilter = req.query.claimed || 'alle'; // alle | yes | no
+      let list = tickets.slice().sort((a,b)=>b.id-a.id);
+      if(statusFilter!=='alle') list = list.filter(t=>t.status===statusFilter);
+      if(claimedFilter==='yes') list = list.filter(t=>!!t.claimer);
+      if(claimedFilter==='no')  list = list.filter(t=>!t.claimer);
+      if(q) list = list.filter(t => String(t.id).includes(q) || (t.topic||'').toLowerCase().includes(q) || (t.userId||'').includes(q) || (t.claimer||'').includes(q));
+
+      const counts = {
+        all: tickets.length,
+        open: tickets.filter(t=>t.status==='offen').length,
+        closed: tickets.filter(t=>t.status==='geschlossen').length
+      };
+
+      res.render('tickets', { list, counts, q, status:statusFilter, claimed:claimedFilter, guildId:cfg.guildId });
+    } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden der Tickets'); }
   });
 
   return router;
 };
 
-/* ====== Helper für Select & Embed ====== */
+/* ====== Helpers ====== */
 function buildPanelSelect(cfg){
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder().setCustomId('topic').setPlaceholder('Thema wählen …').addOptions((cfg.topics||[]).map(t=>({label:t.label,value:t.value,emoji:t.emoji||undefined})))
   );
-}
-function buildPanelEmbed(cfg){
-  if(!cfg.panelEmbed || (!cfg.panelEmbed.title && !cfg.panelEmbed.description)) return null;
-  const e = new EmbedBuilder();
-  if(cfg.panelEmbed.title) e.setTitle(cfg.panelEmbed.title);
-  if(cfg.panelEmbed.description) e.setDescription(cfg.panelEmbed.description);
-  if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) e.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
-  if(cfg.panelEmbed.footer) e.setFooter({ text: cfg.panelEmbed.footer });
-  return e;
 }

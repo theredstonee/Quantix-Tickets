@@ -2,64 +2,61 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <title>Tickets Übersicht (Erweitert)</title>
+  <title>Tickets Übersicht</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    body{max-width:1400px}
-    h1{margin-bottom:.3rem}
-    .toolbar{display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;margin-bottom:1rem}
-    .toolbar > *{flex:0 0 auto}
-    table{width:100%;font-size:.8rem}
-    th{white-space:nowrap;cursor:pointer;user-select:none}
-    th.sort-asc::after{content:" ↑"}
-    th.sort-desc::after{content:" ↓"}
-    .status-offen{color:#2bd94a;font-weight:600}
-    .status-geschlossen{color:#d92b2b;font-weight:600}
-    .prio-dot{font-size:1rem}
-    .pill{display:inline-block;padding:2px 6px;border-radius:12px;font-size:.65rem;background:#444;color:#fff;margin-right:4px}
-    .pill.green{background:#2bd94a;color:#072b00}
-    .pill.orange{background:#ff9900;color:#462900}
-    .pill.red{background:#d92b2b;color:#2b0000}
-    .filter-group{display:flex;gap:.4rem;flex-wrap:wrap}
-    .filter-group button{font-size:.65rem;padding:.35rem .6rem;margin:0}
-    .search-box{min-width:260px}
-    .section-head{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
-    .nowrap{white-space:nowrap}
-    .badge{background:#5865F2;color:#fff;border-radius:6px;padding:2px 6px;font-size:.6rem}
-    .claimed{background:#2b90d9}
-    .unclaimed{background:#777}
-    #empty{display:none;margin-top:1rem;font-style:italic;opacity:.7}
+    body { max-width: 1400px; }
+    table { width:100%; font-size:.8rem; }
+    th, td { vertical-align: middle; }
+    th { user-select:none; cursor:pointer; }
+    .status-offen { color:#2bd94a; font-weight:600; }
+    .status-geschlossen { color:#d92b2b; font-weight:600; }
+    .status-claimed { color:#ffa500; font-weight:600; }
+    .prio-dot { font-size:1rem; }
+    .toolbar { display:flex; gap:1rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
+    .toolbar > * { flex: 0 0 auto; }
+    .chips { display:flex; gap:.4rem; flex-wrap:wrap; }
+    .chip { padding:.25rem .6rem; border-radius:999px; background:#eee; font-size:.7rem; cursor:pointer; }
+    .chip.active { background:#5865F2; color:#fff; }
+    .badge { padding:.15rem .45rem; border-radius:.4rem; font-size:.65rem; background:#444; color:#fff; }
+    .prio-0 { color:#2bd94a; }
+    .prio-1 { color:#ff9900; }
+    .prio-2 { color:#d92b2b; }
+    .claimed { background:#ffb347; color:#000; }
+    .unclaimed { background:#888; }
+    .nowrap { white-space:nowrap; }
+    .small { font-size:.65rem; opacity:.7; }
+    .claim-cell { font-size:.65rem; }
+    .hidden { display:none !important; }
+    .refresh-btn { margin-left:auto; }
   </style>
 </head>
 <body class="container">
-  <header class="section-head">
-    <h1>🎫 Ticket Verlauf</h1>
-    <nav style="margin-left:auto"><a href="/panel">↩ Zurück zum Panel</a></nav>
+  <header>
+    <h1>🎫 Tickets Übersicht</h1>
+    <p class="small">Nur für Team-Mitglieder sichtbar. Live-Daten aus <code>tickets.json</code> (Reload / Auto-Refresh).</p>
+    <nav><a href="/panel">⬅️ Zurück zum Panel</a></nav>
   </header>
 
   <div class="toolbar">
-    <input id="search" class="search-box" type="search" placeholder="Suche (ID, Topic, User, Claimer, Status, Prio)">
-
-    <div class="filter-group" id="statusFilters" role="group" aria-label="Status Filter">
-      <button type="button" data-status="alle" class="secondary outline active">Alle</button>
-      <button type="button" data-status="offen" class="secondary outline">Offen</button>
-      <button type="button" data-status="geschlossen" class="secondary outline">Geschlossen</button>
+    <input type="text" id="search" placeholder="Suche (ID, Topic, User, Claimer)" style="min-width:260px;">
+    <div class="chips" id="statusFilter">
+      <span class="chip active" data-status="alle">Alle</span>
+      <span class="chip" data-status="offen">Offen</span>
+      <span class="chip" data-status="geschlossen">Geschlossen</span>
+      <span class="chip" data-status="claimed">Claimed</span>
+      <span class="chip" data-status="unclaimed">Unclaimed</span>
     </div>
-
-    <div class="filter-group" id="claimFilters" role="group" aria-label="Claim Filter">
-      <button type="button" data-claim="alle" class="secondary outline active">Alle</button>
-      <button type="button" data-claim="claimed" class="secondary outline">Claimed</button>
-      <button type="button" data-claim="unclaimed" class="secondary outline">Unclaimed</button>
+    <div class="chips" id="prioFilter">
+      <span class="chip active" data-prio="all">Prio: Alle</span>
+      <span class="chip" data-prio="0">🟢</span>
+      <span class="chip" data-prio="1">🟠</span>
+      <span class="chip" data-prio="2">🔴</span>
     </div>
-
-    <div class="filter-group" id="prioFilters" role="group" aria-label="Priorität Filter">
-      <button type="button" data-prio="alle" class="secondary outline active">Prio: Alle</button>
-      <button type="button" data-prio="0" class="secondary outline">🟢</button>
-      <button type="button" data-prio="1" class="secondary outline">🟠</button>
-      <button type="button" data-prio="2" class="secondary outline">🔴</button>
-    </div>
-
-    <label style="display:flex;align-items:center;gap:.35rem;font-size:.7rem"><input type="checkbox" id="autoRefresh" checked> Auto‑Refresh 30s</label>
+    <label style="display:flex;align-items:center;gap:.3rem;font-size:.7rem;">
+      <input type="checkbox" id="autoRefresh" checked> Auto‑Refresh (30s)
+    </label>
+    <button id="reload" class="contrast refresh-btn">🔄 Aktualisieren</button>
   </div>
 
   <table id="ticketsTable">
@@ -77,110 +74,106 @@
     </thead>
     <tbody></tbody>
   </table>
-  <p id="empty">Keine Tickets für diese Filter.</p>
 
-  <footer style="margin-top:2rem;font-size:.65rem;opacity:.6">Live Ansicht • Automatisches Neuladen wenn aktiviert • Daten gefiltert im Browser</footer>
+  <footer style="margin-top:2rem;font-size:.65rem;opacity:.6">
+    Ticket-Verlauf • Filtering & Sorting client-seitig • Letztes Update: <span id="lastUpdate">–</span>
+  </footer>
 
 <script>
 const tbody = document.querySelector('#ticketsTable tbody');
-let tickets = [];
-let sortKey = 'id';
-let sortDir = 'desc';
+let allTickets = [];
+let currentSort = { key: 'id', dir: 'desc' };
 
-async function fetchTickets(){
+async function loadTickets(){
   const res = await fetch('/tickets.json?_=' + Date.now()).catch(()=>null);
   if(!res || !res.ok){ return; }
-  tickets = await res.json();
+  allTickets = await res.json();
   render();
+  document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('de-DE');
 }
 
-function fmtDate(ts){
-  try{ return new Date(ts).toLocaleString('de-DE'); }catch{ return ts; }
+function sortTickets(list){
+  const { key, dir } = currentSort;
+  return list.sort((a,b)=>{
+    let va=a[key], vb=b[key];
+    if(key === 'timestamp'){ va=+va; vb=+vb; }
+    if(key === 'priority'){ va=+(va||0); vb=+(vb||0); }
+    if(key === 'id'){ va=+va; vb=+vb; }
+    if(va==null) va=''; if(vb==null) vb='';
+    if(typeof va === 'string') va=va.toLowerCase();
+    if(typeof vb === 'string') vb=vb.toLowerCase();
+    if(va<vb) return dir==='asc'? -1:1;
+    if(va>vb) return dir==='asc'? 1:-1;
+    return 0;
+  });
 }
+
+function activeStatus(){ return document.querySelector('#statusFilter .chip.active').dataset.status; }
+function activePrio(){ return document.querySelector('#prioFilter .chip.active').dataset.prio; }
 
 function render(){
-  const q = document.getElementById('search').value.toLowerCase();
-  const st = document.querySelector('#statusFilters .active').dataset.status;
-  const cl = document.querySelector('#claimFilters .active').dataset.claim;
-  const pr = document.querySelector('#prioFilters .active').dataset.prio;
-
-  let data = tickets.slice();
-  data.sort((a,b)=>{
-    const av = a[sortKey];
-    const bv = b[sortKey];
-    if(av==null && bv!=null) return 1;
-    if(bv==null && av!=null) return -1;
-    if(sortKey==='timestamp'||sortKey==='id'||sortKey==='priority'){
-      return (sortDir==='asc'? (av-bv):(bv-av));
-    }
-    return (''+av).localeCompare(''+bv) * (sortDir==='asc'?1:-1);
-  });
-
-  data = data.filter(t=>{
-    if(st!=='alle' && t.status!==st) return false;
-    if(cl==='claimed' && !t.claimer) return false;
-    if(cl==='unclaimed' && t.claimer) return false;
-    if(pr!=='alle' && (t.priority||0).toString()!==pr) return false;
-    if(q){
-      const hay = `${t.id} ${t.userId} ${t.topic} ${t.status} ${t.claimer||''} ${t.priority}`.toLowerCase();
-      if(!hay.includes(q)) return false;
-    }
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const st = activeStatus();
+  const pf = activePrio();
+  const filtered = allTickets.filter(t=>{
+    if(st==='offen' && t.status!=='offen') return false;
+    if(st==='geschlossen' && t.status!=='geschlossen') return false;
+    if(st==='claimed' && !t.claimer) return false;
+    if(st==='unclaimed' && t.claimer) return false;
+    if(pf!=='all' && String(t.priority||0)!==pf) return false;
+    const hay=(t.id+ ' ' + (t.topic||'') + ' ' + (t.userId||'') + ' ' + (t.claimer||'')).toLowerCase();
+    if(q && !hay.includes(q)) return false;
     return true;
   });
-
-  tbody.innerHTML = data.map(t=>{
+  const sorted = sortTickets(filtered.slice());
+  tbody.innerHTML = sorted.map(t=>{
+    const prio = t.priority||0;
     const dots=['🟢','🟠','🔴'];
-    const prio = dots[t.priority||0];
     const statusClass = 'status-' + t.status;
-    const claimBadge = t.claimer ? `<span class="badge claimed">${t.claimer}</span>` : `<span class="badge unclaimed">–</span>`;
     return `<tr>
       <td class="nowrap">#${t.id}</td>
-      <td class="prio-dot">${prio}</td>
-      <td class="${statusClass}">${t.status}</td>
-      <td>${t.topic}</td>
-      <td><code>${t.userId}</code></td>
-      <td>${claimBadge}</td>
-      <td>${fmtDate(t.timestamp)}</td>
+      <td class="prio-dot prio-${prio}">${dots[prio]}</td>
+      <td class="${statusClass}">${t.status}${t.claimer?'<span class="badge claimed" title="Claimed">C</span>':''}</td>
+      <td>${t.topic||''}</td>
+      <td><code>${t.userId||''}</code></td>
+      <td class="claim-cell">${t.claimer?'<code>'+t.claimer+'</code>':'<span class="badge unclaimed">—</span>'}</td>
+      <td class="nowrap">${new Date(t.timestamp).toLocaleString('de-DE')}</td>
       <td><a href="https://discord.com/channels/${t.guildId||''}/${t.channelId}" target="_blank">🔗</a></td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('empty').style.display = data.length? 'none':'block';
+    </tr>`; }).join('');
 }
 
-// Sort Handling
+// Sorting Events
 Array.from(document.querySelectorAll('th[data-sort]')).forEach(th=>{
   th.addEventListener('click',()=>{
-    const k = th.dataset.sort;
-    if(sortKey===k){ sortDir = (sortDir==='asc'?'desc':'asc'); }
-    else { sortKey=k; sortDir='asc'; }
-    document.querySelectorAll('th[data-sort]').forEach(x=>x.classList.remove('sort-asc','sort-desc'));
-    th.classList.add(sortDir==='asc'?'sort-asc':'sort-desc');
+    const key = th.dataset.sort;
+    if(currentSort.key===key){ currentSort.dir = currentSort.dir==='asc'?'desc':'asc'; }
+    else { currentSort.key=key; currentSort.dir='asc'; }
     render();
   });
 });
 
-// Filter button groups
-function bindFilter(groupId){
-  document.getElementById(groupId).addEventListener('click',e=>{
-    if(e.target.tagName!=='BUTTON') return;
-    Array.from(e.currentTarget.querySelectorAll('button')).forEach(b=>b.classList.remove('active'));
+// Filter Chips
+function chipGroup(id, attr){
+  document.getElementById(id).addEventListener('click', e=>{
+    if(!e.target.classList.contains('chip')) return;
+    [...e.currentTarget.children].forEach(c=>c.classList.remove('active'));
     e.target.classList.add('active');
     render();
   });
 }
-['statusFilters','claimFilters','prioFilters'].forEach(bindFilter);
+chipGroup('statusFilter','status');
+chipGroup('prioFilter','prio');
 
 // Suche
-document.getElementById('search').addEventListener('input',()=>render());
+search.addEventListener('input',()=>render());
+
+// Reload
+reload.addEventListener('click',()=>loadTickets());
 
 // Auto Refresh
-let interval = setInterval(()=>{ if(document.getElementById('autoRefresh').checked) fetchTickets(); },30000);
+setInterval(()=>{ if(document.getElementById('autoRefresh').checked) loadTickets(); }, 30000);
 
-document.getElementById('autoRefresh').addEventListener('change',()=>{ if(!autoRefresh.checked) return; fetchTickets(); });
-
-// Initial
-fetchTickets();
+loadTickets();
 </script>
 </body>
 </html>
