@@ -1,10 +1,7 @@
-// panel.js – HTML Ticket-Verlauf statt JSON (angepasst)
-// Änderungen:
-//  * /tickets liefert jetzt eine HTML-Seite (tickets.ejs) statt Roh-JSON
-//  * /tickets/data liefert weiterhin JSON (für Auto-Reload im Frontend)
-//  * /transcript/:id dient weiter zur Anzeige einzelner Transcripts (falls generiert)
-//  * Panel-/Auth-Logik ansonsten unverändert
-//  * FormFields + Topics Handling wie vorher
+// panel.js – HTML Ticket-Verlauf mit Nutzernamen statt IDs
+// Anpassung: /tickets rendert tickets.ejs und liefert zusätzlich eine Member-Map,
+// so dass im Frontend der Anzeigename (displayName oder Tag) statt der rohen userId / claimer Id erscheint.
+// Alle übrigen bestehenden Routen und Logik wurden unverändert aus deiner geposteten Version übernommen.
 
 require('dotenv').config();
 const express  = require('express');
@@ -122,7 +119,7 @@ module.exports = (client)=>{
       }
       cfg.topics = tableTopics;
 
-      // Form Fields aus JSON (immer direkt JSON Feld nutzen)
+      // Form Fields
       if(req.body.formFieldsJson){
         try { const ff=JSON.parse(req.body.formFieldsJson); if(Array.isArray(ff)) cfg.formFields=ff; } catch{}
       }
@@ -193,18 +190,19 @@ module.exports = (client)=>{
     return map;
   }
 
-  /* ====== Tickets HTML Übersicht ====== */
+  /* ====== Tickets HTML Übersicht (mit Membernamen) ====== */
   router.get('/tickets', isAuth, async (req,res)=>{
     try {
       cfg=readCfg();
       const tickets=loadTickets();
       const guild=await client.guilds.fetch(cfg.guildId);
       const memberMap=await buildMemberMap(guild,tickets);
+      // tickets.ejs muss die JS-Variablen einbinden und displayName statt ID verwenden
       res.render('tickets', { tickets: JSON.stringify(tickets), memberMap: JSON.stringify(memberMap), guildId: cfg.guildId });
     } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden'); }
   });
 
-  /* ====== Tickets JSON für Fetch ====== */
+  /* ====== Tickets JSON für Fetch (Auto-Reload) ====== */
   router.get('/tickets/data', isAuth, (_req,res)=>{ res.json(loadTickets()); });
 
   /* ====== Transcript Serve ====== */
