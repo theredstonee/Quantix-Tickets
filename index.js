@@ -1,9 +1,7 @@
-// --- index.js | Ticket‑Bot v6.3.2 (Channelname Priority-Fix) ---
+// --- index.js | Ticket‑Bot v6.3.2 (Channelname Priority-Fix FINAL) ---
 // Änderung NUR für zuverlässige Aktualisierung des Channel-Namens bei Priority-Wechseln.
-//  - Neu: Rename-Debounce + Queue, um Rate-Limits zu vermeiden (mehrfaches Hoch/Runter schnell hintereinander)
-//  - Funktion renameChannelIfNeeded() ruft jetzt scheduleChannelRename(), die sicherstellt,
-//    dass ein verpasster Rename nach einem Rate-Limit / schnellem Spam trotzdem ausgeführt wird.
-//  - Alle anderen Logiken UNVERÄNDERT.
+//  - Rename-Debounce + Queue (scheduleChannelRename / renameChannelIfNeeded)
+//  - Restliche Logik unverändert zu deiner Basisversion.
 
 require('dotenv').config();
 
@@ -125,19 +123,17 @@ function buildTicketEmbed(i, topic, nr){
   return e;
 }
 
-/* ================= Channel Name Helpers (MIT FIX) ================= */
+/* ================= Channel Name Helpers (FIX) ================= */
 function buildChannelName(ticketNumber, priorityIndex){
   const num = ticketNumber.toString().padStart(5,'0');
   const st  = PRIORITY_STATES[priorityIndex] || PRIORITY_STATES[0];
   return `${PREFIX}${st.dot}ticket-${num}`;
 }
 
-// --- Neuer Debounce / Queue Mechanismus ---
-// Zweck: Verhindert, dass schnelles Hoch/Runter-Spammen der Priorität zu
-// Discord-Rate-Limit führt und spätere Umbenennungen ausfallen.
+// Debounce + Queue für Channel-Renames
 const renameQueue = new Map(); // channelId -> { desiredName, timer, lastApplied }
-const RENAME_MIN_INTERVAL_MS = 3000; // Mindestabstand zwischen tatsächlichen setName-Aufrufen
-const RENAME_MAX_DELAY_MS    = 8000; // Spätestens nach diesem Delay erzwingen
+const RENAME_MIN_INTERVAL_MS = 3000;
+const RENAME_MAX_DELAY_MS    = 8000;
 
 function scheduleChannelRename(channel, desired){
   const entry = renameQueue.get(channel.id) || { desiredName: channel.name, timer:null, lastApplied:0 };
@@ -148,11 +144,8 @@ function scheduleChannelRename(channel, desired){
     const e = renameQueue.get(channel.id);
     if(!e) return;
     const need = e.desiredName;
-    // Falls wir kürzlich gesetzt haben und Name schon stimmt -> fertig
     if(channel.name === need){ e.lastApplied = Date.now(); clearTimeout(e.timer); e.timer=null; return; }
-    // Rate-Limit Abstand prüfen
     if(Date.now() - e.lastApplied < RENAME_MIN_INTERVAL_MS){
-      // Erneut versuchen später
       e.timer = setTimeout(apply, RENAME_MIN_INTERVAL_MS);
       return;
     }
@@ -160,19 +153,16 @@ function scheduleChannelRename(channel, desired){
       await channel.setName(need);
       e.lastApplied = Date.now();
     } catch(err){
-      // Bei Fehler (Rate-Limit etc.) nochmal später probieren, solange Name nicht stimmt
+      // erneuter Versuch nach 4s bei Fehler (Rate Limit etc.)
       e.timer = setTimeout(apply, 4000);
       return;
     }
-    // Wenn nach erfolgreichem Set der gewünschte Name unverändert bleibt -> Timer löschen
     if(e.desiredName === need){ clearTimeout(e.timer); e.timer=null; }
   };
 
-  // Wenn zu lange kein erfolgreicher Apply -> erzwingen
   if(now - entry.lastApplied > RENAME_MAX_DELAY_MS && !entry.timer){
-    entry.timer = setTimeout(apply, 250); // kurzfristig
+    entry.timer = setTimeout(apply, 250);
   } else {
-    // Leicht verzögert (debounce) bei unmittelbaren, schnellen Änderungen
     if(entry.timer) clearTimeout(entry.timer);
     entry.timer = setTimeout(apply, 500);
   }
@@ -181,7 +171,7 @@ function scheduleChannelRename(channel, desired){
 
 function renameChannelIfNeeded(channel, ticket){
   const desired = buildChannelName(ticket.id, ticket.priority||0);
-  if(channel.name === desired) return; // nichts nötig
+  if(channel.name === desired) return;
   scheduleChannelRename(channel, desired);
 }
 
@@ -248,26 +238,26 @@ client.on(Events.InteractionCreate, async i => {
       safeWrite(TICKETS_PATH, log);
       logEvent(i.guild, `🆕 Ticket #${nr} erstellt von <@${i.user.id}> (${topic.label})`);
 
-      // Panel Reset
+      // Panel Reset (Dropdown wieder unverändert anzeigen)
       try {
         cfg = safeRead(CFG_PATH, cfg);
         if(cfg.panelMessageId && cfg.panelChannelId){
           const panelChannel = await i.guild.channels.fetch(cfg.panelChannelId).catch(()=>null);
-            if(panelChannel){
-              const panelMsg = await panelChannel.messages.fetch(cfg.panelMessageId).catch(()=>null);
-              if(panelMsg){
-                const row = buildPanelSelect();
-                let panelEmbed = undefined;
-                if(cfg.panelEmbed && (cfg.panelEmbed.title || cfg.panelEmbed.description)){
-                  panelEmbed = new EmbedBuilder();
-                  if(cfg.panelEmbed.title) panelEmbed.setTitle(cfg.panelEmbed.title);
-                  if(cfg.panelEmbed.description) panelEmbed.setDescription(cfg.panelEmbed.description);
-                  if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) panelEmbed.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
-                  if(cfg.panelEmbed.footer) panelEmbed.setFooter({ text: cfg.panelEmbed.footer });
-                }
-                await panelMsg.edit({ embeds: panelEmbed? [panelEmbed]: panelMsg.embeds, components:[row] });
+          if(panelChannel){
+            const panelMsg = await panelChannel.messages.fetch(cfg.panelMessageId).catch(()=>null);
+            if(panelMsg){
+              const row = buildPanelSelect();
+              let panelEmbed = undefined;
+              if(cfg.panelEmbed && (cfg.panelEmbed.title || cfg.panelEmbed.description)){
+                panelEmbed = new EmbedBuilder();
+                if(cfg.panelEmbed.title) panelEmbed.setTitle(cfg.panelEmbed.title);
+                if(cfg.panelEmbed.description) panelEmbed.setDescription(cfg.panelEmbed.description);
+                if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) panelEmbed.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
+                if(cfg.panelEmbed.footer) panelEmbed.setFooter({ text: cfg.panelEmbed.footer });
               }
+              await panelMsg.edit({ embeds: panelEmbed? [panelEmbed]: panelMsg.embeds, components:[row] });
             }
+          }
         }
       } catch(e){ /* ignorieren */ }
       return;
@@ -292,15 +282,15 @@ client.on(Events.InteractionCreate, async i => {
         case 'close': {
           ticket.status='geschlossen'; safeWrite(TICKETS_PATH, log);
           await i.reply({ephemeral:true,content:'Ticket wird geschlossen…'});
-          await i.channel.send(`🔒 Ticket geschlossen von <@${i.user.id}> <@&${TEAM_ROLE}>`);
-          let files=null; try { files = await createTranscript(i.channel, ticket); } catch {}
-          const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
-          if(transcriptChannelId){
-            try { const tc = await i.guild.channels.fetch(transcriptChannelId); if(tc && files) tc.send({ content:`📁 Transcript Ticket #${ticket.id}`, files:[files.txt, files.html] }); } catch {}
-          }
-          logEvent(i.guild, `🔒 Ticket #${ticket.id} geschlossen von <@${i.user.id}>`);
-          setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
-          return;
+            await i.channel.send(`🔒 Ticket geschlossen von <@${i.user.id}> <@&${TEAM_ROLE}>`);
+            let files=null; try { files = await createTranscript(i.channel, ticket); } catch {}
+            const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
+            if(transcriptChannelId){
+              try { const tc = await i.guild.channels.fetch(transcriptChannelId); if(tc && files) tc.send({ content:`📁 Transcript Ticket #${ticket.id}`, files:[files.txt, files.html] }); } catch {}
+            }
+            logEvent(i.guild, `🔒 Ticket #${ticket.id} geschlossen von <@${i.user.id}>`);
+            setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
+            return;
         }
         case 'claim':
           ticket.claimer = i.user.id; safeWrite(TICKETS_PATH, log);
