@@ -1,7 +1,5 @@
-// panel.js loop-fix v3 + Tickets-Ansicht (minimal notwendige Ergänzungen)
-// Nur Änderungen für /tickets HTML Übersicht + Filter/Suche/Claimer.
-// Rest deines vorhandenen Codes UNVERÄNDERT gelassen, außer Hinzufügen der neuen Route
-// und einer kleinen Hilfsfunktion zum Laden der tickets.json.
+// panel.js loop-fix v3 (unverändert außer: /tickets HTML-Ansicht mit Namen + Suche/Filter)
+// Nur notwendige Ergänzungen für die Ticket-Übersicht. Rest des Codes NICHT verändert.
 
 require('dotenv').config();
 const express  = require('express');
@@ -151,15 +149,8 @@ module.exports = (client)=>{
       const guild   = await client.guilds.fetch(cfg.guildId);
       const channel = await guild.channels.fetch(cfg.panelChannelId);
       const row = buildPanelSelect(cfg);
-      let embedOpts = {};
-      if(cfg.panelEmbed){
-        const p = cfg.panelEmbed;
-        const embed = new EmbedBuilder().setTitle(p.title || '🎟️ Ticket erstellen').setDescription(p.description || 'Wähle dein Thema unten aus.');
-        if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) embed.setColor(parseInt(p.color.replace('#',''),16));
-        if(p.footer) embed.setFooter({ text:p.footer });
-        embedOpts.embeds=[embed];
-      }
-      const sent = await channel.send({ ...embedOpts, components:[row] });
+      let embed = buildPanelEmbed(cfg);
+      const sent = await channel.send({ embeds: embed? [embed]: undefined, components:[row] });
       cfg.panelMessageId = sent.id;
       fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
       res.redirect('/panel?msg=sent');
@@ -175,127 +166,59 @@ module.exports = (client)=>{
       const channel = await guild.channels.fetch(cfg.panelChannelId);
       const msg     = await channel.messages.fetch(cfg.panelMessageId);
       const row     = buildPanelSelect(cfg);
-      let embedOpts = {};
-      if(cfg.panelEmbed){
-        const p = cfg.panelEmbed;
-        const embed = new EmbedBuilder().setTitle(p.title || '🎟️ Ticket erstellen').setDescription(p.description || 'Wähle dein Thema unten aus.');
-        if(p.color && /^#?[0-9a-fA-F]{6}$/.test(p.color)) embed.setColor(parseInt(p.color.replace('#',''),16));
-        if(p.footer) embed.setFooter({ text:p.footer });
-        embedOpts.embeds=[embed];
-      }
-      await msg.edit({ ...embedOpts, components:[row] });
+      const embed   = buildPanelEmbed(cfg);
+      await msg.edit({ embeds: embed? [embed]: undefined, components:[row] });
       res.redirect('/panel?msg=edited');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
 
-  /* ==========================================================
-   * NEU: /tickets – HTML Übersicht mit Filter / Suche / Claimer
-   * (Minimal invasive Ergänzung – ersetzt NICHT die alte JSON Route,
-   *  sondern liefert HTML. Falls du die reine JSON Version brauchst,
-   *  ändere den Pfad dort z.B. auf /tickets.json.)
-   * ========================================================== */
-  router.get('/tickets', isAuth, (req,res)=>{
+  /* ====== Tickets Übersicht (HTML Ansicht mit Suche/Filter, User- & Claimer-Namen, Transcript-Links) ====== */
+  router.get('/tickets', isAuth, async (req,res)=>{
     try {
       const ticketsPath = path.join(__dirname,'tickets.json');
-      const tickets = JSON.parse(fs.readFileSync(ticketsPath,'utf8'));
+      const ticketsRaw = fs.readFileSync(ticketsPath,'utf8');
+      const tickets = ticketsRaw? JSON.parse(ticketsRaw): [];
 
       // Filter Parameter
-      const q = (req.query.q||'').toLowerCase();
-      const statusFilter  = req.query.status  || 'alle';      // alle | offen | geschlossen
-      const claimedFilter = req.query.claimed || 'alle';      // alle | yes | no
-      const prioFilter    = req.query.prio    || 'alle';      // alle | 0 | 1 | 2
+      const q = (req.query.q||'').toLowerCase(); // freie Suche
+      const statusFilter = (req.query.status||'alle').toLowerCase(); // offen | geschlossen | alle
+      const claimedFilter = (req.query.claimed||'alle').toLowerCase(); // yes | no | alle
+      const prioFilter = req.query.prio || 'alle'; // 0 | 1 | 2 | alle
 
-      // Grundliste (neueste zuerst)
-      let list = tickets.slice().sort((a,b)=>b.id - a.id);
+      // Kopie & Sortierung (neueste zuerst)
+      let list = tickets.slice().sort((a,b)=>b.id-a.id);
 
-      if(statusFilter !== 'alle')      list = list.filter(t=>t.status === statusFilter);
-      if(claimedFilter === 'yes')      list = list.filter(t=>!!t.claimer);
-      if(claimedFilter === 'no')       list = list.filter(t=>!t.claimer);
-      if(['0','1','2'].includes(prioFilter)) list = list.filter(t=>(t.priority||0).toString() === prioFilter);
-      if(q) list = list.filter(t =>
-        String(t.id).includes(q) ||
-        (t.topic||'').toLowerCase().includes(q) ||
-        (t.userId||'').includes(q) ||
-        (t.claimer||'').includes(q)
-      );
+      // Anwenden serverseitiger Filter (Basis)
+      if(statusFilter !== 'alle') list = list.filter(t=>t.status === statusFilter);
+      if(claimedFilter === 'yes') list = list.filter(t=>!!t.claimer);
+      if(claimedFilter === 'no')  list = list.filter(t=>!t.claimer);
+      if(prioFilter !== 'alle') list = list.filter(t=>(t.priority||0).toString() === prioFilter);
+      if(q) list = list.filter(t=> [t.id, t.topic, t.userId, t.claimer].filter(Boolean).some(v=>String(v).toLowerCase().includes(q)) );
 
+      // Benutzer-Namen (DisplayName oder Tag) auflösen
+      const guild = await client.guilds.fetch(cfg.guildId).catch(()=>null);
+      const neededIds = new Set();
+      list.forEach(t=>{ neededIds.add(t.userId); if(t.claimer) neededIds.add(t.claimer); });
+      const nameMap = {}; // id -> Anzeige
+      if(guild){
+        for(const id of neededIds){
+          try {
+            const m = await guild.members.fetch(id);
+            nameMap[id] = m.displayName || m.user.username || id;
+          } catch { nameMap[id] = id; }
+        }
+      }
+
+      // Counts für Kopfzeile (immer auf Basis aller Tickets)
       const counts = {
         all: tickets.length,
         open: tickets.filter(t=>t.status==='offen').length,
         closed: tickets.filter(t=>t.status==='geschlossen').length
       };
 
-      // Inline HTML (separate tickets.ejs wäre auch möglich – hier direkt für Minimaländerung)
-      res.send(`<!doctype html><html lang='de'><head><meta charset='utf-8'><title>Tickets Übersicht</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-<style>
-body{max-width:1300px}
-filter-bar{display:block;margin:.75rem 0}
-.badge{display:inline-block;padding:.25rem .65rem;border-radius:999px;background:#eee;font-size:.65rem;margin-right:.35rem}
-.badge.on{background:#3b82f6;color:#fff}
-.prio-dot{font-size:1.05rem}
-.status-offen{color:#2bd94a;font-weight:600}
-.status-geschlossen{color:#d92b2b;font-weight:600}
-.table-wrap{overflow-x:auto}
-.search-row{display:flex;gap:.75rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap}
-#tickets tbody tr.hide{display:none}
-.auto-info{font-size:.65rem;opacity:.6;margin-left:.5rem}
-</style></head><body class='container'>
-<h1>🎟️ Tickets Übersicht</h1>
-<p style='font-size:.8rem;opacity:.7'>Nur für Team-Mitglieder sichtbar. Live-Daten aus <code>tickets.json</code>.</p>
-<nav><a href='/panel'>⬅️ Zurück zum Panel</a></nav>
-
-<div class='search-row'>
-  <input id='search' type='text' placeholder='Suche (ID, Topic, User, Claimer)' value='${q.replace(/'/g,"&#39;")}' />
-  <label style='display:flex;align-items:center;gap:.4rem'><input type='checkbox' id='autoref' checked> <span class='auto-info'>Auto-Refresh (30s)</span></label>
-  <button id='refresh' type='button'>🔄 Aktualisieren</button>
-</div>
-<div class='search-row'>
-  <div id='statusFilters'>
-    ${['alle','offen','geschlossen'].map(s=>`<button data-s='${s}' class='statusBtn ${statusFilter===s?'secondary':''}'>${s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('')}
-  </div>
-  <div id='claimFilters'>
-    ${[['alle','Alle'],['yes','Claimed'],['no','Unclaimed']].map(([v,l])=>`<button data-c='${v}' class='claimBtn ${claimedFilter===v?'secondary':''}'>${l}</button>`).join('')}
-  </div>
-  <div id='prioFilters'>
-    ${['alle','0','1','2'].map(p=>`<button data-p='${p}' class='prioBtn ${prioFilter===p?'secondary':''}'>Prio: ${p==='alle'?'Alle':p}</button>`).join('')}
-  </div>
-</div>
-
-<p style='font-size:.7rem;opacity:.7'>Gesamt: <strong>${counts.all}</strong> • Offen: <strong>${counts.open}</strong> • Geschlossen: <strong>${counts.closed}</strong></p>
-<div class='table-wrap'>
-<table id='tickets'>
-  <thead><tr><th>#</th><th>Prio</th><th>Status</th><th>Topic</th><th>User</th><th>Claimer</th><th>Erstellt</th><th>Kanal</th></tr></thead>
-  <tbody>
-  ${list.map(t=>{ const dots=['🟢','🟠','🔴']; const prio=t.priority||0; return `<tr data-search='${t.id} ${t.topic||''} ${t.userId||''} ${t.claimer||''}'>
-    <td>#${t.id}</td>
-    <td class='prio-dot'>${dots[prio]}</td>
-    <td class='status-${t.status}'>${t.status}</td>
-    <td>${t.topic||''}</td>
-    <td><code>${t.userId}</code></td>
-    <td>${t.claimer?`<code>${t.claimer}</code>`:''}</td>
-    <td>${new Date(t.timestamp).toLocaleString('de-DE')}</td>
-    <td><a href='https://discord.com/channels/${cfg.guildId}/${t.channelId}' target='_blank'>🔗</a></td>
-  </tr>`; }).join('')}
-  </tbody>
-</table>
-</div>
-<footer style='margin-top:2rem;font-size:.65rem;opacity:.6'>Ticket-Verlauf • Client-Filter & Suche • Letztes Update: ${new Date().toLocaleTimeString('de-DE')}</footer>
-<script>
-const qIn=document.getElementById('search');
-qIn.addEventListener('input',()=>{const v=qIn.value.toLowerCase(); document.querySelectorAll('#tickets tbody tr').forEach(tr=>{const hay=tr.getAttribute('data-search').toLowerCase(); tr.classList.toggle('hide', !hay.includes(v));});});
-// Auto reload
-const auto=document.getElementById('autoref'); let iv=setInterval(()=>{ if(auto.checked) location.reload(); },30000);
-// Buttons rebuild query
-function buildQuery(k,v){ const url=new URL(location.href); if(v==='alle'||v===''){ url.searchParams.delete(k);} else { url.searchParams.set(k,v);} url.searchParams.delete('q'); return url.toString(); }
-// Status
-[...document.querySelectorAll('.statusBtn')].forEach(b=>b.addEventListener('click',()=>location.href=buildQuery('status', b.dataset.s)));
-[...document.querySelectorAll('.claimBtn')].forEach(b=>b.addEventListener('click',()=>location.href=buildQuery('claimed', b.dataset.c)));
-[...document.querySelectorAll('.prioBtn')].forEach(b=>b.addEventListener('click',()=>location.href=buildQuery('prio', b.dataset.p)));
-// Refresh Button
-document.getElementById('refresh').addEventListener('click',()=>location.reload());
-</script>
-</body></html>`);
+      // HTML direkt senden (keine extra EJS nötig)
+      res.setHeader('Content-Type','text/html; charset=utf-8');
+      res.end(renderTicketsHTML({ list, counts, q, statusFilter, claimedFilter, prioFilter, nameMap, guildId: cfg.guildId }));
     } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden der Tickets'); }
   });
 
@@ -316,4 +239,112 @@ function buildPanelEmbed(cfg){
   if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) e.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
   if(cfg.panelEmbed.footer) e.setFooter({ text: cfg.panelEmbed.footer });
   return e;
+}
+
+/* ====== HTML Renderer für Tickets ====== */
+function renderTicketsHTML({ list, counts, q, statusFilter, claimedFilter, prioFilter, nameMap, guildId }){
+  const esc = s=>String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  const dots = ['🟢','🟠','🔴'];
+  const now = new Date();
+  const opt = (val,label,cur)=>`<button data-status="${val}" class="tab ${cur===val?'active':''}" type="button">${label}</button>`;
+  const optClaim = (val,label,cur)=>`<button data-claimed="${val}" class="tab ${cur===val?'active':''}" type="button">${label}</button>`;
+  const optPrio = (val,label,cur)=>`<button data-prio="${val}" class="tab ${cur===val?'active':''}" type="button">${label}</button>`;
+
+  return `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Tickets Übersicht</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<style>
+body{max-width:1350px}
+:root{--accent:#4062ff}
+header h1{display:flex;align-items:center;gap:.6rem}
+.tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin:.75rem 0 1rem}
+.tab{background:#eef0f5;border:0;padding:.45rem .9rem;border-radius:999px;cursor:pointer;font-size:.75rem;line-height:1;font-weight:500}
+.tab.active{background:var(--accent);color:#fff}
+#refreshBar{background:#14202b;color:#fff;padding:.85rem 1.2rem;border-radius:6px;margin:.3rem 0 1.1rem;display:flex;align-items:center;justify-content:space-between}
+#ticketsTable{width:100%;font-size:.85rem}
+#ticketsTable th{white-space:nowrap}
+.badge{background:#e5e8ec;padding:.15rem .55rem;border-radius:4px;font-family:monospace;font-size:.7rem}
+.status-offen{color:#2bd94a;font-weight:600}
+.status-geschlossen{color:#d92b2b;font-weight:600}
+.prio{font-size:1rem}
+.controls{display:flex;flex-direction:column;gap:.7rem;margin-bottom:.5rem}
+.controls .row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.searchBox{flex:1 1 500px;min-width:300px}
+footer{margin:2.2rem 0 .8rem;font-size:.7rem;opacity:.55}
+.tag{padding:.25rem .55rem;border-radius:4px;background:#eef0f5;font-size:.65rem;margin-right:.35rem}
+tr.hide{display:none}
+.trans-link{font-size:1rem;text-decoration:none}
+</style></head><body class="container">
+<header>
+  <h1>🧾 Tickets Übersicht</h1>
+  <p style="font-size:.75rem;opacity:.7">Nur für Team‑Mitglieder sichtbar. Live‑Daten aus <code>tickets.json</code></p>
+  <p style="font-size:.7rem;opacity:.65">Gesamt: <strong>${counts.all}</strong> • Offen: <strong>${counts.open}</strong> • Geschlossen: <strong>${counts.closed}</strong></p>
+  <p><a href="/panel">⬅️ Zurück zum Panel</a></p>
+</header>
+<section class="controls">
+  <div class="row"><input id="search" class="searchBox" placeholder="Suche (ID, Topic, User, Claimer)" value="${esc(q)}" autocomplete="off"><label style="display:flex;align-items:center;gap:.4rem;font-size:.75rem"><input type="checkbox" id="auto" checked> Auto‑Refresh (30s)</label></div>
+  <div class="row tabs" id="statusTabs">
+    ${opt('alle','Alle',statusFilter)}${opt('offen','Offen',statusFilter)}${opt('geschlossen','Geschlossen',statusFilter)}
+    ${optClaim('alle','Claimed+Unclaimed',claimedFilter)}${optClaim('yes','Claimed',claimedFilter)}${optClaim('no','Unclaimed',claimedFilter)}
+    ${optPrio('alle','Prio: Alle',prioFilter)}${optPrio('0','🟢',prioFilter)}${optPrio('1','🟠',prioFilter)}${optPrio('2','🔴',prioFilter)}
+  </div>
+  <div id="refreshBar"><button id="manualRefresh" style="background:#1e2d3a;border:0;color:#fff;padding:.5rem 1rem;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:.5rem">🔄 Aktualisieren</button><span id="lastUpdate" style="font-size:.7rem;opacity:.75">Letztes Update: –</span></div>
+</section>
+<table id="ticketsTable"><thead><tr>
+  <th>#</th><th>Prio</th><th>Status</th><th>Topic</th><th>User</th><th>Claimer</th><th>Erstellt</th><th>Kanal</th><th>Transcript</th>
+</tr></thead><tbody>
+${list.map(t=>{
+  const prio = t.priority||0;
+  const statusClass = 'status-'+t.status;
+  const userName = nameMap[t.userId]||t.userId;
+  const claimerName = t.claimer? (nameMap[t.claimer]||t.claimer):'';
+  const transcriptHtml = path.join(__dirname,`transcript_${t.id}.html`);
+  const hasTranscript = fs.existsSync(transcriptHtml);
+  const created = new Date(t.timestamp);
+  const ts = created.toLocaleString('de-DE');
+  const searchStr = `${t.id} ${t.topic} ${userName} ${claimerName} ${t.userId} ${t.claimer||''}`.toLowerCase();
+  return `<tr data-status="${t.status}" data-claimed="${t.claimer? 'yes':'no'}" data-prio="${prio}" data-search="${esc(searchStr)}">
+    <td class="badge">${t.id}</td>
+    <td class="prio">${dots[prio]}</td>
+    <td class="${statusClass}">${t.status}</td>
+    <td>${esc(t.topic)}</td>
+    <td><span class="badge" title="${esc(t.userId)}">${esc(userName)}</span></td>
+    <td>${claimerName? `<span class="badge" title="${esc(t.claimer)}">${esc(claimerName)}</span>`:''}</td>
+    <td>${esc(ts)}</td>
+    <td><a href="https://discord.com/channels/${guildId}/${t.channelId}" target="_blank" title="Channel öffnen">🔗</a></td>
+    <td>${hasTranscript? `<a class="trans-link" href="/transcript/${t.id}" title="Transcript anzeigen" target="_blank">📄</a>`:''}</td>
+  </tr>`; }).join('\n')}
+</tbody></table>
+<footer>Ticket‑Verlauf • Filtering & Sorting client-seitig • Letztes Update: <span id="footerUpdate">–</span></footer>
+<script>
+// Client Filter / Suche (ohne neuen Request)
+const searchInput = document.getElementById('search');
+const statusTabs = document.getElementById('statusTabs');
+let curStatus='${statusFilter}', curClaim='${claimedFilter}', curPrio='${prioFilter}';
+function applyFilters(){
+  const q = searchInput.value.toLowerCase();
+  document.querySelectorAll('#ticketsTable tbody tr').forEach(tr=>{
+    const matchStatus = (curStatus==='alle') || tr.dataset.status===curStatus;
+    const matchClaim = (curClaim==='alle') || tr.dataset.claimed===curClaim;
+    const matchPrio = (curPrio==='alle') || tr.dataset.prio===curPrio;
+    const hay = tr.dataset.search;
+    const matchSearch = !q || hay.includes(q);
+    tr.classList.toggle('hide', !(matchStatus && matchClaim && matchPrio && matchSearch));
+  });
+}
+searchInput.addEventListener('input', applyFilters);
+statusTabs.addEventListener('click', e=>{
+  if(e.target.matches('[data-status]')){ curStatus=e.target.getAttribute('data-status'); document.querySelectorAll('[data-status].tab').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); applyFilters(); }
+  if(e.target.matches('[data-claimed]')){ curClaim=e.target.getAttribute('data-claimed'); document.querySelectorAll('[data-claimed].tab').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); applyFilters(); }
+  if(e.target.matches('[data-prio]')){ curPrio=e.target.getAttribute('data-prio'); document.querySelectorAll('[data-prio].tab').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); applyFilters(); }
+});
+applyFilters();
+// Refresh
+const auto = document.getElementById('auto');
+function setTimes(){ const ts=new Date().toLocaleString('de-DE'); document.getElementById('lastUpdate').textContent='Letztes Update: '+ts; document.getElementById('footerUpdate').textContent=ts; }
+setTimes();
+let iv=setInterval(()=>{ if(auto.checked) location.reload(); },30000);
+
+document.getElementById('manualRefresh').addEventListener('click', ()=>location.reload());
+</script>
+</body></html>`;
 }
