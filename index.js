@@ -1,7 +1,27 @@
-// --- index.js | Ticket‑Bot v6.3.2 (Channelname Priority-Fix FINAL) ---
-// Änderung NUR für zuverlässige Aktualisierung des Channel-Namens bei Priority-Wechseln.
-//  - Rename-Debounce + Queue (scheduleChannelRename / renameChannelIfNeeded)
-//  - Restliche Logik unverändert zu deiner Basisversion.
+// --- index.js | Ticket‑Bot v6.4 (Channelname Priority-Fix + Dynamische Formulare) ---
+// Neue Features ggü. deiner v6.3.2 FINAL:
+//  ✅ Dynamische Formular-Felder pro Topic (Modal bevor Channel erstellt wird)
+//  ✅ Formular-Konfiguration über config.json (cfg.formFields)
+//  ✅ Unterstützt bis zu 5 Felder (Discord Limit) – überschüssige werden ignoriert
+//  ✅ Felder können global oder topicspezifisch sein
+//  ✅ Erfasste Antworten werden dem Ticket-Embed als Felder hinzugefügt
+//  ✅ Speicherung der ausgefüllten Werte in tickets.json unter ticket.formData
+//  ✅ Channelname Priority-Fix (Rename Queue) unverändert beibehalten
+//
+//  Konfiguration (config.json -> formFields Beispiel):
+//  "formFields": [
+//     { "label": "Wie heißt du in Minecraft?", "id": "mcname", "style": "short", "required": true },
+//     { "label": "Welcher Dienst ist betroffen?", "id": "service", "style": "short", "required": true },
+//     { "label": "Beschreibe dein Anliegen", "id": "beschreibung", "style": "paragraph", "required": true },
+//     { "label": "Event ID (nur für event)", "id": "eventid", "style": "short", "required": false, "topic": "event" }
+//  ]
+//  Felder mit "topic" erscheinen nur für dieses Topic. Ohne "topic" = für alle Topics.
+//  Optional kann "topic" auch ein Array sein: "topic": ["bug","server"].
+//  style: "short" oder "paragraph". required: true/false. "id" optional (sonst auto f0,f1,...).
+//
+//  WICHTIG: Beim Auswählen eines Topics öffnet sich zuerst das Formular (falls Felder vorhanden). Erst nach Absenden wird der Channel erstellt.
+//
+//  Nur Code rund um Formulare wurde zusätzlich eingefügt.
 
 require('dotenv').config();
 
@@ -123,57 +143,33 @@ function buildTicketEmbed(i, topic, nr){
   return e;
 }
 
-/* ================= Channel Name Helpers (FIX) ================= */
+/* ================= Channel Name Helpers (FIX mit Queue) ================= */
 function buildChannelName(ticketNumber, priorityIndex){
   const num = ticketNumber.toString().padStart(5,'0');
   const st  = PRIORITY_STATES[priorityIndex] || PRIORITY_STATES[0];
   return `${PREFIX}${st.dot}ticket-${num}`;
 }
-
-// Debounce + Queue für Channel-Renames
+// Debounce + Queue
 const renameQueue = new Map(); // channelId -> { desiredName, timer, lastApplied }
 const RENAME_MIN_INTERVAL_MS = 3000;
 const RENAME_MAX_DELAY_MS    = 8000;
-
 function scheduleChannelRename(channel, desired){
   const entry = renameQueue.get(channel.id) || { desiredName: channel.name, timer:null, lastApplied:0 };
   entry.desiredName = desired;
   const now = Date.now();
-
   const apply = async () => {
-    const e = renameQueue.get(channel.id);
-    if(!e) return;
-    const need = e.desiredName;
+    const e = renameQueue.get(channel.id); if(!e) return; const need = e.desiredName;
     if(channel.name === need){ e.lastApplied = Date.now(); clearTimeout(e.timer); e.timer=null; return; }
-    if(Date.now() - e.lastApplied < RENAME_MIN_INTERVAL_MS){
-      e.timer = setTimeout(apply, RENAME_MIN_INTERVAL_MS);
-      return;
-    }
-    try {
-      await channel.setName(need);
-      e.lastApplied = Date.now();
-    } catch(err){
-      // erneuter Versuch nach 4s bei Fehler (Rate Limit etc.)
-      e.timer = setTimeout(apply, 4000);
-      return;
-    }
+    if(Date.now() - e.lastApplied < RENAME_MIN_INTERVAL_MS){ e.timer = setTimeout(apply, RENAME_MIN_INTERVAL_MS); return; }
+    try { await channel.setName(need); e.lastApplied = Date.now(); }
+    catch { e.timer = setTimeout(apply, 4000); return; }
     if(e.desiredName === need){ clearTimeout(e.timer); e.timer=null; }
   };
-
-  if(now - entry.lastApplied > RENAME_MAX_DELAY_MS && !entry.timer){
-    entry.timer = setTimeout(apply, 250);
-  } else {
-    if(entry.timer) clearTimeout(entry.timer);
-    entry.timer = setTimeout(apply, 500);
-  }
+  if(now - entry.lastApplied > RENAME_MAX_DELAY_MS && !entry.timer){ entry.timer = setTimeout(apply, 250); }
+  else { if(entry.timer) clearTimeout(entry.timer); entry.timer = setTimeout(apply, 500); }
   renameQueue.set(channel.id, entry);
 }
-
-function renameChannelIfNeeded(channel, ticket){
-  const desired = buildChannelName(ticket.id, ticket.priority||0);
-  if(channel.name === desired) return;
-  scheduleChannelRename(channel, desired);
-}
+function renameChannelIfNeeded(channel, ticket){ const desired = buildChannelName(ticket.id, ticket.priority||0); if(channel.name === desired) return; scheduleChannelRename(channel, desired); }
 
 /* ================= Logging ================= */
 async function logEvent(guild, text){
@@ -208,6 +204,25 @@ async function createTranscript(channel, ticket){
   return { txt: new AttachmentBuilder(txtPath), html: new AttachmentBuilder(htmlPath) };
 }
 
+/* ================= FormField Helper ================= */
+function getFormFieldsForTopic(topicValue){
+  const all = Array.isArray(cfg.formFields)? cfg.formFields : [];
+  return all.filter(f => {
+    if(!f) return false;
+    if(!f.topic) return true; // global
+    if(Array.isArray(f.topic)) return f.topic.includes(topicValue);
+    return f.topic === topicValue;
+  }).slice(0,5); // Discord Limit
+}
+function normalizeField(field, index){
+  return {
+    label: (field.label||`Feld ${index+1}`).substring(0,45),
+    id: (field.id||`f${index}`),
+    required: field.required? true:false,
+    style: field.style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short
+  };
+}
+
 /* ================= Interactions ================= */
 client.on(Events.InteractionCreate, async i => {
   try {
@@ -215,51 +230,41 @@ client.on(Events.InteractionCreate, async i => {
       return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(PANEL_FIXED_URL).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
     }
 
+    // Topic Auswahl -> ggf. Formular anzeigen
     if(i.isStringSelectMenu() && i.customId==='topic'){
       const topic = cfg.topics?.find(t=>t.value===i.values[0]);
       if(!topic) return i.reply({content:'Unbekanntes Thema',ephemeral:true});
-      const nr = nextTicket();
-      const ch = await i.guild.channels.create({
-        name: buildChannelName(nr,0),
-        type: ChannelType.GuildText,
-        parent: cfg.ticketCategoryId,
-        permissionOverwrites:[
-          { id:i.guild.id, deny: PermissionsBitField.Flags.ViewChannel },
-          { id:i.user.id, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-          { id:TEAM_ROLE, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
-        ]
-      });
-      const embed = buildTicketEmbed(i, topic, nr);
-      await ch.send({ embeds:[embed], components: buttonRows(false) });
-      i.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
 
-      const log = safeRead(TICKETS_PATH, []);
-      log.push({ id:nr, channelId:ch.id, userId:i.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now() });
-      safeWrite(TICKETS_PATH, log);
-      logEvent(i.guild, `🆕 Ticket #${nr} erstellt von <@${i.user.id}> (${topic.label})`);
+      const formFields = getFormFieldsForTopic(topic.value);
+      if(formFields.length){
+        // Modal anzeigen, Ticketnummer wird erst beim Submit erzeugt
+        const modal = new ModalBuilder().setCustomId(`modal_newticket:${topic.value}`).setTitle(`Ticket: ${topic.label}`.substring(0,45));
+        formFields.forEach((f,idx)=>{
+          const nf = normalizeField(f,idx);
+            modal.addComponents(new ActionRowBuilder().addComponents(
+              new TextInputBuilder()
+                .setCustomId(nf.id)
+                .setLabel(nf.label)
+                .setRequired(nf.required)
+                .setStyle(nf.style)
+            ));
+        });
+        return i.showModal(modal);
+      }
 
-      // Panel Reset (Dropdown wieder unverändert anzeigen)
-      try {
-        cfg = safeRead(CFG_PATH, cfg);
-        if(cfg.panelMessageId && cfg.panelChannelId){
-          const panelChannel = await i.guild.channels.fetch(cfg.panelChannelId).catch(()=>null);
-          if(panelChannel){
-            const panelMsg = await panelChannel.messages.fetch(cfg.panelMessageId).catch(()=>null);
-            if(panelMsg){
-              const row = buildPanelSelect();
-              let panelEmbed = undefined;
-              if(cfg.panelEmbed && (cfg.panelEmbed.title || cfg.panelEmbed.description)){
-                panelEmbed = new EmbedBuilder();
-                if(cfg.panelEmbed.title) panelEmbed.setTitle(cfg.panelEmbed.title);
-                if(cfg.panelEmbed.description) panelEmbed.setDescription(cfg.panelEmbed.description);
-                if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) panelEmbed.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
-                if(cfg.panelEmbed.footer) panelEmbed.setFooter({ text: cfg.panelEmbed.footer });
-              }
-              await panelMsg.edit({ embeds: panelEmbed? [panelEmbed]: panelMsg.embeds, components:[row] });
-            }
-          }
-        }
-      } catch(e){ /* ignorieren */ }
+      // Kein Formular -> sofort Ticket erstellen
+      return await createTicketChannel(i, topic, {});
+    }
+
+    // Modal Submit (neues Ticket)
+    if(i.isModalSubmit() && i.customId.startsWith('modal_newticket:')){
+      const topicValue = i.customId.split(':')[1];
+      const topic = cfg.topics?.find(t=>t.value===topicValue);
+      if(!topic) return i.reply({ephemeral:true,content:'Topic ungültig'});
+      const formFields = getFormFieldsForTopic(topic.value).map(normalizeField);
+      const answers = {};
+      formFields.forEach(f=>{ answers[f.id] = i.fields.getTextInputValue(f.id); });
+      await createTicketChannel(i, topic, answers);
       return;
     }
 
@@ -282,15 +287,15 @@ client.on(Events.InteractionCreate, async i => {
         case 'close': {
           ticket.status='geschlossen'; safeWrite(TICKETS_PATH, log);
           await i.reply({ephemeral:true,content:'Ticket wird geschlossen…'});
-            await i.channel.send(`🔒 Ticket geschlossen von <@${i.user.id}> <@&${TEAM_ROLE}>`);
-            let files=null; try { files = await createTranscript(i.channel, ticket); } catch {}
-            const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
-            if(transcriptChannelId){
-              try { const tc = await i.guild.channels.fetch(transcriptChannelId); if(tc && files) tc.send({ content:`📁 Transcript Ticket #${ticket.id}`, files:[files.txt, files.html] }); } catch {}
-            }
-            logEvent(i.guild, `🔒 Ticket #${ticket.id} geschlossen von <@${i.user.id}>`);
-            setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
-            return;
+          await i.channel.send(`🔒 Ticket geschlossen von <@${i.user.id}> <@&${TEAM_ROLE}>`);
+          let files=null; try { files = await createTranscript(i.channel, ticket); } catch {}
+          const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
+          if(transcriptChannelId){
+            try { const tc = await i.guild.channels.fetch(transcriptChannelId); if(tc && files) tc.send({ content:`📁 Transcript Ticket #${ticket.id}`, files:[files.txt, files.html] }); } catch {}
+          }
+          logEvent(i.guild, `🔒 Ticket #${ticket.id} geschlossen von <@${i.user.id}>`);
+          setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
+          return;
         }
         case 'claim':
           ticket.claimer = i.user.id; safeWrite(TICKETS_PATH, log);
@@ -332,7 +337,7 @@ client.on(Events.InteractionCreate, async i => {
         if(i.channel.permissionOverwrites.cache.get(id))
           return i.reply({ephemeral:true,content:'Schon Zugriff'});
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
-        await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`} );
+        await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`});
         logEvent(i.guild, `➕ User <@${id}> zu Ticket #${safeRead(TICKETS_PATH,[]).find(t=>t.channelId===i.channel.id)?.id||'?'} hinzugefügt`);
       } catch {
         return i.reply({ephemeral:true,content:'Fehler beim Hinzufügen'});
@@ -344,8 +349,66 @@ client.on(Events.InteractionCreate, async i => {
   }
 });
 
+/* ================= Ticket Erstellung (mit optionalen Formular-Daten) ================= */
+async function createTicketChannel(interaction, topic, formData){
+  const nr = nextTicket();
+  const ch = await interaction.guild.channels.create({
+    name: buildChannelName(nr,0),
+    type: ChannelType.GuildText,
+    parent: cfg.ticketCategoryId,
+    permissionOverwrites:[
+      { id:interaction.guild.id, deny: PermissionsBitField.Flags.ViewChannel },
+      { id:interaction.user.id, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+      { id:TEAM_ROLE, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+    ]
+  });
+  const embed = buildTicketEmbed(interaction, topic, nr);
+  // Formular-Ergebnisse als Fields anhängen
+  const formKeys = Object.keys(formData||{});
+  if(formKeys.length){
+    // Max 25 Felder
+    const fields = formKeys.slice(0,25).map(k=>({ name: k, value: formData[k] ? (formData[k].substring(0,1024) || '—') : '—', inline:false }));
+    embed.addFields(fields);
+  }
+  await ch.send({ embeds:[embed], components: buttonRows(false) });
+  // Nutzer informieren
+  if(interaction.isModalSubmit()){
+    await interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
+  } else {
+    interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
+  }
+  // Speichern
+  const log = safeRead(TICKETS_PATH, []);
+  log.push({ id:nr, channelId:ch.id, userId:interaction.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), formData });
+  safeWrite(TICKETS_PATH, log);
+  logEvent(interaction.guild, `🆕 Ticket #${nr} erstellt von <@${interaction.user.id}> (${topic.label})`);
+
+  // Panel Reset (Dropdown wiederherstellen)
+  try {
+    cfg = safeRead(CFG_PATH, cfg);
+    if(cfg.panelMessageId && cfg.panelChannelId){
+      const panelChannel = await interaction.guild.channels.fetch(cfg.panelChannelId).catch(()=>null);
+      if(panelChannel){
+        const panelMsg = await panelChannel.messages.fetch(cfg.panelMessageId).catch(()=>null);
+        if(panelMsg){
+          const row = buildPanelSelect();
+          let panelEmbed = undefined;
+          if(cfg.panelEmbed && (cfg.panelEmbed.title || cfg.panelEmbed.description)){
+            panelEmbed = new EmbedBuilder();
+            if(cfg.panelEmbed.title) panelEmbed.setTitle(cfg.panelEmbed.title);
+            if(cfg.panelEmbed.description) panelEmbed.setDescription(cfg.panelEmbed.description);
+            if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) panelEmbed.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
+            if(cfg.panelEmbed.footer) panelEmbed.setFooter({ text: cfg.panelEmbed.footer });
+          }
+          await panelMsg.edit({ embeds: panelEmbed? [panelEmbed]: panelMsg.embeds, components:[row] });
+        }
+      }
+    }
+  } catch(e){ /* ignorieren */ }
+}
+
+/* ================= Priority Update ================= */
 async function updatePriority(interaction, ticket, log, dir){
-  // Channel-Rename (queued, robust)
   renameChannelIfNeeded(interaction.channel, ticket);
   const msg = await interaction.channel.messages.fetch({limit:10}).then(c=>c.find(m=>m.embeds.length)).catch(()=>null);
   const state = PRIORITY_STATES[ticket.priority||0];
