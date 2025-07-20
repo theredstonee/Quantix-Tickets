@@ -1,10 +1,9 @@
-// --- index.js | Ticket‑Bot v6.3.2 (Loop-Fix kompatibel, Panel-Reset + feste Panel URL) ---
-// Änderungen ggü. deiner geposteten v6.3.1:
-//  1) Dashboard-Link fest auf https://trstickets.theredstonee.de/panel
-//  2) Panel-Dropdown Reset nach Themenauswahl bleibt erhalten
-//  3) Keine sonstigen Logik-Änderungen
-//  4) Kleine Robustheits-Prüfung beim Ticket-Panel Reset
-//  5) Nur minimal notwendige Anpassungen wie gewünscht
+// --- index.js | Ticket‑Bot v6.3.2 (Channelname Priority-Fix) ---
+// Änderung NUR für zuverlässige Aktualisierung des Channel-Namens bei Priority-Wechseln.
+//  - Neu: Rename-Debounce + Queue, um Rate-Limits zu vermeiden (mehrfaches Hoch/Runter schnell hintereinander)
+//  - Funktion renameChannelIfNeeded() ruft jetzt scheduleChannelRename(), die sicherstellt,
+//    dass ein verpasster Rename nach einem Rate-Limit / schnellem Spam trotzdem ausgeführt wird.
+//  - Alle anderen Logiken UNVERÄNDERT.
 
 require('dotenv').config();
 
@@ -126,15 +125,64 @@ function buildTicketEmbed(i, topic, nr){
   return e;
 }
 
-/* ================= Channel Name Helpers ================= */
+/* ================= Channel Name Helpers (MIT FIX) ================= */
 function buildChannelName(ticketNumber, priorityIndex){
   const num = ticketNumber.toString().padStart(5,'0');
   const st  = PRIORITY_STATES[priorityIndex] || PRIORITY_STATES[0];
   return `${PREFIX}${st.dot}ticket-${num}`;
 }
+
+// --- Neuer Debounce / Queue Mechanismus ---
+// Zweck: Verhindert, dass schnelles Hoch/Runter-Spammen der Priorität zu
+// Discord-Rate-Limit führt und spätere Umbenennungen ausfallen.
+const renameQueue = new Map(); // channelId -> { desiredName, timer, lastApplied }
+const RENAME_MIN_INTERVAL_MS = 3000; // Mindestabstand zwischen tatsächlichen setName-Aufrufen
+const RENAME_MAX_DELAY_MS    = 8000; // Spätestens nach diesem Delay erzwingen
+
+function scheduleChannelRename(channel, desired){
+  const entry = renameQueue.get(channel.id) || { desiredName: channel.name, timer:null, lastApplied:0 };
+  entry.desiredName = desired;
+  const now = Date.now();
+
+  const apply = async () => {
+    const e = renameQueue.get(channel.id);
+    if(!e) return;
+    const need = e.desiredName;
+    // Falls wir kürzlich gesetzt haben und Name schon stimmt -> fertig
+    if(channel.name === need){ e.lastApplied = Date.now(); clearTimeout(e.timer); e.timer=null; return; }
+    // Rate-Limit Abstand prüfen
+    if(Date.now() - e.lastApplied < RENAME_MIN_INTERVAL_MS){
+      // Erneut versuchen später
+      e.timer = setTimeout(apply, RENAME_MIN_INTERVAL_MS);
+      return;
+    }
+    try {
+      await channel.setName(need);
+      e.lastApplied = Date.now();
+    } catch(err){
+      // Bei Fehler (Rate-Limit etc.) nochmal später probieren, solange Name nicht stimmt
+      e.timer = setTimeout(apply, 4000);
+      return;
+    }
+    // Wenn nach erfolgreichem Set der gewünschte Name unverändert bleibt -> Timer löschen
+    if(e.desiredName === need){ clearTimeout(e.timer); e.timer=null; }
+  };
+
+  // Wenn zu lange kein erfolgreicher Apply -> erzwingen
+  if(now - entry.lastApplied > RENAME_MAX_DELAY_MS && !entry.timer){
+    entry.timer = setTimeout(apply, 250); // kurzfristig
+  } else {
+    // Leicht verzögert (debounce) bei unmittelbaren, schnellen Änderungen
+    if(entry.timer) clearTimeout(entry.timer);
+    entry.timer = setTimeout(apply, 500);
+  }
+  renameQueue.set(channel.id, entry);
+}
+
 function renameChannelIfNeeded(channel, ticket){
   const desired = buildChannelName(ticket.id, ticket.priority||0);
-  if(channel.name !== desired) channel.setName(desired).catch(()=>{});
+  if(channel.name === desired) return; // nichts nötig
+  scheduleChannelRename(channel, desired);
 }
 
 /* ================= Logging ================= */
@@ -294,7 +342,7 @@ client.on(Events.InteractionCreate, async i => {
         if(i.channel.permissionOverwrites.cache.get(id))
           return i.reply({ephemeral:true,content:'Schon Zugriff'});
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
-        await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`});
+        await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`} );
         logEvent(i.guild, `➕ User <@${id}> zu Ticket #${safeRead(TICKETS_PATH,[]).find(t=>t.channelId===i.channel.id)?.id||'?'} hinzugefügt`);
       } catch {
         return i.reply({ephemeral:true,content:'Fehler beim Hinzufügen'});
@@ -307,6 +355,7 @@ client.on(Events.InteractionCreate, async i => {
 });
 
 async function updatePriority(interaction, ticket, log, dir){
+  // Channel-Rename (queued, robust)
   renameChannelIfNeeded(interaction.channel, ticket);
   const msg = await interaction.channel.messages.fetch({limit:10}).then(c=>c.find(m=>m.embeds.length)).catch(()=>null);
   const state = PRIORITY_STATES[ticket.priority||0];
