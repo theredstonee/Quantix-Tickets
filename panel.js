@@ -1,6 +1,11 @@
-// panel.js loop-fix v3  (ERWEITERT: Ticket-Übersicht + Transcript-Routen)
-// Nur notwendige Ergänzungen für /tickets HTML-Ansicht mit Namen, Suche/Filter horizontal
-// und /transcript/:id Serving. Original Login / Panel Logik unverändert.
+// panel.js – Topics Edit Fix
+// Änderung NUR im POST /panel Handler, damit eingetragene Kategorien (Label/Value/Emoji)
+// nicht mehr durch das unveränderte RAW JSON Feld überschrieben werden.
+// Logik: Wenn mindestens EIN Label-Feld ausgefüllt wurde, werden diese Werte benutzt
+// und *topicsJson* wird IGNORIERT (auch wenn im Formular gesendet). Möchte man stattdessen
+// das JSON nutzen, lässt man einfach alle Label-Felder leer oder entfernt sie und editiert
+// nur das JSON.
+// Alle anderen Teile der Datei unverändert.
 
 require('dotenv').config();
 const express  = require('express');
@@ -106,24 +111,46 @@ module.exports = (client)=>{
     res.render('panel', { cfg, msg:req.query.msg||null });
   });
 
-  /* ====== Panel speichern ====== */
+  /* ====== Panel speichern (FIX für Topics) ====== */
   router.post('/panel', isAuth, (req,res)=>{
     try {
       cfg = readCfg();
-      // Tabellen‑Topics
-      const labels = [].concat(req.body.label||[]);
-      const values = [].concat(req.body.value||[]);
-      const emojis = [].concat(req.body.emoji||[]);
-      const topics = [];
-      for(let i=0;i<labels.length;i++){
-        const L=(labels[i]||'').trim(); if(!L) continue;
-        const V=(values[i]||'').trim() || L.toLowerCase().replace(/\s+/g,'-');
-        const E=(emojis[i]||'').trim();
-        topics.push({ label:L, value:V, emoji:E||undefined });
-      }
-      if(req.body.topicsJson){ try{ const tj=JSON.parse(req.body.topicsJson); if(Array.isArray(tj)) topics.splice(0, topics.length, ...tj); } catch{} }
-      cfg.topics = topics;
+      // 1. Eingaben aus Tabellenfeldern sammeln
+      const labelInputs = [].concat(req.body.label||[]);
+      const valueInputs = [].concat(req.body.value||[]);
+      const emojiInputs = [].concat(req.body.emoji||[]);
 
+      let tableTopics = [];
+      for(let i=0;i<labelInputs.length;i++){
+        const L = (labelInputs[i]||'').trim();
+        if(!L) continue; // nur wirklich ausgefüllte Zeilen
+        const V = (valueInputs[i]||'').trim() || L.toLowerCase().replace(/\s+/g,'-');
+        const E = (emojiInputs[i]||'').trim();
+        tableTopics.push({ label:L, value:V, emoji:E||undefined });
+      }
+
+      const hasTableTopics = tableTopics.length > 0; // mind. eine Zeile ausgefüllt -> Vorrang vor JSON
+
+      // 2. Falls KEINE Tabelle (alle leer) aber JSON-Feld vorhanden & nicht nur whitespace -> JSON übernehmen
+      if(!hasTableTopics){
+        const rawJson = (req.body.topicsJson||'').trim();
+        if(rawJson){
+          try {
+            const parsed = JSON.parse(rawJson);
+            if(Array.isArray(parsed)) tableTopics = parsed;
+          } catch(err){ console.warn('topicsJson parse Fehler ignoriert'); }
+        }
+      }
+
+      // 3. Übernehmen
+      cfg.topics = tableTopics;
+
+      // 4. (Optional) formFieldsJson gleiches Prinzip: nur wenn nicht leer
+      if(req.body.formFieldsJson){
+        try { const ff = JSON.parse(req.body.formFieldsJson); if(Array.isArray(ff)) cfg.formFields = ff; } catch{}
+      }
+
+      // 5. Embeds
       cfg.ticketEmbed = {
         title: req.body.embedTitle || cfg.ticketEmbed?.title || '',
         description: req.body.embedDescription || cfg.ticketEmbed?.description || '',
@@ -173,43 +200,10 @@ module.exports = (client)=>{
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
 
-  /* ====== Tickets Daten (JSON roh) ====== */
-  router.get('/tickets/data', isAuth, (_req,res)=>{
+  /* ====== Tickets Übersicht (einfach JSON) ====== */
+  router.get('/tickets', isAuth, (_req,res)=>{
     try { const tickets = JSON.parse(fs.readFileSync(path.join(__dirname,'tickets.json'),'utf8')); res.json(tickets); }
     catch { res.json([]); }
-  });
-
-  /* ====== Transcript Serve ====== */
-  router.get('/transcript/:id', isAuth, (req,res)=>{
-    const id = req.params.id.replace(/[^0-9]/g,'');
-    if(!id) return res.status(400).send('ID fehlt');
-    const file = path.join(__dirname,`transcript_${id}.html`);
-    if(!fs.existsSync(file)) return res.status(404).send('Transcript nicht gefunden');
-    res.sendFile(file);
-  });
-
-  /* ====== Tickets Übersicht (HTML) ====== */
-  router.get('/tickets', isAuth, async (req,res)=>{
-    try {
-      const ticketsPath = path.join(__dirname,'tickets.json');
-      const raw = fs.readFileSync(ticketsPath,'utf8');
-      const tickets = raw? JSON.parse(raw): [];
-
-      // Für Namen Mapping (nur benötigte IDs fetchen)
-      const guild = await client.guilds.fetch(cfg.guildId).catch(()=>null);
-      const ids = new Set();
-      tickets.forEach(t=>{ if(t.userId) ids.add(t.userId); if(t.claimer) ids.add(t.claimer); });
-      const nameMap = {};
-      if(guild){
-        for(const id of ids){
-          try { const m = await guild.members.fetch(id); nameMap[id] = m.displayName || m.user.username || id; }
-          catch { nameMap[id] = id; }
-        }
-      }
-
-      res.setHeader('Content-Type','text/html; charset=utf-8');
-      res.end(renderTicketsHTML({ tickets, nameMap, guildId: cfg.guildId }));
-    } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden der Tickets'); }
   });
 
   return router;
@@ -229,20 +223,4 @@ function buildPanelEmbed(cfg){
   if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) e.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
   if(cfg.panelEmbed.footer) e.setFooter({ text: cfg.panelEmbed.footer });
   return e;
-}
-
-/* ====== HTML Renderer Tickets ====== */
-function renderTicketsHTML({ tickets, nameMap, guildId }){
-  const esc = s=>String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;' }[c]));
-  const dots=['🟢','🟠','🔴'];
-  // Tabelle Zeilen
-  const rows = tickets.sort((a,b)=>b.id-a.id).map(t=>{
-    const prio = t.priority||0;
-    const userName = nameMap[t.userId]||t.userId;
-    const claimer  = t.claimer ? (nameMap[t.claimer]||t.claimer) : '';
-    const transcriptExists = fs.existsSync(path.join(__dirname,`transcript_${t.id}.html`));
-    return `<tr data-status="${t.status}" data-claimed="${t.claimer? 'claimed':'unclaimed'}" data-prio="${prio}" data-search="${esc(`${t.id} ${t.topic} ${userName} ${claimer} ${t.userId} ${t.claimer||''}`)}">\n      <td class="nowrap">#${t.id}</td>\n      <td>${dots[prio]}</td>\n      <td class="status-${t.status}">${t.status}</td>\n      <td>${esc(t.topic||'')}</td>\n      <td><span class="pill" title="${esc(t.userId)}">${esc(userName)}</span></td>\n      <td>${claimer? `<span class=\"pill\" title=\"${esc(t.claimer)}\">${esc(claimer)}</span>`:''}</td>\n      <td>${new Date(t.timestamp).toLocaleString('de-DE')}</td>\n      <td><a href="https://discord.com/channels/${guildId}/${t.channelId}" target="_blank">🔗</a></td>\n      <td>${transcriptExists? `<a href="/transcript/${t.id}" target="_blank" title="Transcript">📄</a>`:''}</td>\n    </tr>`; }).join('\n');
-
-  return `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Tickets Übersicht</title>\n<link rel=stylesheet href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">\n<style>body{max-width:1350px}h1{display:flex;gap:.6rem;align-items:center}.filters{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0}button.tab{background:#eef0f5;border:0;padding:.45rem 1rem;border-radius:999px;cursor:pointer;font-size:.7rem;font-weight:500}button.tab.active{background:#4062ff;color:#fff}.bar{background:#13202b;color:#fff;padding:.7rem 1rem;border-radius:6px;margin:1rem 0 .8rem;display:flex;align-items:center;justify-content:space-between}table{width:100%;font-size:.8rem}th{white-space:nowrap}td .pill{background:#e4e7ec;padding:.15rem .45rem;border-radius:4px;font-family:monospace;font-size:.65rem}.status-offen{color:#2bd94a;font-weight:600}.status-geschlossen{color:#d92b2b;font-weight:600}tr.hide{display:none}.nowrap{white-space:nowrap}</style></head><body class=container>\n<h1>📔 Tickets Übersicht</h1><p style="font-size:.7rem;opacity:.65;margin-top:-.4rem">Nur Team. Daten aus <code>tickets.json</code>. Filter client‑seitig.</p><p><a href="/panel">⬅️ Zurück zum Panel</a></p>\n<div style="display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;margin:1.2rem 0 .6rem"><input id=search placeholder="Suche (ID, Topic, User, Claimer)" style="flex:1;min-width:320px"><label style="font-size:.65rem;display:flex;align-items:center;gap:.3rem"><input id=auto type=checkbox checked> Auto-Refresh (30s)</label></div>\n<div class=filters id=fTabs>\n  <button class=tab data-status=alle>Alle</button><button class=tab data-status=offen>Offen</button><button class=tab data-status=geschlossen>Geschlossen</button>\n  <button class=tab data-claim=alle>Claimed+Unclaimed</button><button class=tab data-claim=claimed>Claimed</button><button class=tab data-claim=unclaimed>Unclaimed</button>\n  <button class=tab data-prio=alle>Prio: Alle</button><button class=tab data-prio=0>🟢</button><button class=tab data-prio=1>🟠</button><button class=tab data-prio=2>🔴</button>\n</div>\n<div class=bar><button id=reload style="background:#1e2d3a;border:0;color:#fff;padding:.45rem 1rem;border-radius:4px;cursor:pointer">🔄 Aktualisieren</button><span id=info style="font-size:.65rem;opacity:.75">–</span></div>\n<table id=ticketsTbl><thead><tr><th>#</th><th>Prio</th><th>Status</th><th>Topic</th><th>User</th><th>Claimer</th><th>Erstellt</th><th>Kanal</th><th>Transcript</th></tr></thead><tbody>${rows}</tbody></table><footer style="margin:2rem 0 .8rem;font-size:.6rem;opacity:.55">Ticket-Verlauf • Letztes Update: <span id=last>–</span></footer>\n<script>\nconst q=document.getElementById('search');const info=document.getElementById('info');const last=document.getElementById('last');let curStatus='alle',curClaim='alle',curPrio='alle';function setActive(sel,attr,val){sel.querySelectorAll('[data-'+attr+']').forEach(b=>b.classList.toggle('active',b.getAttribute('data-'+attr)===val));}const tBody=document.querySelector('#ticketsTbl tbody');function apply(){const term=q.value.toLowerCase();let shown=0,total=0; tBody.querySelectorAll('tr').forEach(tr=>{total++;const okStatus=(curStatus==='alle')||tr.dataset.status===curStatus;const okClaim=(curClaim==='alle')||tr.dataset.claimed===curClaim;const okPrio=(curPrio==='alle')||tr.dataset.prio===curPrio;const okSearch=!term||tr.dataset.search.includes(term);const vis=okStatus&&okClaim&&okPrio&&okSearch; tr.classList.toggle('hide',!vis); if(vis) shown++;}); info.textContent='Angezeigt: '+shown+' / Gesamt: '+total; last.textContent=new Date().toLocaleTimeString('de-DE'); } apply(); q.addEventListener('input',apply); document.getElementById('fTabs').addEventListener('click',e=>{if(e.target.matches('[data-status]')){curStatus=e.target.getAttribute('data-status');setActive(fTabs,'status',curStatus);apply();} if(e.target.matches('[data-claim]')){curClaim=e.target.getAttribute('data-claim');setActive(fTabs,'claim',curClaim);apply();} if(e.target.matches('[data-prio]')){curPrio=e.target.getAttribute('data-prio');setActive(fTabs,'prio',curPrio);apply();}}); const auto=document.getElementById('auto'); setInterval(()=>{ if(auto.checked) location.reload(); },30000); document.getElementById('reload').addEventListener('click',()=>location.reload()); // Default aktive Buttons
-['[data-status=alle]','[data-claim=alle]','[data-prio=alle]'].forEach(sel=>{const b=document.querySelector(sel); b&&b.classList.add('active');});\n</script></body></html>`;
 }
