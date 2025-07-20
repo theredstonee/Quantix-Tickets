@@ -5,18 +5,27 @@
   <title>Ticket‑Bot Panel</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    body { max-width: 1200px; }
-    table { width:100%; }
+    body { max-width: 1250px; }
+    table { width:100%; border-collapse:collapse; }
+    table th, table td { vertical-align:middle; }
     table input { width:100%; }
     .grid { display:flex; flex-wrap:wrap; gap:1.5rem; }
-    fieldset { flex:1 1 360px; min-width:340px; }
-    textarea { width:100%; font-family: monospace; }
-    .bad { border:1px solid #c33; padding:.5rem .75rem; }
-    .good { border:1px solid #2b7; padding:.5rem .75rem; }
+    fieldset { flex:1 1 370px; min-width:340px; }
+    textarea { width:100%; font-family: monospace; resize:vertical; }
+    .bad { border:1px solid #c33; padding:.55rem .8rem; border-radius:4px; }
+    .good { border:1px solid #2b7; padding:.55rem .8rem; border-radius:4px; }
     .actions form { display:inline-block; margin-right:1rem; }
     footer { margin-top:3rem; font-size:.75rem; opacity:.6; }
     .placeholder-list code { margin-right:.4rem; }
-    .nav-extra { margin-top:2rem; }
+    .row-handle { white-space:nowrap; text-align:center; }
+    .del-btn { background:#e55353; border:0; color:#fff; padding:.35rem .6rem; font-size:.7rem; border-radius:4px; cursor:pointer; }
+    .del-btn:hover { background:#c53d3d; }
+    .add-btn { margin-top:.6rem; }
+    .soft-note { font-size:.7rem; opacity:.65; }
+    .table-wrapper { max-height:420px; overflow:auto; }
+    .dragging { opacity:.45; }
+    .drag-handle { cursor:grab; user-select:none; font-size:.9rem; opacity:.65; }
+    .drag-placeholder { height:40px; outline:2px dashed #888; margin:2px 0; }
   </style>
 </head>
 <body class="container">
@@ -28,36 +37,43 @@
   <% if (msg==='nopanel'){ %><p class="bad">⚠️ Keine gespeicherte Panel‑Nachricht vorhanden.</p><% } %>
   <% if (msg==='error')  { %><p class="bad">❌ Fehler beim Vorgang – Konsole prüfen.</p><% } %>
 
-  <form method="POST" autocomplete="off">
+  <form method="POST" autocomplete="off" id="panelForm">
     <div class="grid">
 
       <!-- Kategorien -->
       <fieldset>
         <legend>Kategorien (Topics)</legend>
-        <table>
-          <thead>
-            <tr><th>Label</th><th>Value</th><th>Emoji</th></tr>
-          </thead>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th style="width:34px"></th><th>Label*</th><th>Value</th><th style="width:110px">Emoji</th><th style="width:70px">Löschen</th></tr>
+            </thead>
             <tbody id="rows">
-            <% (cfg.topics||[]).forEach(t => { %>
-              <tr>
+              <% (cfg.topics||[]).forEach((t,i) => { %>
+              <tr draggable="true">
+                <td class="row-handle"><span class="drag-handle" title="Reihenfolge ziehen">↕</span></td>
                 <td><input name="label" value="<%= t.label %>" required></td>
-                <td><input name="value" value="<%= t.value %>"></td>
-                <td><input name="emoji" value="<%= t.emoji %>"></td>
+                <td><input name="value" value="<%= t.value %>" placeholder="auto aus Label"></td>
+                <td><input name="emoji" value="<%= t.emoji || '' %>" placeholder="😀"></td>
+                <td class="row-handle"><button type="button" class="del-btn" onclick="deleteRow(this)" title="Zeile entfernen">✖</button></td>
               </tr>
-            <% }) %>
+              <% }) %>
             </tbody>
-        </table>
-        <button type="button" onclick="addRow()">➕ Zeile</button>
-        <p style="font-size:.75rem;opacity:.7;margin-top:.5rem">
-          * <b>Value</b> leer ⇒ wird automatisch aus Label (klein) generiert.
+          </table>
+        </div>
+        <button type="button" class="add-btn" onclick="addRow()">➕ Zeile</button>
+        <p class="soft-note" style="margin-top:.5rem">
+          * <b>Label</b> Pflicht. Leere Zeilen oder gelöschte werden ignoriert.
+          Ist <b>Value</b> leer, wird automatisch <code>label-klein-mit-bindestrichen</code> generiert.
         </p>
+        <p class="soft-note">Reihenfolge kannst du per ↕ ziehen – wird beim Speichern übernommen.</p>
+        <p class="soft-note"><b>Wichtig:</b> Wenn mind. eine Label-Zeile existiert, überschreibt das die JSON Topics unten.</p>
       </fieldset>
 
       <!-- Ticket Embed -->
       <fieldset>
         <legend>Ticket Embed Vorlage</legend>
-        <p class="placeholder-list" style="font-size:.75rem">
+        <p class="placeholder-list soft-note">
           Platzhalter:
           <code>{userMention}</code>
           <code>{userId}</code>
@@ -69,7 +85,7 @@
           <input name="embedTitle" value="<%= cfg.ticketEmbed?.title || '' %>">
         </label>
         <label>Beschreibung
-          <textarea name="embedDescription" rows="6"><%= cfg.ticketEmbed?.description || '' %></textarea>
+          <textarea name="embedDescription" rows="7"><%= cfg.ticketEmbed?.description || '' %></textarea>
         </label>
         <label>Farbe (Hex)
           <input name="embedColor" value="<%= cfg.ticketEmbed?.color || '#2b90d9' %>" placeholder="#2b90d9">
@@ -86,7 +102,7 @@
           <input name="panelTitle" value="<%= cfg.panelEmbed?.title || '' %>">
         </label>
         <label>Panel Beschreibung
-          <textarea name="panelDescription" rows="5"><%= cfg.panelEmbed?.description || '' %></textarea>
+          <textarea name="panelDescription" rows="6"><%= cfg.panelEmbed?.description || '' %></textarea>
         </label>
         <label>Panel Farbe (Hex)
           <input name="panelColor" value="<%= cfg.panelEmbed?.color || '#5865F2' %>" placeholder="#5865F2">
@@ -99,14 +115,14 @@
       <!-- RAW JSON -->
       <fieldset>
         <legend>RAW JSON (Optional)</legend>
-        <p style="font-size:.75rem;opacity:.8">
-          Nur nutzen, wenn du komplette Arrays manuell pflegen willst.
+        <p class="soft-note">
+          Dieses Feld wird <b>nur verwendet</b>, wenn <u>keine</u> Label-Zeilen ausgefüllt sind. Sonst wird es ignoriert.
         </p>
         <label>Topics (JSON)
-          <textarea name="topicsJson" rows="8"><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
+          <textarea name="topicsJson" rows="9" id="topicsJson"><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
         </label>
         <label>FormFields (JSON)
-          <textarea name="formFieldsJson" rows="8"><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
+          <textarea name="formFieldsJson" rows="9"><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
         </label>
       </fieldset>
 
@@ -129,23 +145,64 @@
     </form>
   </div>
 
-  <div class="nav-extra">
-    <a href="/tickets" role="button" class="secondary">📜 Ticket Verlauf / History</a>
-  </div>
-
   <footer>
-    <p>Ticket‑Bot Panel • Änderungen werden sofort in <code>config.json</code> gespeichert • Stelle sicher, dass der Bot Schreibrechte hat.</p>
+    <p>Ticket‑Bot Panel • Änderungen werden in <code>config.json</code> gespeichert • Prüfe Schreibrechte des Bots.</p>
   </footer>
 
-  <script>
-    function addRow(){
-      const tr=document.createElement('tr');
-      tr.innerHTML = `
-        <td><input name="label" required></td>
-        <td><input name="value"></td>
-        <td><input name="emoji"></td>`;
-      document.getElementById('rows').appendChild(tr);
+<script>
+  /* ===== Zeile hinzufügen ===== */
+  function addRow(data={label:'',value:'',emoji:''}){
+    const tr=document.createElement('tr');
+    tr.draggable=true;
+    tr.innerHTML=`<td class="row-handle"><span class="drag-handle" title="Ziehen">↕</span></td>
+      <td><input name="label" value="${escapeHtml(data.label||'')}" ${data._required===false?'':'required'}></td>
+      <td><input name="value" value="${escapeHtml(data.value||'')}" placeholder="auto"></td>
+      <td><input name="emoji" value="${escapeHtml(data.emoji||'')}" placeholder="😀"></td>
+      <td class="row-handle"><button type="button" class="del-btn" onclick="deleteRow(this)">✖</button></td>`;
+    document.getElementById('rows').appendChild(tr);
+  }
+
+  /* ===== Zeile löschen ===== */
+  function deleteRow(btn){
+    const tr = btn.closest('tr');
+    tr?.parentNode.removeChild(tr);
+    syncJsonPreview();
+  }
+
+  /* ===== Escape Helper ===== */
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+
+  /* ===== Drag & Drop Reihenfolge ===== */
+  let dragEl=null; let placeholder=null;
+  const tbody=document.getElementById('rows');
+  tbody.addEventListener('dragstart',e=>{
+    const tr=e.target.closest('tr'); if(!tr) return; dragEl=tr; tr.classList.add('dragging'); placeholder=document.createElement('tr'); placeholder.className='drag-placeholder'; tr.after(placeholder); e.dataTransfer.effectAllowed='move';
+  });
+  tbody.addEventListener('dragover',e=>{
+    e.preventDefault(); if(!placeholder) return; const y=e.clientY; const rows=[...tbody.querySelectorAll('tr:not(.dragging)')]; let after=null; for(const r of rows){ const box=r.getBoundingClientRect(); if(y<box.top+box.height/2){ after=r; break; } } if(after) tbody.insertBefore(placeholder,after); else tbody.appendChild(placeholder);
+  });
+  tbody.addEventListener('dragend',()=>{ if(!placeholder||!dragEl) return; placeholder.replaceWith(dragEl); dragEl.classList.remove('dragging'); dragEl=null; placeholder=null; syncJsonPreview(); });
+
+  /* ===== JSON Vorschau synchron halten (optional) ===== */
+  function syncJsonPreview(){
+    const labels=[...document.querySelectorAll('#rows input[name="label"]')].map(i=>i.value.trim());
+    if(labels.some(l=>l)){ // nur wenn mind. eine Zeile -> Vorschau aktualisieren
+      const values=[...document.querySelectorAll('#rows input[name="value"]')].map(i=>i.value.trim());
+      const emojis=[...document.querySelectorAll('#rows input[name="emoji"]')].map(i=>i.value.trim());
+      const arr=[]; for(let i=0;i<labels.length;i++){ const L=labels[i]; if(!L) continue; const V=values[i]||L.toLowerCase().replace(/\s+/g,'-'); const E=emojis[i]; arr.push(E?{label:L,value:V,emoji:E}:{label:L,value:V}); }
+      document.getElementById('topicsJson').value = JSON.stringify(arr,null,2); // reine Info: server nutzt Tabelle direkt
     }
-  </script>
+  }
+  document.getElementById('rows').addEventListener('input', syncJsonPreview);
+
+  // Beim Abschicken: leere Zeilen entfernen (falls required zwischenzeitlich leer)
+  document.getElementById('panelForm').addEventListener('submit',()=>{
+    // Entferne komplett leere Label-Zeilen aus dem DOM -> server erhält sie nicht
+    [...document.querySelectorAll('#rows tr')].forEach(tr=>{
+      const label=tr.querySelector('input[name="label"]').value.trim();
+      if(!label) tr.remove();
+    });
+  });
+</script>
 </body>
 </html>
