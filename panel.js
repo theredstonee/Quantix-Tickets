@@ -1,7 +1,7 @@
-// panel.js – HTML Ticket-Verlauf mit Nutzernamen statt IDs
-// Anpassung: /tickets rendert tickets.ejs und liefert zusätzlich eine Member-Map,
-// so dass im Frontend der Anzeigename (displayName oder Tag) statt der rohen userId / claimer Id erscheint.
-// Alle übrigen bestehenden Routen und Logik wurden unverändert aus deiner geposteten Version übernommen.
+// panel.js – HTML Ticket-Verlauf mit Namen statt IDs (angepasst)
+// Anpassung: /tickets Rendert tickets.ejs (musst du haben) UND liefert zusätzlich eine Member-Map,
+// damit im Frontend User- und Claimer-Namen (Anzeige-Namen) statt reiner IDs erscheinen.
+// Rest deiner zuletzt geposteten Datei bleibt erhalten – nur Tickets-Routen ersetzt/ergänzt.
 
 require('dotenv').config();
 const express  = require('express');
@@ -190,19 +190,18 @@ module.exports = (client)=>{
     return map;
   }
 
-  /* ====== Tickets HTML Übersicht (mit Membernamen) ====== */
+  /* ====== Tickets HTML Übersicht (NAMEN statt IDs) ====== */
   router.get('/tickets', isAuth, async (req,res)=>{
     try {
       cfg=readCfg();
       const tickets=loadTickets();
       const guild=await client.guilds.fetch(cfg.guildId);
       const memberMap=await buildMemberMap(guild,tickets);
-      // tickets.ejs muss die JS-Variablen einbinden und displayName statt ID verwenden
       res.render('tickets', { tickets: JSON.stringify(tickets), memberMap: JSON.stringify(memberMap), guildId: cfg.guildId });
     } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden'); }
   });
 
-  /* ====== Tickets JSON für Fetch (Auto-Reload) ====== */
+  /* ====== Tickets JSON für Fetch (nur Daten) ====== */
   router.get('/tickets/data', isAuth, (_req,res)=>{ res.json(loadTickets()); });
 
   /* ====== Transcript Serve ====== */
