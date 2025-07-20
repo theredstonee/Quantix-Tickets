@@ -2,99 +2,185 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <title>Tickets Übersicht</title>
+  <title>Tickets Übersicht (Erweitert)</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    body { max-width: 1300px; }
-    table { width:100%; font-size:.85rem; }
-    th { white-space:nowrap; }
-    .status-offen { color:#2bd94a; font-weight:600; }
-    .status-geschlossen { color:#d92b2b; font-weight:600; }
-    .prio-dot { font-size:1rem; }
-    .grid { display:flex; gap:2rem; flex-wrap:wrap; }
-    section { flex:1 1 600px; min-width:380px; }
-    .counts { font-size:.8rem; opacity:.7; }
-    .ticket-id { font-family:monospace; }
-    .search { margin-bottom:1rem; }
+    body{max-width:1400px}
+    h1{margin-bottom:.3rem}
+    .toolbar{display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;margin-bottom:1rem}
+    .toolbar > *{flex:0 0 auto}
+    table{width:100%;font-size:.8rem}
+    th{white-space:nowrap;cursor:pointer;user-select:none}
+    th.sort-asc::after{content:" ↑"}
+    th.sort-desc::after{content:" ↓"}
+    .status-offen{color:#2bd94a;font-weight:600}
+    .status-geschlossen{color:#d92b2b;font-weight:600}
+    .prio-dot{font-size:1rem}
+    .pill{display:inline-block;padding:2px 6px;border-radius:12px;font-size:.65rem;background:#444;color:#fff;margin-right:4px}
+    .pill.green{background:#2bd94a;color:#072b00}
+    .pill.orange{background:#ff9900;color:#462900}
+    .pill.red{background:#d92b2b;color:#2b0000}
+    .filter-group{display:flex;gap:.4rem;flex-wrap:wrap}
+    .filter-group button{font-size:.65rem;padding:.35rem .6rem;margin:0}
+    .search-box{min-width:260px}
+    .section-head{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+    .nowrap{white-space:nowrap}
+    .badge{background:#5865F2;color:#fff;border-radius:6px;padding:2px 6px;font-size:.6rem}
+    .claimed{background:#2b90d9}
+    .unclaimed{background:#777}
+    #empty{display:none;margin-top:1rem;font-style:italic;opacity:.7}
   </style>
 </head>
 <body class="container">
-  <header>
-    <h1>🎫 Tickets Übersicht</h1>
-    <p class="counts">Gesamt: <strong><%= counts.all %></strong> – Offen: <strong><%= counts.open %></strong> – Geschlossen: <strong><%= counts.closed %></strong></p>
-    <nav><a href="/panel">⬅️ Zurück zum Panel</a></nav>
+  <header class="section-head">
+    <h1>🎫 Ticket Verlauf</h1>
+    <nav style="margin-left:auto"><a href="/panel">↩ Zurück zum Panel</a></nav>
   </header>
 
-  <form method="GET" class="search">
-    <input type="text" name="q" placeholder="Suche (ID, Topic, UserID)" value="<%= q %>">
-    <button>🔍 Suche</button>
-    <% if(q){ %><a href="/tickets">Reset</a><% } %>
-  </form>
+  <div class="toolbar">
+    <input id="search" class="search-box" type="search" placeholder="Suche (ID, Topic, User, Claimer, Status, Prio)">
 
-  <div class="grid">
-    <section>
-      <h2>🟢 Offene Tickets (<%= open.length %>)</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Prio</th>
-            <th>Topic</th>
-            <th>User</th>
-            <th>Seit</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if(open.length===0){ %>
-            <tr><td colspan="6"><em>Keine offenen Tickets.</em></td></tr>
-          <% } %>
-          <% open.forEach(t => { const prio = (t.priority||0); const dots=['🟢','🟠','🔴']; %>
-            <tr>
-              <td class="ticket-id">#<%= t.id %></td>
-              <td class="prio-dot"><%= dots[prio] %></td>
-              <td><%= t.topic %></td>
-              <td><code><%= t.userId %></code></td>
-              <td><%= new Date(t.timestamp).toLocaleString('de-DE') %></td>
-              <td class="status-offen">offen</td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </section>
+    <div class="filter-group" id="statusFilters" role="group" aria-label="Status Filter">
+      <button type="button" data-status="alle" class="secondary outline active">Alle</button>
+      <button type="button" data-status="offen" class="secondary outline">Offen</button>
+      <button type="button" data-status="geschlossen" class="secondary outline">Geschlossen</button>
+    </div>
 
-    <section>
-      <h2>🔒 Geschlossene Tickets (<%= closed.length %>)</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Prio</th>
-            <th>Topic</th>
-            <th>User</th>
-            <th>Erstellt</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if(closed.length===0){ %>
-            <tr><td colspan="6"><em>Keine geschlossenen Tickets.</em></td></tr>
-          <% } %>
-          <% closed.forEach(t => { const prio = (t.priority||0); const dots=['🟢','🟠','🔴']; %>
-            <tr>
-              <td class="ticket-id">#<%= t.id %></td>
-              <td class="prio-dot"><%= dots[prio] %></td>
-              <td><%= t.topic %></td>
-              <td><code><%= t.userId %></code></td>
-              <td><%= new Date(t.timestamp).toLocaleString('de-DE') %></td>
-              <td class="status-geschlossen">geschlossen</td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </section>
+    <div class="filter-group" id="claimFilters" role="group" aria-label="Claim Filter">
+      <button type="button" data-claim="alle" class="secondary outline active">Alle</button>
+      <button type="button" data-claim="claimed" class="secondary outline">Claimed</button>
+      <button type="button" data-claim="unclaimed" class="secondary outline">Unclaimed</button>
+    </div>
+
+    <div class="filter-group" id="prioFilters" role="group" aria-label="Priorität Filter">
+      <button type="button" data-prio="alle" class="secondary outline active">Prio: Alle</button>
+      <button type="button" data-prio="0" class="secondary outline">🟢</button>
+      <button type="button" data-prio="1" class="secondary outline">🟠</button>
+      <button type="button" data-prio="2" class="secondary outline">🔴</button>
+    </div>
+
+    <label style="display:flex;align-items:center;gap:.35rem;font-size:.7rem"><input type="checkbox" id="autoRefresh" checked> Auto‑Refresh 30s</label>
   </div>
 
-  <footer style="margin-top:2rem;font-size:.7rem;opacity:.6">Ticket-Bot Übersicht • Aktualisierung beim Neuladen • Daten aus tickets.json</footer>
+  <table id="ticketsTable">
+    <thead>
+      <tr>
+        <th data-sort="id">#</th>
+        <th data-sort="priority">Prio</th>
+        <th data-sort="status">Status</th>
+        <th data-sort="topic">Topic</th>
+        <th data-sort="userId">User</th>
+        <th data-sort="claimer">Claimer</th>
+        <th data-sort="timestamp">Erstellt</th>
+        <th>Kanal</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <p id="empty">Keine Tickets für diese Filter.</p>
+
+  <footer style="margin-top:2rem;font-size:.65rem;opacity:.6">Live Ansicht • Automatisches Neuladen wenn aktiviert • Daten gefiltert im Browser</footer>
+
+<script>
+const tbody = document.querySelector('#ticketsTable tbody');
+let tickets = [];
+let sortKey = 'id';
+let sortDir = 'desc';
+
+async function fetchTickets(){
+  const res = await fetch('/tickets.json?_=' + Date.now()).catch(()=>null);
+  if(!res || !res.ok){ return; }
+  tickets = await res.json();
+  render();
+}
+
+function fmtDate(ts){
+  try{ return new Date(ts).toLocaleString('de-DE'); }catch{ return ts; }
+}
+
+function render(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const st = document.querySelector('#statusFilters .active').dataset.status;
+  const cl = document.querySelector('#claimFilters .active').dataset.claim;
+  const pr = document.querySelector('#prioFilters .active').dataset.prio;
+
+  let data = tickets.slice();
+  data.sort((a,b)=>{
+    const av = a[sortKey];
+    const bv = b[sortKey];
+    if(av==null && bv!=null) return 1;
+    if(bv==null && av!=null) return -1;
+    if(sortKey==='timestamp'||sortKey==='id'||sortKey==='priority'){
+      return (sortDir==='asc'? (av-bv):(bv-av));
+    }
+    return (''+av).localeCompare(''+bv) * (sortDir==='asc'?1:-1);
+  });
+
+  data = data.filter(t=>{
+    if(st!=='alle' && t.status!==st) return false;
+    if(cl==='claimed' && !t.claimer) return false;
+    if(cl==='unclaimed' && t.claimer) return false;
+    if(pr!=='alle' && (t.priority||0).toString()!==pr) return false;
+    if(q){
+      const hay = `${t.id} ${t.userId} ${t.topic} ${t.status} ${t.claimer||''} ${t.priority}`.toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  tbody.innerHTML = data.map(t=>{
+    const dots=['🟢','🟠','🔴'];
+    const prio = dots[t.priority||0];
+    const statusClass = 'status-' + t.status;
+    const claimBadge = t.claimer ? `<span class="badge claimed">${t.claimer}</span>` : `<span class="badge unclaimed">–</span>`;
+    return `<tr>
+      <td class="nowrap">#${t.id}</td>
+      <td class="prio-dot">${prio}</td>
+      <td class="${statusClass}">${t.status}</td>
+      <td>${t.topic}</td>
+      <td><code>${t.userId}</code></td>
+      <td>${claimBadge}</td>
+      <td>${fmtDate(t.timestamp)}</td>
+      <td><a href="https://discord.com/channels/${t.guildId||''}/${t.channelId}" target="_blank">🔗</a></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('empty').style.display = data.length? 'none':'block';
+}
+
+// Sort Handling
+Array.from(document.querySelectorAll('th[data-sort]')).forEach(th=>{
+  th.addEventListener('click',()=>{
+    const k = th.dataset.sort;
+    if(sortKey===k){ sortDir = (sortDir==='asc'?'desc':'asc'); }
+    else { sortKey=k; sortDir='asc'; }
+    document.querySelectorAll('th[data-sort]').forEach(x=>x.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(sortDir==='asc'?'sort-asc':'sort-desc');
+    render();
+  });
+});
+
+// Filter button groups
+function bindFilter(groupId){
+  document.getElementById(groupId).addEventListener('click',e=>{
+    if(e.target.tagName!=='BUTTON') return;
+    Array.from(e.currentTarget.querySelectorAll('button')).forEach(b=>b.classList.remove('active'));
+    e.target.classList.add('active');
+    render();
+  });
+}
+['statusFilters','claimFilters','prioFilters'].forEach(bindFilter);
+
+// Suche
+document.getElementById('search').addEventListener('input',()=>render());
+
+// Auto Refresh
+let interval = setInterval(()=>{ if(document.getElementById('autoRefresh').checked) fetchTickets(); },30000);
+
+document.getElementById('autoRefresh').addEventListener('change',()=>{ if(!autoRefresh.checked) return; fetchTickets(); });
+
+// Initial
+fetchTickets();
+</script>
 </body>
 </html>
