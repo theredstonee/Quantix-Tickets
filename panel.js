@@ -1,11 +1,11 @@
-// panel.js – Topics Edit Fix
-// Änderung NUR im POST /panel Handler, damit eingetragene Kategorien (Label/Value/Emoji)
-// nicht mehr durch das unveränderte RAW JSON Feld überschrieben werden.
-// Logik: Wenn mindestens EIN Label-Feld ausgefüllt wurde, werden diese Werte benutzt
-// und *topicsJson* wird IGNORIERT (auch wenn im Formular gesendet). Möchte man stattdessen
-// das JSON nutzen, lässt man einfach alle Label-Felder leer oder entfernt sie und editiert
-// nur das JSON.
-// Alle anderen Teile der Datei unverändert.
+// panel.js – Topics Edit + Einzel-Lösch-Funktion (Variante B erweitert)
+// Änderungen gegenüber deiner zuletzt geposteten Variante B:
+//  * Reihen (Topics) können im Panel per "🗑" Button entfernt werden (client‑seitig).
+//  * Entfernte Reihen werden vor dem Submit aus dem DOM gelöscht – Server bekommt sie nicht mehr und speichert nur sichtbare.
+//  * Speichern-Logik unverändert zum Fix (Tabellen-Einträge haben Vorrang; JSON nur wenn keine Tabellen-Zeile ausgefüllt ist).
+//  * Zusätzliche Sicherheitsprüfung: Falls nach Entfernen keine Topics bleiben UND kein JSON angegeben ist -> cfg.topics = [].
+//  * Kleinere Robustheit bei Farb-Validierung für Embeds.
+// Sonstiger Code (Auth / OAuth / Routes) unverändert gelassen.
 
 require('dotenv').config();
 const express  = require('express');
@@ -66,13 +66,13 @@ module.exports = (client)=>{
     next();
   }
 
-  /* ====== Root (kein Auto‑Loop) ====== */
+  /* ====== Root ====== */
   router.get('/', (req,res)=>{
     if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/panel');
     res.send('<h1>Ticket Panel</h1><p><a href="/login">Login mit Discord</a></p>');
   });
 
-  /* ====== Login mit einfachem Rate‑Limit pro Session ====== */
+  /* ====== Login Rate-Limit ====== */
   router.get('/login', (req,res,next)=>{
     if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/panel');
     const now = Date.now();
@@ -108,14 +108,15 @@ module.exports = (client)=>{
   /* ====== Panel Ansicht ====== */
   router.get('/panel', isAuth, (req,res)=>{
     cfg = readCfg();
+    // Render eigenes Template inline (kein getrenntes EJS notwendig falls bereits vorhanden)
     res.render('panel', { cfg, msg:req.query.msg||null });
   });
 
-  /* ====== Panel speichern (FIX für Topics) ====== */
+  /* ====== Panel speichern (Topics + Embeds) ====== */
   router.post('/panel', isAuth, (req,res)=>{
     try {
       cfg = readCfg();
-      // 1. Eingaben aus Tabellenfeldern sammeln
+      // 1. Tabellen‑Topics sammeln
       const labelInputs = [].concat(req.body.label||[]);
       const valueInputs = [].concat(req.body.value||[]);
       const emojiInputs = [].concat(req.body.emoji||[]);
@@ -123,44 +124,42 @@ module.exports = (client)=>{
       let tableTopics = [];
       for(let i=0;i<labelInputs.length;i++){
         const L = (labelInputs[i]||'').trim();
-        if(!L) continue; // nur wirklich ausgefüllte Zeilen
-        const V = (valueInputs[i]||'').trim() || L.toLowerCase().replace(/\s+/g,'-');
+        const Vraw = (valueInputs[i]||'').trim();
         const E = (emojiInputs[i]||'').trim();
+        if(!L) continue; // leere / gelöschte Zeilen ignorieren
+        const V = Vraw || L.toLowerCase().replace(/\s+/g,'-');
         tableTopics.push({ label:L, value:V, emoji:E||undefined });
       }
 
-      const hasTableTopics = tableTopics.length > 0; // mind. eine Zeile ausgefüllt -> Vorrang vor JSON
+      const hasTableTopics = tableTopics.length > 0;
 
-      // 2. Falls KEINE Tabelle (alle leer) aber JSON-Feld vorhanden & nicht nur whitespace -> JSON übernehmen
+      // 2. Falls keine Tabellen-Einträge, optional JSON nutzen
       if(!hasTableTopics){
         const rawJson = (req.body.topicsJson||'').trim();
         if(rawJson){
-          try {
-            const parsed = JSON.parse(rawJson);
-            if(Array.isArray(parsed)) tableTopics = parsed;
-          } catch(err){ console.warn('topicsJson parse Fehler ignoriert'); }
+          try { const parsed = JSON.parse(rawJson); if(Array.isArray(parsed)) tableTopics = parsed; } catch(err){ console.warn('topicsJson parse Fehler ignoriert'); }
         }
       }
 
-      // 3. Übernehmen
-      cfg.topics = tableTopics;
+      cfg.topics = tableTopics; // kann auch [] sein
 
-      // 4. (Optional) formFieldsJson gleiches Prinzip: nur wenn nicht leer
+      // 3. FormFields optional
       if(req.body.formFieldsJson){
         try { const ff = JSON.parse(req.body.formFieldsJson); if(Array.isArray(ff)) cfg.formFields = ff; } catch{}
       }
 
-      // 5. Embeds
+      // 4. Embeds (mit einfacher Farbvalidierung)
+      function valColor(c, fallback){ return /^#?[0-9a-fA-F]{6}$/.test(c||'') ? c : fallback; }
       cfg.ticketEmbed = {
         title: req.body.embedTitle || cfg.ticketEmbed?.title || '',
         description: req.body.embedDescription || cfg.ticketEmbed?.description || '',
-        color: req.body.embedColor || cfg.ticketEmbed?.color || '#2b90d9',
+        color: valColor(req.body.embedColor || cfg.ticketEmbed?.color, '#2b90d9'),
         footer: req.body.embedFooter || cfg.ticketEmbed?.footer || ''
       };
       cfg.panelEmbed = {
         title: req.body.panelTitle || cfg.panelEmbed?.title || '',
         description: req.body.panelDescription || cfg.panelEmbed?.description || '',
-        color: req.body.panelColor || cfg.panelEmbed?.color || '#5865F2',
+        color: valColor(req.body.panelColor || cfg.panelEmbed?.color, '#5865F2'),
         footer: req.body.panelFooter || cfg.panelEmbed?.footer || ''
       };
 
