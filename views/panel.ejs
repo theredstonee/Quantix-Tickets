@@ -5,22 +5,24 @@
   <title>Ticket‑Bot Panel</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    body { max-width: 1200px; }
+    body { max-width: 1250px; }
     table { width:100%; border-collapse:collapse; }
-    table th, table td { vertical-align:middle; }
+    th,td { padding:.35rem .4rem; }
     table input, table select { width:100%; }
     .grid { display:flex; flex-wrap:wrap; gap:1.5rem; }
-    fieldset { flex:1 1 360px; min-width:340px; }
+    fieldset { flex:1 1 380px; min-width:350px; }
     textarea { width:100%; font-family: monospace; resize:vertical; }
-    .bad { border:1px solid #c33; padding:.5rem .75rem; }
-    .good { border:1px solid #2b7; padding:.5rem .75rem; }
+    .bad { border:1px solid #c33; padding:.55rem .8rem; border-radius:4px; }
+    .good { border:1px solid #2b7; padding:.55rem .8rem; border-radius:4px; }
     .actions form { display:inline-block; margin-right:1rem; }
-    footer { margin-top:3rem; font-size:.75rem; opacity:.6; }
+    footer { margin-top:3rem; font-size:.7rem; opacity:.6; }
     .placeholder-list code { margin-right:.4rem; }
-    .add-btn { margin-top:.6rem; }
-    .soft-note { font-size:.75rem; opacity:.65; }
-    .table-wrapper{ max-height:420px; overflow:auto; }
-    .nav-extra { margin-top:2rem; }
+    .add-btn { margin-top:.5rem; }
+    .soft-note { font-size:.7rem; opacity:.65; }
+    .del-btn { background:#e55353; color:#fff; border:0; padding:.25rem .55rem; border-radius:4px; cursor:pointer; font-size:.7rem; }
+    .del-btn:hover { background:#c84242; }
+    thead { background:#f2f4f8; }
+    .mini { font-size:.65rem; opacity:.55; }
   </style>
 </head>
 <body class="container">
@@ -30,181 +32,126 @@
   <% if (msg==='sent')   { %><p class="good">📤 Panel‑Nachricht gesendet.</p><% } %>
   <% if (msg==='edited') { %><p class="good">✏️ Panel‑Nachricht aktualisiert.</p><% } %>
   <% if (msg==='nopanel'){ %><p class="bad">⚠️ Keine gespeicherte Panel‑Nachricht vorhanden.</p><% } %>
-  <% if (msg==='error')  { %><p class="bad">❌ Fehler beim Vorgang – Konsole prüfen.</p><% } %>
+  <% if (msg==='error')  { %><p class="bad">❌ Fehler – Konsole prüfen.</p><% } %>
 
   <form method="POST" autocomplete="off" id="panelForm">
     <div class="grid">
 
-      <!-- Kategorien ------------------------------------------------------------------>
+      <!-- Topics -->
       <fieldset>
         <legend>Kategorien (Topics)</legend>
         <table>
           <thead>
-            <tr><th>Label*</th><th>Value</th><th>Emoji</th></tr>
+            <tr><th>Label*</th><th>Value</th><th>Emoji</th><th>Löschen</th></tr>
           </thead>
-          <tbody id="rows">
-            <% (cfg.topics||[]).forEach(t => { %>
+          <tbody id="topicRows">
+            <% (cfg.topics||[]).forEach(t=>{ %>
               <tr>
                 <td><input name="label" value="<%= t.label %>" required></td>
                 <td><input name="value" value="<%= t.value %>" placeholder="auto"></td>
-                <td><input name="emoji" value="<%= t.emoji || '' %>"></td>
+                <td><input name="emoji" value="<%= t.emoji||'' %>"></td>
+                <td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>
               </tr>
             <% }) %>
           </tbody>
         </table>
-        <button type="button" class="add-btn" onclick="addRow()">➕ Zeile</button>
-        <p class="soft-note">* <b>Label</b> Pflicht. Ist <b>Value</b> leer, wird automatisch aus Label generiert.</p>
+        <button type="button" class="add-btn" onclick="addTopicRow()">➕ Topic</button>
+        <p class="soft-note">Ist <b>Value</b> leer, wird es aus dem Label generiert (klein + Bindestriche).</p>
       </fieldset>
 
-      <!-- Ticket Embed ----------------------------------------------------------------->
+      <!-- Ticket Embed -->
       <fieldset>
         <legend>Ticket Embed Vorlage</legend>
-        <p class="placeholder-list soft-note">
-          Platzhalter: <code>{userMention}</code> <code>{userId}</code> <code>{topicLabel}</code> <code>{topicValue}</code> <code>{ticketNumber}</code>
-        </p>
-        <label>Titel
-          <input name="embedTitle" value="<%= cfg.ticketEmbed?.title || '' %>">
-        </label>
-        <label>Beschreibung
-          <textarea name="embedDescription" rows="6"><%= cfg.ticketEmbed?.description || '' %></textarea>
-        </label>
-        <label>Farbe (Hex)
-          <input name="embedColor" value="<%= cfg.ticketEmbed?.color || '#2b90d9' %>" placeholder="#2b90d9">
-        </label>
-        <label>Footer
-          <input name="embedFooter" value="<%= cfg.ticketEmbed?.footer || '' %>">
-        </label>
+        <p class="placeholder-list soft-note">Platzhalter: <code>{userMention}</code> <code>{userId}</code> <code>{topicLabel}</code> <code>{topicValue}</code> <code>{ticketNumber}</code></p>
+        <label>Titel <input name="embedTitle" value="<%= cfg.ticketEmbed?.title || '' %>"></label>
+        <label>Beschreibung <textarea name="embedDescription" rows="7"><%= cfg.ticketEmbed?.description || '' %></textarea></label>
+        <label>Farbe (Hex) <input name="embedColor" value="<%= cfg.ticketEmbed?.color || '#2b90d9' %>" placeholder="#2b90d9"></label>
+        <label>Footer <input name="embedFooter" value="<%= cfg.ticketEmbed?.footer || '' %>"></label>
       </fieldset>
 
-      <!-- Panel Embed ------------------------------------------------------------------>
+      <!-- Panel Embed -->
       <fieldset>
         <legend>Panel (Dropdown) Embed</legend>
-        <label>Panel Titel
-          <input name="panelTitle" value="<%= cfg.panelEmbed?.title || '' %>">
-        </label>
-        <label>Panel Beschreibung
-          <textarea name="panelDescription" rows="5"><%= cfg.panelEmbed?.description || '' %></textarea>
-        </label>
-        <label>Panel Farbe (Hex)
-          <input name="panelColor" value="<%= cfg.panelEmbed?.color || '#5865F2' %>" placeholder="#5865F2">
-        </label>
-        <label>Panel Footer
-          <input name="panelFooter" value="<%= cfg.panelEmbed?.footer || '' %>">
-        </label>
+        <label>Panel Titel <input name="panelTitle" value="<%= cfg.panelEmbed?.title || '' %>"></label>
+        <label>Panel Beschreibung <textarea name="panelDescription" rows="6"><%= cfg.panelEmbed?.description || '' %></textarea></label>
+        <label>Panel Farbe (Hex) <input name="panelColor" value="<%= cfg.panelEmbed?.color || '#5865F2' %>" placeholder="#5865F2"></label>
+        <label>Panel Footer <input name="panelFooter" value="<%= cfg.panelEmbed?.footer || '' %>"></label>
       </fieldset>
 
-      <!-- Formular Felder ------------------------------------------------------------------>
+      <!-- Formular Felder -->
       <fieldset>
         <legend>Benutzer‑Formular Felder</legend>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr><th>Label*</th><th>Placeholder</th><th>Typ</th><th>Required</th></tr>
-            </thead>
-            <tbody id="formRows">
-              <% (cfg.formFields||[]).forEach(f => { %>
-                <tr>
-                  <td><input name="ffLabel" value="<%= f.label %>" required></td>
-                  <td><input name="ffPlaceholder" value="<%= f.placeholder || '' %>"></td>
-                  <td>
-                    <select name="ffType">
-                      <option value="short" <%= f.type==='short'? 'selected':'' %>>Kurz</option>
-                      <option value="paragraph" <%= f.type==='paragraph'? 'selected':'' %>>Lang</option>
-                      <option value="number" <%= f.type==='number'? 'selected':'' %>>Zahl</option>
-                    </select>
-                  </td>
-                  <td style="text-align:center"><input type="checkbox" name="ffRequired" <%= f.required? 'checked':'' %>></td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <button type="button" class="add-btn" onclick="addFormRow()">➕ Zeile</button>
-        <p class="soft-note">Diese Felder müssen Nutzer beim Ticket‑Erstellen ausfüllen (Modal). JSON‑Vorschau wird automatisch aktualisiert.</p>
+        <p class="soft-note">Diese Felder MUSS der Nutzer beim Ticket erstellen ausfüllen (Modal öffnet sich nach Themenwahl).</p>
+        <table>
+          <thead>
+            <tr><th>Label*</th><th>Placeholder</th><th>Typ</th><th>Required</th><th>Löschen</th></tr>
+          </thead>
+          <tbody id="formRows">
+            <% (cfg.formFields||[]).forEach(f=>{ %>
+              <tr>
+                <td><input name="ffLabel" value="<%= f.label %>" required></td>
+                <td><input name="ffPlaceholder" value="<%= f.placeholder||'' %>"></td>
+                <td>
+                  <select name="ffType">
+                    <option value="short" <%= f.type==='short'?'selected':'' %>>Kurz</option>
+                    <option value="paragraph" <%= f.type==='paragraph'?'selected':'' %>>Lang</option>
+                    <option value="number" <%= f.type==='number'?'selected':'' %>>Zahl</option>
+                  </select>
+                </td>
+                <td style="text-align:center"><input type="checkbox" name="ffRequired" <%= f.required? 'checked':'' %>></td>
+                <td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <button type="button" class="add-btn" onclick="addFormRow()">➕ Feld</button>
+        <p class="soft-note mini">Typen: <b>short</b> = kurzer Text, <b>paragraph</b> = langer Text, <b>number</b> = numerisch (als Text gespeichert).</p>
+        <label class="soft-note">FormFields (JSON Vorschau)
+          <textarea id="formFieldsJson" name="formFieldsJson" rows="8"><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
+        </label>
       </fieldset>
 
-      <!-- RAW JSON ----------------------------------------------------------------------->
+      <!-- Raw Topics JSON (optional) -->
       <fieldset>
-        <legend>RAW JSON (Optional)</legend>
-        <p class="soft-note">JSON wird überschrieben, wenn du oben Tabellenfelder änderst.</p>
+        <legend>Topics JSON (optional)</legend>
+        <p class="soft-note">Wird nur benutzt wenn keine Topic‑Zeile (Label) vorhanden ist.</p>
         <label>Topics (JSON)
           <textarea name="topicsJson" rows="8" id="topicsJson"><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
-        </label>
-        <label>FormFields (JSON)
-          <textarea name="formFieldsJson" rows="8" id="formFieldsJson"><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
         </label>
       </fieldset>
 
     </div>
-
     <button type="submit">💾 Speichern</button>
   </form>
 
   <hr>
-
   <h2>Panel‑Nachricht Aktionen</h2>
   <div class="actions">
     <form action="/panel/send" method="POST">
       <input name="channelId" placeholder="Channel‑ID" value="<%= cfg.panelChannelId || '' %>" required>
       <button>📤 Senden</button>
     </form>
-
     <form action="/panel/edit" method="POST">
       <button>✏️ Bestehende bearbeiten</button>
     </form>
-  </div>
-
-  <div class="nav-extra">
     <a href="/tickets" role="button" class="secondary">📜 Ticket Verlauf / History</a>
   </div>
 
   <footer>
-    <p>Ticket‑Bot Panel • Änderungen werden sofort in <code>config.json</code> gespeichert • Stelle sicher, dass der Bot Schreibrechte hat.</p>
+    <p>Ticket‑Bot Panel • Änderungen speichern sofort in <code>config.json</code>.</p>
   </footer>
 
 <script>
-  /* -------------------- Topics -------------------- */
-  function addRow(){
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td><input name="label" required></td><td><input name="value" placeholder="auto"></td><td><input name="emoji"></td>`;
-    document.getElementById('rows').appendChild(tr);
-  }
-
-  /* -------------------- FormFields ---------------- */
-  function addFormRow(data={label:'',placeholder:'',type:'short',required:false}){
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td><input name="ffLabel" value="${escapeHtml(data.label)}" required></td>
-      <td><input name="ffPlaceholder" value="${escapeHtml(data.placeholder)}"></td>
-      <td><select name="ffType">
-            <option value="short" ${data.type==='short'?'selected':''}>Kurz</option>
-            <option value="paragraph" ${data.type==='paragraph'?'selected':''}>Lang</option>
-            <option value="number" ${data.type==='number'?'selected':''}>Zahl</option>
-          </select></td>
-      <td style="text-align:center"><input type="checkbox" name="ffRequired" ${data.required?'checked':''}></td>`;
-    document.getElementById('formRows').appendChild(tr);
-  }
-
-  function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
-
-  /* Sync JSON preview when form field table changes */
-  function syncFormJson(){
-    const labels=[...document.querySelectorAll('#formRows input[name="ffLabel"]')];
-    if(!labels.length) return; // nothing yet
-    const arr=[];
-    labels.forEach((inp,idx)=>{
-      const label=inp.value.trim(); if(!label) return; // skip empty
-      const placeholder=document.querySelectorAll('#formRows input[name="ffPlaceholder"]')[idx].value.trim();
-      const type=document.querySelectorAll('#formRows select[name="ffType"]')[idx].value;
-      const required=document.querySelectorAll('#formRows input[name="ffRequired"]')[idx].checked;
-      const obj={ label, type };
-      if(placeholder) obj.placeholder=placeholder;
-      if(required) obj.required=true;
-      arr.push(obj);
-    });
-    document.getElementById('formFieldsJson').value=JSON.stringify(arr, null, 2);
-  }
-  document.getElementById('formRows').addEventListener('input', syncFormJson);
-  document.getElementById('panelForm').addEventListener('submit', syncFormJson);
+function delRow(btn){ const tr=btn.closest('tr'); if(tr) tr.remove(); syncFormJson(); syncTopicsPreview(); }
+function addTopicRow(){ const tr=document.createElement('tr'); tr.innerHTML=`<td><input name="label" required></td><td><input name="value" placeholder="auto"></td><td><input name="emoji"></td><td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>`; document.getElementById('topicRows').appendChild(tr); }
+function addFormRow(data={label:'',placeholder:'',type:'short',required:false}){ const tr=document.createElement('tr'); tr.innerHTML=`<td><input name="ffLabel" value="${esc(data.label)}" required></td><td><input name="ffPlaceholder" value="${esc(data.placeholder)}"></td><td><select name="ffType"><option value="short" ${data.type==='short'?'selected':''}>Kurz</option><option value="paragraph" ${data.type==='paragraph'?'selected':''}>Lang</option><option value="number" ${data.type==='number'?'selected':''}>Zahl</option></select></td><td style="text-align:center"><input type="checkbox" name="ffRequired" ${data.required?'checked':''}></td><td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>`; document.getElementById('formRows').appendChild(tr); syncFormJson(); }
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function syncFormJson(){ const labels=[...document.querySelectorAll('#formRows input[name="ffLabel"]')]; const arr=[]; labels.forEach((inp,idx)=>{ const label=inp.value.trim(); if(!label) return; const placeholder=document.querySelectorAll('#formRows input[name="ffPlaceholder"]')[idx].value.trim(); const type=document.querySelectorAll('#formRows select[name="ffType"]')[idx].value; const required=document.querySelectorAll('#formRows input[name="ffRequired"]')[idx].checked; const obj={label,type}; if(placeholder) obj.placeholder=placeholder; if(required) obj.required=true; arr.push(obj); }); document.getElementById('formFieldsJson').value=JSON.stringify(arr,null,2); }
+function syncTopicsPreview(){ const labels=[...document.querySelectorAll('#topicRows input[name="label"]')]; if(!labels.length) return; const arr=[]; labels.forEach((inp,idx)=>{ const L=inp.value.trim(); if(!L) return; const V=document.querySelectorAll('#topicRows input[name="value"]')[idx].value.trim() || L.toLowerCase().replace(/\s+/g,'-'); const E=document.querySelectorAll('#topicRows input[name="emoji"]')[idx].value.trim(); arr.push(E?{label:L,value:V,emoji:E}:{label:L,value:V}); }); document.getElementById('topicsJson').value=JSON.stringify(arr,null,2); }
+document.getElementById('formRows').addEventListener('input',syncFormJson);
+document.getElementById('topicRows').addEventListener('input',syncTopicsPreview);
+// Vor Submit leere Label-Zeilen entfernen
+document.getElementById('panelForm').addEventListener('submit',()=>{ [...document.querySelectorAll('#topicRows tr')].forEach(tr=>{ if(!tr.querySelector('input[name="label"]').value.trim()) tr.remove(); }); syncFormJson(); });
 </script>
 </body>
 </html>
