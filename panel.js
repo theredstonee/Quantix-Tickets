@@ -1,11 +1,13 @@
-// panel.js – Topics Edit + Einzel-Lösch-Funktion (Variante B erweitert)
-// Änderungen gegenüber deiner zuletzt geposteten Variante B:
-//  * Reihen (Topics) können im Panel per "🗑" Button entfernt werden (client‑seitig).
-//  * Entfernte Reihen werden vor dem Submit aus dem DOM gelöscht – Server bekommt sie nicht mehr und speichert nur sichtbare.
-//  * Speichern-Logik unverändert zum Fix (Tabellen-Einträge haben Vorrang; JSON nur wenn keine Tabellen-Zeile ausgefüllt ist).
-//  * Zusätzliche Sicherheitsprüfung: Falls nach Entfernen keine Topics bleiben UND kein JSON angegeben ist -> cfg.topics = [].
-//  * Kleinere Robustheit bei Farb-Validierung für Embeds.
-// Sonstiger Code (Auth / OAuth / Routes) unverändert gelassen.
+// panel.js – Erweiterung: FormFields bearbeiten + sichere Topics/Forms Speicherung
+// Features:
+//  * Login / Auth unverändert
+//  * Speichern der Topics wie bisher (Tabellen-Einträge > optional JSON Override)
+//  * NEU: FormFields-Verarbeitung aus einfachem Tabellen-Formular ODER JSON (falls Tabelle leer)
+//  * FormField Struktur: { label, customId, style:"short"|"paragraph", required:true/false, min:0, max:200, placeholder }
+//  * Validierung & Normalisierung (Grenzen für Länge)
+//  * Routen /panel, /panel/send, /panel/edit unverändert außer dass formFields geschrieben werden
+//  * Helper buildPanelSelect unverändert
+//  * (Front-End Anpassung in panel.ejs nötig: Tabelle für FormFields – kommt separat)
 
 require('dotenv').config();
 const express  = require('express');
@@ -108,15 +110,14 @@ module.exports = (client)=>{
   /* ====== Panel Ansicht ====== */
   router.get('/panel', isAuth, (req,res)=>{
     cfg = readCfg();
-    // Render eigenes Template inline (kein getrenntes EJS notwendig falls bereits vorhanden)
     res.render('panel', { cfg, msg:req.query.msg||null });
   });
 
-  /* ====== Panel speichern (Topics + Embeds) ====== */
+  /* ====== Panel speichern (Topics + Embeds + FormFields) ====== */
   router.post('/panel', isAuth, (req,res)=>{
     try {
       cfg = readCfg();
-      // 1. Tabellen‑Topics sammeln
+      // 1. Topics Tabelle
       const labelInputs = [].concat(req.body.label||[]);
       const valueInputs = [].concat(req.body.value||[]);
       const emojiInputs = [].concat(req.body.emoji||[]);
@@ -124,31 +125,63 @@ module.exports = (client)=>{
       let tableTopics = [];
       for(let i=0;i<labelInputs.length;i++){
         const L = (labelInputs[i]||'').trim();
+        if(!L) continue; // leere / gelöschte Zeilen
         const Vraw = (valueInputs[i]||'').trim();
         const E = (emojiInputs[i]||'').trim();
-        if(!L) continue; // leere / gelöschte Zeilen ignorieren
         const V = Vraw || L.toLowerCase().replace(/\s+/g,'-');
         tableTopics.push({ label:L, value:V, emoji:E||undefined });
       }
 
       const hasTableTopics = tableTopics.length > 0;
-
-      // 2. Falls keine Tabellen-Einträge, optional JSON nutzen
       if(!hasTableTopics){
         const rawJson = (req.body.topicsJson||'').trim();
         if(rawJson){
           try { const parsed = JSON.parse(rawJson); if(Array.isArray(parsed)) tableTopics = parsed; } catch(err){ console.warn('topicsJson parse Fehler ignoriert'); }
         }
       }
+      cfg.topics = tableTopics; // kann [] sein
 
-      cfg.topics = tableTopics; // kann auch [] sein
+      // 2. FormFields Tabelle (falls später in panel.ejs vorhanden)
+      const ffLabel = [].concat(req.body.ff_label||[]);      // Anzeigename
+      const ffId    = [].concat(req.body.ff_id||[]);         // customId
+      const ffStyle = [].concat(req.body.ff_style||[]);      // short|paragraph
+      const ffReq   = [].concat(req.body.ff_required||[]);   // 'on' oder undefined
+      const ffMin   = [].concat(req.body.ff_min||[]);
+      const ffMax   = [].concat(req.body.ff_max||[]);
+      const ffPH    = [].concat(req.body.ff_placeholder||[]);
 
-      // 3. FormFields optional
-      if(req.body.formFieldsJson){
-        try { const ff = JSON.parse(req.body.formFieldsJson); if(Array.isArray(ff)) cfg.formFields = ff; } catch{}
+      let formFields = [];
+      for(let i=0;i<ffLabel.length;i++){
+        const lbl = (ffLabel[i]||'').trim();
+        if(!lbl) continue; // leere Zeile ignorieren
+        const cidRaw = (ffId[i]||'').trim();
+        const cid = cidRaw || lbl.toLowerCase().replace(/[^a-z0-9_\-]/gi,'_');
+        let style = (ffStyle[i]||'short').toLowerCase();
+        if(!['short','paragraph'].includes(style)) style='short';
+        const required = Array.isArray(ffReq) ? (ffReq[i]==='on' || ffReq.includes(String(i)) || ffReq.includes('true')) : (ffReq==='on');
+        let min = parseInt(ffMin[i]||'0',10); if(isNaN(min)||min<0) min=0; if(min>190) min=190;
+        let max = parseInt(ffMax[i]|| (style==='short'?'100':'500'),10); if(isNaN(max)) max = (style==='short'?100:500);
+        if(max<min+1) max = min+1; if(max>2000) max=2000; // Discord Hard-Limits: Short 1..100, Paragraph bis 4000 (hier konservativ)
+        if(style==='short' && max>100) max=100; // Discord limit
+        const placeholder = (ffPH[i]||'').slice(0,100); // Placeholder max 100 chars
+        formFields.push({ label:lbl, customId:cid, style, required, min, max, placeholder });
       }
 
-      // 4. Embeds (mit einfacher Farbvalidierung)
+      // Falls keine Tabellen-FormFields -> JSON verwenden (falls da)
+      if(formFields.length===0){
+        const rawFF = (req.body.formFieldsJson||'').trim();
+        if(rawFF){
+          try {
+            const parsedFF = JSON.parse(rawFF);
+            if(Array.isArray(parsedFF)){
+              formFields = parsedFF.filter(f=>f && typeof f==='object' && f.label && f.customId);
+            }
+          } catch(err){ console.warn('formFieldsJson parse Fehler ignoriert'); }
+        }
+      }
+      cfg.formFields = formFields; // kann [] sein
+
+      // 3. Embeds (mit Farbvalidierung)
       function valColor(c, fallback){ return /^#?[0-9a-fA-F]{6}$/.test(c||'') ? c : fallback; }
       cfg.ticketEmbed = {
         title: req.body.embedTitle || cfg.ticketEmbed?.title || '',
@@ -199,7 +232,7 @@ module.exports = (client)=>{
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
 
-  /* ====== Tickets Übersicht (einfach JSON) ====== */
+  /* ====== Tickets Übersicht (JSON Raw) ====== */
   router.get('/tickets', isAuth, (_req,res)=>{
     try { const tickets = JSON.parse(fs.readFileSync(path.join(__dirname,'tickets.json'),'utf8')); res.json(tickets); }
     catch { res.json([]); }
