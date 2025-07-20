@@ -5,27 +5,21 @@
   <title>Ticket‑Bot Panel</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    body { max-width: 1320px; }
+    body { max-width: 1200px; }
     table { width:100%; border-collapse:collapse; }
     table th, table td { vertical-align:middle; }
     table input, table select { width:100%; }
     .grid { display:flex; flex-wrap:wrap; gap:1.5rem; }
-    fieldset { flex:1 1 390px; min-width:360px; }
+    fieldset { flex:1 1 360px; min-width:340px; }
     textarea { width:100%; font-family: monospace; resize:vertical; }
-    .bad { border:1px solid #c33; padding:.55rem .8rem; border-radius:4px; }
-    .good { border:1px solid #2b7; padding:.55rem .8rem; border-radius:4px; }
+    .bad { border:1px solid #c33; padding:.5rem .75rem; }
+    .good { border:1px solid #2b7; padding:.5rem .75rem; }
     .actions form { display:inline-block; margin-right:1rem; }
     footer { margin-top:3rem; font-size:.75rem; opacity:.6; }
-    .placeholder-list code { margin-right:.35rem; }
-    .soft-note { font-size:.7rem; opacity:.65; }
-    .table-wrapper { max-height:420px; overflow:auto; }
-    .del-btn { background:#e55353; border:0; color:#fff; padding:.35rem .6rem; font-size:.7rem; border-radius:4px; cursor:pointer; }
-    .del-btn:hover { background:#c53d3d; }
+    .placeholder-list code { margin-right:.4rem; }
     .add-btn { margin-top:.6rem; }
-    .drag-handle { cursor:grab; user-select:none; font-size:.9rem; opacity:.65; }
-    tr.dragging { opacity:.45; }
-    .drag-placeholder { height:40px; outline:2px dashed #888; margin:2px 0; }
-    .mini { width:70px; }
+    .soft-note { font-size:.75rem; opacity:.65; }
+    .table-wrapper{ max-height:420px; overflow:auto; }
   </style>
 </head>
 <body class="container">
@@ -40,47 +34,38 @@
   <form method="POST" autocomplete="off" id="panelForm">
     <div class="grid">
 
-      <!-- Kategorien -->
+      <!-- Kategorien ------------------------------------------------------------------>
       <fieldset>
         <legend>Kategorien (Topics)</legend>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr><th style="width:26px"></th><th>Label*</th><th>Value</th><th style="width:110px">Emoji</th><th style="width:70px">Löschen</th></tr>
-            </thead>
-            <tbody id="topicRows">
-              <% (cfg.topics||[]).forEach(t => { %>
-              <tr draggable="true">
-                <td><span class="drag-handle" title="Reihenfolge ziehen">↕</span></td>
+        <table>
+          <thead>
+            <tr><th>Label*</th><th>Value</th><th>Emoji</th></tr>
+          </thead>
+          <tbody id="rows">
+            <% (cfg.topics||[]).forEach(t => { %>
+              <tr>
                 <td><input name="label" value="<%= t.label %>" required></td>
-                <td><input name="value" value="<%= t.value %>" placeholder="auto aus Label"></td>
-                <td><input name="emoji" value="<%= t.emoji || '' %>" placeholder="😀"></td>
-                <td><button type="button" class="del-btn" onclick="deleteTopicRow(this)">✖</button></td>
+                <td><input name="value" value="<%= t.value %>" placeholder="auto"></td>
+                <td><input name="emoji" value="<%= t.emoji || '' %>"></td>
               </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <button type="button" class="add-btn" onclick="addTopicRow()">➕ Zeile</button>
-        <p class="soft-note" style="margin-top:.5rem">* Label Pflicht. Leere / gelöschte Zeilen werden ignoriert. Ist Value leer, wird automatisch ein slug erzeugt.</p>
+            <% }) %>
+          </tbody>
+        </table>
+        <button type="button" class="add-btn" onclick="addRow()">➕ Zeile</button>
+        <p class="soft-note">* <b>Label</b> Pflicht. Ist <b>Value</b> leer, wird automatisch aus Label generiert.</p>
       </fieldset>
 
-      <!-- Ticket Embed -->
+      <!-- Ticket Embed ----------------------------------------------------------------->
       <fieldset>
         <legend>Ticket Embed Vorlage</legend>
         <p class="placeholder-list soft-note">
-          Platzhalter:
-          <code>{userMention}</code>
-          <code>{userId}</code>
-          <code>{topicLabel}</code>
-          <code>{topicValue}</code>
-          <code>{ticketNumber}</code>
+          Platzhalter: <code>{userMention}</code> <code>{userId}</code> <code>{topicLabel}</code> <code>{topicValue}</code> <code>{ticketNumber}</code>
         </p>
         <label>Titel
           <input name="embedTitle" value="<%= cfg.ticketEmbed?.title || '' %>">
         </label>
         <label>Beschreibung
-          <textarea name="embedDescription" rows="7"><%= cfg.ticketEmbed?.description || '' %></textarea>
+          <textarea name="embedDescription" rows="6"><%= cfg.ticketEmbed?.description || '' %></textarea>
         </label>
         <label>Farbe (Hex)
           <input name="embedColor" value="<%= cfg.ticketEmbed?.color || '#2b90d9' %>" placeholder="#2b90d9">
@@ -90,14 +75,14 @@
         </label>
       </fieldset>
 
-      <!-- Panel Embed -->
+      <!-- Panel Embed ------------------------------------------------------------------>
       <fieldset>
         <legend>Panel (Dropdown) Embed</legend>
         <label>Panel Titel
           <input name="panelTitle" value="<%= cfg.panelEmbed?.title || '' %>">
         </label>
         <label>Panel Beschreibung
-          <textarea name="panelDescription" rows="6"><%= cfg.panelEmbed?.description || '' %></textarea>
+          <textarea name="panelDescription" rows="5"><%= cfg.panelEmbed?.description || '' %></textarea>
         </label>
         <label>Panel Farbe (Hex)
           <input name="panelColor" value="<%= cfg.panelEmbed?.color || '#5865F2' %>" placeholder="#5865F2">
@@ -107,62 +92,46 @@
         </label>
       </fieldset>
 
-      <!-- Formular Felder Builder -->
+      <!-- Formular Felder ------------------------------------------------------------------>
       <fieldset>
-        <legend>Ticket Formular Felder</legend>
+        <legend>Benutzer‑Formular Felder</legend>
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr>
-                <th style="width:26px"></th>
-                <th>Label*</th>
-                <th style="width:120px">Custom ID*</th>
-                <th style="width:110px">Typ</th>
-                <th style="width:70px">Req?</th>
-                <th style="width:70px">Min</th>
-                <th style="width:70px">Max</th>
-                <th style="width:70px">Löschen</th>
-              </tr>
+              <tr><th>Label*</th><th>Placeholder</th><th>Typ</th><th>Required</th></tr>
             </thead>
             <tbody id="formRows">
               <% (cfg.formFields||[]).forEach(f => { %>
-              <tr draggable="true">
-                <td><span class="drag-handle" title="Ziehen">↕</span></td>
-                <td><input name="ff_label" value="<%= f.label %>" required></td>
-                <td><input name="ff_id" value="<%= f.id %>" required></td>
-                <td>
-                  <select name="ff_style">
-                    <option value="short" <%= f.style==='short'?'selected':'' %>>Short</option>
-                    <option value="paragraph" <%= f.style==='paragraph'?'selected':'' %>>Paragraph</option>
-                  </select>
-                </td>
-                <td style="text-align:center">
-                  <input type="checkbox" name="ff_required" value="1" <%= f.required? 'checked':'' %>>
-                </td>
-                <td><input name="ff_min" type="number" min="0" value="<%= f.minLength!=null?f.minLength:'' %>"></td>
-                <td><input name="ff_max" type="number" min="1" value="<%= f.maxLength!=null?f.maxLength:'' %>"></td>
-                <td><button type="button" class="del-btn" onclick="deleteFormRow(this)">✖</button></td>
-              </tr>
+                <tr>
+                  <td><input name="ffLabel" value="<%= f.label %>" required></td>
+                  <td><input name="ffPlaceholder" value="<%= f.placeholder || '' %>"></td>
+                  <td>
+                    <select name="ffType">
+                      <option value="short" <%= f.type==='short'? 'selected':'' %>>Kurz</option>
+                      <option value="paragraph" <%= f.type==='paragraph'? 'selected':'' %>>Lang</option>
+                      <option value="number" <%= f.type==='number'? 'selected':'' %>>Zahl</option>
+                    </select>
+                  </td>
+                  <td style="text-align:center"><input type="checkbox" name="ffRequired" <%= f.required? 'checked':'' %>></td>
+                </tr>
               <% }) %>
             </tbody>
           </table>
         </div>
-        <button type="button" class="add-btn" onclick="addFormRow()">➕ Feld</button>
-        <p class="soft-note" style="margin-top:.5rem">* Label & Custom ID Pflicht. Min/Max nur angeben wenn benötigt. Reihenfolge = Reihenfolge im Modal.</p>
-        <input type="hidden" name="formFieldsJson" id="formFieldsJson" value="<%= JSON.stringify(cfg.formFields||[], null, 2) %>">
+        <button type="button" class="add-btn" onclick="addFormRow()">➕ Zeile</button>
+        <p class="soft-note">Diese Felder müssen Nutzer beim Ticket‑Erstellen ausfüllen (Modal). JSON‑Vorschau wird automatisch aktualisiert.</p>
       </fieldset>
 
-      <!-- RAW JSON (Topics / FormFields) -->
+      <!-- RAW JSON ----------------------------------------------------------------------->
       <fieldset>
         <legend>RAW JSON (Optional)</legend>
-        <p class="soft-note">Topics JSON wird <b>nur</b> genutzt, wenn keine Tabellen-Zeile oben ausgefüllt ist.</p>
+        <p class="soft-note">JSON wird überschrieben, wenn du oben Tabellenfelder änderst.</p>
         <label>Topics (JSON)
-          <textarea name="topicsJson" rows="9" id="topicsJson"><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
+          <textarea name="topicsJson" rows="8" id="topicsJson"><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
         </label>
-        <label>FormFields (JSON, falls du lieber direkt bearbeitest)
-          <textarea rows="9" id="rawFormFields"><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
+        <label>FormFields (JSON)
+          <textarea name="formFieldsJson" rows="8" id="formFieldsJson"><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
         </label>
-        <p class="soft-note">Wenn du hier Änderungen machst und speicherst, überschreibst du den Builder oben. (Builder aktualisiert das Feld beim Speichern automatisch.)</p>
       </fieldset>
 
     </div>
@@ -185,88 +154,52 @@
   </div>
 
   <footer>
-    <p>Ticket‑Bot Panel • Änderungen werden in <code>config.json</code> gespeichert • Prüfe Schreibrechte des Bots.</p>
+    <p>Ticket‑Bot Panel • Änderungen werden sofort in <code>config.json</code> gespeichert • Stelle sicher, dass der Bot Schreibrechte hat.</p>
   </footer>
 
 <script>
-  /* ========== Topics Builder ========== */
-  function addTopicRow(data={label:'',value:'',emoji:''}){
-    const tr=document.createElement('tr'); tr.draggable=true;
-    tr.innerHTML=`<td><span class="drag-handle" title="Ziehen">↕</span></td>
-      <td><input name="label" value="${escapeHtml(data.label||'')}" required></td>
-      <td><input name="value" value="${escapeHtml(data.value||'')}" placeholder="auto"></td>
-      <td><input name="emoji" value="${escapeHtml(data.emoji||'')}" placeholder="😀"></td>
-      <td><button type="button" class="del-btn" onclick="deleteTopicRow(this)">✖</button></td>`;
-    document.getElementById('topicRows').appendChild(tr);
+  /* -------------------- Topics -------------------- */
+  function addRow(){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input name="label" required></td><td><input name="value" placeholder="auto"></td><td><input name="emoji"></td>`;
+    document.getElementById('rows').appendChild(tr);
   }
-  function deleteTopicRow(btn){ btn.closest('tr')?.remove(); syncTopicsJson(); }
 
-  /* ========== Form Fields Builder ========== */
-  function addFormRow(data={label:'',id:'',style:'short',required:false,minLength:'',maxLength:''}){
-    const tr=document.createElement('tr'); tr.draggable=true;
-    tr.innerHTML=`<td><span class=\"drag-handle\" title=\"Ziehen\">↕</span></td>
-      <td><input name=\"ff_label\" value=\"${escapeHtml(data.label||'')}\" required></td>
-      <td><input name=\"ff_id\" value=\"${escapeHtml(data.id||'')}\" required></td>
-      <td><select name=\"ff_style\"><option value=\"short\" ${data.style==='short'?'selected':''}>Short</option><option value=\"paragraph\" ${data.style==='paragraph'?'selected':''}>Paragraph</option></select></td>
-      <td style=\"text-align:center\"><input type=\"checkbox\" name=\"ff_required\" value=\"1\" ${data.required?'checked':''}></td>
-      <td><input name=\"ff_min\" type=\"number\" min=\"0\" value=\"${data.minLength!==undefined&&data.minLength!==null?data.minLength:''}\"></td>
-      <td><input name=\"ff_max\" type=\"number\" min=\"1\" value=\"${data.maxLength!==undefined&&data.maxLength!==null?data.maxLength:''}\"></td>
-      <td><button type=\"button\" class=\"del-btn\" onclick=\"deleteFormRow(this)\">✖</button></td>`;
+  /* -------------------- FormFields ---------------- */
+  function addFormRow(data={label:'',placeholder:'',type:'short',required:false}){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input name="ffLabel" value="${escapeHtml(data.label)}" required></td>
+      <td><input name="ffPlaceholder" value="${escapeHtml(data.placeholder)}"></td>
+      <td><select name="ffType">
+            <option value="short" ${data.type==='short'?'selected':''}>Kurz</option>
+            <option value="paragraph" ${data.type==='paragraph'?'selected':''}>Lang</option>
+            <option value="number" ${data.type==='number'?'selected':''}>Zahl</option>
+          </select></td>
+      <td style="text-align:center"><input type="checkbox" name="ffRequired" ${data.required?'checked':''}></td>`;
     document.getElementById('formRows').appendChild(tr);
   }
-  function deleteFormRow(btn){ btn.closest('tr')?.remove(); syncFormJson(); }
 
-  /* ========== Escape Helper ========== */
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
 
-  /* ========== Drag & Drop (generic) ========== */
-  function setupDrag(containerId, jsonSyncFn){
-    const tbody=document.getElementById(containerId); let dragEl=null, placeholder=null;
-    tbody.addEventListener('dragstart',e=>{ const tr=e.target.closest('tr'); if(!tr) return; dragEl=tr; tr.classList.add('dragging'); placeholder=document.createElement('tr'); placeholder.className='drag-placeholder'; tr.after(placeholder); e.dataTransfer.effectAllowed='move'; });
-    tbody.addEventListener('dragover',e=>{ e.preventDefault(); if(!placeholder) return; const y=e.clientY; const rows=[...tbody.querySelectorAll('tr:not(.dragging)')]; let after=null; for(const r of rows){ const box=r.getBoundingClientRect(); if(y<box.top+box.height/2){ after=r; break; } } if(after) tbody.insertBefore(placeholder,after); else tbody.appendChild(placeholder); });
-    tbody.addEventListener('dragend',()=>{ if(!placeholder||!dragEl) return; placeholder.replaceWith(dragEl); dragEl.classList.remove('dragging'); dragEl=null; placeholder=null; jsonSyncFn(); });
-  }
-  setupDrag('topicRows', syncTopicsJson);
-  setupDrag('formRows', syncFormJson);
-
-  /* ========== Sync JSON Preview (Topics) ========== */
-  function syncTopicsJson(){
-    const labels=[...document.querySelectorAll('#topicRows input[name="label"]')];
-    if(!labels.length) return; // nichts
-    const topics=[]; for(const tr of document.querySelectorAll('#topicRows tr')){ const L=tr.querySelector('input[name="label"]').value.trim(); if(!L) continue; const V=tr.querySelector('input[name="value"]').value.trim() || L.toLowerCase().replace(/\s+/g,'-'); const E=tr.querySelector('input[name="emoji"]').value.trim(); topics.push(E?{label:L,value:V,emoji:E}:{label:L,value:V}); }
-    document.getElementById('topicsJson').value = JSON.stringify(topics,null,2);
-  }
-  document.getElementById('topicRows').addEventListener('input', syncTopicsJson);
-
-  /* ========== Sync JSON (Form Fields) ========== */
+  /* Sync JSON preview when form field table changes */
   function syncFormJson(){
-    const rows=[...document.querySelectorAll('#formRows tr')];
-    const list=[]; for(const tr of rows){
-      const L=tr.querySelector('input[name="ff_label"]').value.trim();
-      const ID=tr.querySelector('input[name="ff_id"]').value.trim();
-      if(!L||!ID) continue;
-      const style=tr.querySelector('select[name="ff_style"]').value==='paragraph'?'paragraph':'short';
-      const req=tr.querySelector('input[name="ff_required"]').checked;
-      const minRaw=tr.querySelector('input[name="ff_min"]').value.trim();
-      const maxRaw=tr.querySelector('input[name="ff_max"]').value.trim();
-      const entry={ label:L, id:ID, style, required:req };
-      if(minRaw!=='' && !isNaN(minRaw)) entry.minLength=parseInt(minRaw);
-      if(maxRaw!=='' && !isNaN(maxRaw)) entry.maxLength=parseInt(maxRaw);
-      list.push(entry);
-    }
-    const json=JSON.stringify(list,null,2);
-    document.getElementById('formFieldsJson').value = json;
-    document.getElementById('rawFormFields').value = json; // Sync Anzeige
+    const labels=[...document.querySelectorAll('#formRows input[name="ffLabel"]')];
+    if(!labels.length) return; // nothing yet
+    const arr=[];
+    labels.forEach((inp,idx)=>{
+      const label=inp.value.trim(); if(!label) return; // skip empty
+      const placeholder=document.querySelectorAll('#formRows input[name="ffPlaceholder"]')[idx].value.trim();
+      const type=document.querySelectorAll('#formRows select[name="ffType"]')[idx].value;
+      const required=document.querySelectorAll('#formRows input[name="ffRequired"]')[idx].checked;
+      const obj={ label, type };
+      if(placeholder) obj.placeholder=placeholder;
+      if(required) obj.required=true;
+      arr.push(obj);
+    });
+    document.getElementById('formFieldsJson').value=JSON.stringify(arr, null, 2);
   }
   document.getElementById('formRows').addEventListener('input', syncFormJson);
-
-  /* ========== Submit Cleanup ========== */
-  document.getElementById('panelForm').addEventListener('submit',()=>{
-    // Entferne komplett leere Topic-Zeilen
-    [...document.querySelectorAll('#topicRows tr')].forEach(tr=>{ const label=tr.querySelector('input[name="label"]').value.trim(); if(!label) tr.remove(); });
-    // Sync Form Felder
-    syncFormJson();
-  });
+  document.getElementById('panelForm').addEventListener('submit', syncFormJson);
 </script>
 </body>
 </html>
