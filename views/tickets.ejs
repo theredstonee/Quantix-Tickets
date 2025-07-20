@@ -5,59 +5,70 @@
   <title>Tickets Übersicht</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    body { max-width: 1400px; }
-    table { width:100%; font-size:.8rem; }
-    th, td { vertical-align: middle; }
-    th { user-select:none; cursor:pointer; }
-    .status-offen { color:#2bd94a; font-weight:600; }
-    .status-geschlossen { color:#d92b2b; font-weight:600; }
-    .status-claimed { color:#ffa500; font-weight:600; }
-    .prio-dot { font-size:1rem; }
-    .toolbar { display:flex; gap:1rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
-    .toolbar > * { flex: 0 0 auto; }
-    .chips { display:flex; gap:.4rem; flex-wrap:wrap; }
-    .chip { padding:.25rem .6rem; border-radius:999px; background:#eee; font-size:.7rem; cursor:pointer; }
-    .chip.active { background:#5865F2; color:#fff; }
-    .badge { padding:.15rem .45rem; border-radius:.4rem; font-size:.65rem; background:#444; color:#fff; }
-    .prio-0 { color:#2bd94a; }
-    .prio-1 { color:#ff9900; }
-    .prio-2 { color:#d92b2b; }
-    .claimed { background:#ffb347; color:#000; }
-    .unclaimed { background:#888; }
-    .nowrap { white-space:nowrap; }
-    .small { font-size:.65rem; opacity:.7; }
-    .claim-cell { font-size:.65rem; }
-    .hidden { display:none !important; }
-    .refresh-btn { margin-left:auto; }
+    body{max-width:1350px}
+    h1{display:flex;align-items:center;gap:.6rem;margin-bottom:.2rem}
+    .sub{font-size:.75rem;opacity:.65;margin:0 0 1.25rem}
+    a.back{display:inline-flex;align-items:center;gap:.35rem;margin-bottom:1.4rem;text-decoration:none}
+
+    /* --- Controls --- */
+    .controls{display:flex;flex-direction:column;gap:.9rem;margin-bottom:.9rem}
+    .controls .row{display:flex;flex-wrap:wrap;gap:.55rem;align-items:center}
+    #search{flex:1 1 520px;min-width:280px}
+    label.inline{display:flex;align-items:center;gap:.4rem;font-size:.72rem;white-space:nowrap}
+
+    .chipbar{display:flex;flex-wrap:wrap;gap:.5rem}
+    .chip{background:#eef0f5;border:0;padding:.46rem 1.05rem;border-radius:999px;font-size:.7rem;font-weight:500;cursor:pointer;line-height:1;user-select:none;transition:.15s}
+    .chip.active{background:#4263eb;color:#fff;box-shadow:0 0 0 1px #4263eb}
+    .chip.prio span{display:inline-block;width:.9rem;height:.9rem;border-radius:50%;}
+    .chip.prio span.green{background:#2bd94a}
+    .chip.prio span.orange{background:#ff9900}
+    .chip.prio span.red{background:#d92b2b}
+
+    #refreshBar{background:#13202b;color:#fff;border-radius:8px;padding:.85rem 1.1rem;display:flex;align-items:center;justify-content:space-between;margin-top:.4rem}
+    #refreshBar button{background:#1e2d3a;border:0;color:#fff;padding:.55rem 1.1rem;border-radius:6px;cursor:pointer;font-size:.75rem;display:flex;align-items:center;gap:.45rem}
+
+    table{width:100%;font-size:.8rem;border-collapse:collapse}
+    thead th{white-space:nowrap;cursor:pointer;user-select:none;padding:.55rem .6rem;font-size:.7rem;letter-spacing:.5px;text-transform:uppercase}
+    thead th.sortAsc:after{content:" \25B2"}
+    thead th.sortDesc:after{content:" \25BC"}
+    tbody td{padding:.55rem .6rem;vertical-align:middle;border-top:1px solid #e5e8ec}
+    tbody tr:hover{background:#f6f8fb}
+    .badge{background:#e3e7ec;font-family:monospace;font-size:.65rem;padding:.2rem .45rem;border-radius:.4rem;display:inline-block}
+    .status-offen{color:#2bd94a;font-weight:600}
+    .status-geschlossen{color:#d92b2b;font-weight:600}
+    .prio-dot{font-size:1rem}
+    .nowrap{white-space:nowrap}
+    .trans-link{text-decoration:none}
+    tr.hide{display:none}
+    footer{margin:2.2rem 0 .8rem;font-size:.65rem;opacity:.55}
+    @media (max-width:880px){ thead th:nth-child(8), tbody td:nth-child(8){display:none} }
+    @media (max-width:680px){ thead th:nth-child(7), tbody td:nth-child(7){display:none} }
   </style>
 </head>
 <body class="container">
-  <header>
-    <h1>🎫 Tickets Übersicht</h1>
-    <p class="small">Nur für Team-Mitglieder sichtbar. Live-Daten aus <code>tickets.json</code> (Reload / Auto-Refresh).</p>
-    <nav><a href="/panel">⬅️ Zurück zum Panel</a></nav>
-  </header>
+  <h1>🎫 Tickets Übersicht</h1>
+  <p class="sub">Nur für Team‑Mitglieder sichtbar. Live-Daten aus <code>tickets.json</code>.</p>
+  <a href="/panel" class="back">⬅️ Zurück zum Panel</a>
 
-  <div class="toolbar">
-    <input type="text" id="search" placeholder="Suche (ID, Topic, User, Claimer)" style="min-width:260px;">
-    <div class="chips" id="statusFilter">
-      <span class="chip active" data-status="alle">Alle</span>
-      <span class="chip" data-status="offen">Offen</span>
-      <span class="chip" data-status="geschlossen">Geschlossen</span>
-      <span class="chip" data-status="claimed">Claimed</span>
-      <span class="chip" data-status="unclaimed">Unclaimed</span>
+  <section class="controls">
+    <div class="row">
+      <input id="search" placeholder="Suche (ID, Topic, User, Claimer)" autocomplete="off">
+      <label class="inline"><input type="checkbox" id="auto" checked> Auto‑Refresh (30s)</label>
     </div>
-    <div class="chips" id="prioFilter">
-      <span class="chip active" data-prio="all">Prio: Alle</span>
-      <span class="chip" data-prio="0">🟢</span>
-      <span class="chip" data-prio="1">🟠</span>
-      <span class="chip" data-prio="2">🔴</span>
+    <div class="row chipbar" id="statusBar">
+      <button class="chip active" data-status="alle">Alle</button>
+      <button class="chip" data-status="offen">Offen</button>
+      <button class="chip" data-status="geschlossen">Geschlossen</button>
+      <button class="chip" data-claim="alle">Claimed+Unclaimed</button>
+      <button class="chip" data-claim="claimed">Claimed</button>
+      <button class="chip" data-claim="unclaimed">Unclaimed</button>
+      <button class="chip active" data-prio="alle" id="prioAll">Prio: Alle</button>
+      <button class="chip prio" data-prio="0" title="Grün"><span class="green"></span></button>
+      <button class="chip prio" data-prio="1" title="Orange"><span class="orange"></span></button>
+      <button class="chip prio" data-prio="2" title="Rot"><span class="red"></span></button>
     </div>
-    <label style="display:flex;align-items:center;gap:.3rem;font-size:.7rem;">
-      <input type="checkbox" id="autoRefresh" checked> Auto‑Refresh (30s)
-    </label>
-    <button id="reload" class="contrast refresh-btn">🔄 Aktualisieren</button>
-  </div>
+    <div id="refreshBar"><button id="refreshBtn">🔄 Aktualisieren</button><span id="lastUpdate" style="font-size:.7rem;opacity:.75">Letztes Update: –</span></div>
+  </section>
 
   <table id="ticketsTable">
     <thead>
@@ -66,114 +77,131 @@
         <th data-sort="priority">Prio</th>
         <th data-sort="status">Status</th>
         <th data-sort="topic">Topic</th>
-        <th data-sort="userId">User</th>
-        <th data-sort="claimer">Claimer</th>
+        <th data-sort="userName">User</th>
+        <th data-sort="claimerName">Claimer</th>
         <th data-sort="timestamp">Erstellt</th>
-        <th>Kanal</th>
+        <th data-sort="channelId">Kanal</th>
+        <th>Transcript</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
-  <footer style="margin-top:2rem;font-size:.65rem;opacity:.6">
-    Ticket-Verlauf • Filtering & Sorting client-seitig • Letztes Update: <span id="lastUpdate">–</span>
-  </footer>
+  <footer>Ticket‑Verlauf • Client‑seitige Filter & Sortierung • Letztes Update: <span id="footerUpdate">–</span></footer>
 
 <script>
-const tbody = document.querySelector('#ticketsTable tbody');
-let allTickets = [];
-let currentSort = { key: 'id', dir: 'desc' };
+  // Server-seitig injizierte Daten (panel.js /tickets Route muss diese Variablen setzen)
+  // Erwartet: window.__TICKETS und window.__MEMBERS
+  // Falls du EJS verwendest: in tickets.ejs oberhalb dieses Scripts einsetzen:
+  // <script>window.__TICKETS = <%- tickets %>; window.__MEMBERS = <%- memberMap %>; const GUILD_ID = '<%= guildId %>';</script>
+</script>
+<script>
+  // Fallback, falls Template die Variablen direkt schreibt
+  const ticketsRaw = window.__TICKETS || [];
+  const memberMap = window.__MEMBERS || {}; // { id: { display, tag, nickname } }
+  const GUILD_ID = window.GUILD_ID || '<%= guildId || "" %>';
 
-async function loadTickets(){
-  const res = await fetch('/tickets.json?_=' + Date.now()).catch(()=>null);
-  if(!res || !res.ok){ return; }
-  allTickets = await res.json();
-  render();
-  document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('de-DE');
-}
+  let tickets = ticketsRaw.slice();
+  let sortKey = 'id';
+  let sortDir = 'desc';
+  let statusFilter = 'alle';
+  let claimFilter = 'alle';
+  let prioFilter = 'alle';
 
-function sortTickets(list){
-  const { key, dir } = currentSort;
-  return list.sort((a,b)=>{
-    let va=a[key], vb=b[key];
-    if(key === 'timestamp'){ va=+va; vb=+vb; }
-    if(key === 'priority'){ va=+(va||0); vb=+(vb||0); }
-    if(key === 'id'){ va=+va; vb=+vb; }
-    if(va==null) va=''; if(vb==null) vb='';
-    if(typeof va === 'string') va=va.toLowerCase();
-    if(typeof vb === 'string') vb=vb.toLowerCase();
-    if(va<vb) return dir==='asc'? -1:1;
-    if(va>vb) return dir==='asc'? 1:-1;
-    return 0;
+  const tbody = document.querySelector('#ticketsTable tbody');
+  const dots = ['🟢','🟠','🔴'];
+
+  function displayName(id){ if(!id) return ''; const m = memberMap[id]; return m? (m.display || m.tag || id) : id; }
+  function fmt(ts){ const d=new Date(ts); return d.toLocaleDateString('de-DE',{day:'numeric',month:'numeric',year:'numeric'})+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+
+  function apply(){
+    let list = tickets.slice();
+    if(statusFilter!=='alle') list = list.filter(t=>t.status===statusFilter);
+    if(claimFilter==='claimed') list = list.filter(t=>!!t.claimer);
+    if(claimFilter==='unclaimed') list = list.filter(t=>!t.claimer);
+    if(prioFilter!=='alle') list = list.filter(t=>(t.priority||0)==+prioFilter);
+    const q = document.getElementById('search').value.trim().toLowerCase();
+    if(q) list = list.filter(t=> (
+      String(t.id).includes(q) ||
+      (t.topic||'').toLowerCase().includes(q) ||
+      (t.userId||'').includes(q) ||
+      (t.claimer||'').includes(q) ||
+      displayName(t.userId).toLowerCase().includes(q) ||
+      displayName(t.claimer).toLowerCase().includes(q)
+    ));
+
+    list.sort((a,b)=>{
+      let av, bv;
+      if(sortKey==='userName'){ av = displayName(a.userId).toLowerCase(); bv = displayName(b.userId).toLowerCase(); }
+      else if(sortKey==='claimerName'){ av = displayName(a.claimer).toLowerCase(); bv = displayName(b.claimer).toLowerCase(); }
+      else { av = a[sortKey]; bv = b[sortKey]; }
+      if(['id','timestamp','priority'].includes(sortKey)){ av=Number(av)||0; bv=Number(bv)||0; }
+      else { av=(av||'').toString().toLowerCase(); bv=(bv||'').toString().toLowerCase(); }
+      if(av<bv) return sortDir==='asc'? -1:1;
+      if(av>bv) return sortDir==='asc'? 1:-1;
+      return 0;
+    });
+    render(list);
+  }
+
+  function render(list){
+    tbody.innerHTML = list.map(t=>{
+      const pr = t.priority||0;
+      const userName = displayName(t.userId);
+      const claimerName = displayName(t.claimer);
+      const transcriptFile = `transcript_${t.id}.html`;
+      return `<tr data-status="${t.status}" data-claimed="${t.claimer? 'yes':'no'}" data-prio="${pr}">
+        <td class="nowrap"><span class="badge">${t.id}</span></td>
+        <td class="prio-dot">${dots[pr]}</td>
+        <td class="status-${t.status}">${t.status}</td>
+        <td>${t.topic||''}</td>
+        <td><span class="badge" title="${t.userId||''}">${userName}</span></td>
+        <td>${t.claimer? `<span class="badge" title="${t.claimer}">${claimerName}</span>`:''}</td>
+        <td class="nowrap">${fmt(t.timestamp)}</td>
+        <td><a href="https://discord.com/channels/${GUILD_ID}/${t.channelId}" target="_blank" title="Channel öffnen">🔗</a></td>
+        <td><a class="trans-link" href="/transcript/${t.id}" target="_blank" title="Transcript öffnen">📄</a></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Sortierung
+  document.querySelectorAll('#ticketsTable thead th[data-sort]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const k = th.dataset.sort;
+      if(sortKey===k) sortDir = (sortDir==='asc'?'desc':'asc'); else { sortKey=k; sortDir='asc'; }
+      document.querySelectorAll('#ticketsTable thead th').forEach(h=>h.classList.remove('sortAsc','sortDesc'));
+      th.classList.add(sortDir==='asc'?'sortAsc':'sortDesc');
+      apply();
+    });
   });
-}
 
-function activeStatus(){ return document.querySelector('#statusFilter .chip.active').dataset.status; }
-function activePrio(){ return document.querySelector('#prioFilter .chip.active').dataset.prio; }
-
-function render(){
-  const q = document.getElementById('search').value.trim().toLowerCase();
-  const st = activeStatus();
-  const pf = activePrio();
-  const filtered = allTickets.filter(t=>{
-    if(st==='offen' && t.status!=='offen') return false;
-    if(st==='geschlossen' && t.status!=='geschlossen') return false;
-    if(st==='claimed' && !t.claimer) return false;
-    if(st==='unclaimed' && t.claimer) return false;
-    if(pf!=='all' && String(t.priority||0)!==pf) return false;
-    const hay=(t.id+ ' ' + (t.topic||'') + ' ' + (t.userId||'') + ' ' + (t.claimer||'')).toLowerCase();
-    if(q && !hay.includes(q)) return false;
-    return true;
+  // Filter Chips
+  const statusBar = document.getElementById('statusBar');
+  statusBar.addEventListener('click', e=>{
+    const btn = e.target.closest('.chip'); if(!btn) return;
+    if(btn.dataset.status){ statusFilter = btn.dataset.status; toggleActive('status', statusFilter); }
+    if(btn.dataset.claim){ claimFilter = btn.dataset.claim; toggleActive('claim', claimFilter); }
+    if(btn.dataset.prio){ prioFilter = btn.dataset.prio; toggleActive('prio', prioFilter); }
+    apply();
   });
-  const sorted = sortTickets(filtered.slice());
-  tbody.innerHTML = sorted.map(t=>{
-    const prio = t.priority||0;
-    const dots=['🟢','🟠','🔴'];
-    const statusClass = 'status-' + t.status;
-    return `<tr>
-      <td class="nowrap">#${t.id}</td>
-      <td class="prio-dot prio-${prio}">${dots[prio]}</td>
-      <td class="${statusClass}">${t.status}${t.claimer?'<span class="badge claimed" title="Claimed">C</span>':''}</td>
-      <td>${t.topic||''}</td>
-      <td><code>${t.userId||''}</code></td>
-      <td class="claim-cell">${t.claimer?'<code>'+t.claimer+'</code>':'<span class="badge unclaimed">—</span>'}</td>
-      <td class="nowrap">${new Date(t.timestamp).toLocaleString('de-DE')}</td>
-      <td><a href="https://discord.com/channels/${t.guildId||''}/${t.channelId}" target="_blank">🔗</a></td>
-    </tr>`; }).join('');
-}
+  function toggleActive(type, val){
+    document.querySelectorAll(`.chip[data-${type}]`).forEach(c=>{ c.classList.toggle('active', c.getAttribute(`data-${type}`)===val); });
+    if(type==='prio' && val!=='alle') document.getElementById('prioAll').classList.remove('active');
+  }
 
-// Sorting Events
-Array.from(document.querySelectorAll('th[data-sort]')).forEach(th=>{
-  th.addEventListener('click',()=>{
-    const key = th.dataset.sort;
-    if(currentSort.key===key){ currentSort.dir = currentSort.dir==='asc'?'desc':'asc'; }
-    else { currentSort.key=key; currentSort.dir='asc'; }
-    render();
-  });
-});
+  document.getElementById('search').addEventListener('input', apply);
+  document.getElementById('refreshBtn').addEventListener('click', reloadData);
 
-// Filter Chips
-function chipGroup(id, attr){
-  document.getElementById(id).addEventListener('click', e=>{
-    if(!e.target.classList.contains('chip')) return;
-    [...e.currentTarget.children].forEach(c=>c.classList.remove('active'));
-    e.target.classList.add('active');
-    render();
-  });
-}
-chipGroup('statusFilter','status');
-chipGroup('prioFilter','prio');
+  function setTimes(){ const ts=new Date().toLocaleString('de-DE'); document.getElementById('lastUpdate').textContent='Letztes Update: '+ts; document.getElementById('footerUpdate').textContent=ts; }
+  setTimes();
+  setInterval(()=>{ if(document.getElementById('auto').checked) reloadData(); }, 30000);
 
-// Suche
-search.addEventListener('input',()=>render());
+  async function reloadData(){
+    try { const r = await fetch('/tickets/data?_=' + Date.now()); if(!r.ok) return; tickets = await r.json(); setTimes(); apply(); } catch{}
+  }
 
-// Reload
-reload.addEventListener('click',()=>loadTickets());
-
-// Auto Refresh
-setInterval(()=>{ if(document.getElementById('autoRefresh').checked) loadTickets(); }, 30000);
-
-loadTickets();
+  // Initial Render
+  apply();
 </script>
 </body>
 </html>
