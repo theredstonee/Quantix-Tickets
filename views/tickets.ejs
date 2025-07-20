@@ -102,7 +102,13 @@
   const tbody = document.querySelector('#ticketsTable tbody');
   const dots = ['🟢','🟠','🔴'];
 
-  function displayName(id){ if(!id) return ''; const m = memberMap[id]; return m? (m.display || m.tag || id) : id; }
+  
+  function displayName(id){
+    if(!id) return '';
+    const m = memberMap[id];
+    if(!m) return id;
+    return m.display || m.nickname || m.username || m.tag || id;
+  }
   function fmt(ts){ const d=new Date(ts); return d.toLocaleDateString('de-DE',{day:'numeric',month:'numeric',year:'numeric'})+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
 
   function apply(){

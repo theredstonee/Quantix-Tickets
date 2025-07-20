@@ -179,16 +179,28 @@ module.exports = (client)=>{
   const TICKETS_PATH = path.join(__dirname,'tickets.json');
   function loadTickets(){ try { return JSON.parse(fs.readFileSync(TICKETS_PATH,'utf8')); } catch { return []; } }
 
-  async function buildMemberMap(guild, tickets){
-    const map={};
-    const ids=new Set();
-    tickets.forEach(t=>{ if(t.userId) ids.add(t.userId); if(t.claimer) ids.add(t.claimer); });
-    for(const id of ids){
-      try { const m=await guild.members.fetch(id); map[id]={ tag:m.user.tag, display:m.displayName }; }
-      catch { map[id]={ tag:id, display:id }; }
+async function buildMemberMap(guild, tickets){
+  const map = {};
+  const ids = new Set();
+  tickets.forEach(t => {
+    if(t.userId) ids.add(t.userId);
+    if(t.claimer) ids.add(t.claimer);
+  });
+  for(const id of ids){
+    try {
+      const m = await guild.members.fetch(id);
+      map[id] = {
+        tag: m.user.tag,
+        username: m.user.username,
+        nickname: m.nickname || null,
+        display: m.displayName
+      };
+    } catch {
+      map[id] = { tag:id, username:id, nickname:null, display:id };
     }
-    return map;
   }
+  return map;
+}
 
   /* ====== Tickets HTML Übersicht (NAMEN statt IDs) ====== */
   router.get('/tickets', isAuth, async (req,res)=>{
@@ -197,7 +209,12 @@ module.exports = (client)=>{
       const tickets=loadTickets();
       const guild=await client.guilds.fetch(cfg.guildId);
       const memberMap=await buildMemberMap(guild,tickets);
-      res.render('tickets', { tickets: JSON.stringify(tickets), memberMap: JSON.stringify(memberMap), guildId: cfg.guildId });
+      res.render('tickets', {
+      tickets: JSON.stringify(tickets),
+      memberMap: JSON.stringify(memberMap),
+      guildId: cfg.guildId
+    });
+
     } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden'); }
   });
 
