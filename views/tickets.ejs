@@ -42,13 +42,13 @@
 </head>
 <body class="container">
   <h1>🎫 Tickets Übersicht</h1>
-  <p class="sub">Nur für Team‑Mitglieder sichtbar. Live-Daten aus <code>tickets.json</code>.</p>
+  <p class="sub">Nur für Team-Mitglieder sichtbar. Live-Daten aus <code>tickets.json</code>.</p>
   <a href="/panel" class="back">⬅️ Zurück zum Panel</a>
 
   <section class="controls">
     <div class="row">
       <input id="search" placeholder="Suche (ID, Topic, User, Claimer)" autocomplete="off">
-      <label class="inline"><input type="checkbox" id="auto" checked> Auto‑Refresh (30s)</label>
+      <label class="inline"><input type="checkbox" id="auto" checked> Auto-Refresh (30s)</label>
     </div>
     <div class="row chipbar" id="statusBar">
       <button class="chip active" data-status="alle">Alle</button>
@@ -82,14 +82,20 @@
     <tbody></tbody>
   </table>
 
-  <footer>Ticket‑Verlauf • Client‑seitige Filter & Sortierung • Letztes Update: <span id="footerUpdate">–</span></footer>
+  <footer>Ticket-Verlauf • Client-seitige Filter & Sortierung • Letztes Update: <span id="footerUpdate">–</span></footer>
+
+<!-- ✅ Server-seitig injizierte Daten (neu) -->
+<script>
+  // Diese Variablen werden aus panel.js gesetzt:
+  // res.render('tickets', { tickets: JSON.stringify(tickets), memberMap: JSON.stringify(memberMap), guildId: cfg.guildId });
+  window.__TICKETS = <%- tickets %>;
+  window.__MEMBERS = <%- memberMap %>;
+  window.GUILD_ID  = '<%= guildId %>';
+</script>
 
 <script>
-  // Erwartet: server setzt window.__TICKETS, window.__MEMBERS und window.GUILD_ID
-</script>
-<script>
   const ticketsRaw = window.__TICKETS || [];
-  const memberMap = window.__MEMBERS || {}; // { id: { display, tag, nickname } }
+  const memberMap = window.__MEMBERS || {}; // { id: { display, tag, nickname, username } }
   const GUILD_ID = window.GUILD_ID || '';
 
   let tickets = ticketsRaw.slice();
@@ -102,14 +108,16 @@
   const tbody = document.querySelector('#ticketsTable tbody');
   const dots = ['🟢','🟠','🔴'];
 
-  
   function displayName(id){
     if(!id) return '';
     const m = memberMap[id];
     if(!m) return id;
     return m.display || m.nickname || m.username || m.tag || id;
   }
-  function fmt(ts){ const d=new Date(ts); return d.toLocaleDateString('de-DE',{day:'numeric',month:'numeric',year:'numeric'})+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+  function fmt(ts){
+    const d=new Date(ts);
+    return d.toLocaleDateString('de-DE',{day:'numeric',month:'numeric',year:'numeric'})+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
 
   function apply(){
     let list = tickets.slice();
@@ -186,12 +194,22 @@
   document.getElementById('search').addEventListener('input', apply);
   document.getElementById('refreshBtn').addEventListener('click', reloadData);
 
-  function setTimes(){ const ts=new Date().toLocaleString('de-DE'); document.getElementById('lastUpdate').textContent='Letztes Update: '+ts; document.getElementById('footerUpdate').textContent=ts; }
+  function setTimes(){
+    const ts=new Date().toLocaleString('de-DE');
+    document.getElementById('lastUpdate').textContent='Letztes Update: '+ts;
+    document.getElementById('footerUpdate').textContent=ts;
+  }
   setTimes();
   setInterval(()=>{ if(document.getElementById('auto').checked) reloadData(); }, 30000);
 
   async function reloadData(){
-    try { const r = await fetch('/tickets/data?_=' + Date.now()); if(!r.ok) return; tickets = await r.json(); setTimes(); apply(); } catch{}
+    try {
+      const r = await fetch('/tickets/data?_=' + Date.now());
+      if(!r.ok) return;
+      tickets = await r.json();
+      setTimes();
+      apply();
+    } catch{}
   }
 
   apply();
