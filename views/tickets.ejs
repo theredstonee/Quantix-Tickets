@@ -45,6 +45,40 @@
   <p class="sub">Nur für Team-Mitglieder sichtbar. Live-Daten aus <code>tickets.json</code>.</p>
   <a href="/panel" class="back">⬅️ Zurück zum Panel</a>
 
+  <style>
+  .embed-preview{display:flex;gap:.75rem;flex-wrap:wrap;margin:.75rem 0 1rem}
+  .d-embed{display:flex;gap:.8rem;align-items:flex-start;background:#2b2d31;border:1px solid #1f2124;border-radius:8px;padding:.75rem 1rem;color:#e6e7e8;max-width:900px}
+  .d-embed .acc{width:4px;border-radius:3px;background:#5865F2;flex:0 0 4px}
+  .d-embed .body{flex:1}
+  .d-embed .title{font-weight:700;margin-bottom:.25rem}
+  .d-embed .desc{white-space:pre-wrap;opacity:.95}
+  .d-embed .footer{margin-top:.5rem;font-size:.8rem;opacity:.75}
+  </style>
+
+<div class="embed-preview">
+  <% if (panelEmbed && (panelEmbed.title || panelEmbed.description || panelEmbed.footer)) { %>
+    <div class="d-embed">
+      <div class="acc" style="background:<%= panelEmbed.color || '#5865F2' %>"></div>
+      <div class="body">
+        <% if(panelEmbed.title){ %><div class="title"><%= panelEmbed.title %></div><% } %>
+        <% if(panelEmbed.description){ %><div class="desc"><%= panelEmbed.description %></div><% } %>
+        <% if(panelEmbed.footer){ %><div class="footer"><%= panelEmbed.footer %></div><% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (ticketEmbed && (ticketEmbed.title || ticketEmbed.description || ticketEmbed.footer)) { %>
+    <div class="d-embed">
+      <div class="acc" style="background:<%= ticketEmbed.color || '#2b90d9' %>"></div>
+      <div class="body">
+        <% if(ticketEmbed.title){ %><div class="title"><%= ticketEmbed.title %></div><% } %>
+        <% if(ticketEmbed.description){ %><div class="desc"><%= ticketEmbed.description %></div><% } %>
+        <% if(ticketEmbed.footer){ %><div class="footer"><%= ticketEmbed.footer %></div><% } %>
+      </div>
+    </div>
+  <% } %>
+</div>
+
   <section class="controls">
     <div class="row">
       <input id="search" placeholder="Suche (ID, Topic, User, Claimer)" autocomplete="off">
