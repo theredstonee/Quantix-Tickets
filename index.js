@@ -185,7 +185,6 @@ async function logEvent(guild, text){
 }
 
 /* ================= Transcript ================= */
-// ===== Transcript mit Embed-Support + Mention-Auflösung =====
 async function createTranscript(channel, ticket){
   const guild = channel.guild;
 
