@@ -185,93 +185,200 @@ async function logEvent(guild, text){
 }
 
 /* ================= Transcript ================= */
-async function createTranscript(channel, ticket, opts = {}) {
-  const { AttachmentBuilder } = require('discord.js');
-  const resolveMentions = !!opts.resolveMentions;
+// ===== Transcript mit Embed-Support + Mention-Auflösung =====
+async function createTranscript(channel, ticket){
+  const guild = channel.guild;
 
-  // bis zu 1000 Nachrichten sammeln
-  let messages = [];
-  let lastId;
-  while (messages.length < 1000) {
-    const fetched = await channel.messages.fetch({ limit: 100, before: lastId }).catch(()=>null);
-    if (!fetched || fetched.size === 0) break;
-    messages.push(...fetched.values());
-    lastId = fetched.last().id;
+  // Caches für schnelle Namensauflösung
+  const userCache   = new Map();
+  const roleCache   = new Map();
+  const chanCache   = new Map();
+
+  const esc = (s='') => String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+  async function resolveUser(id){
+    if(userCache.has(id)) return userCache.get(id);
+    let name = id;
+    try {
+      const m = await guild.members.fetch(id);
+      name = `${m.displayName} (${m.user.username})`;
+    } catch {
+      try {
+        const u = await channel.client.users.fetch(id);
+        name = u.username || u.tag || id;
+      } catch {}
+    }
+    userCache.set(id, name);
+    return name;
   }
-  messages.sort((a,b)=> a.createdTimestamp - b.createdTimestamp);
+  async function resolveRole(id){
+    if(roleCache.has(id)) return roleCache.get(id);
+    let name = id;
+    try { const r = await guild.roles.fetch(id); name = r ? `@${r.name}` : id; } catch {}
+    roleCache.set(id, name); return name;
+  }
+  async function resolveChannel(id){
+    if(chanCache.has(id)) return chanCache.get(id);
+    let name = id;
+    try { const ch = await guild.channels.fetch(id); name = ch ? `#${ch.name}` : id; } catch {}
+    chanCache.set(id, name); return name;
+  }
 
-  // Hilfsfunktionen für Mentions -> Namen
-  const rolesCache   = channel.guild.roles.cache;
-  const chansCache   = channel.guild.channels.cache;
-  const membersCache = channel.guild.members.cache;
+  // Mentions in PLAIN TEXT auflösen
+  async function resolveMentionsText(text=''){
+    let out = text;
+    // users
+    const uMatches = [...text.matchAll(/<@!?(\d{17,20})>/g)];
+    for(const m of uMatches){ out = out.replace(m[0], '@'+await resolveUser(m[1])); }
+    // roles
+    const rMatches = [...out.matchAll(/<@&(\d{17,20})>/g)];
+    for(const m of rMatches){ out = out.replace(m[0], await resolveRole(m[1])); }
+    // channels
+    const cMatches = [...out.matchAll(/<#(\d{17,20})>/g)];
+    for(const m of cMatches){ out = out.replace(m[0], await resolveChannel(m[1])); }
+    return out;
+  }
 
-  const mentionToName = (text='')=>{
-    if (!resolveMentions || !text) return text;
+  // Mentions in HTML (mit Escaping) auflösen
+  async function resolveMentionsHtml(text=''){
+    let out = esc(text);
+    const uMatches = [...text.matchAll(/<@!?(\d{17,20})>/g)];
+    for(const m of uMatches){
+      const name = esc(await resolveUser(m[1]));
+      out = out.replace(esc(m[0]), `<span class="mention">@${name}</span>`);
+    }
+    const rMatches = [...text.matchAll(/<@&(\d{17,20})>/g)];
+    for(const m of rMatches){
+      const name = esc(await resolveRole(m[1]));
+      out = out.replace(esc(m[0]), `<span class="mention">${name}</span>`);
+    }
+    const cMatches = [...text.matchAll(/<#(\d{17,20})>/g)];
+    for(const m of cMatches){
+      const name = esc(await resolveChannel(m[1]));
+      out = out.replace(esc(m[0]), `<span class="chan">${name}</span>`);
+    }
+    return out;
+  }
 
-    return text
-      // User Mentions <@123> / <@!123>
-      .replace(/<@!?(\d{17,20})>/g, (_, id) => {
-        const m = membersCache.get(id);
-        const tag  = m?.user?.tag || id;
-        const name = m?.displayName || tag;
-        return `@${name}`;
-      })
-      // Rollen <@&123>
-      .replace(/<@&(\d{17,20})>/g, (_, id) => {
-        const r = rolesCache.get(id);
-        return `@${(r && r.name) || `Rolle:${id}`}`;
-      })
-      // Channels <#123>
-      .replace(/<#(\d{17,20})>/g, (_, id) => {
-        const c = chansCache.get(id);
-        return `#${(c && c.name) || id}`;
-      });
-  };
+  // Nachrichten einsammeln (bis 1000)
+  let all = [];
+  let before;
+  while(all.length < 1000){
+    const batch = await channel.messages.fetch({ limit: 100, before }).catch(()=>null);
+    if(!batch || batch.size === 0) break;
+    all.push(...batch.values());
+    before = batch.last().id;
+  }
+  all.sort((a,b)=> a.createdTimestamp - b.createdTimestamp);
 
-  // TXT-Inhalt
-  const lines = [
-    `# Transcript Ticket ${ticket.id}`,
-    `Channel: ${channel.name}`,
-    `Erstellt: ${new Date(ticket.timestamp).toISOString()}`,
-    ''
-  ];
+  // ---------- Plain-Text bauen (inkl. Embeds) ----------
+  const lines = [];
+  lines.push(`# Transcript Ticket ${ticket.id}`);
+  lines.push(`Channel: ${channel.name}`);
+  lines.push(`Erstellt: ${new Date(ticket.timestamp).toISOString()}`);
+  lines.push(`Nachrichten: ${all.length}`);
+  lines.push('');
 
-  for (const m of messages) {
-    const time   = new Date(m.createdTimestamp).toISOString();
-    const author = m.author ? (m.author.tag || m.author.id) : 'Unbekannt';
-    const content = mentionToName(m.content || '').replace(/\n/g, '\\n');
-    lines.push(`[${time}] ${author}: ${content}`);
-    if (m.attachments.size) {
+  for(const m of all){
+    const ts = new Date(m.createdTimestamp).toISOString();
+    const author = m.author ? (m.author.tag || m.author.username || m.author.id) : 'Unbekannt';
+    const content = await resolveMentionsText(m.content || '');
+    lines.push(`[${ts}] ${author}: ${content}`);
+    // Dateien
+    if(m.attachments.size){
       m.attachments.forEach(a => lines.push(`  [Anhang] ${a.name} -> ${a.url}`));
     }
+    // EMBEDS (als Text)
+    if(m.embeds?.length){
+      for(const e of m.embeds){
+        if(e.title)       lines.push(`  [EMBED] ${e.title}`);
+        if(e.description) lines.push('    '+(await resolveMentionsText(e.description)).replace(/\n/g,' '));
+        if(e.fields?.length){
+          for(const f of e.fields){
+            const v = await resolveMentionsText(f.value || '');
+            lines.push(`    [${f.name}] ${v.replace(/\n/g,' ')}`);
+          }
+        }
+        if(e.footer?.text) lines.push(`    ⌯ ${e.footer.text}`);
+      }
+    }
   }
-  const txt = lines.join('\n');
+  const plain = lines.join('\n');
 
-  // Sehr schlichtes HTML
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Transcript ${ticket.id}</title>
+  // ---------- HTML bauen (inkl. Embeds) ----------
+  const body = [];
+  for(const m of all){
+    const time = new Date(m.createdTimestamp).toISOString();
+    const author = esc(m.author ? (m.author.tag || m.author.username || m.author.id) : 'Unbekannt');
+    const msg = await resolveMentionsHtml(m.content || '');
+
+    let atts = '';
+    if(m.attachments.size){
+      atts = [...m.attachments.values()]
+        .map(a => `<div class="att">📎 <a href="${a.url}" target="_blank">${esc(a.name)}</a></div>`)
+        .join('');
+    }
+
+    let embedsHtml = '';
+    if(m.embeds?.length){
+      embedsHtml = m.embeds.map(e=>{
+        const parts = [];
+        if(e.title)       parts.push(`<div class="e-title">${esc(e.title)}</div>`);
+        if(e.description) parts.push(`<div class="e-desc">${await resolveMentionsHtml(e.description)}</div>`);
+        if(e.fields?.length){
+          parts.push(`<div class="e-fields">${
+            e.fields.map(f=>`<div class="e-field"><div class="name">${esc(f.name)}</div><div class="value">${await resolveMentionsHtml(f.value||'')}</div></div>`).join('')
+          }</div>`);
+        }
+        if(e.footer?.text) parts.push(`<div class="e-footer">${esc(e.footer.text)}</div>`);
+        return `<div class="embed">${parts.join('')}</div>`;
+      }).join('');
+    }
+
+    body.push(`
+      <div class="m">
+        <span class="t">${time}</span>
+        <span class="a">${author}</span>
+        <span class="c">${msg}</span>
+        ${atts}
+        ${embedsHtml}
+      </div>
+    `);
+  }
+
+  const html = `<!doctype html>
+<html><head><meta charset="utf-8">
+<title>Transcript Ticket ${ticket.id}</title>
 <style>
-body{font-family:Arial;background:#111;color:#eee}
-.m{margin:4px 0}.t{color:#888;font-size:11px;margin-right:6px}
-.a{color:#4ea1ff;font-weight:bold;margin-right:4px}
-.att{color:#ffa500;font-size:11px;display:block;margin-left:2rem}
-</style></head><body>
-<h1>Transcript Ticket ${ticket.id}</h1>
-<p>Channel: ${channel.name}<br>Erstellt: ${new Date(ticket.timestamp).toISOString()}<br>Nachrichten: ${messages.length}</p>
-<hr>
-${messages.map(m=>{
-  const atts = m.attachments.size
-    ? [...m.attachments.values()].map(a=>`<span class='att'>📎 <a href='${a.url}'>${a.name}</a></span>`).join('')
-    : '';
-  const time = new Date(m.createdTimestamp).toISOString();
-  const auth = m.author ? (m.author.tag || m.author.id) : 'Unbekannt';
-  const text = mentionToName(m.content || '').replace(/</g,'&lt;');
-  return `<div class='m'><span class='t'>${time}</span><span class='a'>${auth}</span><span>${text}</span>${atts}</div>`;
-}).join('')}
+  body{background:#0f1115;color:#e6e6e6;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:18px}
+  h1{margin:0 0 8px}
+  .meta{opacity:.7;margin:0 0 12px}
+  .m{margin:6px 0 10px}
+  .t{color:#9aa0a6;font-size:12px;margin-right:6px}
+  .a{color:#64b5f6;font-weight:600;margin-right:6px}
+  .att{color:#ffb74d;font-size:12px;margin-left:2rem}
+  .mention{color:#c3e88d;font-weight:600}
+  .chan{color:#82aaff}
+  .embed{border-left:4px solid #5865F2;background:#1a1d23;padding:.6rem .8rem;margin:.4rem 0;border-radius:6px}
+  .e-title{font-weight:700;margin-bottom:.25rem}
+  .e-desc{white-space:pre-wrap}
+  .e-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.5rem;margin-top:.4rem}
+  .e-field{background:#12151a;padding:.45rem;border-radius:4px}
+  .e-field .name{font-weight:600;margin-bottom:.2rem}
+  .e-footer{opacity:.7;margin-top:.4rem;font-size:.9em}
+</style>
+</head><body>
+  <h1>Transcript Ticket ${ticket.id}</h1>
+  <p class="meta">Channel: ${esc(channel.name)} • Erstellt: ${new Date(ticket.timestamp).toISOString()} • Nachrichten: ${all.length}</p>
+  <hr>
+  ${body.join('\n')}
 </body></html>`;
 
   const tTxt  = path.join(__dirname, `transcript_${ticket.id}.txt`);
   const tHtml = path.join(__dirname, `transcript_${ticket.id}.html`);
-  fs.writeFileSync(tTxt,  txt);
+  fs.writeFileSync(tTxt,  plain);
   fs.writeFileSync(tHtml, html);
 
   return { txt: new AttachmentBuilder(tTxt), html: new AttachmentBuilder(tHtml) };
