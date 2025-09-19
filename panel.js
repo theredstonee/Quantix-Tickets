@@ -1,7 +1,9 @@
 // panel.js – HTML Ticket-Verlauf mit Namen statt IDs (angepasst)
-// Anpassung: /tickets Rendert tickets.ejs (musst du haben) UND liefert zusätzlich eine Member-Map,
-// damit im Frontend User- und Claimer-Namen (Anzeige-Namen) statt reiner IDs erscheinen.
-// Rest deiner zuletzt geposteten Datei bleibt erhalten – nur Tickets-Routen ersetzt/ergänzt.
+// Änderungen: robuster POST-/panel-Handler für korrektes Speichern der Embeds & FormFields
+//  - Leere Felder werden als leer gespeichert (nicht mehr "verschluckt")
+//  - Hex-Farbe wird validiert & mit führendem # normalisiert
+//  - Topics: Tabellenwerte haben Vorrang, sonst topicsJson
+//  - /tickets rendert tickets.ejs inkl. Member-Map für Namen statt IDs
 
 require('dotenv').config();
 const express  = require('express');
@@ -17,7 +19,7 @@ const CONFIG = path.join(__dirname, 'config.json');
 function readCfg(){ try { return JSON.parse(fs.readFileSync(CONFIG,'utf8')); } catch { return {}; } }
 let cfg = readCfg();
 
-/* ====== Basis‑URL (für Callback) ====== */
+/* ====== Basis-URL (für Callback) ====== */
 const BASE = process.env.PUBLIC_BASE_URL || '';
 
 /* ====== Passport Serialisierung ====== */
@@ -52,7 +54,7 @@ module.exports = (client)=>{
   function isAuth(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
     const entry = req.user.guilds?.find(g=>g.id===cfg.guildId);
-    if(!entry) return res.status(403).send('Nicht auf Ziel‑Server.');
+    if(!entry) return res.status(403).send('Nicht auf Ziel-Server.');
     const ALLOWED = 0x8n | 0x20n; // Admin oder Manage Guild
     if(!(BigInt(entry.permissions) & ALLOWED)) return res.status(403).send('Keine Berechtigung.');
     next();
@@ -69,7 +71,7 @@ module.exports = (client)=>{
     if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/panel');
     const now = Date.now();
     if(now - (req.session.lastLoginAttempt||0) < 4000){
-      return res.status(429).send('Zu viele Login‑Versuche – bitte 4s warten. <a href="/">Zurück</a>');
+      return res.status(429).send('Zu viele Login-Versuche – bitte 4s warten. <a href="/">Zurück</a>');
     }
     req.session.lastLoginAttempt = now;
     next();
@@ -97,46 +99,67 @@ module.exports = (client)=>{
   /* ====== Panel Ansicht ====== */
   router.get('/panel', isAuth, (req,res)=>{ cfg = readCfg(); res.render('panel', { cfg, msg:req.query.msg||null }); });
 
-  /* ====== Panel speichern (Topics + FormFields + Embeds) ====== */
+  /* ====== Panel speichern (Topics + FormFields + Embeds – FIXED) ====== */
   router.post('/panel', isAuth, (req,res)=>{
     try {
       cfg = readCfg();
-      // Topics aus Tabelle
+
+      // ---------- Topics: Tabellen-Werte haben Vorrang ----------
       const labelInputs = [].concat(req.body.label||[]);
       const valueInputs = [].concat(req.body.value||[]);
       const emojiInputs = [].concat(req.body.emoji||[]);
       let tableTopics = [];
       for(let i=0;i<labelInputs.length;i++){
-        const L=(labelInputs[i]||'').trim(); if(!L) continue;
+        const L=(labelInputs[i]||'').trim();
+        if(!L) continue; // nur ausgefüllte Zeilen
         const V=(valueInputs[i]||'').trim() || L.toLowerCase().replace(/\s+/g,'-');
         const E=(emojiInputs[i]||'').trim();
         tableTopics.push({ label:L, value:V, emoji:E||undefined });
       }
-      const hasTableTopics = tableTopics.length>0;
-      if(!hasTableTopics){
+      if(tableTopics.length>0){
+        cfg.topics = tableTopics;
+      } else {
         const rawJson=(req.body.topicsJson||'').trim();
-        if(rawJson){ try{ const parsed=JSON.parse(rawJson); if(Array.isArray(parsed)) tableTopics=parsed; }catch{/*ignore*/} }
-      }
-      cfg.topics = tableTopics;
-
-      // Form Fields
-      if(req.body.formFieldsJson){
-        try { const ff=JSON.parse(req.body.formFieldsJson); if(Array.isArray(ff)) cfg.formFields=ff; } catch{}
+        if(rawJson){ try{ const parsed=JSON.parse(rawJson); if(Array.isArray(parsed)) cfg.topics=parsed; }catch{/*ignore*/} }
+        if(!Array.isArray(cfg.topics)) cfg.topics = [];
       }
 
-      // Embeds
-      function val(c,f){ return /^#?[0-9a-fA-F]{6}$/.test(c||'') ? c : f; }
-      cfg.ticketEmbed = {
-        title: req.body.embedTitle || cfg.ticketEmbed?.title || '',
-        description: req.body.embedDescription || cfg.ticketEmbed?.description || '',
-        color: val(req.body.embedColor || cfg.ticketEmbed?.color,'#2b90d9'),
-        footer: req.body.embedFooter || cfg.ticketEmbed?.footer || ''
+      // ---------- Form Fields (JSON direkt) ----------
+      if(Object.prototype.hasOwnProperty.call(req.body,'formFieldsJson')){
+        try {
+          const ff = JSON.parse(req.body.formFieldsJson);
+          cfg.formFields = Array.isArray(ff) ? ff : [];
+        } catch { cfg.formFields = []; }
+      }
+
+      // ---------- Embeds (Ticket & Panel) – echte Übernahme auch bei leeren Strings ----------
+      const ensureHex = (s, fallback) => {
+        const str = (s ?? '').toString().trim();
+        if(/^#?[0-9a-fA-F]{6}$/.test(str)){ return str.startsWith('#') ? str : '#'+str; }
+        // wenn ungültig und fallback vorhanden → fallback normalisieren
+        const fb = (fallback ?? '').toString().trim() || '#2b90d9';
+        return fb.startsWith('#') ? fb : '#'+fb;
       };
+      const take = (bodyKey, current) => (
+        Object.prototype.hasOwnProperty.call(req.body, bodyKey) ? req.body[bodyKey] : (current ?? '')
+      );
+
+      // Ticket Embed
+      const prevTE = cfg.ticketEmbed || {};
+      cfg.ticketEmbed = {
+        title:       take('embedTitle',       prevTE.title),
+        description: take('embedDescription', prevTE.description),
+        color:       ensureHex(take('embedColor', prevTE.color), '#2b90d9'),
+        footer:      take('embedFooter',      prevTE.footer)
+      };
+
+      // Panel Embed
+      const prevPE = cfg.panelEmbed || {};
       cfg.panelEmbed = {
-        title: req.body.panelTitle || cfg.panelEmbed?.title || '',
-        description: req.body.panelDescription || cfg.panelEmbed?.description || '',
-        color: val(req.body.panelColor || cfg.panelEmbed?.color,'#5865F2'),
-        footer: req.body.panelFooter || cfg.panelEmbed?.footer || ''
+        title:       take('panelTitle',       prevPE.title),
+        description: take('panelDescription', prevPE.description),
+        color:       ensureHex(take('panelColor', prevPE.color), '#5865F2'),
+        footer:      take('panelFooter',      prevPE.footer)
       };
 
       fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
@@ -179,28 +202,28 @@ module.exports = (client)=>{
   const TICKETS_PATH = path.join(__dirname,'tickets.json');
   function loadTickets(){ try { return JSON.parse(fs.readFileSync(TICKETS_PATH,'utf8')); } catch { return []; } }
 
-async function buildMemberMap(guild, tickets){
-  const map = {};
-  const ids = new Set();
-  tickets.forEach(t => {
-    if(t.userId) ids.add(t.userId);
-    if(t.claimer) ids.add(t.claimer);
-  });
-  for(const id of ids){
-    try {
-      const m = await guild.members.fetch(id);
-      map[id] = {
-        tag: m.user.tag,
-        username: m.user.username,
-        nickname: m.nickname || null,
-        display: m.displayName
-      };
-    } catch {
-      map[id] = { tag:id, username:id, nickname:null, display:id };
+  async function buildMemberMap(guild, tickets){
+    const map = {};
+    const ids = new Set();
+    tickets.forEach(t => {
+      if(t.userId) ids.add(t.userId);
+      if(t.claimer) ids.add(t.claimer);
+    });
+    for(const id of ids){
+      try {
+        const m = await guild.members.fetch(id);
+        map[id] = {
+          tag: m.user.tag,
+          username: m.user.username,
+          nickname: m.nickname || null,
+          display: m.displayName
+        };
+      } catch {
+        map[id] = { tag:id, username:id, nickname:null, display:id };
+      }
     }
+    return map;
   }
-  return map;
-}
 
   /* ====== Tickets HTML Übersicht (NAMEN statt IDs) ====== */
   router.get('/tickets', isAuth, async (req,res)=>{
@@ -210,15 +233,14 @@ async function buildMemberMap(guild, tickets){
       const guild=await client.guilds.fetch(cfg.guildId);
       const memberMap=await buildMemberMap(guild,tickets);
       res.render('tickets', {
-      tickets: JSON.stringify(tickets),
-      memberMap: JSON.stringify(memberMap),
-      guildId: cfg.guildId
-    });
-
+        tickets: JSON.stringify(tickets),
+        memberMap: JSON.stringify(memberMap),
+        guildId: cfg.guildId
+      });
     } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden'); }
   });
 
-  /* ====== Tickets JSON für Fetch (nur Daten) ====== */
+  /* ====== Tickets JSON für Fetch ====== */
   router.get('/tickets/data', isAuth, (_req,res)=>{ res.json(loadTickets()); });
 
   /* ====== Transcript Serve ====== */
