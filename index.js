@@ -185,31 +185,98 @@ async function logEvent(guild, text){
 }
 
 /* ================= Transcript ================= */
-async function createTranscript(channel, ticket){
-  let messages = []; let lastId;
-  while(messages.length < 1000){
-    const fetched = await channel.messages.fetch({ limit:100, before:lastId }).catch(()=>null);
-    if(!fetched || fetched.size===0) break;
+async function createTranscript(channel, ticket, opts = {}) {
+  const { AttachmentBuilder } = require('discord.js');
+  const resolveMentions = !!opts.resolveMentions;
+
+  // bis zu 1000 Nachrichten sammeln
+  let messages = [];
+  let lastId;
+  while (messages.length < 1000) {
+    const fetched = await channel.messages.fetch({ limit: 100, before: lastId }).catch(()=>null);
+    if (!fetched || fetched.size === 0) break;
     messages.push(...fetched.values());
     lastId = fetched.last().id;
   }
-  messages.sort((a,b)=>a.createdTimestamp-b.createdTimestamp);
+  messages.sort((a,b)=> a.createdTimestamp - b.createdTimestamp);
 
-  const lines = [ `# Transcript Ticket ${ticket.id}`, `Channel: ${channel.name}`, `Erstellt: ${new Date(ticket.timestamp).toISOString()}`, '' ];
-  for(const m of messages){
-    const time = new Date(m.createdTimestamp).toISOString();
+  // Hilfsfunktionen für Mentions -> Namen
+  const rolesCache   = channel.guild.roles.cache;
+  const chansCache   = channel.guild.channels.cache;
+  const membersCache = channel.guild.members.cache;
+
+  const mentionToName = (text='')=>{
+    if (!resolveMentions || !text) return text;
+
+    return text
+      // User Mentions <@123> / <@!123>
+      .replace(/<@!?(\d{17,20})>/g, (_, id) => {
+        const m = membersCache.get(id);
+        const tag  = m?.user?.tag || id;
+        const name = m?.displayName || tag;
+        return `@${name}`;
+      })
+      // Rollen <@&123>
+      .replace(/<@&(\d{17,20})>/g, (_, id) => {
+        const r = rolesCache.get(id);
+        return `@${(r && r.name) || `Rolle:${id}`}`;
+      })
+      // Channels <#123>
+      .replace(/<#(\d{17,20})>/g, (_, id) => {
+        const c = chansCache.get(id);
+        return `#${(c && c.name) || id}`;
+      });
+  };
+
+  // TXT-Inhalt
+  const lines = [
+    `# Transcript Ticket ${ticket.id}`,
+    `Channel: ${channel.name}`,
+    `Erstellt: ${new Date(ticket.timestamp).toISOString()}`,
+    ''
+  ];
+
+  for (const m of messages) {
+    const time   = new Date(m.createdTimestamp).toISOString();
     const author = m.author ? (m.author.tag || m.author.id) : 'Unbekannt';
-    const content = (m.content||'').replace(/\n/g,'\\n');
+    const content = mentionToName(m.content || '').replace(/\n/g, '\\n');
     lines.push(`[${time}] ${author}: ${content}`);
-    if(m.attachments.size) m.attachments.forEach(att=>lines.push(`  [Anhang] ${att.name} -> ${att.url}`));
+    if (m.attachments.size) {
+      m.attachments.forEach(a => lines.push(`  [Anhang] ${a.name} -> ${a.url}`));
+    }
   }
   const txt = lines.join('\n');
-  const html = `<!DOCTYPE html><html><head><meta charset='utf-8'><title>Transcript ${ticket.id}</title><style>body{font-family:Arial;background:#111;color:#eee}.m{margin:4px 0}.t{color:#888;font-size:11px;margin-right:6px}.a{color:#4ea1ff;font-weight:bold;margin-right:4px}.att{color:#ffa500;font-size:11px;display:block;margin-left:2rem}</style></head><body><h1>Transcript Ticket ${ticket.id}</h1>${messages.map(m=>{const atts=m.attachments.size?[...m.attachments.values()].map(a=>`<span class='att'>📎 <a href='${a.url}'>${a.name}</a></span>`).join(''):'';return `<div class='m'><span class='t'>${new Date(m.createdTimestamp).toISOString()}</span><span class='a'>${m.author?m.author.tag:''}</span><span>${(m.content||'').replace(/</g,'&lt;')}</span>${atts}</div>`}).join('')}</body></html>`;
-  const txtPath = path.join(__dirname,`transcript_${ticket.id}.txt`);
-  const htmlPath= path.join(__dirname,`transcript_${ticket.id}.html`);
-  fs.writeFileSync(txtPath, txt); fs.writeFileSync(htmlPath, html);
-  return { txt: new AttachmentBuilder(txtPath), html: new AttachmentBuilder(htmlPath) };
+
+  // Sehr schlichtes HTML
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Transcript ${ticket.id}</title>
+<style>
+body{font-family:Arial;background:#111;color:#eee}
+.m{margin:4px 0}.t{color:#888;font-size:11px;margin-right:6px}
+.a{color:#4ea1ff;font-weight:bold;margin-right:4px}
+.att{color:#ffa500;font-size:11px;display:block;margin-left:2rem}
+</style></head><body>
+<h1>Transcript Ticket ${ticket.id}</h1>
+<p>Channel: ${channel.name}<br>Erstellt: ${new Date(ticket.timestamp).toISOString()}<br>Nachrichten: ${messages.length}</p>
+<hr>
+${messages.map(m=>{
+  const atts = m.attachments.size
+    ? [...m.attachments.values()].map(a=>`<span class='att'>📎 <a href='${a.url}'>${a.name}</a></span>`).join('')
+    : '';
+  const time = new Date(m.createdTimestamp).toISOString();
+  const auth = m.author ? (m.author.tag || m.author.id) : 'Unbekannt';
+  const text = mentionToName(m.content || '').replace(/</g,'&lt;');
+  return `<div class='m'><span class='t'>${time}</span><span class='a'>${auth}</span><span>${text}</span>${atts}</div>`;
+}).join('')}
+</body></html>`;
+
+  const tTxt  = path.join(__dirname, `transcript_${ticket.id}.txt`);
+  const tHtml = path.join(__dirname, `transcript_${ticket.id}.html`);
+  fs.writeFileSync(tTxt,  txt);
+  fs.writeFileSync(tHtml, html);
+
+  return { txt: new AttachmentBuilder(tTxt), html: new AttachmentBuilder(tHtml) };
 }
+
 
 /* ================= FormField Helper ================= */
 function getFormFieldsForTopic(topicValue){
@@ -292,18 +359,40 @@ client.on(Events.InteractionCreate, async i => {
       switch(i.customId){
         case 'team_close':
         case 'close': {
-          ticket.status='geschlossen'; safeWrite(TICKETS_PATH, log);
-          await i.reply({ephemeral:true,content:'Ticket wird geschlossen…'});
-          await i.channel.send(`🔒 Ticket geschlossen von <@${i.user.id}> <@&${TEAM_ROLE}>`);
-          let files=null; try { files = await createTranscript(i.channel, ticket); } catch {}
-          const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
-          if(transcriptChannelId){
-            try { const tc = await i.guild.channels.fetch(transcriptChannelId); if(tc && files) tc.send({ content:`📁 Transcript Ticket #${ticket.id}`, files:[files.txt, files.html] }); } catch {}
-          }
-          logEvent(i.guild, `🔒 Ticket #${ticket.id} geschlossen von <@${i.user.id}>`);
-          setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
-          return;
-        }
+          // Status speichern
+         ticket.status = 'geschlossen';
+         safeWrite(TICKETS_PATH, log);
+
+         // Namen statt @IDs
+        const closer = await i.guild.members.fetch(i.user.id).catch(()=>null);
+        const closerTag  = closer?.user?.tag || i.user.tag || i.user.username || i.user.id;
+        const closerName = closer?.displayName || closerTag;
+        const roleObj    = await i.guild.roles.fetch(TEAM_ROLE).catch(()=>null);
+        const teamLabel  = roleObj ? `@${roleObj.name}` : '@Team';
+
+        await i.reply({ ephemeral:true, content:'Ticket wird geschlossen…' });
+
+        // Keine Mentions mehr, nur Namen anzeigen (damit der Transcript sauber ist)
+        await i.channel.send(`🔒 Ticket geschlossen von ${closerName} (${closerTag}) • ${teamLabel}`);
+
+        // Transcript erstellen (mit Mention-Umwandlung, siehe Funktion unten)
+        let files = null;
+        try { files = await createTranscript(i.channel, ticket, { resolveMentions: true }); } catch {}
+
+        // Transcript hochladen (falls Channel konfiguriert)
+        const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
+        if (transcriptChannelId && files){
+          try {
+            const tc = await i.guild.channels.fetch(transcriptChannelId);
+            if (tc) await tc.send({ content:`📁 Transcript Ticket #${ticket.id}`, files:[files.txt, files.html] });
+         } catch {}
+       }
+
+  // Logging & Channel löschen
+  logEvent(i.guild, `🔒 Ticket #${ticket.id} geschlossen von ${closerTag}`);
+  setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
+  return;
+}
         case 'claim':
           ticket.claimer = i.user.id; safeWrite(TICKETS_PATH, log);
           await i.update({ components: buttonRows(true) });
