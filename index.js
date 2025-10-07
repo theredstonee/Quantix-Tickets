@@ -100,7 +100,8 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildMembers   // <-- hinzufügen
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.MessageContent  // <-- für Message-Inhalt-Zugriff
   ],
   partials: [Partials.Channel, Partials.Message]
 });
@@ -422,6 +423,28 @@ client.on(Events.InteractionCreate, async i => {
       // Unclaim: Nur Claimer kann unclaimen
       if(i.customId==='unclaim'){
         if(!isClaimer && !isTeam) return i.reply({ephemeral:true,content:'Nur der Claimer kann unclaimen'});
+
+        // Berechtigungen zurücksetzen: Ersteller + Team (alle hinzugefügten User behalten Zugriff)
+        try {
+          const permissions = [
+            { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+            { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+            { id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+          ];
+
+          // Hinzugefügte User auch erlauben
+          if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
+            ticket.addedUsers.forEach(uid => {
+              permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+            });
+          }
+
+          await i.channel.permissionOverwrites.set(permissions);
+          await i.channel.send(`🔄 <@${i.user.id}> hat das Ticket unclaimed`);
+        } catch(err) {
+          console.error('Fehler beim Zurücksetzen der Berechtigungen:', err);
+        }
+
         delete ticket.claimer; safeWrite(TICKETS_PATH, log);
         await i.update({ components: buttonRows(false) });
         logEvent(i.guild, `🔄 Unclaim Ticket #${ticket.id} von <@${i.user.id}>`);
@@ -483,6 +506,29 @@ client.on(Events.InteractionCreate, async i => {
 }
         case 'claim':
           ticket.claimer = i.user.id; safeWrite(TICKETS_PATH, log);
+
+          // Berechtigungen anpassen: Claimer + Ersteller + Team + hinzugefügte User
+          try {
+            const permissions = [
+              { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+              { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+              { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+              { id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+            ];
+
+            // Hinzugefügte User behalten Zugriff
+            if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
+              ticket.addedUsers.forEach(uid => {
+                permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+              });
+            }
+
+            await i.channel.permissionOverwrites.set(permissions);
+            await i.channel.send(`✅ <@${i.user.id}> hat dieses Ticket geclaimed`);
+          } catch(err) {
+            console.error('Fehler beim Setzen der Berechtigungen:', err);
+          }
+
           await i.update({ components: buttonRows(true) });
           logEvent(i.guild, `✅ Claim Ticket #${ticket.id} von <@${i.user.id}>`);
           break;
@@ -513,12 +559,27 @@ client.on(Events.InteractionCreate, async i => {
       if(!id) return i.reply({ephemeral:true,content:'Ungültige ID'});
       try {
         await i.guild.members.fetch(id);
-        if(i.channel.permissionOverwrites.cache.get(id))
-          return i.reply({ephemeral:true,content:'Schon Zugriff'});
+
+        const log = safeRead(TICKETS_PATH, []);
+        const ticket = log.find(t=>t.channelId===i.channel.id);
+        if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz'});
+
+        // Prüfen ob User schon Zugriff hat
+        if(!ticket.addedUsers) ticket.addedUsers = [];
+        if(ticket.addedUsers.includes(id) || ticket.userId === id || ticket.claimer === id)
+          return i.reply({ephemeral:true,content:'Hat bereits Zugriff'});
+
+        // User zur Liste hinzufügen
+        ticket.addedUsers.push(id);
+        safeWrite(TICKETS_PATH, log);
+
+        // Berechtigungen setzen
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
         await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`});
-        logEvent(i.guild, `➕ User <@${id}> zu Ticket #${safeRead(TICKETS_PATH,[]).find(t=>t.channelId===i.channel.id)?.id||'?'} hinzugefügt`);
-      } catch {
+        await i.channel.send(`➕ <@${id}> wurde zum Ticket hinzugefügt`);
+        logEvent(i.guild, `➕ User <@${id}> zu Ticket #${ticket.id} hinzugefügt`);
+      } catch(err) {
+        console.error('Fehler beim Hinzufügen:', err);
         return i.reply({ephemeral:true,content:'Fehler beim Hinzufügen'});
       }
     }
@@ -564,7 +625,7 @@ async function createTicketChannel(interaction, topic, formData){
   }
   // Speichern
   const log = safeRead(TICKETS_PATH, []);
-  log.push({ id:nr, channelId:ch.id, userId:interaction.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), formData });
+  log.push({ id:nr, channelId:ch.id, userId:interaction.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), formData, addedUsers:[] });
   safeWrite(TICKETS_PATH, log);
   logEvent(interaction.guild, `🆕 Ticket #${nr} erstellt von <@${interaction.user.id}> (${topic.label})`);
 
@@ -602,5 +663,41 @@ async function updatePriority(interaction, ticket, log, dir){
   logEvent(interaction.guild, `⚙️ Ticket #${ticket.id} Priorität ${dir}: ${state.label}`);
   await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
 }
+
+/* ================= Message Delete für unbefugte Nutzer ================= */
+client.on(Events.MessageCreate, async (message) => {
+  // Ignoriere Bot-Nachrichten
+  if(message.author.bot) return;
+
+  // Prüfe ob es ein Ticket-Channel ist
+  if(!message.channel.name || !message.channel.name.startsWith(PREFIX)) return;
+
+  try {
+    const log = safeRead(TICKETS_PATH, []);
+    const ticket = log.find(t => t.channelId === message.channel.id);
+    if(!ticket) return;
+
+    // Berechtigte Nutzer
+    const authorId = message.author.id;
+    const isCreator = ticket.userId === authorId;
+    const isClaimer = ticket.claimer === authorId;
+    const isAdded = ticket.addedUsers && ticket.addedUsers.includes(authorId);
+    const isTeam = message.member?.roles?.cache?.has(TEAM_ROLE);
+
+    // Wenn nicht berechtigt -> löschen
+    if(!isCreator && !isClaimer && !isAdded && !isTeam){
+      await message.delete().catch(()=>{});
+
+      // DM an den Nutzer senden
+      try {
+        await message.author.send(`❌ Du hast keine Berechtigung in Ticket #${ticket.id} zu schreiben. Nur der Ersteller, Claimer, hinzugefügte Nutzer und Team-Mitglieder dürfen schreiben.`);
+      } catch {
+        // DM fehlgeschlagen (DMs deaktiviert)
+      }
+    }
+  } catch(err) {
+    console.error('Fehler beim Message-Delete-Check:', err);
+  }
+});
 
 client.login(TOKEN);
