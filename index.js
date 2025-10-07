@@ -69,8 +69,18 @@ function loadCommands(){
 /* ================= Pfade / Dateien ================= */
 const CONFIG_DIR   = path.join(__dirname,'configs');
 const CFG_PATH     = path.join(__dirname,'config.json'); // Legacy fallback
-const COUNTER_PATH = path.join(__dirname,'ticketCounter.json');
-const TICKETS_PATH = path.join(__dirname,'tickets.json');
+const COUNTER_PATH = path.join(__dirname,'ticketCounter.json'); // Legacy
+const TICKETS_PATH = path.join(__dirname,'tickets.json'); // Legacy
+
+// Pro-Server Pfade
+function getTicketsPath(guildId){
+  if(!guildId) return TICKETS_PATH;
+  return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
+}
+function getCounterPath(guildId){
+  if(!guildId) return COUNTER_PATH;
+  return path.join(CONFIG_DIR, `${guildId}_counter.json`);
+}
 
 /* ================= Safe JSON Helpers ================= */
 function safeRead(file, fallback){
@@ -82,50 +92,71 @@ function safeWrite(file, data){ fs.writeFileSync(file, JSON.stringify(data,null,
 if(!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
 
 function readCfg(guildId){
-  if(!guildId){
-    // Fallback auf legacy config.json
-    return safeRead(CFG_PATH, {});
-  }
-  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
   try {
-    return JSON.parse(fs.readFileSync(configPath,'utf8'));
-  } catch {
-    // Wenn keine Config existiert, erstelle default
-    const defaultCfg = {
-      guildId: guildId,
-      topics: [],
-      formFields: [],
-      ticketEmbed: {
-        title: '🎫 Ticket #{ticketNumber}',
-        description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
-        color: '#2b90d9',
-        footer: 'Ticket #{ticketNumber}'
-      },
-      panelEmbed: {
-        title: '🎫 Ticket System',
-        description: 'Wähle dein Thema',
-        color: '#5865F2',
-        footer: 'Support'
-      }
-    };
-    writeCfg(guildId, defaultCfg);
-    return defaultCfg;
+    if(!guildId){
+      // Fallback auf legacy config.json
+      return safeRead(CFG_PATH, {}) || {};
+    }
+    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+    try {
+      const data = JSON.parse(fs.readFileSync(configPath,'utf8'));
+      return data || {};
+    } catch {
+      // Wenn keine Config existiert, erstelle default
+      const defaultCfg = {
+        guildId: guildId,
+        topics: [],
+        formFields: [],
+        ticketEmbed: {
+          title: '🎫 Ticket #{ticketNumber}',
+          description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
+          color: '#2b90d9',
+          footer: 'TRS Tickets ©️'
+        },
+        panelEmbed: {
+          title: '🎫 Ticket System',
+          description: 'Wähle dein Thema',
+          color: '#5865F2',
+          footer: 'TRS Tickets ©️'
+        }
+      };
+      writeCfg(guildId, defaultCfg);
+      return defaultCfg;
+    }
+  } catch(err) {
+    console.error('readCfg error:', err);
+    return {};
   }
 }
 
 function writeCfg(guildId, data){
-  if(!guildId){
-    // Legacy fallback
-    safeWrite(CFG_PATH, data);
-    return;
+  try {
+    if(!guildId){
+      // Legacy fallback
+      safeWrite(CFG_PATH, data);
+      return;
+    }
+    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+    fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
+  } catch(err) {
+    console.error('writeCfg error:', err);
   }
-  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
 }
 
-// Initialize other files
+// Initialize other files (legacy)
 if(!fs.existsSync(COUNTER_PATH)) safeWrite(COUNTER_PATH, { last: 0 });
 if(!fs.existsSync(TICKETS_PATH)) safeWrite(TICKETS_PATH, []);
+
+// Helper-Funktionen für Tickets
+function loadTickets(guildId){
+  const ticketsPath = getTicketsPath(guildId);
+  if(!fs.existsSync(ticketsPath)) safeWrite(ticketsPath, []);
+  return safeRead(ticketsPath, []);
+}
+function saveTickets(guildId, tickets){
+  const ticketsPath = getTicketsPath(guildId);
+  safeWrite(ticketsPath, tickets);
+}
 
 /* ================= Express / Panel ================= */
 const app = express();
@@ -151,7 +182,14 @@ const TOKEN = process.env.DISCORD_TOKEN;
 const PANEL_FIXED_URL = 'https://trstickets.theredstonee.de/panel';
 
 /* ================= Counter ================= */
-function nextTicket(){ const c=safeRead(COUNTER_PATH,{last:0}); c.last++; safeWrite(COUNTER_PATH,c); return c.last; }
+function nextTicket(guildId){
+  const counterPath = getCounterPath(guildId);
+  if(!fs.existsSync(counterPath)) safeWrite(counterPath, {last:0});
+  const c = safeRead(counterPath,{last:0});
+  c.last++;
+  safeWrite(counterPath,c);
+  return c.last;
+}
 
 /* ================= Button Rows ================= */
 function buttonRows(claimed){
@@ -173,11 +211,15 @@ function buttonRows(claimed){
 
 /* ================= Panel Select ================= */
 function buildPanelSelect(cfg){
+  const topics = (cfg.topics||[]).filter(t => t && t.label && t.value);
+  if(topics.length === 0){
+    topics.push({ label: 'Keine Topics konfiguriert', value: 'none', emoji: '⚠️' });
+  }
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('topic')
       .setPlaceholder('Wähle dein Thema …')
-      .addOptions((cfg.topics||[]).map(t=>({ label:t.label, value:t.value, emoji:t.emoji||undefined })))
+      .addOptions(topics.map(t=>({ label:t.label, value:t.value, emoji:t.emoji||undefined })))
   );
 }
 
@@ -393,7 +435,7 @@ function normalizeField(field, index){
 client.on(Events.InteractionCreate, async i => {
   try {
     // Load config for this guild
-    const cfg = readCfg(i.guild?.id);
+    const cfg = readCfg(i.guild?.id) || {};
 
     if(i.isChatInputCommand()){
       const command = commandsCollection.get(i.commandName);
@@ -420,6 +462,7 @@ client.on(Events.InteractionCreate, async i => {
 
     // Topic Auswahl -> ggf. Formular anzeigen
     if(i.isStringSelectMenu() && i.customId==='topic'){
+      if(i.values[0] === 'none') return i.reply({content:'⚠️ Keine Topics konfiguriert. Bitte konfiguriere zuerst Topics im Panel.',ephemeral:true});
       const topic = cfg.topics?.find(t=>t.value===i.values[0]);
       if(!topic) return i.reply({content:'Unbekanntes Thema',ephemeral:true});
 
@@ -457,7 +500,8 @@ client.on(Events.InteractionCreate, async i => {
     }
 
     if(i.isButton()){
-      const log = safeRead(TICKETS_PATH, []);
+      const guildId = i.guild.id;
+      const log = loadTickets(guildId);
       const ticket = log.find(t=>t.channelId===i.channel.id);
       if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz'});
       const isTeam = i.member.roles.cache.has(TEAM_ROLE);
@@ -495,7 +539,7 @@ client.on(Events.InteractionCreate, async i => {
           console.error('Fehler beim Zurücksetzen der Berechtigungen:', err);
         }
 
-        delete ticket.claimer; safeWrite(TICKETS_PATH, log);
+        delete ticket.claimer; saveTickets(guildId, log);
         await i.update({ components: buttonRows(false) });
         logEvent(i.guild, `🔄 Unclaim Ticket #${ticket.id} von <@${i.user.id}>`);
         return;
@@ -509,7 +553,7 @@ client.on(Events.InteractionCreate, async i => {
         case 'close': {
           // Status speichern
          ticket.status = 'geschlossen';
-         safeWrite(TICKETS_PATH, log);
+         saveTickets(guildId, log);
 
          // Namen statt @IDs
         const closer = await i.guild.members.fetch(i.user.id).catch(()=>null);
@@ -555,7 +599,7 @@ client.on(Events.InteractionCreate, async i => {
   return;
 }
         case 'claim':
-          ticket.claimer = i.user.id; safeWrite(TICKETS_PATH, log);
+          ticket.claimer = i.user.id; saveTickets(guildId, log);
 
           // Berechtigungen anpassen: Claimer + Ersteller + Team + hinzugefügte User
           try {
@@ -584,12 +628,12 @@ client.on(Events.InteractionCreate, async i => {
           break;
         case 'priority_up': {
           ticket.priority = Math.min(2, (ticket.priority||0)+1);
-          await updatePriority(i, ticket, log, 'hoch');
+          await updatePriority(i, ticket, log, 'hoch', guildId);
           break;
         }
         case 'priority_down': {
           ticket.priority = Math.max(0, (ticket.priority||0)-1);
-          await updatePriority(i, ticket, log, 'herab');
+          await updatePriority(i, ticket, log, 'herab', guildId);
           break;
         }
         case 'add_user': {
@@ -610,7 +654,8 @@ client.on(Events.InteractionCreate, async i => {
       try {
         await i.guild.members.fetch(id);
 
-        const log = safeRead(TICKETS_PATH, []);
+        const guildId = i.guild.id;
+        const log = loadTickets(guildId);
         const ticket = log.find(t=>t.channelId===i.channel.id);
         if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz'});
 
@@ -621,7 +666,7 @@ client.on(Events.InteractionCreate, async i => {
 
         // User zur Liste hinzufügen
         ticket.addedUsers.push(id);
-        safeWrite(TICKETS_PATH, log);
+        saveTickets(guildId, log);
 
         // Berechtigungen setzen
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
@@ -641,7 +686,8 @@ client.on(Events.InteractionCreate, async i => {
 
 /* ================= Ticket Erstellung (mit optionalen Formular-Daten) ================= */
 async function createTicketChannel(interaction, topic, formData, cfg){
-  const nr = nextTicket();
+  const guildId = interaction.guild.id;
+  const nr = nextTicket(guildId);
   const ch = await interaction.guild.channels.create({
     name: buildChannelName(nr,0),
     type: ChannelType.GuildText,
@@ -674,9 +720,11 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
   }
   // Speichern
-  const log = safeRead(TICKETS_PATH, []);
+  const ticketsPath = getTicketsPath(guildId);
+  if(!fs.existsSync(ticketsPath)) safeWrite(ticketsPath, []);
+  const log = safeRead(ticketsPath, []);
   log.push({ id:nr, channelId:ch.id, userId:interaction.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), formData, addedUsers:[] });
-  safeWrite(TICKETS_PATH, log);
+  safeWrite(ticketsPath, log);
   logEvent(interaction.guild, `🆕 Ticket #${nr} erstellt von <@${interaction.user.id}> (${topic.label})`);
 
   // Panel Reset (Dropdown wiederherstellen)
@@ -703,12 +751,12 @@ async function createTicketChannel(interaction, topic, formData, cfg){
 }
 
 /* ================= Priority Update ================= */
-async function updatePriority(interaction, ticket, log, dir){
+async function updatePriority(interaction, ticket, log, dir, guildId){
   renameChannelIfNeeded(interaction.channel, ticket);
   const msg = await interaction.channel.messages.fetch({limit:10}).then(c=>c.find(m=>m.embeds.length)).catch(()=>null);
   const state = PRIORITY_STATES[ticket.priority||0];
   if(msg){ const e = EmbedBuilder.from(msg.embeds[0]); e.setColor(state.embedColor); await msg.edit({embeds:[e]}); }
-  safeWrite(TICKETS_PATH, log);
+  saveTickets(guildId, log);
   logEvent(interaction.guild, `⚙️ Ticket #${ticket.id} Priorität ${dir}: ${state.label}`);
   await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
 }
@@ -722,7 +770,9 @@ client.on(Events.MessageCreate, async (message) => {
   if(!message.channel.name || !message.channel.name.startsWith(PREFIX)) return;
 
   try {
-    const log = safeRead(TICKETS_PATH, []);
+    const guildId = message.guild?.id;
+    if(!guildId) return;
+    const log = loadTickets(guildId);
     const ticket = log.find(t => t.channelId === message.channel.id);
     if(!ticket) return;
 

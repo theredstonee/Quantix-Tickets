@@ -24,40 +24,59 @@ if(!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
 const LEGACY_CONFIG = path.join(__dirname, 'config.json');
 
 function readCfg(guildId){
-  if(!guildId){
-    // Fallback auf legacy config.json
-    try { return JSON.parse(fs.readFileSync(LEGACY_CONFIG,'utf8')); } catch { return {}; }
-  }
-  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
   try {
-    return JSON.parse(fs.readFileSync(configPath,'utf8'));
-  } catch {
-    // Wenn keine Config existiert, erstelle default
-    const defaultCfg = {
-      guildId: guildId,
-      topics: [],
-      formFields: [],
-      ticketEmbed: {
-        title: '🎫 Ticket #{ticketNumber}',
-        description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
-        color: '#2b90d9',
-        footer: 'Ticket #{ticketNumber}'
-      },
-      panelEmbed: {
-        title: '🎫 Ticket System',
-        description: 'Wähle dein Thema',
-        color: '#5865F2',
-        footer: 'Support'
+    if(!guildId){
+      // Fallback auf legacy config.json
+      try {
+        const data = JSON.parse(fs.readFileSync(LEGACY_CONFIG,'utf8'));
+        return data || {};
+      } catch {
+        return {};
       }
-    };
-    writeCfg(guildId, defaultCfg);
-    return defaultCfg;
+    }
+    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+    try {
+      const data = JSON.parse(fs.readFileSync(configPath,'utf8'));
+      return data || {};
+    } catch {
+      // Wenn keine Config existiert, erstelle default
+      const defaultCfg = {
+        guildId: guildId,
+        topics: [],
+        formFields: [],
+        ticketEmbed: {
+          title: '🎫 Ticket #{ticketNumber}',
+          description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
+          color: '#2b90d9',
+          footer: 'TRS Tickets ©️'
+        },
+        panelEmbed: {
+          title: '🎫 Ticket System',
+          description: 'Wähle dein Thema',
+          color: '#5865F2',
+          footer: 'TRS Tickets ©️'
+        }
+      };
+      writeCfg(guildId, defaultCfg);
+      return defaultCfg;
+    }
+  } catch(err) {
+    console.error('readCfg error:', err);
+    return {};
   }
 }
 
 function writeCfg(guildId, data){
-  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
+  try {
+    if(!guildId){
+      fs.writeFileSync(LEGACY_CONFIG, JSON.stringify(data, null, 2));
+      return;
+    }
+    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+    fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
+  } catch(err) {
+    console.error('writeCfg error:', err);
+  }
 }
 
 let cfg = readCfg(); // Legacy fallback
@@ -344,8 +363,20 @@ module.exports = (client)=>{
   });
 
   /* ====== Tickets Helper ====== */
-  const TICKETS_PATH = path.join(__dirname,'tickets.json');
-  function loadTickets(){ try { return JSON.parse(fs.readFileSync(TICKETS_PATH,'utf8')); } catch { return []; } }
+  const TICKETS_PATH = path.join(__dirname,'tickets.json'); // Legacy fallback
+  function getTicketsPath(guildId){
+    if(!guildId) return TICKETS_PATH;
+    return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
+  }
+  function loadTickets(guildId){
+    const ticketsPath = getTicketsPath(guildId);
+    try {
+      if(!fs.existsSync(ticketsPath)) return [];
+      return JSON.parse(fs.readFileSync(ticketsPath,'utf8'));
+    } catch {
+      return [];
+    }
+  }
 
   async function buildMemberMap(guild, tickets){
     const map = {};
@@ -375,7 +406,7 @@ module.exports = (client)=>{
     try {
       const guildId = req.session.selectedGuild;
       const cfg = readCfg(guildId);
-      const tickets = loadTickets();
+      const tickets = loadTickets(guildId);
       const guild = await client.guilds.fetch(guildId);
       const memberMap = await buildMemberMap(guild,tickets);
       res.render('tickets', {
@@ -388,7 +419,7 @@ module.exports = (client)=>{
   });
 
   /* ====== Tickets JSON für Fetch ====== */
-  router.get('/tickets/data', isAuth, (_req,res)=>{ res.json(loadTickets()); });
+  router.get('/tickets/data', isAuth, (req,res)=>{ res.json(loadTickets(req.session.selectedGuild)); });
 
   /* ====== Transcript Serve ====== */
   router.get('/transcript/:id', isAuth, (req,res)=>{
@@ -404,8 +435,12 @@ module.exports = (client)=>{
 
 /* ====== Helper für Select & Embed ====== */
 function buildPanelSelect(cfg){
+  const topics = (cfg.topics||[]).filter(t => t && t.label && t.value);
+  if(topics.length === 0){
+    topics.push({ label: 'Keine Topics konfiguriert', value: 'none', emoji: '⚠️' });
+  }
   return new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder().setCustomId('topic').setPlaceholder('Thema wählen …').addOptions((cfg.topics||[]).map(t=>({ label:t.label, value:t.value, emoji:t.emoji||undefined })))
+    new StringSelectMenuBuilder().setCustomId('topic').setPlaceholder('Thema wählen …').addOptions(topics.map(t=>({ label:t.label, value:t.value, emoji:t.emoji||undefined })))
   );
 }
 function buildPanelEmbed(cfg){
