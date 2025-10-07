@@ -1,10 +1,94 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
   <meta charset="utf-8">
   <title>Ticket‑Bot Panel</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
+    :root {
+      --bg-color: #fff;
+      --text-color: #1a1a1a;
+      --border-color: #e5e8ec;
+      --accent-color: #00b894;
+      --accent-hover: #00a077;
+      --fieldset-bg: #f8f9fa;
+      --thead-bg: #f2f4f8;
+      --input-bg: #fff;
+      --code-bg: #f0f0f0;
+      --success-bg: #d1f2eb;
+      --success-border: #2bb780;
+      --error-bg: #f8d7da;
+      --error-border: #c33;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --border-color: #1a3a2a;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --fieldset-bg: #0f1510;
+      --thead-bg: #0f1f15;
+      --input-bg: #0f1510;
+      --code-bg: #0a1a0f;
+      --success-bg: #0a2015;
+      --success-border: #00ff88;
+      --error-bg: #2a0a0a;
+      --error-border: #ff4444;
+    }
+
+    [data-theme="dark"] body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] input,
+    [data-theme="dark"] select,
+    [data-theme="dark"] textarea {
+      background-color: var(--input-bg);
+      border-color: var(--border-color);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] fieldset {
+      background-color: var(--fieldset-bg);
+      border-color: var(--border-color);
+    }
+
+    [data-theme="dark"] thead {
+      background: var(--thead-bg);
+    }
+
+    [data-theme="dark"] code {
+      background: var(--code-bg);
+      color: var(--accent-color);
+    }
+
+    [data-theme="dark"] .good {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--accent-color);
+    }
+
+    [data-theme="dark"] .bad {
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: #ff6666;
+    }
+
+    [data-theme="dark"] a {
+      color: var(--accent-color);
+    }
+
+    [data-theme="dark"] button:not(.del-btn):not(.theme-toggle) {
+      background-color: var(--accent-color);
+      color: #000;
+    }
+
+    [data-theme="dark"] button:not(.del-btn):not(.theme-toggle):hover {
+      background-color: var(--accent-hover);
+    }
+
     body { max-width: 1250px; }
     table { width:100%; border-collapse:collapse; }
     th,td { padding:.35rem .4rem; }
@@ -12,8 +96,8 @@
     .grid { display:flex; flex-wrap:wrap; gap:1.5rem; }
     fieldset { flex:1 1 380px; min-width:350px; }
     textarea { width:100%; font-family: monospace; resize:vertical; }
-    .bad { border:1px solid #c33; padding:.55rem .8rem; border-radius:4px; }
-    .good { border:1px solid #2b7; padding:.55rem .8rem; border-radius:4px; }
+    .bad { border:1px solid var(--error-border); padding:.55rem .8rem; border-radius:4px; background: var(--error-bg); }
+    .good { border:1px solid var(--success-border); padding:.55rem .8rem; border-radius:4px; background: var(--success-bg); }
     .actions form { display:inline-block; margin-right:1rem; }
     footer { margin-top:3rem; font-size:.7rem; opacity:.6; }
     .placeholder-list code { margin-right:.4rem; }
@@ -21,11 +105,60 @@
     .soft-note { font-size:.7rem; opacity:.65; }
     .del-btn { background:#e55353; color:#fff; border:0; padding:.25rem .55rem; border-radius:4px; cursor:pointer; font-size:.7rem; }
     .del-btn:hover { background:#c84242; }
-    thead { background:#f2f4f8; }
+    thead { background: var(--thead-bg); }
     .mini { font-size:.65rem; opacity:.55; }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: var(--accent-color);
+      color: #000;
+      border: 0;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: var(--accent-hover);
+    }
+
+    [data-theme="dark"] .theme-toggle {
+      background: var(--accent-color);
+      box-shadow: 0 2px 12px rgba(0,255,136,0.4);
+    }
+
+    .header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .server-info {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    [data-theme="dark"] .server-info {
+      color: var(--accent-color);
+    }
   </style>
 </head>
 <body class="container">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
+    <span id="themeIcon">🌙</span>
+  </button>
   <h1>🎫 Ticket‑Bot Panel</h1>
 
   <% if (msg==='saved')  { %><p class="good">✅ Gespeichert.</p><% } %>
@@ -213,6 +346,23 @@ document.getElementById('formRows').addEventListener('input',syncFormJson);
 document.getElementById('topicRows').addEventListener('input',syncTopicsPreview);
 // Vor Submit leere Label-Zeilen entfernen
 document.getElementById('panelForm').addEventListener('submit',()=>{ [...document.querySelectorAll('#topicRows tr')].forEach(tr=>{ if(!tr.querySelector('input[name="label"]').value.trim()) tr.remove(); }); syncFormJson(); });
+
+// Theme Toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const currentTheme = html.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('trs-theme', newTheme);
+  document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+}
+
+// Theme beim Laden setzen
+(function() {
+  const savedTheme = localStorage.getItem('trs-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+})();
 </script>
 </body>
 </html>

@@ -1,10 +1,94 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
   <meta charset="utf-8">
   <title>Tickets Übersicht</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
+    :root {
+      --bg-color: #fff;
+      --text-color: #1a1a1a;
+      --border-color: #e5e8ec;
+      --accent-color: #00b894;
+      --accent-hover: #00a077;
+      --table-hover: #f6f8fb;
+      --thead-bg: #f2f4f8;
+      --chip-bg: #eef0f5;
+      --chip-active: #4263eb;
+      --refresh-bar-bg: #13202b;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --border-color: #1a3a2a;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --table-hover: #0f1f15;
+      --thead-bg: #0f1f15;
+      --chip-bg: #0f1f15;
+      --chip-active: #00ff88;
+      --refresh-bar-bg: #0a1a0f;
+    }
+
+    [data-theme="dark"] body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] tbody tr:hover {
+      background: var(--table-hover);
+    }
+
+    [data-theme="dark"] thead {
+      background: var(--thead-bg);
+    }
+
+    [data-theme="dark"] .chip {
+      background: var(--chip-bg);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] .chip.active {
+      background: var(--chip-active);
+      color: #000;
+    }
+
+    [data-theme="dark"] #refreshBar {
+      background: var(--refresh-bar-bg);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] #refreshBar button {
+      background: var(--chip-bg);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] input {
+      background: var(--chip-bg);
+      border-color: var(--border-color);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] .badge {
+      background: var(--chip-bg);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] a {
+      color: var(--accent-color);
+    }
+
+    [data-theme="dark"] .form-data {
+      background: var(--chip-bg);
+      border-color: var(--border-color);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] tbody td {
+      border-top-color: var(--border-color);
+    }
+
     body{max-width:1350px}
     h1{display:flex;align-items:center;gap:.6rem;margin-bottom:.2rem}
     .sub{font-size:.75rem;opacity:.65;margin:0 0 1.25rem}
@@ -43,9 +127,42 @@
     footer{margin:2.2rem 0 .8rem;font-size:.65rem;opacity:.55}
     @media (max-width:880px){ thead th:nth-child(9), tbody td:nth-child(9){display:none} }
     @media (max-width:680px){ thead th:nth-child(8), tbody td:nth-child(8){display:none} }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: var(--accent-color);
+      color: #000;
+      border: 0;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: var(--accent-hover);
+    }
+
+    [data-theme="dark"] .theme-toggle {
+      background: var(--accent-color);
+      box-shadow: 0 2px 12px rgba(0,255,136,0.4);
+    }
   </style>
 </head>
 <body class="container">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
+    <span id="themeIcon">🌙</span>
+  </button>
   <h1>🎫 Tickets Übersicht</h1>
   <p class="sub">Nur für Team-Mitglieder sichtbar. Live-Daten aus <code>tickets.json</code>.</p>
   <a href="/panel" class="back">⬅️ Zurück zum Panel</a>
@@ -223,6 +340,23 @@
   }
 
   apply();
+
+  // Theme Toggle
+  function toggleTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('trs-theme', newTheme);
+    document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+  }
+
+  // Theme beim Laden setzen
+  (function() {
+    const savedTheme = localStorage.getItem('trs-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+  })();
 </script>
 </body>
 </html>
