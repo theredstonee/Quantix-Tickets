@@ -522,9 +522,18 @@ client.on(Events.InteractionCreate, async i => {
         try {
           const permissions = [
             { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-            { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-            { id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+            { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
           ];
+
+          // Team-Rolle hinzufügen wenn existent
+          if(TEAM_ROLE && TEAM_ROLE.trim()){
+            try {
+              await i.guild.roles.fetch(TEAM_ROLE);
+              permissions.push({ id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+            } catch {
+              console.error('Team-Rolle nicht gefunden beim Unclaim:', TEAM_ROLE);
+            }
+          }
 
           // Hinzugefügte User auch erlauben
           if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
@@ -606,9 +615,18 @@ client.on(Events.InteractionCreate, async i => {
             const permissions = [
               { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
               { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-              { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-              { id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+              { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
             ];
+
+            // Team-Rolle hinzufügen wenn existent
+            if(TEAM_ROLE && TEAM_ROLE.trim()){
+              try {
+                await i.guild.roles.fetch(TEAM_ROLE);
+                permissions.push({ id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+              } catch {
+                console.error('Team-Rolle nicht gefunden beim Claim:', TEAM_ROLE);
+              }
+            }
 
             // Hinzugefügte User behalten Zugriff
             if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
@@ -688,15 +706,41 @@ client.on(Events.InteractionCreate, async i => {
 async function createTicketChannel(interaction, topic, formData, cfg){
   const guildId = interaction.guild.id;
   const nr = nextTicket(guildId);
+
+  // Parent-Kategorie validieren
+  let parentId = null;
+  if(cfg.ticketCategoryId && cfg.ticketCategoryId.trim()){
+    try {
+      const category = await interaction.guild.channels.fetch(cfg.ticketCategoryId.trim());
+      if(category && category.type === ChannelType.GuildCategory){
+        parentId = category.id;
+      }
+    } catch {
+      console.error('Kategorie nicht gefunden:', cfg.ticketCategoryId);
+    }
+  }
+
+  // Permission Overwrites vorbereiten
+  const permOverwrites = [
+    { id:interaction.guild.id, deny: PermissionsBitField.Flags.ViewChannel },
+    { id:interaction.user.id, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+  ];
+
+  // Team-Rolle hinzufügen wenn gültig
+  if(TEAM_ROLE && TEAM_ROLE.trim()){
+    try {
+      await interaction.guild.roles.fetch(TEAM_ROLE);
+      permOverwrites.push({ id:TEAM_ROLE, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+    } catch {
+      console.error('Team-Rolle nicht gefunden:', TEAM_ROLE);
+    }
+  }
+
   const ch = await interaction.guild.channels.create({
     name: buildChannelName(nr,0),
     type: ChannelType.GuildText,
-    parent: cfg.ticketCategoryId,
-    permissionOverwrites:[
-      { id:interaction.guild.id, deny: PermissionsBitField.Flags.ViewChannel },
-      { id:interaction.user.id, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-      { id:TEAM_ROLE, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
-    ]
+    parent: parentId,
+    permissionOverwrites: permOverwrites
   });
   const embed = buildTicketEmbed(cfg, interaction, topic, nr);
   // Formular-Ergebnisse als Fields anhängen
