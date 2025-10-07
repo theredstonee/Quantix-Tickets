@@ -473,7 +473,7 @@ async function createTicketChannel(interaction, topic, formData){
   } else {
     interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
   }
-  // Speicher
+  // Speichern
   const log = safeRead(TICKETS_PATH, []);
   log.push({ id:nr, channelId:ch.id, userId:interaction.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), formData });
   safeWrite(TICKETS_PATH, log);
