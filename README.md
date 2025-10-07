@@ -1,5 +1,7 @@
 # 🎫 TRS Tickets Bot
 
+**Version:** Alpha 1.0
+
 Ein professioneller Discord-Ticket-Bot mit Web-Dashboard und dynamischen Formularen für Discord-Server.
 
 ## ✨ Features
@@ -21,6 +23,7 @@ Ein professioneller Discord-Ticket-Bot mit Web-Dashboard und dynamischen Formula
 
 ### Management-Befehle
 - `/dashboard` - Link zum Web-Dashboard anzeigen
+- `/version` - Bot-Version anzeigen
 - `/reload` - Bot-Konfiguration neu laden
 - `/restart` - Bot neu starten
 - `/update` - Neueste Version von GitHub ziehen & neu starten
@@ -52,7 +55,7 @@ Ein professioneller Discord-Ticket-Bot mit Web-Dashboard und dynamischen Formula
    DISCORD_TOKEN=your_bot_token
    CLIENT_ID=your_client_id
    CLIENT_SECRET=your_client_secret
-   PUBLIC_BASE_URL=https://your-domain.com
+   PUBLIC_BASE_URL=https://trstickets.theredstonee.de
    SESSION_SECRET=random_secret_string
    ```
 
@@ -157,16 +160,18 @@ Passe das Ticket-Embed im Web-Dashboard an mit folgenden Platzhaltern:
 
 **Slash-Befehle:**
 - `/dashboard` - Dashboard-Link anzeigen
+- `/version` - Bot-Version anzeigen
 - `/reload` - Config neu laden
 - `/restart` - Bot neu starten
 - `/update` - Update von GitHub & Neustart
 
 ### Web-Dashboard
 
-**Zugriff:** `https://your-domain.com/panel`
+**Zugriff:** `https://trstickets.theredstonee.de/panel`
 
 **Features:**
-- ⚙️ Topics & Kategorien verwalten
+- ⚙️ Server-Einstellungen & Channel-Auswahl
+- 🏷️ Topics & Kategorien verwalten
 - 📝 Formular-Felder konfigurieren
 - 🎨 Embed-Design anpassen
 - 📊 Ticket-Verlauf ansehen
@@ -180,6 +185,12 @@ Passe das Ticket-Embed im Web-Dashboard an mit folgenden Platzhaltern:
 - Manage Channels
 - Manage Permissions
 - Read Message History
+- Manage Messages (für Auto-Delete)
+
+### Privileged Intents (Developer Portal)
+⚠️ **Wichtig:** Aktiviere im Discord Developer Portal unter "Bot":
+- ✅ **Server Members Intent**
+- ✅ **Message Content Intent** (für Auto-Delete bei geclaimten Tickets)
 
 ### Team-Rolle
 Definiert in `index.js` - Konstante `TEAM_ROLE`:
@@ -197,14 +208,17 @@ TRS-Tickets-Bot-1/
 ├── tickets.json          # Ticket-Datenbank
 ├── ticketCounter.json    # Ticket-Zähler
 ├── commands/             # Slash-Commands
-│   ├── dashboard.js
-│   ├── reload.js
-│   ├── restart.js
-│   └── update.js
+│   ├── dashboard.js      # Dashboard-Link
+│   ├── version.js        # Version anzeigen
+│   ├── reload.js         # Config & Commands neu laden
+│   ├── restart.js        # Bot neu starten
+│   └── update.js         # Git pull & Neustart
 ├── views/                # EJS Templates
 │   ├── panel.ejs         # Admin-Panel
 │   └── tickets.ejs       # Ticket-Übersicht
-└── .env                  # Umgebungsvariablen
+├── .env                  # Umgebungsvariablen
+├── README.md             # Diese Datei
+└── CLAUDE.md             # Claude Code Dokumentation
 ```
 
 ## 🛠️ Technologien
@@ -223,11 +237,21 @@ Dieses Projekt ist für den privaten/Server-internen Gebrauch bestimmt.
 
 Bei Problemen oder Feature-Wünschen erstelle ein Issue im Repository oder kontaktiere das Entwickler-Team.
 
-## 📮 Support
+## 📮 Support & Links
 
-- Discord: [Server-Link]
-- Website: [Website-Link]
+- 🌐 **Website:** [theredstonee.de](https://theredstonee.de)
+- 💬 **Discord Server:** [dc.theredstonee.de](https://dc.theredstonee.de)
+- 🎫 **Ticket Panel:** [trstickets.theredstonee.de](https://trstickets.theredstonee.de)
+
+## ✨ Features Highlights
+
+- ✅ **Auto-Delete** - Unbefugte Nachrichten werden automatisch gelöscht (nur bei geclaimten Tickets)
+- 🔐 **Claim-System** - Berechtigungen werden automatisch angepasst
+- 📋 **Formular-System** - Dynamische Eingabefelder pro Topic
+- 🎨 **Prioritäten** - 3 Stufen mit automatischer Channel-Umbenennung
+- 📊 **Web-Dashboard** - Channel-Dropdowns & Server-Einstellungen
+- 📄 **Transcripts** - Automatischer Export bei Ticket-Schließung
 
 ---
 
-**Dingnator TRS Tickets ©️**
+**TRS Tickets ©️ • Version Alpha 1.0**

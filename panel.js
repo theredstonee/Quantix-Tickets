@@ -14,6 +14,8 @@ const fs = require('fs');
 const path = require('path');
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 
+const VERSION = 'Alpha 1.0'; // Bot Version
+
 /* ====== Config laden ====== */
 const CONFIG = path.join(__dirname, 'config.json');
 function readCfg(){ try { return JSON.parse(fs.readFileSync(CONFIG,'utf8')); } catch { return {}; } }
@@ -97,12 +99,35 @@ module.exports = (client)=>{
   router.get('/logout',(req,res)=>{ req.logout?.(()=>{}); req.session.destroy(()=>res.redirect('/')); });
 
   /* ====== Panel Ansicht ====== */
-  router.get('/panel', isAuth, (req,res)=>{ cfg = readCfg(); res.render('panel', { cfg, msg:req.query.msg||null }); });
+  router.get('/panel', isAuth, async (req,res)=>{
+    cfg = readCfg();
 
-  /* ====== Panel speichern (Topics + FormFields + Embeds – FIXED) ====== */
+    // Channels vom Server laden
+    let channels = [];
+    try {
+      const guild = await client.guilds.fetch(cfg.guildId);
+      const fetchedChannels = await guild.channels.fetch();
+      channels = fetchedChannels
+        .filter(ch => ch.type === 0 || ch.type === 4) // Text Channels (0) und Kategorien (4)
+        .map(ch => ({ id: ch.id, name: ch.name, type: ch.type }))
+        .sort((a,b) => a.name.localeCompare(b.name));
+    } catch(err) {
+      console.error('Fehler beim Laden der Channels:', err);
+    }
+
+    res.render('panel', { cfg, msg: req.query.msg||null, channels, version: VERSION });
+  });
+
+  /* ====== Panel speichern (Topics + FormFields + Embeds + Server Settings – FIXED) ====== */
   router.post('/panel', isAuth, (req,res)=>{
     try {
       cfg = readCfg();
+
+      // ---------- Server Settings ----------
+      if(req.body.guildId) cfg.guildId = req.body.guildId.trim();
+      if(req.body.ticketCategoryId) cfg.ticketCategoryId = req.body.ticketCategoryId.trim();
+      if(req.body.logChannelId) cfg.logChannelId = req.body.logChannelId.trim();
+      if(req.body.transcriptChannelId) cfg.transcriptChannelId = req.body.transcriptChannelId.trim();
 
       // ---------- Topics: Tabellen-Werte haben Vorrang ----------
       const labelInputs = [].concat(req.body.label||[]);
@@ -235,7 +260,8 @@ module.exports = (client)=>{
       res.render('tickets', {
         tickets: JSON.stringify(tickets),
         memberMap: JSON.stringify(memberMap),
-        guildId: cfg.guildId
+        guildId: cfg.guildId,
+        version: VERSION
       });
     } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden'); }
   });

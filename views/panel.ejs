@@ -37,6 +37,45 @@
   <form method="POST" autocomplete="off" id="panelForm">
     <div class="grid">
 
+      <!-- Server Einstellungen -->
+      <fieldset>
+        <legend>⚙️ Server Einstellungen</legend>
+        <label>Guild/Server ID
+          <input name="guildId" value="<%= cfg.guildId || '' %>" placeholder="1234567890123456789" required>
+        </label>
+        <label>Ticket Kategorie
+          <select name="ticketCategoryId">
+            <option value="">-- Kategorie wählen --</option>
+            <% channels.filter(ch => ch.type === 4).forEach(ch => { %>
+              <option value="<%= ch.id %>" <%= cfg.ticketCategoryId === ch.id ? 'selected' : '' %>>
+                📁 <%= ch.name %>
+              </option>
+            <% }) %>
+          </select>
+        </label>
+        <label>Log Channel
+          <select name="logChannelId">
+            <option value="">-- Channel wählen --</option>
+            <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
+              <option value="<%= ch.id %>" <%= cfg.logChannelId === ch.id ? 'selected' : '' %>>
+                # <%= ch.name %>
+              </option>
+            <% }) %>
+          </select>
+        </label>
+        <label>Transcript Channel
+          <select name="transcriptChannelId">
+            <option value="">-- Channel wählen --</option>
+            <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
+              <option value="<%= ch.id %>" <%= cfg.transcriptChannelId === ch.id ? 'selected' : '' %>>
+                # <%= ch.name %>
+              </option>
+            <% }) %>
+          </select>
+        </label>
+        <p class="soft-note">Die Guild ID findest du im Server → Rechtsklick → ID kopieren (Entwicklermodus muss aktiviert sein)</p>
+      </fieldset>
+
       <!-- Topics -->
       <fieldset>
         <legend>Kategorien (Topics)</legend>
@@ -120,6 +159,20 @@
         </label>
       </fieldset>
 
+      <!-- Umgebungsvariablen Info -->
+      <fieldset>
+        <legend>🔧 Umgebungsvariablen (.env)</legend>
+        <p class="soft-note">Diese Einstellungen müssen direkt in der <code>.env</code> Datei auf dem Server bearbeitet werden:</p>
+        <ul class="soft-note" style="margin-top: 0.5rem; line-height: 1.8;">
+          <li><code>DISCORD_TOKEN</code> - Bot Token</li>
+          <li><code>CLIENT_ID</code> - OAuth2 Client ID</li>
+          <li><code>CLIENT_SECRET</code> - OAuth2 Client Secret</li>
+          <li><code>PUBLIC_BASE_URL</code> - Öffentliche URL (z.B. https://trstickets.theredstonee.de)</li>
+          <li><code>SESSION_SECRET</code> - Session Secret für Web-Panel</li>
+        </ul>
+        <p class="soft-note" style="margin-top: 0.8rem;">⚠️ Aus Sicherheitsgründen können diese Werte nicht über das Web-Panel geändert werden.</p>
+      </fieldset>
+
     </div>
     <button type="submit">💾 Speichern</button>
   </form>
@@ -128,7 +181,14 @@
   <h2>Panel‑Nachricht Aktionen</h2>
   <div class="actions">
     <form action="/panel/send" method="POST">
-      <input name="channelId" placeholder="Channel‑ID" value="<%= cfg.panelChannelId || '' %>" required>
+      <select name="channelId" required style="min-width: 250px;">
+        <option value="">-- Panel Channel wählen --</option>
+        <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
+          <option value="<%= ch.id %>" <%= cfg.panelChannelId === ch.id ? 'selected' : '' %>>
+            # <%= ch.name %>
+          </option>
+        <% }) %>
+      </select>
       <button>📤 Senden</button>
     </form>
     <form action="/panel/edit" method="POST">
@@ -138,7 +198,8 @@
   </div>
 
   <footer>
-    <p>Ticket‑Bot Panel • Änderungen speichern sofort in <code>config.json</code>.</p>
+    <p>TRS Tickets ©️ • Version <%= version %></p>
+    <p class="soft-note">Änderungen speichern sofort in <code>config.json</code></p>
   </footer>
 
 <script>

@@ -39,6 +39,7 @@ const {
 } = require('discord.js');
 
 /* ================= Konstanten ================= */
+const VERSION   = 'Alpha 1.0';                     // Bot Version
 const TEAM_ROLE = '1387525699908272218';           // Team Rolle
 const PREFIX    = '🎫│';                           // Präfix vor Ticket Channels
 const PRIORITY_STATES = [
@@ -664,7 +665,7 @@ async function updatePriority(interaction, ticket, log, dir){
   await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
 }
 
-/* ================= Message Delete für unbefugte Nutzer ================= */
+/* ================= Message Delete für unbefugte Nutzer (nur wenn geclaimed) ================= */
 client.on(Events.MessageCreate, async (message) => {
   // Ignoriere Bot-Nachrichten
   if(message.author.bot) return;
@@ -676,6 +677,9 @@ client.on(Events.MessageCreate, async (message) => {
     const log = safeRead(TICKETS_PATH, []);
     const ticket = log.find(t => t.channelId === message.channel.id);
     if(!ticket) return;
+
+    // Nur prüfen wenn Ticket geclaimed ist
+    if(!ticket.claimer) return;
 
     // Berechtigte Nutzer
     const authorId = message.author.id;
@@ -690,7 +694,7 @@ client.on(Events.MessageCreate, async (message) => {
 
       // DM an den Nutzer senden
       try {
-        await message.author.send(`❌ Du hast keine Berechtigung in Ticket #${ticket.id} zu schreiben. Nur der Ersteller, Claimer, hinzugefügte Nutzer und Team-Mitglieder dürfen schreiben.`);
+        await message.author.send(`❌ Du hast keine Berechtigung in Ticket #${ticket.id} zu schreiben. Dieses Ticket wurde geclaimed und ist nur für Ersteller, Claimer, hinzugefügte Nutzer und Team-Mitglieder zugänglich.`);
       } catch {
         // DM fehlgeschlagen (DMs deaktiviert)
       }
