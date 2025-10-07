@@ -222,7 +222,7 @@ async function logEvent(guild, text){
       .setDescription(text)
       .setColor(0x00ff00) // Grün
       .setTimestamp()
-      .setFooter({ text: 'Dingnator TRS Tickets ©️' });
+      .setFooter({ text: 'TRS Tickets ©️' });
 
     await ch.send({ embeds: [embed] });
   } catch {}
