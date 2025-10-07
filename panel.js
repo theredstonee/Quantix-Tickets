@@ -44,6 +44,7 @@ function readCfg(guildId){
         guildId: guildId,
         topics: [],
         formFields: [],
+        teamRoleId: '1387525699908272218', // Default Team-Rolle
         ticketEmbed: {
           title: '🎫 Ticket #{ticketNumber}',
           description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
@@ -254,25 +255,36 @@ module.exports = (client)=>{
     const guildId = req.session.selectedGuild;
     const cfg = readCfg(guildId);
 
-    // Channels vom Server laden
+    // Channels und Rollen vom Server laden
     let channels = [];
+    let roles = [];
     let guildName = 'Server';
     try {
       const guild = await client.guilds.fetch(guildId);
       guildName = guild.name;
+
+      // Channels laden
       const fetchedChannels = await guild.channels.fetch();
       channels = fetchedChannels
         .filter(ch => ch.type === 0 || ch.type === 4) // Text Channels (0) und Kategorien (4)
         .map(ch => ({ id: ch.id, name: ch.name, type: ch.type }))
         .sort((a,b) => a.name.localeCompare(b.name));
+
+      // Rollen laden
+      const fetchedRoles = await guild.roles.fetch();
+      roles = fetchedRoles
+        .filter(r => r.id !== guild.id) // @everyone ausschließen
+        .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
+        .sort((a,b) => a.name.localeCompare(b.name));
     } catch(err) {
-      console.error('Fehler beim Laden der Channels:', err);
+      console.error('Fehler beim Laden der Channels/Rollen:', err);
     }
 
     res.render('panel', {
       cfg,
       msg: req.query.msg||null,
       channels,
+      roles,
       version: VERSION,
       guildName,
       guildId
@@ -290,6 +302,7 @@ module.exports = (client)=>{
       if(req.body.ticketCategoryId) cfg.ticketCategoryId = req.body.ticketCategoryId.trim();
       if(req.body.logChannelId) cfg.logChannelId = req.body.logChannelId.trim();
       if(req.body.transcriptChannelId) cfg.transcriptChannelId = req.body.transcriptChannelId.trim();
+      if(req.body.teamRoleId) cfg.teamRoleId = req.body.teamRoleId.trim();
 
       // ---------- Topics: Tabellen-Werte haben Vorrang ----------
       const labelInputs = [].concat(req.body.label||[]);

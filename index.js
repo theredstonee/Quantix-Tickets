@@ -40,13 +40,18 @@ const {
 
 /* ================= Konstanten ================= */
 const VERSION   = 'Alpha 1.0';                     // Bot Version
-const TEAM_ROLE = '1387525699908272218';           // Team Rolle
 const PREFIX    = '🎫│';                           // Präfix vor Ticket Channels
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },
   { dot: '🟠', embedColor: 0xff9900, label: 'Orange' },
   { dot: '🔴', embedColor: 0xd92b2b, label: 'Rot'    }
 ];
+
+// Helper: Team-Rolle aus Config holen
+function getTeamRole(guildId){
+  const cfg = readCfg(guildId);
+  return cfg.teamRoleId || null;
+}
 
 /* ================= Command Collection ================= */
 const { Collection } = require('discord.js');
@@ -107,6 +112,7 @@ function readCfg(guildId){
         guildId: guildId,
         topics: [],
         formFields: [],
+        teamRoleId: '1387525699908272218', // Default Team-Rolle
         ticketEmbed: {
           title: '🎫 Ticket #{ticketNumber}',
           description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
@@ -504,12 +510,14 @@ client.on(Events.InteractionCreate, async i => {
       const log = loadTickets(guildId);
       const ticket = log.find(t=>t.channelId===i.channel.id);
       if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz'});
-      const isTeam = i.member.roles.cache.has(TEAM_ROLE);
+      const TEAM_ROLE = getTeamRole(guildId);
+      const isTeam = TEAM_ROLE ? i.member.roles.cache.has(TEAM_ROLE) : false;
       const isCreator = ticket.userId === i.user.id;
       const isClaimer = ticket.claimer === i.user.id;
 
       if(i.customId==='request_close'){
-        await i.channel.send({ content:`❓ Schließungsanfrage von <@${i.user.id}> <@&${TEAM_ROLE}>`, components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel('Schließen').setStyle(ButtonStyle.Danger) ) ] });
+        const mentionTeam = TEAM_ROLE ? `<@&${TEAM_ROLE}>` : '@Team';
+        await i.channel.send({ content:`❓ Schließungsanfrage von <@${i.user.id}> ${mentionTeam}`, components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel('Schließen').setStyle(ButtonStyle.Danger) ) ] });
         logEvent(i.guild, `❓ Close-Request Ticket #${ticket.id} von <@${i.user.id}>`);
         return i.reply({ephemeral:true,content:'Anfrage gesendet'});
       }
@@ -568,7 +576,7 @@ client.on(Events.InteractionCreate, async i => {
         const closer = await i.guild.members.fetch(i.user.id).catch(()=>null);
         const closerTag  = closer?.user?.tag || i.user.tag || i.user.username || i.user.id;
         const closerName = closer?.displayName || closerTag;
-        const roleObj    = await i.guild.roles.fetch(TEAM_ROLE).catch(()=>null);
+        const roleObj    = TEAM_ROLE ? await i.guild.roles.fetch(TEAM_ROLE).catch(()=>null) : null;
         const teamLabel  = roleObj ? `@${roleObj.name}` : '@Team';
 
         await i.reply({ ephemeral:true, content:'Ticket wird geschlossen…' });
@@ -665,7 +673,9 @@ client.on(Events.InteractionCreate, async i => {
     }
 
     if(i.isModalSubmit() && i.customId==='modal_add_user'){
-      if(!i.member.roles.cache.has(TEAM_ROLE)) return i.reply({ephemeral:true,content:'Nur Team'});
+      const TEAM_ROLE = getTeamRole(i.guild.id);
+      const isTeam = TEAM_ROLE ? i.member.roles.cache.has(TEAM_ROLE) : false;
+      if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team'});
       const raw = i.fields.getTextInputValue('user').trim();
       const id = (raw.replace(/<@!?|>/g,'').match(/\d{17,20}/)||[])[0];
       if(!id) return i.reply({ephemeral:true,content:'Ungültige ID'});
@@ -727,6 +737,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   ];
 
   // Team-Rolle hinzufügen wenn gültig
+  const TEAM_ROLE = getTeamRole(guildId);
   if(TEAM_ROLE && TEAM_ROLE.trim()){
     try {
       await interaction.guild.roles.fetch(TEAM_ROLE);
@@ -828,7 +839,8 @@ client.on(Events.MessageCreate, async (message) => {
     const isCreator = ticket.userId === authorId;
     const isClaimer = ticket.claimer === authorId;
     const isAdded = ticket.addedUsers && ticket.addedUsers.includes(authorId);
-    const isTeam = message.member?.roles?.cache?.has(TEAM_ROLE);
+    const TEAM_ROLE = getTeamRole(guildId);
+    const isTeam = TEAM_ROLE ? message.member?.roles?.cache?.has(TEAM_ROLE) : false;
 
     // Wenn nicht berechtigt -> löschen
     if(!isCreator && !isClaimer && !isAdded && !isTeam){

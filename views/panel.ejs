@@ -174,7 +174,7 @@
       <fieldset>
         <legend>⚙️ Server Einstellungen</legend>
         <label>Guild/Server ID
-          <input name="guildId" value="<%= cfg.guildId || '' %>" placeholder="1234567890123456789" required>
+          <input name="guildId" value="<%= cfg.guildId || guildId || '' %>" placeholder="1234567890123456789" readonly style="background: var(--fieldset-bg); cursor: not-allowed;">
         </label>
         <label>Ticket Kategorie
           <select name="ticketCategoryId">
@@ -206,7 +206,17 @@
             <% }) %>
           </select>
         </label>
-        <p class="soft-note">Die Guild ID findest du im Server → Rechtsklick → ID kopieren (Entwicklermodus muss aktiviert sein)</p>
+        <label>Team Rolle
+          <select name="teamRoleId">
+            <option value="">-- Rolle wählen --</option>
+            <% roles.forEach(role => { %>
+              <option value="<%= role.id %>" <%= cfg.teamRoleId === role.id ? 'selected' : '' %>>
+                @ <%= role.name %>
+              </option>
+            <% }) %>
+          </select>
+        </label>
+        <p class="soft-note">Guild ID wird automatisch gesetzt. Team-Rolle bestimmt welche User Zugriff auf Ticket-Funktionen haben.</p>
       </fieldset>
 
       <!-- Topics -->
