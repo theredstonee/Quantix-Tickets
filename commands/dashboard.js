@@ -1,18 +1,26 @@
 // commands/dashboard.js
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('dashboard')
-    .setDescription('Link zum Ticket‑Dashboard anzeigen')
-    .setDMPermission(false),       // nur im Server, nicht in DMs
-  async execute (interaction) {
-    // Panel‑Adresse zentral festlegen (→ .env oder harte URL)
-    const url = process.env.PANEL_URL || 'http://192.168.178.141:3000/panel';
+    .setDescription('Link zum Admin-Panel anzeigen')
+    .setDMPermission(false),
+  async execute(interaction) {
+    const PANEL_URL = process.env.PUBLIC_BASE_URL
+      ? `${process.env.PUBLIC_BASE_URL.replace(/\/$/, '')}/panel`
+      : 'https://trstickets.theredstonee.de/panel';
 
-    // Nur dir zeigen (ephemeral), damit kein Spam entsteht
+    const button = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setURL(PANEL_URL)
+        .setStyle(ButtonStyle.Link)
+        .setLabel('🖥️ Dashboard öffnen')
+    );
+
     await interaction.reply({
-      content: `🖥️ Hier geht’s zum Dashboard:\n${url}`,
+      content: '**TRS Tickets Admin-Panel**\nKlicke auf den Button um das Dashboard zu öffnen:',
+      components: [button],
       ephemeral: true
     });
   }
