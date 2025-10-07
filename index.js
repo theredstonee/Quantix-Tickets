@@ -67,7 +67,8 @@ function loadCommands(){
 }
 
 /* ================= Pfade / Dateien ================= */
-const CFG_PATH     = path.join(__dirname,'config.json');
+const CONFIG_DIR   = path.join(__dirname,'configs');
+const CFG_PATH     = path.join(__dirname,'config.json'); // Legacy fallback
 const COUNTER_PATH = path.join(__dirname,'ticketCounter.json');
 const TICKETS_PATH = path.join(__dirname,'tickets.json');
 
@@ -77,18 +78,54 @@ function safeRead(file, fallback){
 }
 function safeWrite(file, data){ fs.writeFileSync(file, JSON.stringify(data,null,2)); }
 
-let cfg = safeRead(CFG_PATH, {});
+/* ================= Multi-Server Config System ================= */
+if(!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
+
+function readCfg(guildId){
+  if(!guildId){
+    // Fallback auf legacy config.json
+    return safeRead(CFG_PATH, {});
+  }
+  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+  try {
+    return JSON.parse(fs.readFileSync(configPath,'utf8'));
+  } catch {
+    // Wenn keine Config existiert, erstelle default
+    const defaultCfg = {
+      guildId: guildId,
+      topics: [],
+      formFields: [],
+      ticketEmbed: {
+        title: '🎫 Ticket #{ticketNumber}',
+        description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
+        color: '#2b90d9',
+        footer: 'Ticket #{ticketNumber}'
+      },
+      panelEmbed: {
+        title: '🎫 Ticket System',
+        description: 'Wähle dein Thema',
+        color: '#5865F2',
+        footer: 'Support'
+      }
+    };
+    writeCfg(guildId, defaultCfg);
+    return defaultCfg;
+  }
+}
+
+function writeCfg(guildId, data){
+  if(!guildId){
+    // Legacy fallback
+    safeWrite(CFG_PATH, data);
+    return;
+  }
+  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+  fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
+}
+
+// Initialize other files
 if(!fs.existsSync(COUNTER_PATH)) safeWrite(COUNTER_PATH, { last: 0 });
 if(!fs.existsSync(TICKETS_PATH)) safeWrite(TICKETS_PATH, []);
-
-if(!cfg.ticketEmbed){
-  cfg.ticketEmbed = {
-    title: '🎫 Ticket #{ticketNumber}',
-    description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
-    color: '#2b90d9',
-    footer: 'Ticket #{ticketNumber}'
-  };
-}
 
 /* ================= Express / Panel ================= */
 const app = express();
@@ -135,7 +172,7 @@ function buttonRows(claimed){
 }
 
 /* ================= Panel Select ================= */
-function buildPanelSelect(){
+function buildPanelSelect(cfg){
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('topic')
@@ -149,11 +186,20 @@ async function deployCommands(){
   loadCommands();
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   const commands = Array.from(commandsCollection.values()).map(cmd => cmd.data.toJSON());
-  await rest.put(
-    Routes.applicationGuildCommands(client.user.id, cfg.guildId),
-    { body: commands }
-  );
-  console.log(`✅ ${commands.length} Slash-Commands registriert`);
+
+  // Deploy commands to all guilds where bot is present
+  const guilds = await client.guilds.fetch();
+  for(const [guildId, guild] of guilds){
+    try {
+      await rest.put(
+        Routes.applicationGuildCommands(client.user.id, guildId),
+        { body: commands }
+      );
+      console.log(`✅ ${commands.length} Commands → ${guild.name} (${guildId})`);
+    } catch(err){
+      console.error(`❌ Commands Fehler für ${guildId}:`, err);
+    }
+  }
 }
 
 client.once('ready', async () => {
@@ -162,9 +208,8 @@ client.once('ready', async () => {
 });
 
 /* ================= Ticket Embed Builder ================= */
-function buildTicketEmbed(i, topic, nr){
-  cfg = safeRead(CFG_PATH, cfg);
-  const t = cfg.ticketEmbed;
+function buildTicketEmbed(cfg, i, topic, nr){
+  const t = cfg.ticketEmbed || {};
   const rep = s => (s||'')
     .replace(/\{ticketNumber\}/g, nr)
     .replace(/\{topicLabel\}/g, topic.label)
@@ -207,6 +252,7 @@ function renameChannelIfNeeded(channel, ticket){ const desired = buildChannelNam
 
 /* ================= Logging ================= */
 async function logEvent(guild, text){
+  const cfg = readCfg(guild.id);
   if(!cfg.logChannelId) return;
   try {
     const ch = await guild.channels.fetch(cfg.logChannelId);
@@ -325,7 +371,7 @@ ${messages.map(m=>{
 
 
 /* ================= FormField Helper ================= */
-function getFormFieldsForTopic(topicValue){
+function getFormFieldsForTopic(cfg, topicValue){
   const all = Array.isArray(cfg.formFields)? cfg.formFields : [];
   return all.filter(f => {
     if(!f) return false;
@@ -346,12 +392,15 @@ function normalizeField(field, index){
 /* ================= Interactions ================= */
 client.on(Events.InteractionCreate, async i => {
   try {
+    // Load config for this guild
+    const cfg = readCfg(i.guild?.id);
+
     if(i.isChatInputCommand()){
       const command = commandsCollection.get(i.commandName);
       if(command){
         // Spezielle Behandlung für reload
         if(i.commandName === 'reload'){
-          cfg = safeRead(CFG_PATH, {});
+          // Reload wird von commands/reload.js gehandhabt
           loadCommands();
           await deployCommands();
           return i.reply({ content:'✅ Config & Commands neu geladen!', ephemeral:true });
@@ -374,7 +423,7 @@ client.on(Events.InteractionCreate, async i => {
       const topic = cfg.topics?.find(t=>t.value===i.values[0]);
       if(!topic) return i.reply({content:'Unbekanntes Thema',ephemeral:true});
 
-      const formFields = getFormFieldsForTopic(topic.value);
+      const formFields = getFormFieldsForTopic(cfg, topic.value);
       if(formFields.length){
         // Modal anzeigen, Ticketnummer wird erst beim Submit erzeugt
         const modal = new ModalBuilder().setCustomId(`modal_newticket:${topic.value}`).setTitle(`Ticket: ${topic.label}`.substring(0,45));
@@ -392,7 +441,7 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       // Kein Formular -> sofort Ticket erstellen
-      return await createTicketChannel(i, topic, {});
+      return await createTicketChannel(i, topic, {}, cfg);
     }
 
     // Modal Submit (neues Ticket)
@@ -400,10 +449,10 @@ client.on(Events.InteractionCreate, async i => {
       const topicValue = i.customId.split(':')[1];
       const topic = cfg.topics?.find(t=>t.value===topicValue);
       if(!topic) return i.reply({ephemeral:true,content:'Topic ungültig'});
-      const formFields = getFormFieldsForTopic(topic.value).map(normalizeField);
+      const formFields = getFormFieldsForTopic(cfg, topic.value).map(normalizeField);
       const answers = {};
       formFields.forEach(f=>{ answers[f.id] = i.fields.getTextInputValue(f.id); });
-      await createTicketChannel(i, topic, answers);
+      await createTicketChannel(i, topic, answers, cfg);
       return;
     }
 
@@ -591,7 +640,7 @@ client.on(Events.InteractionCreate, async i => {
 });
 
 /* ================= Ticket Erstellung (mit optionalen Formular-Daten) ================= */
-async function createTicketChannel(interaction, topic, formData){
+async function createTicketChannel(interaction, topic, formData, cfg){
   const nr = nextTicket();
   const ch = await interaction.guild.channels.create({
     name: buildChannelName(nr,0),
@@ -603,12 +652,12 @@ async function createTicketChannel(interaction, topic, formData){
       { id:TEAM_ROLE, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
     ]
   });
-  const embed = buildTicketEmbed(interaction, topic, nr);
+  const embed = buildTicketEmbed(cfg, interaction, topic, nr);
   // Formular-Ergebnisse als Fields anhängen
   const formKeys = Object.keys(formData||{});
   if(formKeys.length){
     // Labels der Formular-Felder finden
-    const formFields = getFormFieldsForTopic(topic.value).map(normalizeField);
+    const formFields = getFormFieldsForTopic(cfg, topic.value).map(normalizeField);
     // Max 25 Felder
     const fields = formKeys.slice(0,25).map(k=>{
       const field = formFields.find(f=>f.id===k);
@@ -632,13 +681,12 @@ async function createTicketChannel(interaction, topic, formData){
 
   // Panel Reset (Dropdown wiederherstellen)
   try {
-    cfg = safeRead(CFG_PATH, cfg);
     if(cfg.panelMessageId && cfg.panelChannelId){
       const panelChannel = await interaction.guild.channels.fetch(cfg.panelChannelId).catch(()=>null);
       if(panelChannel){
         const panelMsg = await panelChannel.messages.fetch(cfg.panelMessageId).catch(()=>null);
         if(panelMsg){
-          const row = buildPanelSelect();
+          const row = buildPanelSelect(cfg);
           let panelEmbed = undefined;
           if(cfg.panelEmbed && (cfg.panelEmbed.title || cfg.panelEmbed.description)){
             panelEmbed = new EmbedBuilder();

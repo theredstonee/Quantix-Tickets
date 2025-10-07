@@ -16,10 +16,51 @@ const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('dis
 
 const VERSION = 'Alpha 1.0'; // Bot Version
 
-/* ====== Config laden ====== */
-const CONFIG = path.join(__dirname, 'config.json');
-function readCfg(){ try { return JSON.parse(fs.readFileSync(CONFIG,'utf8')); } catch { return {}; } }
-let cfg = readCfg();
+/* ====== Config laden (Multi-Server) ====== */
+const CONFIG_DIR = path.join(__dirname, 'configs');
+if(!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
+
+// Legacy config.json als Fallback
+const LEGACY_CONFIG = path.join(__dirname, 'config.json');
+
+function readCfg(guildId){
+  if(!guildId){
+    // Fallback auf legacy config.json
+    try { return JSON.parse(fs.readFileSync(LEGACY_CONFIG,'utf8')); } catch { return {}; }
+  }
+  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+  try {
+    return JSON.parse(fs.readFileSync(configPath,'utf8'));
+  } catch {
+    // Wenn keine Config existiert, erstelle default
+    const defaultCfg = {
+      guildId: guildId,
+      topics: [],
+      formFields: [],
+      ticketEmbed: {
+        title: '🎫 Ticket #{ticketNumber}',
+        description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
+        color: '#2b90d9',
+        footer: 'Ticket #{ticketNumber}'
+      },
+      panelEmbed: {
+        title: '🎫 Ticket System',
+        description: 'Wähle dein Thema',
+        color: '#5865F2',
+        footer: 'Support'
+      }
+    };
+    writeCfg(guildId, defaultCfg);
+    return defaultCfg;
+  }
+}
+
+function writeCfg(guildId, data){
+  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+  fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
+}
+
+let cfg = readCfg(); // Legacy fallback
 
 /* ====== Basis-URL (für Callback) ====== */
 const BASE = process.env.PUBLIC_BASE_URL || '';
@@ -52,20 +93,86 @@ module.exports = (client)=>{
   router.use(passport.session());
   router.use(express.urlencoded({extended:true}));
 
-  /* ====== Helper: Auth Middleware ====== */
+  /* ====== Helper: Auth Middleware (Server-spezifisch) ====== */
   function isAuth(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
-    const entry = req.user.guilds?.find(g=>g.id===cfg.guildId);
-    if(!entry) return res.status(403).send('Nicht auf Ziel-Server.');
-    const ALLOWED = 0x8n | 0x20n; // Admin oder Manage Guild
-    if(!(BigInt(entry.permissions) & ALLOWED)) return res.status(403).send('Keine Berechtigung.');
+
+    // Prüfe ob ein Server ausgewählt wurde
+    if(!req.session.selectedGuild) return res.redirect('/select-server');
+
+    const guildId = req.session.selectedGuild;
+    const entry = req.user.guilds?.find(g=>g.id===guildId);
+    if(!entry) return res.status(403).send('Du bist nicht auf diesem Server oder der Bot ist nicht auf dem Server.');
+
+    // Nur Administrator darf zugreifen
+    const ADMIN = 0x8n; // Administrator Permission
+    if(!(BigInt(entry.permissions) & ADMIN)) {
+      return res.status(403).send('Keine Berechtigung. Du brauchst Administrator-Rechte auf diesem Server.');
+    }
+
     next();
   }
 
   /* ====== Root ====== */
   router.get('/', (req,res)=>{
-    if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/panel');
-    res.send('<h1>Ticket Panel</h1><p><a href="/login">Login mit Discord</a></p>');
+    if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/select-server');
+    res.send('<h1>TRS Tickets Panel</h1><p><a href="/login">Login mit Discord</a></p>');
+  });
+
+  /* ====== Server Auswahl ====== */
+  router.get('/select-server', async (req,res)=>{
+    if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
+
+    try {
+      // Hole alle Guilds wo der Bot ist
+      const botGuilds = await client.guilds.fetch();
+      const botGuildIds = new Set(botGuilds.map(g => g.id));
+
+      // Filter User-Guilds: Nur wo Bot ist UND User Admin ist
+      const ADMIN = 0x8n;
+      const availableServers = (req.user.guilds || [])
+        .filter(g => {
+          const hasBot = botGuildIds.has(g.id);
+          const isAdmin = (BigInt(g.permissions) & ADMIN) === ADMIN;
+          return hasBot && isAdmin;
+        })
+        .map(g => ({
+          id: g.id,
+          name: g.name,
+          icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null
+        }));
+
+      if(availableServers.length === 0){
+        return res.send('<h1>Keine Server verfügbar</h1><p>Du bist auf keinem Server Administrator wo der Bot ist.</p><p><a href="/logout">Logout</a></p>');
+      }
+
+      res.render('select-server', {
+        servers: availableServers,
+        version: VERSION,
+        currentGuild: req.session.selectedGuild || null
+      });
+    } catch(err){
+      console.error('Server-Auswahl Fehler:', err);
+      res.status(500).send('Fehler beim Laden der Server');
+    }
+  });
+
+  /* ====== Server Auswahl speichern ====== */
+  router.post('/select-server', (req,res)=>{
+    if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
+
+    const guildId = req.body.guildId;
+    if(!guildId) return res.redirect('/select-server');
+
+    // Prüfe ob User Admin auf dem Server ist
+    const ADMIN = 0x8n;
+    const entry = req.user.guilds?.find(g=>g.id===guildId);
+    if(!entry || !(BigInt(entry.permissions) & ADMIN)){
+      return res.status(403).send('Keine Administrator-Rechte auf diesem Server.');
+    }
+
+    req.session.selectedGuild = guildId;
+    res.redirect('/panel');
   });
 
   /* ====== Login Rate-Limit ====== */
@@ -100,12 +207,15 @@ module.exports = (client)=>{
 
   /* ====== Panel Ansicht ====== */
   router.get('/panel', isAuth, async (req,res)=>{
-    cfg = readCfg();
+    const guildId = req.session.selectedGuild;
+    const cfg = readCfg(guildId);
 
     // Channels vom Server laden
     let channels = [];
+    let guildName = 'Server';
     try {
-      const guild = await client.guilds.fetch(cfg.guildId);
+      const guild = await client.guilds.fetch(guildId);
+      guildName = guild.name;
       const fetchedChannels = await guild.channels.fetch();
       channels = fetchedChannels
         .filter(ch => ch.type === 0 || ch.type === 4) // Text Channels (0) und Kategorien (4)
@@ -115,16 +225,24 @@ module.exports = (client)=>{
       console.error('Fehler beim Laden der Channels:', err);
     }
 
-    res.render('panel', { cfg, msg: req.query.msg||null, channels, version: VERSION });
+    res.render('panel', {
+      cfg,
+      msg: req.query.msg||null,
+      channels,
+      version: VERSION,
+      guildName,
+      guildId
+    });
   });
 
   /* ====== Panel speichern (Topics + FormFields + Embeds + Server Settings – FIXED) ====== */
   router.post('/panel', isAuth, (req,res)=>{
     try {
-      cfg = readCfg();
+      const guildId = req.session.selectedGuild;
+      const cfg = readCfg(guildId);
 
       // ---------- Server Settings ----------
-      if(req.body.guildId) cfg.guildId = req.body.guildId.trim();
+      cfg.guildId = guildId; // Immer die ausgewählte Guild
       if(req.body.ticketCategoryId) cfg.ticketCategoryId = req.body.ticketCategoryId.trim();
       if(req.body.logChannelId) cfg.logChannelId = req.body.logChannelId.trim();
       if(req.body.transcriptChannelId) cfg.transcriptChannelId = req.body.transcriptChannelId.trim();
@@ -187,7 +305,7 @@ module.exports = (client)=>{
         footer:      take('panelFooter',      prevPE.footer)
       };
 
-      fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
+      writeCfg(guildId, cfg);
       res.redirect('/panel?msg=saved');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
@@ -195,25 +313,27 @@ module.exports = (client)=>{
   /* ====== Panel Nachricht senden ====== */
   router.post('/panel/send', isAuth, async (req,res)=>{
     try {
-      cfg = readCfg();
+      const guildId = req.session.selectedGuild;
+      const cfg = readCfg(guildId);
       cfg.panelChannelId = req.body.channelId;
-      const guild   = await client.guilds.fetch(cfg.guildId);
+      const guild   = await client.guilds.fetch(guildId);
       const channel = await guild.channels.fetch(cfg.panelChannelId);
       const row = buildPanelSelect(cfg);
       let embed = buildPanelEmbed(cfg);
       const sent = await channel.send({ embeds: embed? [embed]: undefined, components:[row] });
       cfg.panelMessageId = sent.id;
-      fs.writeFileSync(CONFIG, JSON.stringify(cfg,null,2));
+      writeCfg(guildId, cfg);
       res.redirect('/panel?msg=sent');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
 
   /* ====== Panel Nachricht bearbeiten ====== */
-  router.post('/panel/edit', isAuth, async (_req,res)=>{
+  router.post('/panel/edit', isAuth, async (req,res)=>{
+    const guildId = req.session.selectedGuild;
+    const cfg = readCfg(guildId);
     if(!cfg.panelChannelId || !cfg.panelMessageId) return res.redirect('/panel?msg=nopanel');
     try {
-      cfg = readCfg();
-      const guild   = await client.guilds.fetch(cfg.guildId);
+      const guild   = await client.guilds.fetch(guildId);
       const channel = await guild.channels.fetch(cfg.panelChannelId);
       const msg     = await channel.messages.fetch(cfg.panelMessageId);
       const row     = buildPanelSelect(cfg);
@@ -253,14 +373,15 @@ module.exports = (client)=>{
   /* ====== Tickets HTML Übersicht (NAMEN statt IDs) ====== */
   router.get('/tickets', isAuth, async (req,res)=>{
     try {
-      cfg=readCfg();
-      const tickets=loadTickets();
-      const guild=await client.guilds.fetch(cfg.guildId);
-      const memberMap=await buildMemberMap(guild,tickets);
+      const guildId = req.session.selectedGuild;
+      const cfg = readCfg(guildId);
+      const tickets = loadTickets();
+      const guild = await client.guilds.fetch(guildId);
+      const memberMap = await buildMemberMap(guild,tickets);
       res.render('tickets', {
         tickets: JSON.stringify(tickets),
         memberMap: JSON.stringify(memberMap),
-        guildId: cfg.guildId,
+        guildId: guildId,
         version: VERSION
       });
     } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden'); }
