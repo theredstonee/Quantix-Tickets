@@ -100,6 +100,31 @@ passport.use(new Strategy({
 module.exports = (client)=>{
   const router = express.Router();
 
+  /* ====== Log Helper ====== */
+  async function logEvent(guildId, text, user){
+    try {
+      const cfg = readCfg(guildId);
+      if(!cfg.logChannelId) return;
+      const guild = await client.guilds.fetch(guildId);
+      const ch = await guild.channels.fetch(cfg.logChannelId);
+      if(!ch) return;
+
+      const embed = new EmbedBuilder()
+        .setDescription(text)
+        .setColor(0x00ff00)
+        .setTimestamp()
+        .setFooter({ text: 'TRS Tickets ©️' });
+
+      if(user){
+        embed.setAuthor({ name: `${user.username}`, iconURL: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : undefined });
+      }
+
+      await ch.send({ embeds: [embed] });
+    } catch(err) {
+      console.error('Log Error:', err);
+    }
+  }
+
   /* ====== Session ====== */
   router.use(session({
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
@@ -255,7 +280,7 @@ module.exports = (client)=>{
   });
 
   /* ====== Panel speichern (Topics + FormFields + Embeds + Server Settings – FIXED) ====== */
-  router.post('/panel', isAuth, (req,res)=>{
+  router.post('/panel', isAuth, async (req,res)=>{
     try {
       const guildId = req.session.selectedGuild;
       const cfg = readCfg(guildId);
@@ -325,6 +350,10 @@ module.exports = (client)=>{
       };
 
       writeCfg(guildId, cfg);
+
+      // Log Event
+      await logEvent(guildId, '⚙️ **Konfiguration aktualisiert** über das Panel', req.user);
+
       res.redirect('/panel?msg=saved');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
@@ -342,6 +371,10 @@ module.exports = (client)=>{
       const sent = await channel.send({ embeds: embed? [embed]: undefined, components:[row] });
       cfg.panelMessageId = sent.id;
       writeCfg(guildId, cfg);
+
+      // Log Event
+      await logEvent(guildId, `📤 **Panel-Nachricht gesendet** in <#${cfg.panelChannelId}>`, req.user);
+
       res.redirect('/panel?msg=sent');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
@@ -358,6 +391,10 @@ module.exports = (client)=>{
       const row     = buildPanelSelect(cfg);
       const embed   = buildPanelEmbed(cfg);
       await msg.edit({ embeds: embed? [embed]: undefined, components:[row] });
+
+      // Log Event
+      await logEvent(guildId, `✏️ **Panel-Nachricht aktualisiert** in <#${cfg.panelChannelId}>`, req.user);
+
       res.redirect('/panel?msg=edited');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
