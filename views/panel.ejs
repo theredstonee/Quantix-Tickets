@@ -5,24 +5,36 @@
   <title>Ticket‑Bot Panel</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    body { max-width: 1250px; }
-    table { width:100%; border-collapse:collapse; }
-    th,td { padding:.35rem .4rem; }
-    table input, table select { width:100%; }
+    body { max-width: 1250px; background:#0a0a0a; color:#00ff00; }
+    h1,h2 { color:#00ff00; }
+    table { width:100%; border-collapse:collapse; background:#0a0a0a; border:1px solid #00ff00; }
+    th,td { padding:.35rem .4rem; border:1px solid #003300; color:#00cc00; }
+    table input, table select { width:100%; background:#1a1a1a; border:1px solid #00ff00; color:#00ff00; }
     .grid { display:flex; flex-wrap:wrap; gap:1.5rem; }
-    fieldset { flex:1 1 380px; min-width:350px; }
-    textarea { width:100%; font-family: monospace; resize:vertical; }
-    .bad { border:1px solid #c33; padding:.55rem .8rem; border-radius:4px; }
-    .good { border:1px solid #2b7; padding:.55rem .8rem; border-radius:4px; }
+    fieldset { flex:1 1 380px; min-width:350px; background:#1a1a1a; border:1px solid #00ff00; }
+    legend { color:#00ff00; }
+    label { color:#00ff00; }
+    textarea { width:100%; font-family: monospace; resize:vertical; background:#1a1a1a; border:1px solid #00ff00; color:#00ff00; }
+    input[type="text"], input[type="email"], input { background:#1a1a1a; border:1px solid #00ff00; color:#00ff00; }
+    button[type="submit"], button { background:#002200; border:1px solid #00ff00; color:#00ff00; cursor:pointer; }
+    button[type="submit"]:hover, button:hover { background:#003300; }
+    .bad { border:2px solid #ff0000; background:#1a0000; padding:.55rem .8rem; border-radius:4px; color:#ff6666; }
+    .good { border:2px solid #00ff00; background:#001a00; padding:.55rem .8rem; border-radius:4px; color:#00ff00; }
     .actions form { display:inline-block; margin-right:1rem; }
-    footer { margin-top:3rem; font-size:.7rem; opacity:.6; }
-    .placeholder-list code { margin-right:.4rem; }
-    .add-btn { margin-top:.5rem; }
-    .soft-note { font-size:.7rem; opacity:.65; }
-    .del-btn { background:#e55353; color:#fff; border:0; padding:.25rem .55rem; border-radius:4px; cursor:pointer; font-size:.7rem; }
-    .del-btn:hover { background:#c84242; }
-    thead { background:#f2f4f8; }
-    .mini { font-size:.65rem; opacity:.55; }
+    footer { margin-top:3rem; font-size:.7rem; opacity:.6; color:#00cc00; }
+    .placeholder-list code { margin-right:.4rem; background:#1a1a1a; color:#00ff00; border:1px solid #00ff00; padding:.1rem .3rem; }
+    code { background:#1a1a1a; color:#00ff00; border:1px solid #00ff00; padding:.1rem .3rem; border-radius:3px; }
+    .add-btn { margin-top:.5rem; background:#002200; border:1px solid #00ff00; color:#00ff00; }
+    .add-btn:hover { background:#003300; }
+    .soft-note { font-size:.7rem; opacity:.75; color:#00cc00; }
+    .del-btn { background:#660000; color:#ff6666; border:1px solid #ff0000; padding:.25rem .55rem; border-radius:4px; cursor:pointer; font-size:.7rem; }
+    .del-btn:hover { background:#880000; }
+    thead { background:#1a1a1a; color:#00ff00; }
+    .mini { font-size:.65rem; opacity:.65; color:#00cc00; }
+    a { color:#00ff00; }
+    a:hover { color:#00cc00; }
+    a[role="button"] { background:#002200; border:1px solid #00ff00; color:#00ff00; text-decoration:none; }
+    a[role="button"]:hover { background:#003300; }
   </style>
 </head>
 <body class="container">

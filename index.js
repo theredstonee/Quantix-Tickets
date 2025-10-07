@@ -47,6 +47,24 @@ const PRIORITY_STATES = [
   { dot: '🔴', embedColor: 0xd92b2b, label: 'Rot'    }
 ];
 
+/* ================= Command Collection ================= */
+const { Collection } = require('discord.js');
+const commandsCollection = new Collection();
+
+function loadCommands(){
+  commandsCollection.clear();
+  const commandFiles = fs.readdirSync(path.join(__dirname,'commands')).filter(f=>f.endsWith('.js'));
+  for(const file of commandFiles){
+    const filePath = path.join(__dirname,'commands',file);
+    delete require.cache[require.resolve(filePath)];
+    try {
+      const cmd = require(filePath);
+      if(cmd.data && cmd.execute) commandsCollection.set(cmd.data.name, cmd);
+    } catch(err){ console.error(`Fehler beim Laden von ${file}:`, err); }
+  }
+  console.log(`📦 ${commandsCollection.size} Commands geladen`);
+}
+
 /* ================= Pfade / Dateien ================= */
 const CFG_PATH     = path.join(__dirname,'config.json');
 const COUNTER_PATH = path.join(__dirname,'ticketCounter.json');
@@ -125,12 +143,19 @@ function buildPanelSelect(){
 }
 
 /* ================= Slash Command Deploy ================= */
-client.once('ready', async () => {
+async function deployCommands(){
+  loadCommands();
   const rest = new REST({ version: '10' }).setToken(TOKEN);
+  const commands = Array.from(commandsCollection.values()).map(cmd => cmd.data.toJSON());
   await rest.put(
     Routes.applicationGuildCommands(client.user.id, cfg.guildId),
-    { body: [ new SlashCommandBuilder().setName('dashboard').setDescription('Link zum Admin‑Panel').toJSON() ] }
+    { body: commands }
   );
+  console.log(`✅ ${commands.length} Slash-Commands registriert`);
+}
+
+client.once('ready', async () => {
+  await deployCommands();
   console.log(`🤖 ${client.user.tag} bereit`);
 });
 
@@ -181,7 +206,26 @@ function renameChannelIfNeeded(channel, ticket){ const desired = buildChannelNam
 /* ================= Logging ================= */
 async function logEvent(guild, text){
   if(!cfg.logChannelId) return;
-  try { const ch = await guild.channels.fetch(cfg.logChannelId); ch && ch.send(text); } catch {}
+  try {
+    const ch = await guild.channels.fetch(cfg.logChannelId);
+    if(!ch) return;
+
+    // Berliner Zeitzone
+    const now = new Date();
+    const berlinTime = now.toLocaleString('de-DE', {
+      timeZone: 'Europe/Berlin',
+      dateStyle: 'short',
+      timeStyle: 'medium'
+    });
+
+    const embed = new EmbedBuilder()
+      .setDescription(text)
+      .setColor(0x00ff00) // Grün
+      .setTimestamp()
+      .setFooter({ text: 'Dingnator TRS Tickets ©️' });
+
+    await ch.send({ embeds: [embed] });
+  } catch {}
 }
 
 /* ================= Transcript ================= */
@@ -300,8 +344,27 @@ function normalizeField(field, index){
 /* ================= Interactions ================= */
 client.on(Events.InteractionCreate, async i => {
   try {
-    if(i.isChatInputCommand() && i.commandName==='dashboard'){
-      return i.reply({ components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setURL(PANEL_FIXED_URL).setStyle(ButtonStyle.Link).setLabel('Dashboard') ) ], ephemeral:true });
+    if(i.isChatInputCommand()){
+      const command = commandsCollection.get(i.commandName);
+      if(command){
+        // Spezielle Behandlung für reload
+        if(i.commandName === 'reload'){
+          cfg = safeRead(CFG_PATH, {});
+          loadCommands();
+          await deployCommands();
+          return i.reply({ content:'✅ Config & Commands neu geladen!', ephemeral:true });
+        }
+        // Normale Command-Ausführung
+        try {
+          await command.execute(i);
+        } catch(err){
+          console.error('Command Error:', err);
+          const reply = { content: '❌ Fehler beim Ausführen des Commands', ephemeral: true };
+          if(i.deferred || i.replied) await i.editReply(reply);
+          else await i.reply(reply);
+        }
+        return;
+      }
     }
 
     // Topic Auswahl -> ggf. Formular anzeigen
@@ -347,6 +410,8 @@ client.on(Events.InteractionCreate, async i => {
       const ticket = log.find(t=>t.channelId===i.channel.id);
       if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz'});
       const isTeam = i.member.roles.cache.has(TEAM_ROLE);
+      const isCreator = ticket.userId === i.user.id;
+      const isClaimer = ticket.claimer === i.user.id;
 
       if(i.customId==='request_close'){
         await i.channel.send({ content:`❓ Schließungsanfrage von <@${i.user.id}> <@&${TEAM_ROLE}>`, components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel('Schließen').setStyle(ButtonStyle.Danger) ) ] });
@@ -354,6 +419,16 @@ client.on(Events.InteractionCreate, async i => {
         return i.reply({ephemeral:true,content:'Anfrage gesendet'});
       }
 
+      // Unclaim: Nur Claimer kann unclaimen
+      if(i.customId==='unclaim'){
+        if(!isClaimer && !isTeam) return i.reply({ephemeral:true,content:'Nur der Claimer kann unclaimen'});
+        delete ticket.claimer; safeWrite(TICKETS_PATH, log);
+        await i.update({ components: buttonRows(false) });
+        logEvent(i.guild, `🔄 Unclaim Ticket #${ticket.id} von <@${i.user.id}>`);
+        return;
+      }
+
+      // Andere Buttons: Nur Team
       if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team'});
 
       switch(i.customId){
@@ -384,7 +459,20 @@ client.on(Events.InteractionCreate, async i => {
         if (transcriptChannelId && files){
           try {
             const tc = await i.guild.channels.fetch(transcriptChannelId);
-            if (tc) await tc.send({ content:`📁 Transcript Ticket #${ticket.id}`, files:[files.txt, files.html] });
+            if (tc) {
+              const transcriptUrl = PANEL_FIXED_URL.replace('/panel', `/transcript/${ticket.id}`);
+              const transcriptButton = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                  .setURL(transcriptUrl)
+                  .setStyle(ButtonStyle.Link)
+                  .setLabel('📄 Transcript ansehen')
+              );
+              await tc.send({
+                content:`📁 Transcript Ticket #${ticket.id}`,
+                files:[files.txt, files.html],
+                components: [transcriptButton]
+              });
+            }
          } catch {}
        }
 
@@ -397,11 +485,6 @@ client.on(Events.InteractionCreate, async i => {
           ticket.claimer = i.user.id; safeWrite(TICKETS_PATH, log);
           await i.update({ components: buttonRows(true) });
           logEvent(i.guild, `✅ Claim Ticket #${ticket.id} von <@${i.user.id}>`);
-          break;
-        case 'unclaim':
-          delete ticket.claimer; safeWrite(TICKETS_PATH, log);
-          await i.update({ components: buttonRows(false) });
-          logEvent(i.guild, `🔄 Unclaim Ticket #${ticket.id} von <@${i.user.id}>`);
           break;
         case 'priority_up': {
           ticket.priority = Math.min(2, (ticket.priority||0)+1);
@@ -462,8 +545,14 @@ async function createTicketChannel(interaction, topic, formData){
   // Formular-Ergebnisse als Fields anhängen
   const formKeys = Object.keys(formData||{});
   if(formKeys.length){
+    // Labels der Formular-Felder finden
+    const formFields = getFormFieldsForTopic(topic.value).map(normalizeField);
     // Max 25 Felder
-    const fields = formKeys.slice(0,25).map(k=>({ name: k, value: formData[k] ? (formData[k].substring(0,1024) || '—') : '—', inline:false }));
+    const fields = formKeys.slice(0,25).map(k=>{
+      const field = formFields.find(f=>f.id===k);
+      const label = field ? field.label : k;
+      return { name: label, value: formData[k] ? (formData[k].substring(0,1024) || '—') : '—', inline:false };
+    });
     embed.addFields(fields);
   }
   await ch.send({ embeds:[embed], components: buttonRows(false) });

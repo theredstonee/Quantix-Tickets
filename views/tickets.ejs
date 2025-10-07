@@ -5,37 +5,50 @@
   <title>Tickets Übersicht</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <style>
-    body{max-width:1350px}
-    h1{display:flex;align-items:center;gap:.6rem;margin-bottom:.2rem}
-    .sub{font-size:.75rem;opacity:.65;margin:0 0 1.25rem}
-    a.back{display:inline-flex;align-items:center;gap:.35rem;margin-bottom:1.4rem;text-decoration:none}
+    body{max-width:1350px;background:#0a0a0a;color:#00ff00}
+    h1{display:flex;align-items:center;gap:.6rem;margin-bottom:.2rem;color:#00ff00}
+    .sub{font-size:.75rem;opacity:.75;margin:0 0 1.25rem;color:#00cc00}
+    a.back{display:inline-flex;align-items:center;gap:.35rem;margin-bottom:1.4rem;text-decoration:none;color:#00ff00}
+    a.back:hover{color:#00cc00}
     .controls{display:flex;flex-direction:column;gap:.9rem;margin-bottom:.9rem}
     .controls .row{display:flex;flex-wrap:wrap;gap:.55rem;align-items:center}
-    #search{flex:1 1 520px;min-width:280px}
-    label.inline{display:flex;align-items:center;gap:.4rem;font-size:.72rem;white-space:nowrap}
+    #search{flex:1 1 520px;min-width:280px;background:#1a1a1a;border:1px solid #00ff00;color:#00ff00}
+    label.inline{display:flex;align-items:center;gap:.4rem;font-size:.72rem;white-space:nowrap;color:#00ff00}
     .chipbar{display:flex;flex-wrap:wrap;gap:.5rem}
-    .chip{background:#eef0f5;border:0;padding:.46rem 1.05rem;border-radius:999px;font-size:.7rem;font-weight:500;cursor:pointer;line-height:1;user-select:none;transition:.15s}
-    .chip.active{background:#4263eb;color:#fff;box-shadow:0 0 0 1px #4263eb}
+    .chip{background:#1a1a1a;border:1px solid #00ff00;color:#00ff00;padding:.46rem 1.05rem;border-radius:999px;font-size:.7rem;font-weight:500;cursor:pointer;line-height:1;user-select:none;transition:.15s}
+    .chip:hover{background:#002200}
+    .chip.active{background:#00ff00;color:#000;box-shadow:0 0 8px #00ff00}
     .chip.prio span{display:inline-block;width:.9rem;height:.9rem;border-radius:50%;}
     .chip.prio span.green{background:#2bd94a}
     .chip.prio span.orange{background:#ff9900}
     .chip.prio span.red{background:#d92b2b}
-    #refreshBar{background:#13202b;color:#fff;border-radius:8px;padding:.85rem 1.1rem;display:flex;align-items:center;justify-content:space-between;margin-top:.4rem}
-    #refreshBar button{background:#1e2d3a;border:0;color:#fff;padding:.55rem 1.1rem;border-radius:6px;cursor:pointer;font-size:.75rem;display:flex;align-items:center;gap:.45rem}
-    table{width:100%;font-size:.8rem;border-collapse:collapse}
-    thead th{white-space:nowrap;cursor:pointer;user-select:none;padding:.55rem .6rem;font-size:.7rem;letter-spacing:.5px;text-transform:uppercase}
+    #refreshBar{background:#1a1a1a;color:#00ff00;border:1px solid #00ff00;border-radius:8px;padding:.85rem 1.1rem;display:flex;align-items:center;justify-content:space-between;margin-top:.4rem}
+    #refreshBar button{background:#002200;border:1px solid #00ff00;color:#00ff00;padding:.55rem 1.1rem;border-radius:6px;cursor:pointer;font-size:.75rem;display:flex;align-items:center;gap:.45rem}
+    #refreshBar button:hover{background:#003300}
+    table{width:100%;font-size:.8rem;border-collapse:collapse;background:#0a0a0a}
+    thead th{white-space:nowrap;cursor:pointer;user-select:none;padding:.55rem .6rem;font-size:.7rem;letter-spacing:.5px;text-transform:uppercase;background:#1a1a1a;color:#00ff00;border:1px solid #00ff00}
     thead th.sortAsc:after{content:" \25B2"}
     thead th.sortDesc:after{content:" \25BC"}
-    tbody td{padding:.55rem .6rem;vertical-align:middle;border-top:1px solid #e5e8ec}
-    tbody tr:hover{background:#f6f8fb}
-    .badge{background:#e3e7ec;font-family:monospace;font-size:.65rem;padding:.2rem .45rem;border-radius:.4rem;display:inline-block}
-    .status-offen{color:#2bd94a;font-weight:600}
-    .status-geschlossen{color:#d92b2b;font-weight:600}
+    tbody td{padding:.55rem .6rem;vertical-align:middle;border:1px solid #003300;color:#00cc00}
+    tbody tr:hover{background:#001100}
+    .badge{background:#1a1a1a;color:#00ff00;border:1px solid #00ff00;font-family:monospace;font-size:.65rem;padding:.2rem .45rem;border-radius:.4rem;display:inline-block}
+    .status-offen{color:#00ff00;font-weight:600}
+    .status-geschlossen{color:#ff0000;font-weight:600}
     .prio-dot{font-size:1rem}
     .nowrap{white-space:nowrap}
-    .trans-link{text-decoration:none}
+    .trans-link{text-decoration:none;color:#00ff00}
+    .trans-link:hover{color:#00cc00}
+    .details-btn{cursor:pointer;color:#00ff00;text-decoration:none}
+    .details-btn:hover{color:#00cc00}
+    .form-data{font-size:.7rem;padding:.3rem;background:#1a1a1a;border:1px solid #00ff00;border-radius:4px;margin-top:.3rem;display:none;color:#00cc00}
+    .form-data.show{display:block}
+    .form-data dt{font-weight:bold;color:#00ff00;margin-top:.3rem}
+    .form-data dd{margin-left:1rem;color:#00cc00}
     tr.hide{display:none}
-    footer{margin:2.2rem 0 .8rem;font-size:.65rem;opacity:.55}
+    footer{margin:2.2rem 0 .8rem;font-size:.65rem;opacity:.65;color:#00cc00}
+    code{background:#1a1a1a;color:#00ff00;border:1px solid #00ff00;padding:.1rem .3rem;border-radius:3px}
+    a{color:#00ff00}
+    a:hover{color:#00cc00}
     @media (max-width:880px){ thead th:nth-child(8), tbody td:nth-child(8){display:none} }
     @media (max-width:680px){ thead th:nth-child(7), tbody td:nth-child(7){display:none} }
   </style>
@@ -82,6 +95,7 @@
         <th data-sort="userName">User</th>
         <th data-sort="claimerName">Claimer</th>
         <th data-sort="timestamp">Erstellt</th>
+        <th>Details</th>
         <th data-sort="channelId">Kanal</th>
         <th>Transcript</th>
       </tr>
@@ -152,6 +166,12 @@
       const pr = t.priority||0;
       const userName = displayName(t.userId);
       const claimerName = displayName(t.claimer);
+      const hasFormData = t.formData && Object.keys(t.formData).length > 0;
+      let formDataHtml = '';
+      if(hasFormData){
+        const entries = Object.entries(t.formData).map(([k,v])=>`<dt>${esc(k)}:</dt><dd>${esc(v||'—')}</dd>`).join('');
+        formDataHtml = `<dl class="form-data" id="fd-${t.id}">${entries}</dl>`;
+      }
       return `<tr data-status="${t.status}" data-claimed="${t.claimer? 'yes':'no'}" data-prio="${pr}">
         <td class="nowrap"><span class="badge">${t.id}</span></td>
         <td class="prio-dot">${dots[pr]}</td>
@@ -160,11 +180,18 @@
         <td><span class="badge" title="${t.userId||''}">${userName}</span></td>
         <td>${t.claimer? `<span class="badge" title="${t.claimer}">${claimerName}</span>`:''}</td>
         <td class="nowrap">${fmt(t.timestamp)}</td>
+        <td>${hasFormData? `<span class="details-btn" onclick="toggleFormData(${t.id})">📋</span>${formDataHtml}`:''}</td>
         <td><a href="https://discord.com/channels/${GUILD_ID}/${t.channelId}" target="_blank" title="Channel öffnen">🔗</a></td>
         <td><a class="trans-link" href="/transcript/${t.id}" target="_blank" title="Transcript öffnen">📄</a></td>
       </tr>`;
     }).join('');
   }
+
+  function toggleFormData(id){
+    const el = document.getElementById('fd-'+id);
+    if(el) el.classList.toggle('show');
+  }
+  function esc(s){return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
   document.querySelectorAll('#ticketsTable thead th[data-sort]').forEach(th=>{
     th.addEventListener('click', ()=>{
