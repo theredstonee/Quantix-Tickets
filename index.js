@@ -841,8 +841,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   }
   await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
 
-  // Team-Rolle pingen
-  const TEAM_ROLE = getTeamRole(guildId);
+  // Team-Rolle pingen (TEAM_ROLE bereits oben definiert)
   if (TEAM_ROLE) {
     await ch.send({ content: `<@&${TEAM_ROLE}> ${t(guildId, 'ticket.created')}` });
   }
