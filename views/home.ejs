@@ -42,11 +42,27 @@
       color: var(--accent-color);
     }
 
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
       max-width: 1200px;
       line-height: 2;
       padding: 0 5rem;
       margin: 0 auto;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .hero {
@@ -184,9 +200,6 @@
       color: var(--text-color);
     }
 
-    .content {
-      padding: 0 0 4rem 0;
-    }
 
     .features {
       display: grid;

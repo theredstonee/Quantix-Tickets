@@ -90,7 +90,25 @@
       background-color: var(--accent-hover);
     }
 
-    body { max-width: 1400px; padding: 0 5rem; line-height: 1.8; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 1400px;
+      padding: 0 5rem;
+      line-height: 1.8;
+      margin: 0 auto;
+    }
+
+    main {
+      flex: 1;
+    }
     table { width:100%; border-collapse:collapse; }
     th,td { padding:.6rem .8rem; }
     table input, table select { width:100%; }
