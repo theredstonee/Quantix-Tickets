@@ -45,6 +45,7 @@
       max-width: 1000px;
       line-height: 1.8;
       padding: 0;
+      margin: 0 auto;
     }
 
     .hero {
@@ -225,19 +226,41 @@
       position: fixed;
       top: 1.5rem;
       left: 1.5rem;
-      background: var(--card-bg);
-      border: 2px solid var(--accent-color);
-      border-radius: 0.5rem;
-      padding: 0.5rem;
-      font-size: 0.9rem;
+      display: flex;
+      gap: 0.5rem;
       z-index: 1000;
-      cursor: pointer;
-      transition: all 0.3s;
     }
 
-    .language-selector:hover {
-      transform: scale(1.05);
+    .lang-btn {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.8rem;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 3rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .lang-btn:hover {
+      transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      border-color: var(--accent-color);
+    }
+
+    .lang-btn.active {
+      border-color: var(--accent-color);
+      background: var(--accent-color);
+      box-shadow: 0 2px 8px rgba(0,184,148,0.4);
+    }
+
+    [data-theme="dark"] .lang-btn.active {
+      box-shadow: 0 2px 12px rgba(0,255,136,0.4);
     }
   </style>
 </head>
@@ -246,11 +269,11 @@
     <span id="themeIcon">🌙</span>
   </button>
 
-  <select class="language-selector" onchange="document.cookie='lang='+this.value+'; path=/'; location.reload()">
-    <option value="de" <%= lang === 'de' ? 'selected' : '' %>>🇩🇪 Deutsch</option>
-    <option value="en" <%= lang === 'en' ? 'selected' : '' %>>🇬🇧 English</option>
-    <option value="he" <%= lang === 'he' ? 'selected' : '' %>>🇮🇱 עברית</option>
-  </select>
+  <div class="language-selector">
+    <a href="/set-user-language/de" class="lang-btn <%= lang === 'de' ? 'active' : '' %>" title="Deutsch">🇩🇪</a>
+    <a href="/set-user-language/en" class="lang-btn <%= lang === 'en' ? 'active' : '' %>" title="English">🇬🇧</a>
+    <a href="/set-user-language/he" class="lang-btn <%= lang === 'he' ? 'active' : '' %>" title="עברית">🇮🇱</a>
+  </div>
 
   <div class="hero">
     <h1>🎫 TRS Tickets</h1>
@@ -311,21 +334,41 @@
   </footer>
 
   <script>
-    // Theme toggle
+    // Cookie helper functions
+    function setCookie(name, value, days = 365) {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+    }
+
+    function getCookie(name) {
+      return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, '');
+    }
+
+    // Theme toggle with cookie sync
     function toggleTheme() {
       const html = document.documentElement;
       const currentTheme = html.getAttribute('data-theme');
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
+      setCookie('theme', newTheme);
       document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
     }
 
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme');
+    // Load saved theme from cookie or localStorage
+    const cookieTheme = getCookie('theme');
+    const localTheme = localStorage.getItem('theme');
+    const savedTheme = cookieTheme || localTheme || 'light';
+
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
       document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      // Sync to both storage types
+      localStorage.setItem('theme', savedTheme);
+      setCookie('theme', savedTheme);
     }
   </script>
 </body>

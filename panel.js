@@ -294,6 +294,13 @@ module.exports = (client)=>{
   /* ====== Logout ====== */
   router.get('/logout',(req,res)=>{ req.logout?.(()=>{}); req.session.destroy(()=>res.redirect('/')); });
 
+  /* ====== User Language Preference (Cookie-based, No Auth) ====== */
+  router.get('/set-user-language/:lang', (req, res) => {
+    const lang = ['de', 'en', 'he'].includes(req.params.lang) ? req.params.lang : 'de';
+    res.cookie('lang', lang, { maxAge: 365 * 24 * 60 * 60 * 1000, path: '/' }); // 1 year
+    res.redirect('/');
+  });
+
   /* ====== Language Switch (Guild-based) ====== */
   router.get('/set-language/:lang', isAuth, async (req, res) => {
     const lang = ['de', 'en', 'he'].includes(req.params.lang) ? req.params.lang : 'de';

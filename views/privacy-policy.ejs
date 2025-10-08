@@ -248,21 +248,41 @@
   </footer>
 
   <script>
-    // Theme toggle
+    // Cookie helper functions
+    function setCookie(name, value, days = 365) {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+    }
+
+    function getCookie(name) {
+      return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, '');
+    }
+
+    // Theme toggle with cookie sync
     function toggleTheme() {
       const html = document.documentElement;
       const currentTheme = html.getAttribute('data-theme');
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
+      setCookie('theme', newTheme);
       document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
     }
 
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme');
+    // Load saved theme from cookie or localStorage
+    const cookieTheme = getCookie('theme');
+    const localTheme = localStorage.getItem('theme');
+    const savedTheme = cookieTheme || localTheme || 'light';
+
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
       document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      // Sync to both storage types
+      localStorage.setItem('theme', savedTheme);
+      setCookie('theme', savedTheme);
     }
   </script>
 </body>
