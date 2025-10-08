@@ -511,8 +511,29 @@ client.on(Events.InteractionCreate, async i => {
       if(!topic) return i.reply({content:'Unbekanntes Thema',ephemeral:true});
 
       const formFields = getFormFieldsForTopic(cfg, topic.value);
+
+      // Panel-Nachricht zurücksetzen (Select-Menü refresh)
+      const resetPanelMessage = async () => {
+        try {
+          const row = buildPanelSelect(cfg);
+          let panelEmbed = undefined;
+          if(cfg.panelEmbed && (cfg.panelEmbed.title || cfg.panelEmbed.description)){
+            panelEmbed = new EmbedBuilder();
+            if(cfg.panelEmbed.title) panelEmbed.setTitle(cfg.panelEmbed.title);
+            if(cfg.panelEmbed.description) panelEmbed.setDescription(cfg.panelEmbed.description);
+            if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) panelEmbed.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
+            if(cfg.panelEmbed.footer) panelEmbed.setFooter({ text: cfg.panelEmbed.footer });
+          }
+          await i.message.edit({ embeds: panelEmbed ? [panelEmbed] : i.message.embeds, components: [row] });
+        } catch(e) {
+          console.error('Fehler beim Zurücksetzen der Panel-Nachricht:', e);
+        }
+      };
+
       if(formFields.length){
-        // Modal anzeigen, Ticketnummer wird erst beim Submit erzeugt
+        // Panel zurücksetzen und Modal anzeigen
+        await resetPanelMessage();
+
         const modal = new ModalBuilder().setCustomId(`modal_newticket:${topic.value}`).setTitle(`Ticket: ${topic.label}`.substring(0,45));
         formFields.forEach((f,idx)=>{
           const nf = normalizeField(f,idx);
@@ -527,7 +548,9 @@ client.on(Events.InteractionCreate, async i => {
         return i.showModal(modal);
       }
 
-      // Kein Formular -> sofort Ticket erstellen
+      // Kein Formular -> Panel mit update zurücksetzen und Ticket erstellen
+      await resetPanelMessage();
+      await i.deferReply({ ephemeral: true });
       return await createTicketChannel(i, topic, {}, cfg);
     }
 
@@ -825,10 +848,12 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   }
 
   // Nutzer informieren
-  if(interaction.isModalSubmit()){
+  if(interaction.deferred){
+    await interaction.editReply({ content:`Ticket erstellt: ${ch}` });
+  } else if(interaction.isModalSubmit()){
     await interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
   } else {
-    interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
+    await interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
   }
   // Speichern
   const ticketsPath = getTicketsPath(guildId);
