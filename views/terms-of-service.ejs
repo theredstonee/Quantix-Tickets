@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="<%= lang %>" data-theme="light" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+<head>
+  <meta charset="utf-8">
+  <title><%= t.tos.title %> - TRS Tickets</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <style>
+    :root {
+      --bg-color: #fff;
+      --text-color: #1a1a1a;
+      --border-color: #e5e8ec;
+      --accent-color: #00b894;
+      --accent-hover: #00a077;
+      --card-bg: #f8f9fa;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --border-color: #1a3a2a;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --card-bg: #0f1510;
+    }
+
+    [data-theme="dark"] body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] .info-box {
+      background: var(--card-bg);
+      border-color: var(--border-color);
+    }
+
+    [data-theme="dark"] a {
+      color: var(--accent-color);
+    }
+
+    [data-theme="dark"] button:not(.theme-toggle) {
+      background-color: var(--accent-color);
+      color: #000;
+    }
+
+    body { max-width: 900px; line-height: 1.8; }
+    h1 { margin-bottom: 0.5rem; }
+    h2 { margin-top: 2.5rem; margin-bottom: 1rem; color: var(--accent-color); }
+    h3 { margin-top: 1.5rem; }
+    .info-box {
+      background: var(--card-bg);
+      border-left: 4px solid var(--accent-color);
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 4px;
+    }
+    .info-box p { margin: 0.5rem 0; }
+    ul { margin-left: 1.5rem; }
+    ul li { margin-bottom: 0.8rem; }
+    .back-btn {
+      margin-top: 3rem;
+      display: inline-block;
+    }
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      opacity: 0.7;
+      text-align: center;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: var(--accent-color);
+      color: #000;
+      border: 0;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: var(--accent-hover);
+    }
+
+    [data-theme="dark"] .theme-toggle {
+      background: var(--accent-color);
+      box-shadow: 0 2px 12px rgba(0,255,136,0.4);
+    }
+
+    strong { color: var(--accent-color); }
+  </style>
+</head>
+<body class="container">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+    <span id="themeIcon">🌙</span>
+  </button>
+
+  <h1>📜 <%= t.tos.title %></h1>
+
+  <div class="info-box">
+    <p><strong><%= t.tos.operator %>:</strong> Theredstonee</p>
+    <p><strong><%= t.tos.contact %>:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
+    <p><strong><%= t.tos.last_updated %>:</strong> <%= new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'he' ? 'he-IL' : 'en-US') %></p>
+  </div>
+
+  <!-- Section 1: Terms of Service -->
+  <h2><%= t.tos.section_1_title %></h2>
+  <p><%= t.tos.section_1_intro %></p>
+  <ul>
+    <li><%= t.tos.section_1_1 %></li>
+    <li><%= t.tos.section_1_2 %></li>
+    <li><%= t.tos.section_1_3 %></li>
+    <li><%= t.tos.section_1_4 %></li>
+  </ul>
+
+  <!-- Section 2: Data Collection -->
+  <h2><%= t.tos.section_2_title %></h2>
+  <p><%= t.tos.section_2_intro %></p>
+  <ul>
+    <li><%- t.tos.section_2_1 %></li>
+    <li><%- t.tos.section_2_2 %></li>
+    <li><%- t.tos.section_2_3 %></li>
+    <li><%- t.tos.section_2_4 %></li>
+    <li><%- t.tos.section_2_5 %></li>
+    <li><%- t.tos.section_2_6 %></li>
+    <li><%- t.tos.section_2_7 %></li>
+  </ul>
+
+  <!-- Section 3: Data Storage -->
+  <h2><%= t.tos.section_3_title %></h2>
+  <p><%= t.tos.section_3_intro %></p>
+  <ul>
+    <li><%- t.tos.section_3_1 %></li>
+    <li><%- t.tos.section_3_2 %></li>
+    <li><%- t.tos.section_3_3 %></li>
+    <li><%- t.tos.section_3_4 %></li>
+  </ul>
+
+  <!-- Section 4: Data Usage -->
+  <h2><%= t.tos.section_4_title %></h2>
+  <p><%= t.tos.section_4_intro %></p>
+  <ul>
+    <li><%= t.tos.section_4_1 %></li>
+    <li><%= t.tos.section_4_2 %></li>
+    <li><%= t.tos.section_4_3 %></li>
+    <li><%= t.tos.section_4_4 %></li>
+    <li><%- t.tos.section_4_5 %></li>
+  </ul>
+
+  <!-- Section 5: Your Rights (GDPR) -->
+  <h2><%= t.tos.section_5_title %></h2>
+  <p><%= t.tos.section_5_intro %></p>
+  <ul>
+    <li><%- t.tos.section_5_1 %></li>
+    <li><%- t.tos.section_5_2 %></li>
+    <li><%- t.tos.section_5_3 %></li>
+    <li><%- t.tos.section_5_4 %></li>
+    <li><%- t.tos.section_5_5.replace('{contact}', '<a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a>') %></li>
+  </ul>
+
+  <!-- Section 6: Security -->
+  <h2><%= t.tos.section_6_title %></h2>
+  <ul>
+    <li><%= t.tos.section_6_1 %></li>
+    <li><%= t.tos.section_6_2 %></li>
+    <li><%= t.tos.section_6_3 %></li>
+  </ul>
+
+  <!-- Section 7: Changes -->
+  <h2><%= t.tos.section_7_title %></h2>
+  <p><%= t.tos.section_7_text %></p>
+
+  <!-- Section 8: Contact -->
+  <h2><%= t.tos.section_8_title %></h2>
+  <p><%= t.tos.section_8_text %></p>
+  <div class="info-box">
+    <p><strong>Email:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
+    <p><strong><%= t.tos.operator %>:</strong> Theredstonee</p>
+  </div>
+
+  <a href="/panel" role="button" class="back-btn secondary">← <%= t.tos.back_to_panel %></a>
+
+  <footer>
+    <p>TRS Tickets ©️ <%= new Date().getFullYear() %></p>
+  </footer>
+
+  <script>
+    // Theme toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    }
+  </script>
+</body>
+</html>

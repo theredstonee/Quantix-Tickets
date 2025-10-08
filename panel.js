@@ -182,7 +182,25 @@ module.exports = (client)=>{
   /* ====== Root ====== */
   router.get('/', (req,res)=>{
     if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/select-server');
-    res.send('<h1>TRS Tickets Panel</h1><p><a href="/login">Login mit Discord</a></p>');
+    res.send('<h1>TRS Tickets Panel</h1><p><a href="/login">Login mit Discord</a></p><p><a href="/terms-of-service">Terms of Service</a> | <a href="/privacy-policy">Privacy Policy</a></p>');
+  });
+
+  /* ====== Terms of Service (No Auth Required) ====== */
+  router.get('/terms-of-service', (req, res) => {
+    const lang = req.cookies.lang || 'de';
+    res.render('terms-of-service', {
+      t: getTranslations(lang),
+      lang: lang
+    });
+  });
+
+  /* ====== Privacy Policy (No Auth Required) ====== */
+  router.get('/privacy-policy', (req, res) => {
+    const lang = req.cookies.lang || 'de';
+    res.render('privacy-policy', {
+      t: getTranslations(lang),
+      lang: lang
+    });
   });
 
   /* ====== Server Auswahl ====== */

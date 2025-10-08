@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="<%= lang %>" data-theme="light" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+<head>
+  <meta charset="utf-8">
+  <title><%= t.privacy?.title || 'Privacy Policy' %> - TRS Tickets</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <style>
+    :root {
+      --bg-color: #fff;
+      --text-color: #1a1a1a;
+      --border-color: #e5e8ec;
+      --accent-color: #00b894;
+      --accent-hover: #00a077;
+      --card-bg: #f8f9fa;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --border-color: #1a3a2a;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --card-bg: #0f1510;
+    }
+
+    [data-theme="dark"] body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] .info-box, [data-theme="dark"] .warning-box {
+      background: var(--card-bg);
+      border-color: var(--accent-color);
+    }
+
+    [data-theme="dark"] a {
+      color: var(--accent-color);
+    }
+
+    [data-theme="dark"] button:not(.theme-toggle) {
+      background-color: var(--accent-color);
+      color: #000;
+    }
+
+    body { max-width: 900px; line-height: 1.8; }
+    h1 { margin-bottom: 0.5rem; }
+    h2 { margin-top: 2.5rem; margin-bottom: 1rem; color: var(--accent-color); }
+    h3 { margin-top: 1.5rem; color: var(--accent-color); opacity: 0.8; font-size: 1.1rem; }
+    .info-box {
+      background: var(--card-bg);
+      border-left: 4px solid var(--accent-color);
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 4px;
+    }
+    .warning-box {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 4px;
+      color: #856404;
+    }
+    [data-theme="dark"] .warning-box {
+      background: #332701;
+      color: #ffc107;
+    }
+    .info-box p, .warning-box p { margin: 0.5rem 0; }
+    ul { margin-left: 1.5rem; }
+    ul li { margin-bottom: 0.8rem; }
+    .back-btn {
+      margin-top: 3rem;
+      display: inline-block;
+      margin-right: 1rem;
+    }
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      opacity: 0.7;
+      text-align: center;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: var(--accent-color);
+      color: #000;
+      border: 0;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: var(--accent-hover);
+    }
+
+    [data-theme="dark"] .theme-toggle {
+      background: var(--accent-color);
+      box-shadow: 0 2px 12px rgba(0,255,136,0.4);
+    }
+
+    strong { color: var(--accent-color); }
+    code { background: var(--card-bg); padding: 0.2rem 0.4rem; border-radius: 3px; }
+  </style>
+</head>
+<body class="container">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+    <span id="themeIcon">🌙</span>
+  </button>
+
+  <h1>🔒 <%= t.privacy?.title || 'Privacy Policy' %></h1>
+
+  <p><%= t.privacy?.intro || 'This privacy policy explains how TRS Ticket Bot collects, uses and protects your personal data.' %></p>
+
+  <div class="info-box">
+    <p><strong><%= t.tos.operator %>:</strong> Theredstonee</p>
+    <p><strong><%= t.tos.contact %>:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
+    <p><strong><%= t.tos.last_updated %>:</strong> <%= new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'he' ? 'he-IL' : 'en-US') %></p>
+  </div>
+
+  <!-- Section 1: Verantwortlicher -->
+  <h2><%= t.privacy?.section_1_title || '1. Data Controller' %></h2>
+  <p><%= t.privacy?.section_1_text || 'Responsible for data processing:' %></p>
+  <div class="info-box">
+    <p><strong>Name:</strong> Theredstonee</p>
+    <p><strong>Email:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
+    <p><strong>Country:</strong> Germany (GDPR applicable)</p>
+  </div>
+
+  <!-- Section 2: Erhobene Daten -->
+  <h2><%= t.privacy?.section_2_title || '2. Collected Data' %></h2>
+
+  <h3><%= t.privacy?.section_2_subtitle_discord || '2.1 Discord Data' %></h3>
+  <ul>
+    <li><%- t.privacy?.section_2_discord_1 || '**User IDs** - Unique Discord identifiers' %></li>
+    <li><%- t.privacy?.section_2_discord_2 || '**Server IDs** - Discord server identifiers' %></li>
+    <li><%- t.privacy?.section_2_discord_3 || '**Profile information** - Username, discriminator, avatar (web panel only)' %></li>
+    <li><%- t.privacy?.section_2_discord_4 || '**Server memberships** - For admin panel access control' %></li>
+  </ul>
+
+  <h3><%= t.privacy?.section_2_subtitle_tickets || '2.2 Ticket Data' %></h3>
+  <ul>
+    <li><%= t.privacy?.section_2_tickets_1 || 'All messages and attachments in ticket channels' %></li>
+    <li><%= t.privacy?.section_2_tickets_2 || 'Form responses when creating tickets' %></li>
+    <li><%= t.privacy?.section_2_tickets_3 || 'Ticket metadata (status, priority, timestamps)' %></li>
+    <li><%= t.privacy?.section_2_tickets_4 || 'Assigned team members and added users' %></li>
+  </ul>
+
+  <h3><%= t.privacy?.section_2_subtitle_web || '2.3 Web Panel Data' %></h3>
+  <ul>
+    <li><%- t.privacy?.section_2_web_1 || '**Session cookies** - To maintain login' %></li>
+    <li><%- t.privacy?.section_2_web_2 || '**OAuth tokens** - Temporary for Discord authentication' %></li>
+    <li><%- t.privacy?.section_2_web_3 || '**Language preferences** - Cookie for language selection' %></li>
+    <li><%- t.privacy?.section_2_web_4 || '**Theme preferences** - LocalStorage for dark/light mode' %></li>
+  </ul>
+
+  <!-- Section 3: Third-Party Services -->
+  <h2><%= t.privacy?.section_3_title || '3. Third-Party Services' %></h2>
+  <h3><%= t.privacy?.section_3_subtitle || 'Discord API' %></h3>
+  <ul>
+    <li><%= t.privacy?.section_3_1 || 'The bot uses Discord API for communication' %></li>
+    <li><%= t.privacy?.section_3_2 || 'OAuth2 for web panel authentication' %></li>
+    <li><%= t.privacy?.section_3_3 || 'Discord Privacy Policy: https://discord.com/privacy' %></li>
+    <li><%= t.privacy?.section_3_4 || 'No other third-party services are used' %></li>
+  </ul>
+
+  <!-- Section 4: Storage & Security -->
+  <h2><%= t.privacy?.section_4_title || '4. Storage Location & Security' %></h2>
+  <ul>
+    <li><%- t.privacy?.section_4_1 || 'All data is stored on servers in **Germany**' %></li>
+    <li><%= t.privacy?.section_4_2 || 'Encrypted transmission via HTTPS/WSS' %></li>
+    <li><%= t.privacy?.section_4_3 || 'Access restricted to authorized administrators' %></li>
+    <li><%= t.privacy?.section_4_4 || 'Regular security updates and backups' %></li>
+  </ul>
+
+  <!-- Section 5: Data Retention -->
+  <h2><%= t.privacy?.section_5_title || '5. Data Retention' %></h2>
+  <ul>
+    <li><%- t.privacy?.section_5_1 || '**Bot active:** Data stored permanently' %></li>
+    <li><%- t.privacy?.section_5_2 || '**Bot removed:** Automatic deletion after **2 months** (configurable)' %></li>
+    <li><%- t.privacy?.section_5_3 || '**On request:** Immediate deletion possible (see rights)' %></li>
+  </ul>
+
+  <!-- Section 6: GDPR Rights -->
+  <h2><%= t.privacy?.section_6_title || '6. Your Rights under GDPR' %></h2>
+  <ul>
+    <li><%- t.privacy?.section_6_1 || '**Right to access (Art. 15 GDPR)** - Information about stored data' %></li>
+    <li><%- t.privacy?.section_6_2 || '**Right to rectification (Art. 16 GDPR)** - Correction of incorrect data' %></li>
+    <li><%- t.privacy?.section_6_3 || '**Right to erasure (Art. 17 GDPR)** - "Right to be forgotten"' %></li>
+    <li><%- t.privacy?.section_6_4 || '**Right to restriction of processing (Art. 18 GDPR)**' %></li>
+    <li><%- t.privacy?.section_6_5 || '**Right to data portability (Art. 20 GDPR)** - Data in structured format' %></li>
+    <li><%- t.privacy?.section_6_6 || '**Right to object (Art. 21 GDPR)** - Object to processing' %></li>
+    <li><%- t.privacy?.section_6_7 || '**Right to lodge a complaint** - With competent supervisory authority' %></li>
+  </ul>
+
+  <!-- Section 7: Cookies & Tracking -->
+  <h2><%= t.privacy?.section_7_title || '7. Cookies & Tracking' %></h2>
+  <ul>
+    <li><%- t.privacy?.section_7_1 || '**Session cookies** - Technically necessary for web panel functionality' %></li>
+    <li><%- t.privacy?.section_7_2 || '**Language cookie** - Stores language preference' %></li>
+    <li><%- t.privacy?.section_7_3 || '**No tracking cookies** - No analytics or advertising' %></li>
+    <li><%- t.privacy?.section_7_4 || '**LocalStorage** - Only for theme preference (local in browser)' %></li>
+  </ul>
+
+  <!-- Section 8: Opt-Out -->
+  <h2><%= t.privacy?.section_8_title || '8. Opt-Out Options' %></h2>
+  <ul>
+    <li><%- t.privacy?.section_8_1 || '**Remove bot** - Remove bot from server → Data deleted after 2 months' %></li>
+    <li><%- t.privacy?.section_8_2?.replace('{contact}', '<a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a>') || '**Immediate deletion** - Request via email' %></li>
+    <li><%= t.privacy?.section_8_3 || '**Delete cookies** - In your browser settings' %></li>
+  </ul>
+
+  <!-- Section 9: Legal Basis -->
+  <h2><%= t.privacy?.section_9_title || '9. Legal Basis for Processing' %></h2>
+  <ul>
+    <li><%- t.privacy?.section_9_1 || '**Art. 6 para. 1 lit. a GDPR** - Consent by using the bot' %></li>
+    <li><%- t.privacy?.section_9_2 || '**Art. 6 para. 1 lit. b GDPR** - Contract fulfillment (ticket service)' %></li>
+    <li><%- t.privacy?.section_9_3 || '**Art. 6 para. 1 lit. f GDPR** - Legitimate interest (support system)' %></li>
+  </ul>
+
+  <!-- Section 10: Contact -->
+  <h2><%= t.privacy?.section_10_title || '10. Contact & Privacy Requests' %></h2>
+  <p><%= t.privacy?.section_10_text || 'For privacy inquiries, contact us:' %></p>
+  <div class="info-box">
+    <p><strong>Email:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
+    <p><strong>Operator:</strong> Theredstonee</p>
+    <p><strong>Response time:</strong> Within 30 days (Art. 12 GDPR)</p>
+  </div>
+
+  <a href="/terms-of-service" role="button" class="back-btn secondary">← <%= t.privacy?.back_to_tos || 'Back to Terms of Service' %></a>
+  <a href="/panel" role="button" class="back-btn secondary">← <%= t.tos.back_to_panel %></a>
+
+  <footer>
+    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <a href="/terms-of-service">Terms of Service</a> | <a href="/privacy-policy">Privacy Policy</a></p>
+  </footer>
+
+  <script>
+    // Theme toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    }
+  </script>
+</body>
+</html>
