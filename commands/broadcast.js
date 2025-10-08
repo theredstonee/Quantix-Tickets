@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ALLOWED_GUILD = '1291125037876904026'; // Only this guild can use this command
+const ALLOWED_USER = '1159182333316968530'; // Only this user can use this command
 const CONFIG_DIR = path.join(__dirname, '..', 'configs');
 const VERSION = 'Alpha 1.0.1';
 
@@ -24,10 +25,10 @@ module.exports = {
       });
     }
 
-    // Check if user has admin permissions
-    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+    // Check if user is the authorized user
+    if (interaction.user.id !== ALLOWED_USER) {
       return interaction.reply({
-        content: '❌ Only administrators can use this command.',
+        content: '❌ You are not authorized to use this command.',
         ephemeral: true
       });
     }

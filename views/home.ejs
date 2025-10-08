@@ -125,6 +125,27 @@
       color: #00b894;
     }
 
+    .btn-secondary {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.5);
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.3);
+      color: white;
+    }
+
     [data-theme="dark"] .btn-primary {
       background: var(--accent-color);
       color: #000;
@@ -135,6 +156,31 @@
       background: var(--accent-hover);
       border-color: var(--accent-hover);
       color: #000;
+    }
+
+    [data-theme="dark"] .btn-secondary {
+      background: rgba(0,255,136,0.2);
+      color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    [data-theme="dark"] .btn-secondary:hover {
+      background: rgba(0,255,136,0.3);
+      color: var(--accent-color);
+    }
+
+    .user-info {
+      background: rgba(255,255,255,0.15);
+      padding: 0.8rem 1.5rem;
+      border-radius: 2rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      font-size: 0.95rem;
+    }
+
+    [data-theme="dark"] .user-info {
+      background: rgba(0,255,136,0.15);
+      color: var(--text-color);
     }
 
     .content {
@@ -279,11 +325,26 @@
     <h1>🎫 TRS Tickets</h1>
     <p><%= lang === 'de' ? 'Professionelles Ticket-System für Discord' : lang === 'en' ? 'Professional Ticket System for Discord' : 'מערכת כרטיסים מקצועית עבור Discord' %></p>
     <div class="version-badge">Alpha 1.0.1</div>
-    <div class="button-container">
-      <a href="/login" class="btn-primary">
-        <%= lang === 'de' ? '🔐 Mit Discord anmelden' : lang === 'en' ? '🔐 Login with Discord' : '🔐 התחבר עם Discord' %>
-      </a>
-    </div>
+
+    <% if (isAuthenticated && user) { %>
+      <div class="user-info">
+        <%= lang === 'de' ? 'Angemeldet als' : lang === 'en' ? 'Logged in as' : 'מחובר בתור' %> <strong><%= user.username %></strong>
+      </div>
+      <div class="button-container">
+        <a href="/select-server" class="btn-primary">
+          <%= lang === 'de' ? '⚙️ Zum Admin Panel' : lang === 'en' ? '⚙️ Go to Admin Panel' : '⚙️ עבור לפאנל ניהול' %>
+        </a>
+        <a href="/logout" class="btn-secondary">
+          <%= lang === 'de' ? '🚪 Abmelden' : lang === 'en' ? '🚪 Logout' : '🚪 התנתק' %>
+        </a>
+      </div>
+    <% } else { %>
+      <div class="button-container">
+        <a href="/login" class="btn-primary">
+          <%= lang === 'de' ? '🔐 Mit Discord anmelden' : lang === 'en' ? '🔐 Login with Discord' : '🔐 התחבר עם Discord' %>
+        </a>
+      </div>
+    <% } %>
   </div>
 
   <div class="content">

@@ -181,11 +181,13 @@ module.exports = (client)=>{
 
   /* ====== Root ====== */
   router.get('/', (req,res)=>{
-    if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/select-server');
     const lang = req.cookies.lang || 'de';
+    const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
     res.render('home', {
       lang: lang,
-      t: getTranslations(lang)
+      t: getTranslations(lang),
+      user: isAuthenticated ? req.user : null,
+      isAuthenticated: isAuthenticated
     });
   });
 
