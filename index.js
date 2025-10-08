@@ -555,8 +555,8 @@ client.on(Events.InteractionCreate, async i => {
 
       if(i.customId==='request_close'){
         const mentionTeam = TEAM_ROLE ? `<@&${TEAM_ROLE}>` : '@Team';
-        await i.channel.send({ content:`❓ Schließungsanfrage von <@${i.user.id}> ${mentionTeam}`, components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel('Schließen').setStyle(ButtonStyle.Danger) ) ] });
-        logEvent(i.guild, `❓ Close-Request Ticket #${ticket.id} von <@${i.user.id}>`);
+        await i.channel.send({ content:`❓ Schließungsanfrage von <@${i.user.id}> ${mentionTeam}`, components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel(t(guildId, 'buttons.close')).setStyle(ButtonStyle.Danger) ) ] });
+        logEvent(i.guild, t(guildId, 'logs.close_requested', { id: ticket.id, user: `<@${i.user.id}>` }));
         return i.reply({ephemeral:true,content:'Anfrage gesendet'});
       }
 
@@ -596,7 +596,7 @@ client.on(Events.InteractionCreate, async i => {
 
         delete ticket.claimer; saveTickets(guildId, log);
         await i.update({ components: buttonRows(false, guildId) });
-        logEvent(i.guild, `🔄 Unclaim Ticket #${ticket.id} von <@${i.user.id}>`);
+        logEvent(i.guild, t(guildId, 'logs.ticket_unclaimed', { id: ticket.id, user: `<@${i.user.id}>` }));
         return;
       }
 
@@ -649,7 +649,7 @@ client.on(Events.InteractionCreate, async i => {
        }
 
   // Logging & Channel löschen
-  logEvent(i.guild, `🔒 Ticket #${ticket.id} geschlossen von ${closerTag}`);
+  logEvent(i.guild, t(guildId, 'logs.ticket_closed', { id: ticket.id, user: closerTag }));
   setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
   return;
 }
@@ -688,7 +688,7 @@ client.on(Events.InteractionCreate, async i => {
           }
 
           await i.update({ components: buttonRows(true, guildId) });
-          logEvent(i.guild, `✅ Claim Ticket #${ticket.id} von <@${i.user.id}>`);
+          logEvent(i.guild, t(guildId, 'logs.ticket_claimed', { id: ticket.id, user: `<@${i.user.id}>` }));
           break;
         case 'priority_up': {
           ticket.priority = Math.min(2, (ticket.priority||0)+1);
@@ -738,7 +738,7 @@ client.on(Events.InteractionCreate, async i => {
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
         await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`});
         await i.channel.send(`➕ <@${id}> wurde zum Ticket hinzugefügt`);
-        logEvent(i.guild, `➕ User <@${id}> zu Ticket #${ticket.id} hinzugefügt`);
+        logEvent(i.guild, t(guildId, 'logs.user_added', { user: `<@${id}>`, id: ticket.id }));
       } catch(err) {
         console.error('Fehler beim Hinzufügen:', err);
         return i.reply({ephemeral:true,content:'Fehler beim Hinzufügen'});
@@ -818,7 +818,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   const log = safeRead(ticketsPath, []);
   log.push({ id:nr, channelId:ch.id, userId:interaction.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), formData, addedUsers:[] });
   safeWrite(ticketsPath, log);
-  logEvent(interaction.guild, `🆕 Ticket #${nr} erstellt von <@${interaction.user.id}> (${topic.label})`);
+  logEvent(interaction.guild, t(guildId, 'logs.ticket_created', { id: nr, user: `<@${interaction.user.id}>`, topic: topic.label }));
 
   // Panel Reset (Dropdown wiederherstellen)
   try {
@@ -850,7 +850,7 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
   const state = PRIORITY_STATES[ticket.priority||0];
   if(msg){ const e = EmbedBuilder.from(msg.embeds[0]); e.setColor(state.embedColor); await msg.edit({embeds:[e]}); }
   saveTickets(guildId, log);
-  logEvent(interaction.guild, `⚙️ Ticket #${ticket.id} Priorität ${dir}: ${state.label}`);
+  logEvent(interaction.guild, t(guildId, 'logs.priority_changed', { id: ticket.id, direction: dir, priority: state.label }));
   await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
 }
 

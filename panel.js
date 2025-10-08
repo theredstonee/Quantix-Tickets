@@ -13,7 +13,7 @@ const { Strategy } = require('passport-discord');
 const fs = require('fs');
 const path = require('path');
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
-const { getTranslations } = require('./translations');
+const { getTranslations, t, getLanguageName } = require('./translations');
 const cookieParser = require('cookie-parser');
 
 const VERSION = 'Alpha 1.0'; // Bot Version
@@ -215,7 +215,8 @@ module.exports = (client)=>{
       res.render('select-server', {
         servers: availableServers,
         version: VERSION,
-        currentGuild: req.session.selectedGuild || null
+        currentGuild: req.session.selectedGuild || null,
+        t: res.locals.t
       });
     } catch(err){
       console.error('Server-Auswahl Fehler:', err);
@@ -282,7 +283,8 @@ module.exports = (client)=>{
       writeCfg(guildId, cfg);
 
       // Log Event
-      await logEvent(guildId, `🌐 **Server-Sprache geändert** auf ${lang === 'de' ? 'Deutsch' : lang === 'en' ? 'English' : 'עברית'}`, req.user);
+      const langName = getLanguageName(lang);
+      await logEvent(guildId, t(guildId, 'logs.language_changed', { language: langName }), req.user);
     }
 
     res.redirect(req.get('referer') || '/panel');
@@ -403,7 +405,7 @@ module.exports = (client)=>{
       writeCfg(guildId, cfg);
 
       // Log Event
-      await logEvent(guildId, '⚙️ **Konfiguration aktualisiert** über das Panel', req.user);
+      await logEvent(guildId, t(guildId, 'logs.config_updated'), req.user);
 
       res.redirect('/panel?msg=saved');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
@@ -424,7 +426,7 @@ module.exports = (client)=>{
       writeCfg(guildId, cfg);
 
       // Log Event
-      await logEvent(guildId, `📤 **Panel-Nachricht gesendet** in <#${cfg.panelChannelId}>`, req.user);
+      await logEvent(guildId, t(guildId, 'logs.panel_sent', { channel: `<#${cfg.panelChannelId}>` }), req.user);
 
       res.redirect('/panel?msg=sent');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
@@ -444,7 +446,7 @@ module.exports = (client)=>{
       await msg.edit({ embeds: embed? [embed]: undefined, components:[row] });
 
       // Log Event
-      await logEvent(guildId, `✏️ **Panel-Nachricht aktualisiert** in <#${cfg.panelChannelId}>`, req.user);
+      await logEvent(guildId, t(guildId, 'logs.panel_edited', { channel: `<#${cfg.panelChannelId}>` }), req.user);
 
       res.redirect('/panel?msg=edited');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }

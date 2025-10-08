@@ -171,26 +171,26 @@
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
     <span id="themeIcon">🌙</span>
   </button>
-  <h1>🎫 Ticket‑Bot Panel</h1>
+  <h1>🎫 <%= t.web.title %></h1>
 
-  <% if (msg==='saved')  { %><p class="good">✅ Gespeichert.</p><% } %>
-  <% if (msg==='sent')   { %><p class="good">📤 Panel‑Nachricht gesendet.</p><% } %>
-  <% if (msg==='edited') { %><p class="good">✏️ Panel‑Nachricht aktualisiert.</p><% } %>
-  <% if (msg==='nopanel'){ %><p class="bad">⚠️ Keine gespeicherte Panel‑Nachricht vorhanden.</p><% } %>
-  <% if (msg==='error')  { %><p class="bad">❌ Fehler – Konsole prüfen.</p><% } %>
+  <% if (msg==='saved')  { %><p class="good"><%= t.web.messages.saved %></p><% } %>
+  <% if (msg==='sent')   { %><p class="good"><%= t.web.messages.sent %></p><% } %>
+  <% if (msg==='edited') { %><p class="good"><%= t.web.messages.edited %></p><% } %>
+  <% if (msg==='nopanel'){ %><p class="bad"><%= t.web.messages.nopanel %></p><% } %>
+  <% if (msg==='error')  { %><p class="bad"><%= t.web.messages.error %></p><% } %>
 
   <form method="POST" autocomplete="off" id="panelForm">
     <div class="grid">
 
       <!-- Server Einstellungen -->
       <fieldset>
-        <legend>⚙️ Server Einstellungen</legend>
-        <label>Guild/Server ID
+        <legend>⚙️ <%= t.web.server_settings %></legend>
+        <label><%= t.web.guild_id %>
           <input name="guildId" value="<%= cfg.guildId || guildId || '' %>" placeholder="1234567890123456789" readonly style="background: var(--fieldset-bg); cursor: not-allowed;">
         </label>
-        <label>Ticket Kategorie
+        <label><%= t.web.ticket_category %>
           <select name="ticketCategoryId">
-            <option value="">-- Kategorie wählen --</option>
+            <option value=""><%= t.web.select_category %></option>
             <% channels.filter(ch => ch.type === 4).forEach(ch => { %>
               <option value="<%= ch.id %>" <%= cfg.ticketCategoryId === ch.id ? 'selected' : '' %>>
                 📁 <%= ch.name %>
@@ -198,9 +198,9 @@
             <% }) %>
           </select>
         </label>
-        <label>Log Channel
+        <label><%= t.web.log_channel %>
           <select name="logChannelId">
-            <option value="">-- Channel wählen --</option>
+            <option value=""><%= t.web.select_channel %></option>
             <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
               <option value="<%= ch.id %>" <%= cfg.logChannelId === ch.id ? 'selected' : '' %>>
                 # <%= ch.name %>
@@ -208,9 +208,9 @@
             <% }) %>
           </select>
         </label>
-        <label>Transcript Channel
+        <label><%= t.web.transcript_channel %>
           <select name="transcriptChannelId">
-            <option value="">-- Channel wählen --</option>
+            <option value=""><%= t.web.select_channel %></option>
             <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
               <option value="<%= ch.id %>" <%= cfg.transcriptChannelId === ch.id ? 'selected' : '' %>>
                 # <%= ch.name %>
@@ -218,9 +218,9 @@
             <% }) %>
           </select>
         </label>
-        <label>Team Rolle
+        <label><%= t.web.team_role %>
           <select name="teamRoleId">
-            <option value="">-- Rolle wählen --</option>
+            <option value=""><%= t.web.select_role %></option>
             <% roles.forEach(role => { %>
               <option value="<%= role.id %>" <%= cfg.teamRoleId === role.id ? 'selected' : '' %>>
                 @ <%= role.name %>
@@ -233,17 +233,17 @@
 
       <!-- Topics -->
       <fieldset>
-        <legend>Kategorien (Topics)</legend>
+        <legend><%= t.web.topics %></legend>
         <table>
           <thead>
-            <tr><th>Label*</th><th>Value</th><th>Emoji</th><th>Löschen</th></tr>
+            <tr><th><%= t.web.topic_label %>*</th><th><%= t.web.topic_value %></th><th><%= t.web.topic_emoji %></th><th><%= t.web.delete %></th></tr>
           </thead>
           <tbody id="topicRows">
-            <% (cfg.topics||[]).forEach(t=>{ %>
+            <% (cfg.topics||[]).forEach(topic=>{ %>
               <tr>
-                <td><input name="label" value="<%= t.label %>" required></td>
-                <td><input name="value" value="<%= t.value %>" placeholder="auto"></td>
-                <td><input name="emoji" value="<%= t.emoji||'' %>"></td>
+                <td><input name="label" value="<%= topic.label %>" required></td>
+                <td><input name="value" value="<%= topic.value %>" placeholder="auto"></td>
+                <td><input name="emoji" value="<%= topic.emoji||'' %>"></td>
                 <td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>
               </tr>
             <% }) %>
@@ -255,21 +255,21 @@
 
       <!-- Ticket Embed -->
       <fieldset>
-        <legend>Ticket Embed Vorlage</legend>
-        <p class="placeholder-list soft-note">Platzhalter: <code>{userMention}</code> <code>{userId}</code> <code>{topicLabel}</code> <code>{topicValue}</code> <code>{ticketNumber}</code></p>
-        <label>Titel <input name="embedTitle" value="<%= cfg.ticketEmbed?.title || '' %>"></label>
-        <label>Beschreibung <textarea name="embedDescription" rows="7"><%= cfg.ticketEmbed?.description || '' %></textarea></label>
-        <label>Farbe (Hex) <input name="embedColor" value="<%= cfg.ticketEmbed?.color || '#2b90d9' %>" placeholder="#2b90d9"></label>
-        <label>Footer <input name="embedFooter" value="<%= cfg.ticketEmbed?.footer || '' %>"></label>
+        <legend><%= t.web.ticket_embed %></legend>
+        <p class="placeholder-list soft-note"><%= t.web.placeholders %>: <code>{userMention}</code> <code>{userId}</code> <code>{topicLabel}</code> <code>{topicValue}</code> <code>{ticketNumber}</code></p>
+        <label><%= t.web.embed_title %> <input name="embedTitle" value="<%= cfg.ticketEmbed?.title || '' %>"></label>
+        <label><%= t.web.embed_description %> <textarea name="embedDescription" rows="7"><%= cfg.ticketEmbed?.description || '' %></textarea></label>
+        <label><%= t.web.embed_color %> <input name="embedColor" value="<%= cfg.ticketEmbed?.color || '#2b90d9' %>" placeholder="#2b90d9"></label>
+        <label><%= t.web.embed_footer %> <input name="embedFooter" value="<%= cfg.ticketEmbed?.footer || '' %>"></label>
       </fieldset>
 
       <!-- Panel Embed -->
       <fieldset>
-        <legend>Panel (Dropdown) Embed</legend>
-        <label>Panel Titel <input name="panelTitle" value="<%= cfg.panelEmbed?.title || '' %>"></label>
-        <label>Panel Beschreibung <textarea name="panelDescription" rows="6"><%= cfg.panelEmbed?.description || '' %></textarea></label>
-        <label>Panel Farbe (Hex) <input name="panelColor" value="<%= cfg.panelEmbed?.color || '#5865F2' %>" placeholder="#5865F2"></label>
-        <label>Panel Footer <input name="panelFooter" value="<%= cfg.panelEmbed?.footer || '' %>"></label>
+        <legend><%= t.web.panel_embed %></legend>
+        <label><%= t.web.embed_title %> <input name="panelTitle" value="<%= cfg.panelEmbed?.title || '' %>"></label>
+        <label><%= t.web.embed_description %> <textarea name="panelDescription" rows="6"><%= cfg.panelEmbed?.description || '' %></textarea></label>
+        <label><%= t.web.embed_color %> <input name="panelColor" value="<%= cfg.panelEmbed?.color || '#5865F2' %>" placeholder="#5865F2"></label>
+        <label><%= t.web.embed_footer %> <input name="panelFooter" value="<%= cfg.panelEmbed?.footer || '' %>"></label>
       </fieldset>
 
       <!-- Formular Felder -->
@@ -329,27 +329,27 @@
       </fieldset>
 
     </div>
-    <button type="submit">💾 Speichern</button>
+    <button type="submit">💾 <%= t.web.save %></button>
   </form>
 
   <hr>
-  <h2>Panel‑Nachricht Aktionen</h2>
+  <h2><%= t.web.panel_actions %></h2>
   <div class="actions">
     <form action="/panel/send" method="POST">
       <select name="channelId" required style="min-width: 250px;">
-        <option value="">-- Panel Channel wählen --</option>
+        <option value=""><%= t.web.select_channel %></option>
         <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
           <option value="<%= ch.id %>" <%= cfg.panelChannelId === ch.id ? 'selected' : '' %>>
             # <%= ch.name %>
           </option>
         <% }) %>
       </select>
-      <button>📤 Senden</button>
+      <button>📤 <%= t.web.send_panel %></button>
     </form>
     <form action="/panel/edit" method="POST">
-      <button>✏️ Bestehende bearbeiten</button>
+      <button>✏️ <%= t.web.edit_panel %></button>
     </form>
-    <a href="/tickets" role="button" class="secondary">📜 Ticket Verlauf / History</a>
+    <a href="/tickets" role="button" class="secondary">📜 <%= t.web.ticket_history %></a>
   </div>
 
   <footer>

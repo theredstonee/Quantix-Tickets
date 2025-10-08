@@ -124,8 +124,8 @@
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
     <span id="themeIcon">🌙</span>
   </button>
-  <h1>🌐 Server Auswahl</h1>
-  <p class="sub">Wähle einen Server aus, den du mit dem Ticket-Bot konfigurieren möchtest.</p>
+  <h1>🌐 <%= t.web.server_selection %></h1>
+  <p class="sub"><%= t.web.select_server %></p>
 
   <% if (servers && servers.length > 0) { %>
     <form method="POST" action="/select-server" id="serverForm">
@@ -145,7 +145,7 @@
                 <div class="server-name">
                   <%= server.name %>
                   <% if (currentGuild === server.id) { %>
-                    <span class="current-badge">AKTIV</span>
+                    <span class="current-badge"><%= t.web.current %></span>
                   <% } %>
                 </div>
                 <div class="server-id"><%= server.id %></div>
@@ -155,13 +155,13 @@
         <% }); %>
       </div>
 
-      <button type="submit" class="submit-btn">✅ Server auswählen & zum Panel</button>
+      <button type="submit" class="submit-btn">✅ <%= t.web.select_btn %></button>
     </form>
   <% } else { %>
     <div class="no-servers">
-      <p>⚠️ Keine verfügbaren Server gefunden.</p>
+      <p>⚠️ <%= t.web.no_servers %></p>
       <p style="margin-top: 1rem; font-size: 0.85rem;">
-        Du benötigst Administrator-Rechte auf einem Server, auf dem der TRS Tickets Bot installiert ist.
+        <%= t.web.no_servers_desc %>
       </p>
     </div>
   <% } %>
