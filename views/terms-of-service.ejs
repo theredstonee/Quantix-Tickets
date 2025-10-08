@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title><%= t.tos.title %> - TRS Tickets</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
       --bg-color: #fff;
@@ -105,10 +106,10 @@
 </head>
 <body class="container">
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
-    <span id="themeIcon">🌙</span>
+    <i id="themeIcon" class="fas fa-moon"></i>
   </button>
 
-  <h1>📜 <%= t.tos.title %></h1>
+  <h1><i class="fas fa-file-contract"></i> <%= t.tos.title %></h1>
 
   <div class="info-box">
     <p><strong><%= t.tos.operator %>:</strong> Ohev Tamerin</p>
@@ -220,7 +221,7 @@
       html.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
       setCookie('theme', newTheme);
-      document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+      document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
     // Load saved theme from cookie or localStorage
@@ -230,7 +231,7 @@
 
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
-      document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
       // Sync to both storage types
       localStorage.setItem('theme', savedTheme);
       setCookie('theme', savedTheme);

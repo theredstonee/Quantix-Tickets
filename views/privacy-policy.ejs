@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title><%= t.privacy?.title || 'Privacy Policy' %> - TRS Tickets</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
       --bg-color: #fff;
@@ -118,10 +119,10 @@
 </head>
 <body class="container">
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
-    <span id="themeIcon">🌙</span>
+    <i id="themeIcon" class="fas fa-moon"></i>
   </button>
 
-  <h1>🔒 <%= t.privacy?.title || 'Privacy Policy' %></h1>
+  <h1><i class="fas fa-lock"></i> <%= t.privacy?.title || 'Privacy Policy' %></h1>
 
   <p><%= t.privacy?.intro || 'This privacy policy explains how TRS Ticket Bot collects, uses and protects your personal data.' %></p>
 
@@ -276,7 +277,7 @@
       html.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
       setCookie('theme', newTheme);
-      document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+      document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
     // Load saved theme from cookie or localStorage
@@ -286,7 +287,7 @@
 
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
-      document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
       // Sync to both storage types
       localStorage.setItem('theme', savedTheme);
       setCookie('theme', savedTheme);

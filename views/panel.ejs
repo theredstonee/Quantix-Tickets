@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Ticket‑Bot Panel</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
       --bg-color: #fff;
@@ -169,9 +170,9 @@
     </select>
   </div>
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
-    <span id="themeIcon">🌙</span>
+    <i id="themeIcon" class="fas fa-moon"></i>
   </button>
-  <h1>🎫 <%= t.web.title %></h1>
+  <h1><i class="fas fa-ticket-alt"></i> <%= t.web.title %></h1>
 
   <% if (msg==='saved')  { %><p class="good"><%= t.web.messages.saved %></p><% } %>
   <% if (msg==='sent')   { %><p class="good"><%= t.web.messages.sent %></p><% } %>
@@ -184,7 +185,7 @@
 
       <!-- Server Einstellungen -->
       <fieldset>
-        <legend>⚙️ <%= t.web.server_settings %></legend>
+        <legend><i class="fas fa-server"></i> <%= t.web.server_settings %></legend>
         <label><%= t.web.guild_id %>
           <input name="guildId" value="<%= cfg.guildId || guildId || '' %>" placeholder="1234567890123456789" readonly style="background: var(--fieldset-bg); cursor: not-allowed;">
         </label>
@@ -344,12 +345,12 @@
           </option>
         <% }) %>
       </select>
-      <button>📤 <%= t.web.send_panel %></button>
+      <button><i class="fas fa-paper-plane"></i> <%= t.web.send_panel %></button>
     </form>
     <form action="/panel/edit" method="POST">
-      <button>✏️ <%= t.web.edit_panel %></button>
+      <button><i class="fas fa-edit"></i> <%= t.web.edit_panel %></button>
     </form>
-    <a href="/tickets" role="button" class="secondary">📜 <%= t.web.ticket_history %></a>
+    <a href="/tickets" role="button" class="secondary"><i class="fas fa-history"></i> <%= t.web.ticket_history %></a>
   </div>
 
   <footer>
@@ -376,14 +377,14 @@ function toggleTheme() {
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', newTheme);
   localStorage.setItem('trs-theme', newTheme);
-  document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 }
 
 // Theme beim Laden setzen
 (function() {
   const savedTheme = localStorage.getItem('trs-theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
-  document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 })();
 </script>
 </body>

@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Tickets Übersicht</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
       --bg-color: #fff;
@@ -161,11 +162,11 @@
 </head>
 <body class="container">
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
-    <span id="themeIcon">🌙</span>
+    <i id="themeIcon" class="fas fa-moon"></i>
   </button>
-  <h1>🎫 Tickets Übersicht</h1>
+  <h1><i class="fas fa-ticket-alt"></i> Tickets Übersicht</h1>
   <p class="sub">Nur für Team-Mitglieder sichtbar. Live-Daten aus <code>tickets.json</code>.</p>
-  <a href="/panel" class="back">⬅️ Zurück zum Panel</a>
+  <a href="/panel" class="back"><i class="fas fa-arrow-left"></i> Zurück zum Panel</a>
 
   <!-- Diese Variablen werden VOM Server (panel.js /tickets) gesetzt -->
   <script>
@@ -348,14 +349,14 @@
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', newTheme);
     localStorage.setItem('trs-theme', newTheme);
-    document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
   }
 
   // Theme beim Laden setzen
   (function() {
     const savedTheme = localStorage.getItem('trs-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
-    document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
   })();
 </script>
 </body>

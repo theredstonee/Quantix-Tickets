@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>TRS Tickets - Admin Panel</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
       --bg-color: #fff;
@@ -308,21 +309,65 @@
     [data-theme="dark"] .lang-btn.active {
       box-shadow: 0 2px 12px rgba(0,255,136,0.4);
     }
+
+    /* Font Awesome Styling */
+    i.fas, i.fab {
+      margin-right: 0.5rem;
+    }
+
+    h1 i, h2 i, h3 i {
+      color: var(--accent-color);
+    }
+
+    .btn-primary i, .btn-secondary i {
+      margin-right: 0.3rem;
+    }
+
+    .feature-card h3 i {
+      font-size: 1.5rem;
+      display: block;
+      margin-bottom: 1rem;
+      margin-right: 0;
+    }
+
+    .theme-toggle i {
+      transition: transform 0.3s ease;
+    }
+
+    .theme-toggle:hover i {
+      transform: rotate(20deg);
+    }
+
+    .legal-links i {
+      margin-right: 0.3rem;
+      font-size: 0.9rem;
+    }
+
+    .lang-btn i {
+      margin-right: 0.3rem;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
-    <span id="themeIcon">🌙</span>
+    <i id="themeIcon" class="fas fa-moon"></i>
   </button>
 
   <div class="language-selector">
-    <a href="/set-user-language/de" class="lang-btn <%= lang === 'de' ? 'active' : '' %>" title="Deutsch">🇩🇪</a>
-    <a href="/set-user-language/en" class="lang-btn <%= lang === 'en' ? 'active' : '' %>" title="English">🇬🇧</a>
-    <a href="/set-user-language/he" class="lang-btn <%= lang === 'he' ? 'active' : '' %>" title="עברית">🇮🇱</a>
+    <a href="/set-user-language/de" class="lang-btn <%= lang === 'de' ? 'active' : '' %>" title="Deutsch">
+      <i class="fas fa-globe"></i> DE
+    </a>
+    <a href="/set-user-language/en" class="lang-btn <%= lang === 'en' ? 'active' : '' %>" title="English">
+      <i class="fas fa-globe"></i> EN
+    </a>
+    <a href="/set-user-language/he" class="lang-btn <%= lang === 'he' ? 'active' : '' %>" title="עברית">
+      <i class="fas fa-globe"></i> HE
+    </a>
   </div>
 
   <div class="hero">
-    <h1>🎫 TRS Tickets</h1>
+    <h1><i class="fas fa-ticket-alt"></i> TRS Tickets</h1>
     <p><%= lang === 'de' ? 'Professionelles Ticket-System für Discord' : lang === 'en' ? 'Professional Ticket System for Discord' : 'מערכת כרטיסים מקצועית עבור Discord' %></p>
     <div class="version-badge">Beta 0.2.0</div>
 
@@ -332,16 +377,16 @@
       </div>
       <div class="button-container">
         <a href="/select-server" class="btn-primary">
-          <%= lang === 'de' ? '⚙️ Zum Admin Panel' : lang === 'en' ? '⚙️ Go to Admin Panel' : '⚙️ עבור לפאנל ניהול' %>
+          <i class="fas fa-cog"></i> <%= lang === 'de' ? 'Zum Admin Panel' : lang === 'en' ? 'Go to Admin Panel' : 'עבור לפאנל ניהול' %>
         </a>
         <a href="/logout" class="btn-secondary">
-          <%= lang === 'de' ? '🚪 Abmelden' : lang === 'en' ? '🚪 Logout' : '🚪 התנתק' %>
+          <i class="fas fa-sign-out-alt"></i> <%= lang === 'de' ? 'Abmelden' : lang === 'en' ? 'Logout' : 'התנתק' %>
         </a>
       </div>
     <% } else { %>
       <div class="button-container">
         <a href="/login" class="btn-primary">
-          <%= lang === 'de' ? '🔐 Mit Discord anmelden' : lang === 'en' ? '🔐 Login with Discord' : '🔐 התחבר עם Discord' %>
+          <i class="fab fa-discord"></i> <%= lang === 'de' ? 'Mit Discord anmelden' : lang === 'en' ? 'Login with Discord' : 'התחבר עם Discord' %>
         </a>
       </div>
     <% } %>
@@ -350,45 +395,45 @@
   <div class="content">
     <div class="features">
       <div class="feature-card">
-        <h3>🌐 <%= lang === 'de' ? 'Multi-Sprache' : lang === 'en' ? 'Multi-Language' : 'רב-לשוני' %></h3>
+        <h3><i class="fas fa-language"></i> <%= lang === 'de' ? 'Multi-Sprache' : lang === 'en' ? 'Multi-Language' : 'רב-לשוני' %></h3>
         <p><%= lang === 'de' ? 'Unterstützt Deutsch, Englisch und Hebräisch mit vollständiger Übersetzung für Bot und Web-Panel.' : lang === 'en' ? 'Supports German, English and Hebrew with complete translation for bot and web panel.' : 'תומך בגרמנית, אנגלית ועברית עם תרגום מלא לבוט ולפאנל אינטרנט.' %></p>
       </div>
 
       <div class="feature-card">
-        <h3>⚙️ <%= lang === 'de' ? 'Web-Verwaltung' : lang === 'en' ? 'Web Management' : 'ניהול אינטרנט' %></h3>
+        <h3><i class="fas fa-tools"></i> <%= lang === 'de' ? 'Web-Verwaltung' : lang === 'en' ? 'Web Management' : 'ניהול אינטרנט' %></h3>
         <p><%= lang === 'de' ? 'Umfassendes Admin-Panel zur Konfiguration von Topics, Formularen und Embeds.' : lang === 'en' ? 'Comprehensive admin panel for configuring topics, forms and embeds.' : 'פאנל ניהול מקיף להגדרת נושאים, טפסים והטבעות.' %></p>
       </div>
 
       <div class="feature-card">
-        <h3>🔒 <%= lang === 'de' ? 'DSGVO-konform' : lang === 'en' ? 'GDPR Compliant' : 'תואם GDPR' %></h3>
+        <h3><i class="fas fa-shield-alt"></i> <%= lang === 'de' ? 'DSGVO-konform' : lang === 'en' ? 'GDPR Compliant' : 'תואם GDPR' %></h3>
         <p><%= lang === 'de' ? 'Vollständige Datenschutzerklärung und Nutzungsbedingungen mit Datenlöschung nach 2 Monaten.' : lang === 'en' ? 'Complete privacy policy and terms of service with data deletion after 2 months.' : 'מדיניות פרטיות ותנאי שימוש מלאים עם מחיקת נתונים לאחר חודשיים.' %></p>
       </div>
 
       <div class="feature-card">
-        <h3>🎯 <%= lang === 'de' ? 'Ticket-Verwaltung' : lang === 'en' ? 'Ticket Management' : 'ניהול כרטיסים' %></h3>
+        <h3><i class="fas fa-tasks"></i> <%= lang === 'de' ? 'Ticket-Verwaltung' : lang === 'en' ? 'Ticket Management' : 'ניהול כרטיסים' %></h3>
         <p><%= lang === 'de' ? 'Prioritäten, Claiming, Transkripte und vollständige Ticket-Historie im Web-Panel.' : lang === 'en' ? 'Priorities, claiming, transcripts and complete ticket history in the web panel.' : 'עדיפויות, תפיסה, תמלילים והיסטוריית כרטיסים מלאה בפאנל האינטרנט.' %></p>
       </div>
 
       <div class="feature-card">
-        <h3>📋 <%= lang === 'de' ? 'Dynamische Formulare' : lang === 'en' ? 'Dynamic Forms' : 'טפסים דינמיים' %></h3>
+        <h3><i class="fas fa-clipboard-list"></i> <%= lang === 'de' ? 'Dynamische Formulare' : lang === 'en' ? 'Dynamic Forms' : 'טפסים דינמיים' %></h3>
         <p><%= lang === 'de' ? 'Erstelle benutzerdefinierte Formularfelder für jeden Ticket-Typ über das Web-Panel.' : lang === 'en' ? 'Create custom form fields for each ticket type via the web panel.' : 'צור שדות טופס מותאמים אישית לכל סוג כרטיס דרך פאנל האינטרנט.' %></p>
       </div>
 
       <div class="feature-card">
-        <h3>🌙 <%= lang === 'de' ? 'Dark Mode' : lang === 'en' ? 'Dark Mode' : 'מצב כהה' %></h3>
+        <h3><i class="fas fa-moon"></i> <%= lang === 'de' ? 'Dark Mode' : lang === 'en' ? 'Dark Mode' : 'מצב כהה' %></h3>
         <p><%= lang === 'de' ? 'Modernes Design mit automatischem Dark Mode und RTL-Unterstützung für Hebräisch.' : lang === 'en' ? 'Modern design with automatic dark mode and RTL support for Hebrew.' : 'עיצוב מודרני עם מצב כהה אוטומטי ותמיכה ב-RTL לעברית.' %></p>
       </div>
     </div>
 
     <div class="legal-links">
       <a href="/imprint">
-        <%= lang === 'de' ? '📄 Impressum' : lang === 'en' ? '📄 Legal Notice' : '📄 מידע משפטי' %>
+        <i class="fas fa-file-alt"></i> <%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %>
       </a>
       <a href="/terms-of-service">
-        <%= lang === 'de' ? '📜 Nutzungsbedingungen' : lang === 'en' ? '📜 Terms of Service' : '📜 תנאי שימוש' %>
+        <i class="fas fa-file-contract"></i> <%= lang === 'de' ? 'Nutzungsbedingungen' : lang === 'en' ? 'Terms of Service' : 'תנאי שימוש' %>
       </a>
       <a href="/privacy-policy">
-        <%= lang === 'de' ? '🔒 Datenschutzerklärung' : lang === 'en' ? '🔒 Privacy Policy' : '🔒 מדיניות פרטיות' %>
+        <i class="fas fa-lock"></i> <%= lang === 'de' ? 'Datenschutzerklärung' : lang === 'en' ? 'Privacy Policy' : 'מדיניות פרטיות' %>
       </a>
     </div>
   </div>
@@ -419,7 +464,7 @@
       html.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
       setCookie('theme', newTheme);
-      document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+      document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
     // Load saved theme from cookie or localStorage
@@ -429,7 +474,7 @@
 
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
-      document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
       // Sync to both storage types
       localStorage.setItem('theme', savedTheme);
       setCookie('theme', savedTheme);

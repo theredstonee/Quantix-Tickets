@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Ticket #<%= ticket.id.toString().padStart(5, '0') %></title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body class="container">
   <h1>Ticket #<%= ticket.id.toString().padStart(5, '0') %></h1>
@@ -25,7 +26,7 @@
   </ul>
 
   <h2>Aktionen</h2>
-  <a href="/tickets">⬅️ Zur Übersicht</a>
+  <a href="/tickets"><i class="fas fa-arrow-left"></i> Zur Übersicht</a>
   <!-- Platzhalter für spätere Export-Links -->
   <% if (ticket.transcript) { %>
     | <a href="/transcripts/<%= ticket.transcript %>" target="_blank">📄 Transcript</a>
