@@ -153,9 +153,21 @@
     [data-theme="dark"] .server-info {
       color: var(--accent-color);
     }
+
+    [data-theme="dark"] select {
+      background: var(--accent-color) !important;
+      color: #000 !important;
+    }
   </style>
 </head>
 <body class="container">
+  <div style="position: fixed; top: 1.5rem; right: 5.5rem; z-index: 1000;">
+    <select onchange="window.location.href='/set-language/' + this.value" style="background: var(--accent-color); color: #000; border: 0; padding: 0.75rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+      <option value="de" <%= lang === 'de' ? 'selected' : '' %>>🇩🇪 Deutsch</option>
+      <option value="en" <%= lang === 'en' ? 'selected' : '' %>>🇬🇧 English</option>
+      <option value="he" <%= lang === 'he' ? 'selected' : '' %>>🇮🇱 עברית</option>
+    </select>
+  </div>
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
     <span id="themeIcon">🌙</span>
   </button>

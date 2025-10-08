@@ -1,0 +1,82 @@
+{
+  "ticket": {
+    "created": "Ticket created",
+    "closed": "Ticket closed",
+    "claimed": "Ticket claimed",
+    "unclaimed": "Ticket unclaimed",
+    "priority_updated": "Priority updated",
+    "user_added": "User added",
+    "close_requested": "Close requested",
+    "transcript_saved": "Transcript saved",
+    "hello": "Hello",
+    "topic": "Topic",
+    "priority": "Priority",
+    "status": "Status",
+    "created_by": "Created by",
+    "claimed_by": "Claimed by",
+    "no_form": "No form fields"
+  },
+  "buttons": {
+    "close": "Close",
+    "claim": "Claim",
+    "unclaim": "Unclaim",
+    "priority_up": "Priority ↑",
+    "priority_down": "Priority ↓",
+    "add_user": "Add User",
+    "request_close": "Request Close"
+  },
+  "messages": {
+    "ticket_closed": "✅ Ticket has been closed.",
+    "ticket_claimed": "{user} has claimed the ticket.",
+    "ticket_unclaimed": "{user} has unclaimed the ticket.",
+    "priority_changed": "🔔 Priority has been changed to **{priority}**.",
+    "user_added_success": "✅ {user} has been added to the ticket.",
+    "close_requested": "🔔 {user} has requested to close the ticket.",
+    "only_team": "❌ Only team members can perform this action.",
+    "only_creator": "❌ Only the ticket creator can perform this action.",
+    "transcript_created": "📄 Transcript has been created.",
+    "no_transcript_channel": "⚠️ No transcript channel configured.",
+    "error_occurred": "❌ An error occurred."
+  },
+  "panel": {
+    "title": "🎫 Ticket System",
+    "description": "Select a topic to create a ticket.",
+    "select_topic": "Select a topic",
+    "dashboard_command": "🔗 Dashboard",
+    "dashboard_description": "Open the admin panel"
+  },
+  "language": {
+    "changed": "✅ Language has been set to **English**.",
+    "select": "Select your language:",
+    "german": "Deutsch",
+    "english": "English",
+    "hebrew": "עברית",
+    "command_description": "Change server language",
+    "only_admin": "❌ Only administrators can change the server language.",
+    "updated": "✅ Server language has been set to **{language}**."
+  },
+  "web": {
+    "title": "TRS Ticket Bot - Admin Panel",
+    "language": "Language",
+    "topics": "Topics",
+    "form_fields": "Form Fields",
+    "embeds": "Embeds",
+    "panel_message": "Panel Message",
+    "ticket_history": "Ticket History",
+    "save": "Save",
+    "send": "Send",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "logout": "Logout",
+    "login": "Login with Discord",
+    "no_tickets": "No tickets found",
+    "ticket_id": "Ticket ID",
+    "user": "User",
+    "status": "Status",
+    "created": "Created",
+    "view": "View",
+    "transcript": "Transcript",
+    "server_language": "Server Language"
+  }
+}

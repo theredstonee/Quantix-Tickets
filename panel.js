@@ -13,6 +13,8 @@ const { Strategy } = require('passport-discord');
 const fs = require('fs');
 const path = require('path');
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { getTranslations } = require('./translations');
+const cookieParser = require('cookie-parser');
 
 const VERSION = 'Alpha 1.0'; // Bot Version
 
@@ -127,6 +129,7 @@ module.exports = (client)=>{
   }
 
   /* ====== Session ====== */
+  router.use(cookieParser());
   router.use(session({
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
@@ -137,6 +140,24 @@ module.exports = (client)=>{
   router.use(passport.initialize());
   router.use(passport.session());
   router.use(express.urlencoded({extended:true}));
+
+  /* ====== Language Middleware ====== */
+  router.use((req, res, next) => {
+    // Get language from guild config if available, otherwise use cookie
+    const guildId = req.session?.selectedGuild;
+    let lang = 'de';
+
+    if (guildId) {
+      const cfg = readCfg(guildId);
+      lang = cfg.language || 'de';
+    } else {
+      lang = req.cookies.lang || 'de';
+    }
+
+    res.locals.lang = lang;
+    res.locals.t = getTranslations(lang);
+    next();
+  });
 
   /* ====== Helper: Auth Middleware (Server-spezifisch) ====== */
   function isAuth(req,res,next){
@@ -249,6 +270,23 @@ module.exports = (client)=>{
 
   /* ====== Logout ====== */
   router.get('/logout',(req,res)=>{ req.logout?.(()=>{}); req.session.destroy(()=>res.redirect('/')); });
+
+  /* ====== Language Switch (Guild-based) ====== */
+  router.get('/set-language/:lang', isAuth, async (req, res) => {
+    const lang = ['de', 'en', 'he'].includes(req.params.lang) ? req.params.lang : 'de';
+    const guildId = req.session.selectedGuild;
+
+    if (guildId) {
+      const cfg = readCfg(guildId);
+      cfg.language = lang;
+      writeCfg(guildId, cfg);
+
+      // Log Event
+      await logEvent(guildId, `🌐 **Server-Sprache geändert** auf ${lang === 'de' ? 'Deutsch' : lang === 'en' ? 'English' : 'עברית'}`, req.user);
+    }
+
+    res.redirect(req.get('referer') || '/panel');
+  });
 
   /* ====== Panel Ansicht ====== */
   router.get('/panel', isAuth, async (req,res)=>{

@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "body-parser": "^2.2.0",
+    "cookie-parser": "^1.4.6",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.0",
     "ejs": "^3.1.10",

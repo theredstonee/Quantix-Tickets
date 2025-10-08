@@ -37,6 +37,7 @@ const {
   PermissionsBitField, ChannelType, Events, AttachmentBuilder,
   StringSelectMenuBuilder
 } = require('discord.js');
+const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
 
 /* ================= Konstanten ================= */
 const VERSION   = 'Alpha 1.0';                     // Bot Version
@@ -198,19 +199,19 @@ function nextTicket(guildId){
 }
 
 /* ================= Button Rows ================= */
-function buttonRows(claimed){
+function buttonRows(claimed, guildId = null){
   const row1 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('request_close').setEmoji('❓').setLabel('Schließungsanfrage').setStyle(ButtonStyle.Secondary)
+    new ButtonBuilder().setCustomId('request_close').setEmoji('❓').setLabel(t(guildId, 'buttons.request_close')).setStyle(ButtonStyle.Secondary)
   );
   const row2 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('close').setEmoji('🔒').setLabel('Schließen').setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId('priority_down').setEmoji('🔻').setLabel('Herab').setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId('priority_up').setEmoji('🔺').setLabel('Hoch').setStyle(ButtonStyle.Primary),
-    claimed ? new ButtonBuilder().setCustomId('unclaim').setEmoji('🔄').setLabel('Unclaim').setStyle(ButtonStyle.Secondary)
-            : new ButtonBuilder().setCustomId('claim').setEmoji('✅').setLabel('Claim').setStyle(ButtonStyle.Success)
+    new ButtonBuilder().setCustomId('close').setEmoji('🔒').setLabel(t(guildId, 'buttons.close')).setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId('priority_down').setEmoji('🔻').setLabel(t(guildId, 'buttons.priority_down')).setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId('priority_up').setEmoji('🔺').setLabel(t(guildId, 'buttons.priority_up')).setStyle(ButtonStyle.Primary),
+    claimed ? new ButtonBuilder().setCustomId('unclaim').setEmoji('🔄').setLabel(t(guildId, 'buttons.unclaim')).setStyle(ButtonStyle.Secondary)
+            : new ButtonBuilder().setCustomId('claim').setEmoji('✅').setLabel(t(guildId, 'buttons.claim')).setStyle(ButtonStyle.Success)
   );
   const row3 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('add_user').setEmoji('➕').setLabel('Nutzer').setStyle(ButtonStyle.Secondary)
+    new ButtonBuilder().setCustomId('add_user').setEmoji('➕').setLabel(t(guildId, 'buttons.add_user')).setStyle(ButtonStyle.Secondary)
   );
   return [row1,row2,row3];
 }
@@ -253,6 +254,23 @@ async function deployCommands(){
 client.once('ready', async () => {
   await deployCommands();
   console.log(`🤖 ${client.user.tag} bereit`);
+});
+
+// Guild Create Event - Deploy commands when bot joins a new server
+client.on(Events.GuildCreate, async (guild) => {
+  console.log(`🆕 Bot joined new guild: ${guild.name} (${guild.id})`);
+  try {
+    loadCommands();
+    const rest = new REST({ version: '10' }).setToken(TOKEN);
+    const commands = Array.from(commandsCollection.values()).map(cmd => cmd.data.toJSON());
+    await rest.put(
+      Routes.applicationGuildCommands(client.user.id, guild.id),
+      { body: commands }
+    );
+    console.log(`✅ Commands deployed to ${guild.name}`);
+  } catch (err) {
+    console.error(`❌ Error deploying commands to ${guild.name}:`, err);
+  }
 });
 
 /* ================= Ticket Embed Builder ================= */
@@ -444,6 +462,26 @@ client.on(Events.InteractionCreate, async i => {
     const cfg = readCfg(i.guild?.id) || {};
 
     if(i.isChatInputCommand()){
+      // /setlanguage Command Handler
+      if(i.commandName === 'setlanguage'){
+        const guildId = i.guild?.id;
+        if(!guildId) return i.reply({ content: '❌ This command can only be used in a server.', ephemeral: true });
+
+        // Check if user has admin permission
+        if(!i.member.permissions.has(PermissionsBitField.Flags.Administrator)){
+          return i.reply({ content: t(guildId, 'language.only_admin'), ephemeral: true });
+        }
+
+        const selectedLang = i.options.getString('language');
+        setGuildLanguage(guildId, selectedLang);
+        const langName = getLanguageName(selectedLang);
+
+        return i.reply({
+          content: t(guildId, 'language.updated', { language: langName }),
+          ephemeral: false
+        });
+      }
+
       const command = commandsCollection.get(i.commandName);
       if(command){
         // Spezielle Behandlung für reload
@@ -557,7 +595,7 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         delete ticket.claimer; saveTickets(guildId, log);
-        await i.update({ components: buttonRows(false) });
+        await i.update({ components: buttonRows(false, guildId) });
         logEvent(i.guild, `🔄 Unclaim Ticket #${ticket.id} von <@${i.user.id}>`);
         return;
       }
@@ -649,7 +687,7 @@ client.on(Events.InteractionCreate, async i => {
             console.error('Fehler beim Setzen der Berechtigungen:', err);
           }
 
-          await i.update({ components: buttonRows(true) });
+          await i.update({ components: buttonRows(true, guildId) });
           logEvent(i.guild, `✅ Claim Ticket #${ticket.id} von <@${i.user.id}>`);
           break;
         case 'priority_up': {
@@ -767,7 +805,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     });
     embed.addFields(fields);
   }
-  await ch.send({ embeds:[embed], components: buttonRows(false) });
+  await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
   // Nutzer informieren
   if(interaction.isModalSubmit()){
     await interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });

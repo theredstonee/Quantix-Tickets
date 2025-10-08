@@ -1,0 +1,82 @@
+{
+  "ticket": {
+    "created": "Ticket erstellt",
+    "closed": "Ticket geschlossen",
+    "claimed": "Ticket übernommen",
+    "unclaimed": "Ticket freigegeben",
+    "priority_updated": "Priorität geändert",
+    "user_added": "Benutzer hinzugefügt",
+    "close_requested": "Schließen angefordert",
+    "transcript_saved": "Transkript gespeichert",
+    "hello": "Hallo",
+    "topic": "Thema",
+    "priority": "Priorität",
+    "status": "Status",
+    "created_by": "Erstellt von",
+    "claimed_by": "Übernommen von",
+    "no_form": "Keine Formularfelder"
+  },
+  "buttons": {
+    "close": "Schließen",
+    "claim": "Übernehmen",
+    "unclaim": "Freigeben",
+    "priority_up": "Priorität ↑",
+    "priority_down": "Priorität ↓",
+    "add_user": "Benutzer hinzufügen",
+    "request_close": "Schließen anfordern"
+  },
+  "messages": {
+    "ticket_closed": "✅ Ticket wurde geschlossen.",
+    "ticket_claimed": "{user} hat das Ticket übernommen.",
+    "ticket_unclaimed": "{user} hat das Ticket freigegeben.",
+    "priority_changed": "🔔 Priorität wurde auf **{priority}** geändert.",
+    "user_added_success": "✅ {user} wurde zum Ticket hinzugefügt.",
+    "close_requested": "🔔 {user} hat das Schließen des Tickets angefordert.",
+    "only_team": "❌ Nur Team-Mitglieder können diese Aktion ausführen.",
+    "only_creator": "❌ Nur der Ticket-Ersteller kann diese Aktion ausführen.",
+    "transcript_created": "📄 Transkript wurde erstellt.",
+    "no_transcript_channel": "⚠️ Kein Transkript-Kanal konfiguriert.",
+    "error_occurred": "❌ Ein Fehler ist aufgetreten."
+  },
+  "panel": {
+    "title": "🎫 Ticket System",
+    "description": "Wähle ein Thema aus, um ein Ticket zu erstellen.",
+    "select_topic": "Wähle ein Thema",
+    "dashboard_command": "🔗 Dashboard",
+    "dashboard_description": "Öffne das Admin-Panel"
+  },
+  "language": {
+    "changed": "✅ Sprache wurde auf **Deutsch** gesetzt.",
+    "select": "Wähle deine Sprache:",
+    "german": "Deutsch",
+    "english": "English",
+    "hebrew": "עברית",
+    "command_description": "Ändere die Server-Sprache",
+    "only_admin": "❌ Nur Administratoren können die Server-Sprache ändern.",
+    "updated": "✅ Server-Sprache wurde auf **{language}** gesetzt."
+  },
+  "web": {
+    "title": "TRS Ticket Bot - Admin Panel",
+    "language": "Sprache",
+    "topics": "Themen",
+    "form_fields": "Formularfelder",
+    "embeds": "Embeds",
+    "panel_message": "Panel-Nachricht",
+    "ticket_history": "Ticket-Verlauf",
+    "save": "Speichern",
+    "send": "Senden",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "add": "Hinzufügen",
+    "logout": "Abmelden",
+    "login": "Anmelden mit Discord",
+    "no_tickets": "Keine Tickets gefunden",
+    "ticket_id": "Ticket ID",
+    "user": "Benutzer",
+    "status": "Status",
+    "created": "Erstellt",
+    "view": "Ansehen",
+    "transcript": "Transkript",
+    "server_language": "Server-Sprache"
+  }
+}
