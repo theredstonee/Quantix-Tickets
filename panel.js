@@ -16,7 +16,7 @@ const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('dis
 const { getTranslations, t, getLanguageName } = require('./translations');
 const cookieParser = require('cookie-parser');
 
-const VERSION = 'Beta 0.2.0'; // Bot Version
+const VERSION = 'Beta 0.3.0'; // Bot Version
 
 /* ====== Config laden (Multi-Server) ====== */
 const CONFIG_DIR = path.join(__dirname, 'configs');

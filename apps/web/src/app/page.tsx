@@ -117,7 +117,7 @@ export default function Home() {
           fontSize: '0.9rem',
           marginTop: '0.5rem'
         }}>
-          Beta 0.2.0
+          Beta 0.3.0
         </div>
 
         {session ? (
