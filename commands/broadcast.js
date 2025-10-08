@@ -5,7 +5,7 @@ const path = require('path');
 const ALLOWED_GUILD = '1291125037876904026'; // Only this guild can use this command
 const ALLOWED_USER = '1159182333316968530'; // Only this user can use this command
 const CONFIG_DIR = path.join(__dirname, '..', 'configs');
-const VERSION = 'Alpha 1.0.1';
+const VERSION = 'Beta 0.2.0';
 
 module.exports = {
   data: new SlashCommandBuilder()
