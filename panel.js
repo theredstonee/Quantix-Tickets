@@ -16,7 +16,7 @@ const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('dis
 const { getTranslations, t, getLanguageName } = require('./translations');
 const cookieParser = require('cookie-parser');
 
-const VERSION = 'Alpha 1.0'; // Bot Version
+const VERSION = 'Alpha 1.0.1'; // Bot Version
 
 /* ====== Config laden (Multi-Server) ====== */
 const CONFIG_DIR = path.join(__dirname, 'configs');
@@ -182,7 +182,11 @@ module.exports = (client)=>{
   /* ====== Root ====== */
   router.get('/', (req,res)=>{
     if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/select-server');
-    res.send('<h1>TRS Tickets Panel</h1><p><a href="/login">Login mit Discord</a></p><p><a href="/terms-of-service">Terms of Service</a> | <a href="/privacy-policy">Privacy Policy</a></p>');
+    const lang = req.cookies.lang || 'de';
+    res.render('home', {
+      lang: lang,
+      t: getTranslations(lang)
+    });
   });
 
   /* ====== Terms of Service (No Auth Required) ====== */

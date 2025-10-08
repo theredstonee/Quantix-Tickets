@@ -8,8 +8,8 @@ module.exports = {
     .setDMPermission(false),
   async execute(interaction) {
     const PANEL_URL = process.env.PUBLIC_BASE_URL
-      ? `${process.env.PUBLIC_BASE_URL.replace(/\/$/, '')}/panel`
-      : 'https://trstickets.theredstonee.de/panel';
+      ? process.env.PUBLIC_BASE_URL.replace(/\/$/, '')
+      : 'https://trstickets.theredstonee.de';
 
     const button = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
