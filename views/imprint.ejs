@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="<%= lang %>" data-theme="light" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+<head>
+  <meta charset="utf-8">
+  <title><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %> - TRS Tickets</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <style>
+    :root {
+      --bg-color: #fff;
+      --text-color: #1a1a1a;
+      --border-color: #e5e8ec;
+      --accent-color: #00b894;
+      --accent-hover: #00a077;
+      --card-bg: #f8f9fa;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --border-color: #1a3a2a;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --card-bg: #0f1510;
+    }
+
+    [data-theme="dark"] body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] .info-box {
+      background: var(--card-bg);
+      border-color: var(--accent-color);
+    }
+
+    [data-theme="dark"] a {
+      color: var(--accent-color);
+    }
+
+    [data-theme="dark"] button:not(.theme-toggle) {
+      background-color: var(--accent-color);
+      color: #000;
+    }
+
+    body { max-width: 900px; line-height: 1.8; }
+    h1 { margin-bottom: 0.5rem; }
+    h2 { margin-top: 2.5rem; margin-bottom: 1rem; color: var(--accent-color); }
+    h3 { margin-top: 1.5rem; color: var(--accent-color); opacity: 0.8; font-size: 1.1rem; }
+    .info-box {
+      background: var(--card-bg);
+      border-left: 4px solid var(--accent-color);
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 4px;
+    }
+    .info-box p { margin: 0.5rem 0; }
+    ul { margin-left: 1.5rem; }
+    ul li { margin-bottom: 0.8rem; }
+    .back-btn {
+      margin-top: 3rem;
+      display: inline-block;
+      margin-right: 1rem;
+    }
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      opacity: 0.7;
+      text-align: center;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: var(--accent-color);
+      color: #000;
+      border: 0;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: var(--accent-hover);
+    }
+
+    [data-theme="dark"] .theme-toggle {
+      background: var(--accent-color);
+      box-shadow: 0 2px 12px rgba(0,255,136,0.4);
+    }
+
+    strong { color: var(--accent-color); }
+    code { background: var(--card-bg); padding: 0.2rem 0.4rem; border-radius: 3px; }
+  </style>
+</head>
+<body class="container">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+    <span id="themeIcon">🌙</span>
+  </button>
+
+  <h1>📄 <%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %></h1>
+
+  <p><%= lang === 'de' ? 'Angaben gemäß § 5 TMG' : lang === 'en' ? 'Information in accordance with § 5 TMG (German Telemedia Act)' : 'מידע בהתאם ל-§ 5 TMG' %></p>
+
+  <!-- Betreiber / Operator -->
+  <h2><%= lang === 'de' ? '1. Diensteanbieter' : lang === 'en' ? '1. Service Provider' : '1. ספק השירות' %></h2>
+  <div class="info-box">
+    <p><strong><%= lang === 'de' ? 'Betreiber' : lang === 'en' ? 'Operator' : 'מפעיל' %>:</strong> Ohev Tamerin</p>
+    <p><strong><%= lang === 'de' ? 'Adresse' : lang === 'en' ? 'Address' : 'כתובת' %>:</strong> Karl-Haider-Straße 16d<br>83727 Deutschland</p>
+  </div>
+
+  <!-- Kontakt / Contact -->
+  <h2><%= lang === 'de' ? '2. Kontakt' : lang === 'en' ? '2. Contact' : '2. יצירת קשר' %></h2>
+  <div class="info-box">
+    <p><strong>E-Mail:</strong> <a href="mailto:info@theredstonee.de">info@theredstonee.de</a></p>
+    <p><strong><%= lang === 'de' ? 'Website' : lang === 'en' ? 'Website' : 'אתר אינטרנט' %>:</strong> <a href="https://trstickets.theredstonee.de">trstickets.theredstonee.de</a></p>
+  </div>
+
+  <!-- Verantwortlich für den Inhalt / Responsible for content -->
+  <h2><%= lang === 'de' ? '3. Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV' : lang === 'en' ? '3. Responsible for Content' : '3. אחראי לתוכן' %></h2>
+  <div class="info-box">
+    <p>Ohev Tamerin</p>
+    <p>Karl-Haider-Straße 16d</p>
+    <p>83727 Deutschland</p>
+  </div>
+
+  <!-- Haftungsausschluss / Disclaimer -->
+  <h2><%= lang === 'de' ? '4. Haftungsausschluss' : lang === 'en' ? '4. Disclaimer' : '4. כתב ויתור' %></h2>
+
+  <h3><%= lang === 'de' ? '4.1 Haftung für Inhalte' : lang === 'en' ? '4.1 Liability for Content' : '4.1 אחריות לתוכן' %></h3>
+  <p><%= lang === 'de' ? 'Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.' : lang === 'en' ? 'The contents of our pages have been created with the greatest care. However, we cannot guarantee the accuracy, completeness and timeliness of the content. As a service provider, we are responsible for our own content on these pages in accordance with § 7 para.1 TMG under general law. However, according to §§ 8 to 10 TMG, we as a service provider are not obligated to monitor transmitted or stored third-party information or to investigate circumstances that indicate illegal activity.' : 'התוכן של הדפים שלנו נוצר בקפידה רבה. עם זאת, איננו יכולים להבטיח את הדיוק, השלמות והעדכניות של התוכן.' %></p>
+
+  <h3><%= lang === 'de' ? '4.2 Haftung für Links' : lang === 'en' ? '4.2 Liability for Links' : '4.2 אחריות לקישורים' %></h3>
+  <p><%= lang === 'de' ? 'Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.' : lang === 'en' ? 'Our offer contains links to external third-party websites over whose content we have no influence. Therefore, we cannot assume any liability for this external content. The respective provider or operator of the pages is always responsible for the content of the linked pages.' : 'ההצעה שלנו מכילה קישורים לאתרי אינטרנט חיצוניים של צד שלישי שאין לנו השפעה על תוכנם.' %></p>
+
+  <!-- Datenschutz / Privacy -->
+  <h2><%= lang === 'de' ? '5. Datenschutz' : lang === 'en' ? '5. Privacy' : '5. פרטיות' %></h2>
+  <div class="info-box">
+    <p><%= lang === 'de' ? 'Die Nutzung unseres Bots kann mit der Verarbeitung personenbezogener Daten verbunden sein.' : lang === 'en' ? 'The use of our bot may involve the processing of personal data.' : 'השימוש בבוט שלנו עשוי לכלול עיבוד נתונים אישיים.' %></p>
+    <p><strong><%= lang === 'de' ? 'Datenspeicherung' : lang === 'en' ? 'Data Retention' : 'שמירת נתונים' %>:</strong><br>
+    <%= lang === 'de' ? 'Alle Bot-Daten werden <strong>2 Monate nach dem Entfernen des Bots vom Server</strong> automatisch gelöscht.' : lang === 'en' ? 'All bot data is automatically deleted <strong>2 months after removing the bot from the server</strong>.' : 'כל נתוני הבוט נמחקים אוטומטית <strong>חודשיים לאחר הסרת הבוט מהשרת</strong>.' %></p>
+    <p><%= lang === 'de' ? 'Weitere Informationen finden Sie in unserer' : lang === 'en' ? 'For more information, see our' : 'למידע נוסף, ראה את' %> <a href="/privacy-policy"><%= lang === 'de' ? 'Datenschutzerklärung' : lang === 'en' ? 'Privacy Policy' : 'מדיניות הפרטיות' %></a>.</p>
+  </div>
+
+  <!-- Discord -->
+  <h2><%= lang === 'de' ? '6. Discord Bot' : lang === 'en' ? '6. Discord Bot' : '6. בוט Discord' %></h2>
+  <p><%= lang === 'de' ? 'Dieser Bot nutzt die Discord API und unterliegt den' : lang === 'en' ? 'This bot uses the Discord API and is subject to' : 'הבוט הזה משתמש ב-API של Discord וכפוף ל' %> <a href="https://discord.com/terms" target="_blank" rel="noopener">Discord Terms of Service</a> <%= lang === 'de' ? 'und der' : lang === 'en' ? 'and' : 'ו' %> <a href="https://discord.com/privacy" target="_blank" rel="noopener">Discord Privacy Policy</a>.</p>
+
+  <!-- Urheberrecht / Copyright -->
+  <h2><%= lang === 'de' ? '7. Urheberrecht' : lang === 'en' ? '7. Copyright' : '7. זכויות יוצרים' %></h2>
+  <p><%= lang === 'de' ? 'Die durch den Bot und die Webseite erstellten Inhalte unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des Betreibers.' : lang === 'en' ? 'The content created by the bot and website is subject to German copyright law. Duplication, editing, distribution and any type of exploitation outside the limits of copyright law require the written consent of the operator.' : 'התוכן שנוצר על ידי הבוט והאתר כפוף לחוק זכויות היוצרים הגרמני.' %></p>
+
+  <a href="/" role="button" class="back-btn secondary">← <%= lang === 'de' ? 'Zurück zur Startseite' : lang === 'en' ? 'Back to Home' : 'חזרה לדף הבית' %></a>
+
+  <footer>
+    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <a href="/terms-of-service"><%= lang === 'de' ? 'Nutzungsbedingungen' : lang === 'en' ? 'Terms of Service' : 'תנאי שימוש' %></a> | <a href="/privacy-policy"><%= lang === 'de' ? 'Datenschutzerklärung' : lang === 'en' ? 'Privacy Policy' : 'מדיניות פרטיות' %></a></p>
+  </footer>
+
+  <script>
+    // Cookie helper functions
+    function setCookie(name, value, days = 365) {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+    }
+
+    function getCookie(name) {
+      return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, '');
+    }
+
+    // Theme toggle with cookie sync
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      setCookie('theme', newTheme);
+      document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+
+    // Load saved theme from cookie or localStorage
+    const cookieTheme = getCookie('theme');
+    const localTheme = localStorage.getItem('theme');
+    const savedTheme = cookieTheme || localTheme || 'light';
+
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      // Sync to both storage types
+      localStorage.setItem('theme', savedTheme);
+      setCookie('theme', savedTheme);
+    }
+  </script>
+</body>
+</html>

@@ -381,6 +381,9 @@
     </div>
 
     <div class="legal-links">
+      <a href="/imprint">
+        <%= lang === 'de' ? '📄 Impressum' : lang === 'en' ? '📄 Legal Notice' : '📄 מידע משפטי' %>
+      </a>
       <a href="/terms-of-service">
         <%= lang === 'de' ? '📜 Nutzungsbedingungen' : lang === 'en' ? '📜 Terms of Service' : '📜 תנאי שימוש' %>
       </a>
@@ -391,7 +394,7 @@
   </div>
 
   <footer>
-    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | Operated by Theredstonee | <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
+    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <%= lang === 'de' ? 'Betrieben von' : lang === 'en' ? 'Operated by' : 'מופעל על ידי' %> Ohev Tamerin | <a href="/imprint"><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %></a></p>
   </footer>
 
   <script>

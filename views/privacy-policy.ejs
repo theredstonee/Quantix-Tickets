@@ -126,8 +126,8 @@
   <p><%= t.privacy?.intro || 'This privacy policy explains how TRS Ticket Bot collects, uses and protects your personal data.' %></p>
 
   <div class="info-box">
-    <p><strong><%= t.tos.operator %>:</strong> Theredstonee</p>
-    <p><strong><%= t.tos.contact %>:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
+    <p><strong><%= t.tos.operator %>:</strong> Ohev Tamerin</p>
+    <p><strong><%= t.tos.contact %>:</strong> <a href="mailto:info@theredstonee.de">info@theredstonee.de</a></p>
     <p><strong><%= t.tos.last_updated %>:</strong> <%= new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'he' ? 'he-IL' : 'en-US') %></p>
   </div>
 
@@ -135,8 +135,9 @@
   <h2><%= t.privacy?.section_1_title || '1. Data Controller' %></h2>
   <p><%= t.privacy?.section_1_text || 'Responsible for data processing:' %></p>
   <div class="info-box">
-    <p><strong>Name:</strong> Theredstonee</p>
-    <p><strong>Email:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
+    <p><strong>Name:</strong> Ohev Tamerin</p>
+    <p><strong>Address:</strong> Karl-Haider-Straße 16d, 83727 Deutschland</p>
+    <p><strong>Email:</strong> <a href="mailto:info@theredstonee.de">info@theredstonee.de</a></p>
     <p><strong>Country:</strong> Germany (GDPR applicable)</p>
   </div>
 
@@ -188,10 +189,15 @@
 
   <!-- Section 5: Data Retention -->
   <h2><%= t.privacy?.section_5_title || '5. Data Retention' %></h2>
+  <div class="info-box">
+    <p><strong><%= lang === 'de' ? 'Wichtig' : lang === 'en' ? 'Important' : 'חשוב' %>:</strong></p>
+    <p><%= lang === 'de' ? 'Alle Bot-Daten (Tickets, Nachrichten, Formular-Antworten, Konfiguration) werden <strong>automatisch 2 Monate nach dem Entfernen des Bots vom Server</strong> vollständig gelöscht.' : lang === 'en' ? 'All bot data (tickets, messages, form responses, configuration) will be <strong>automatically deleted 2 months after removing the bot from the server</strong>.' : 'כל נתוני הבוט (כרטיסים, הודעות, תגובות לטופס, תצורה) <strong>יימחקו אוטומטית חודשיים לאחר הסרת הבוט מהשרת</strong>.' %></p>
+  </div>
   <ul>
-    <li><%- t.privacy?.section_5_1 || '**Bot active:** Data stored permanently' %></li>
-    <li><%- t.privacy?.section_5_2 || '**Bot removed:** Automatic deletion after **2 months** (configurable)' %></li>
-    <li><%- t.privacy?.section_5_3 || '**On request:** Immediate deletion possible (see rights)' %></li>
+    <li><%- t.privacy?.section_5_1 || '**Bot active:** Data stored during active use' %></li>
+    <li><%- t.privacy?.section_5_2 || '**Bot removed:** Automatic deletion after **exactly 2 months**' %></li>
+    <li><%- t.privacy?.section_5_3 || '**On request:** Immediate deletion possible (contact info@theredstonee.de)' %></li>
+    <li><strong><%= lang === 'de' ? 'Keine unbegrenzte Speicherung' : lang === 'en' ? 'No unlimited storage' : 'אין אחסון בלתי מוגבל' %>:</strong> <%= lang === 'de' ? 'Deine Daten werden nicht ewig gespeichert.' : lang === 'en' ? 'Your data will not be stored forever.' : 'הנתונים שלך לא יאוחסנו לנצח.' %></li>
   </ul>
 
   <!-- Section 6: GDPR Rights -->
@@ -218,8 +224,8 @@
   <!-- Section 8: Opt-Out -->
   <h2><%= t.privacy?.section_8_title || '8. Opt-Out Options' %></h2>
   <ul>
-    <li><%- t.privacy?.section_8_1 || '**Remove bot** - Remove bot from server → Data deleted after 2 months' %></li>
-    <li><%- t.privacy?.section_8_2?.replace('{contact}', '<a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a>') || '**Immediate deletion** - Request via email' %></li>
+    <li><%- t.privacy?.section_8_1 || '**Remove bot** - Remove bot from server → Data deleted automatically after exactly 2 months' %></li>
+    <li><%- '**' + (lang === 'de' ? 'Sofortige Löschung' : lang === 'en' ? 'Immediate deletion' : 'מחיקה מיידית') + '** - ' + (lang === 'de' ? 'Anfrage per E-Mail an' : lang === 'en' ? 'Request via email to' : 'בקשה דרך אימייל ל') + ' <a href="mailto:info@theredstonee.de">info@theredstonee.de</a>' %></li>
     <li><%= t.privacy?.section_8_3 || '**Delete cookies** - In your browser settings' %></li>
   </ul>
 
@@ -235,8 +241,9 @@
   <h2><%= t.privacy?.section_10_title || '10. Contact & Privacy Requests' %></h2>
   <p><%= t.privacy?.section_10_text || 'For privacy inquiries, contact us:' %></p>
   <div class="info-box">
-    <p><strong>Email:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
-    <p><strong>Operator:</strong> Theredstonee</p>
+    <p><strong>Email:</strong> <a href="mailto:info@theredstonee.de">info@theredstonee.de</a></p>
+    <p><strong>Operator:</strong> Ohev Tamerin</p>
+    <p><strong>Address:</strong> Karl-Haider-Straße 16d, 83727 Deutschland</p>
     <p><strong>Response time:</strong> Within 30 days (Art. 12 GDPR)</p>
   </div>
 
@@ -244,7 +251,7 @@
   <a href="/" role="button" class="back-btn secondary">← <%= t.tos.back_to_panel %></a>
 
   <footer>
-    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <a href="/terms-of-service">Terms of Service</a> | <a href="/privacy-policy">Privacy Policy</a></p>
+    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <%= lang === 'de' ? 'Betrieben von' : lang === 'en' ? 'Operated by' : 'מופעל על ידי' %> Ohev Tamerin | <a href="/imprint"><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %></a> | <a href="/terms-of-service"><%= lang === 'de' ? 'AGB' : lang === 'en' ? 'Terms' : 'תנאים' %></a></p>
   </footer>
 
   <script>

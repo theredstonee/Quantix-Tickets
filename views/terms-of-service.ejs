@@ -110,8 +110,8 @@
   <h1>📜 <%= t.tos.title %></h1>
 
   <div class="info-box">
-    <p><strong><%= t.tos.operator %>:</strong> Theredstonee</p>
-    <p><strong><%= t.tos.contact %>:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
+    <p><strong><%= t.tos.operator %>:</strong> Ohev Tamerin</p>
+    <p><strong><%= t.tos.contact %>:</strong> <a href="mailto:info@theredstonee.de">info@theredstonee.de</a></p>
     <p><strong><%= t.tos.last_updated %>:</strong> <%= new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'he' ? 'he-IL' : 'en-US') %></p>
   </div>
 
@@ -167,7 +167,7 @@
     <li><%- t.tos.section_5_2 %></li>
     <li><%- t.tos.section_5_3 %></li>
     <li><%- t.tos.section_5_4 %></li>
-    <li><%- t.tos.section_5_5.replace('{contact}', '<a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a>') %></li>
+    <li><%- t.tos.section_5_5.replace('{contact}', '<a href="mailto:info@theredstonee.de">info@theredstonee.de</a>') %></li>
   </ul>
 
   <!-- Section 6: Security -->
@@ -186,14 +186,15 @@
   <h2><%= t.tos.section_8_title %></h2>
   <p><%= t.tos.section_8_text %></p>
   <div class="info-box">
-    <p><strong>Email:</strong> <a href="mailto:trs@theredstonee.de">trs@theredstonee.de</a></p>
-    <p><strong><%= t.tos.operator %>:</strong> Theredstonee</p>
+    <p><strong>Email:</strong> <a href="mailto:info@theredstonee.de">info@theredstonee.de</a></p>
+    <p><strong><%= t.tos.operator %>:</strong> Ohev Tamerin</p>
+    <p><strong>Address:</strong> Karl-Haider-Straße 16d, 83727 Deutschland</p>
   </div>
 
   <a href="/" role="button" class="back-btn secondary">← <%= t.tos.back_to_panel %></a>
 
   <footer>
-    <p>TRS Tickets ©️ <%= new Date().getFullYear() %></p>
+    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <%= lang === 'de' ? 'Betrieben von' : lang === 'en' ? 'Operated by' : 'מופעל על ידי' %> Ohev Tamerin | <a href="/imprint"><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %></a> | <a href="/privacy-policy"><%= lang === 'de' ? 'Datenschutz' : lang === 'en' ? 'Privacy' : 'פרטיות' %></a></p>
   </footer>
 
   <script>

@@ -209,6 +209,15 @@ module.exports = (client)=>{
     });
   });
 
+  /* ====== Imprint / Impressum (No Auth Required) ====== */
+  router.get('/imprint', (req, res) => {
+    const lang = req.cookies.lang || 'de';
+    res.render('imprint', {
+      t: getTranslations(lang),
+      lang: lang
+    });
+  });
+
   /* ====== Server Auswahl ====== */
   router.get('/select-server', async (req,res)=>{
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
