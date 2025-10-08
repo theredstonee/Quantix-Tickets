@@ -589,7 +589,10 @@ client.on(Events.InteractionCreate, async i => {
           }
 
           await i.channel.permissionOverwrites.set(permissions);
-          await i.channel.send(`🔄 <@${i.user.id}> hat das Ticket unclaimed`);
+
+          // Team-Rolle pingen bei Unclaim
+          const mentionTeam = TEAM_ROLE ? `<@&${TEAM_ROLE}>` : '';
+          await i.channel.send(`🔄 <@${i.user.id}> ${t(guildId, 'messages.ticket_unclaimed', { user: `<@${i.user.id}>` })} ${mentionTeam}`);
         } catch(err) {
           console.error('Fehler beim Zurücksetzen der Berechtigungen:', err);
         }
@@ -682,7 +685,10 @@ client.on(Events.InteractionCreate, async i => {
             }
 
             await i.channel.permissionOverwrites.set(permissions);
-            await i.channel.send(`✅ <@${i.user.id}> hat dieses Ticket geclaimed`);
+
+            // Team-Rolle pingen bei Claim
+            const mentionTeam = TEAM_ROLE ? `<@&${TEAM_ROLE}>` : '';
+            await i.channel.send(`✅ <@${i.user.id}> ${t(guildId, 'messages.ticket_claimed', { user: `<@${i.user.id}>` })} ${mentionTeam}`);
           } catch(err) {
             console.error('Fehler beim Setzen der Berechtigungen:', err);
           }
@@ -737,7 +743,12 @@ client.on(Events.InteractionCreate, async i => {
         // Berechtigungen setzen
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
         await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`});
-        await i.channel.send(`➕ <@${id}> wurde zum Ticket hinzugefügt`);
+
+        // Team-Rolle pingen bei User hinzufügen
+        const TEAM_ROLE_ADD = getTeamRole(guildId);
+        const mentionTeam = TEAM_ROLE_ADD ? `<@&${TEAM_ROLE_ADD}>` : '';
+        await i.channel.send(`➕ <@${id}> ${t(guildId, 'messages.user_added_success', { user: `<@${id}>` }).replace('✅', '')} ${mentionTeam}`);
+
         logEvent(i.guild, t(guildId, 'logs.user_added', { user: `<@${id}>`, id: ticket.id }));
       } catch(err) {
         console.error('Fehler beim Hinzufügen:', err);
@@ -806,6 +817,13 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     embed.addFields(fields);
   }
   await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
+
+  // Team-Rolle pingen
+  const TEAM_ROLE = getTeamRole(guildId);
+  if (TEAM_ROLE) {
+    await ch.send({ content: `<@&${TEAM_ROLE}> ${t(guildId, 'ticket.created')}` });
+  }
+
   // Nutzer informieren
   if(interaction.isModalSubmit()){
     await interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
@@ -850,6 +868,13 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
   const state = PRIORITY_STATES[ticket.priority||0];
   if(msg){ const e = EmbedBuilder.from(msg.embeds[0]); e.setColor(state.embedColor); await msg.edit({embeds:[e]}); }
   saveTickets(guildId, log);
+
+  // Team-Rolle pingen bei Priority-Änderung
+  const TEAM_ROLE = getTeamRole(guildId);
+  if (TEAM_ROLE) {
+    await interaction.channel.send({ content: `<@&${TEAM_ROLE}> ${t(guildId, 'messages.priority_changed', { priority: state.label })}` });
+  }
+
   logEvent(interaction.guild, t(guildId, 'logs.priority_changed', { id: ticket.id, direction: dir, priority: state.label }));
   await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
 }
