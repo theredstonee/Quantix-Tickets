@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}TRS Tickets - Home{% endblock %}
+
+{% block content %}
+<div class="hero" style="text-align: center; padding: 5rem 3rem; background: linear-gradient(135deg, #00b894 0%, #00a077 100%); color: white; border-radius: 0 0 1rem 1rem; margin-bottom: 4rem;">
+    <h1><i class="fas fa-ticket-alt"></i> TRS Tickets</h1>
+    <p style="font-size: 1.3rem;">Professionelles Ticket-System für Discord</p>
+    <div style="margin-top: 2rem;">
+        {% if isAuthenticated and user %}
+            <p>Angemeldet als <strong>{{ user.username }}</strong></p>
+            <a href="/select-server" role="button">Zum Admin Panel</a>
+            <a href="/logout" role="button" class="secondary">Abmelden</a>
+        {% else %}
+            <a href="/login" role="button">Mit Discord anmelden</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="features" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+    <div class="feature-card" style="background: var(--card-bg); padding: 2rem; border-radius: 0.75rem; border-left: 5px solid var(--accent-color);">
+        <h3><i class="fas fa-language"></i> Multi-Sprache</h3>
+        <p>Unterstützt Deutsch, Englisch und Hebräisch.</p>
+    </div>
+    <div class="feature-card" style="background: var(--card-bg); padding: 2rem; border-radius: 0.75rem; border-left: 5px solid var(--accent-color);">
+        <h3><i class="fas fa-tools"></i> Web-Verwaltung</h3>
+        <p>Umfassendes Admin-Panel zur Konfiguration.</p>
+    </div>
+    <div class="feature-card" style="background: var(--card-bg); padding: 2rem; border-radius: 0.75rem; border-left: 5px solid var(--accent-color);">
+        <h3><i class="fas fa-tasks"></i> Ticket-Verwaltung</h3>
+        <p>Prioritäten, Claiming, Transkripte und Historie.</p>
+    </div>
+</div>
+
+<footer style="text-align: center; margin-top: 4rem; padding: 2rem; opacity: 0.7;">
+    <p>TRS Tickets ©️ 2025 | <a href="/imprint">Impressum</a> | <a href="/terms-of-service">AGB</a> | <a href="/privacy-policy">Datenschutz</a></p>
+</footer>
+{% endblock %}

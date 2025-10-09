@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket Historie - TRS Tickets{% endblock %}
+
+{% block content %}
+<main style="padding: 2rem 0;">
+    <h1><i class="fas fa-history"></i> Ticket Historie</h1>
+    <p><a href="/panel">← Zurück zum Panel</a></p>
+
+    <div id="ticketsContainer" style="margin-top: 2rem;">
+        <p>Lade Tickets...</p>
+    </div>
+
+    <footer style="margin-top: 3rem; text-align: center; opacity: 0.6;">
+        <p>TRS Tickets ©️ • Version {{ version }}</p>
+    </footer>
+</main>
+
+<script>
+    const tickets = {{ tickets|safe }};
+    const memberMap = {{ memberMap|safe }};
+
+    function renderTickets() {
+        const container = document.getElementById('ticketsContainer');
+
+        if (tickets.length === 0) {
+            container.innerHTML = '<p style="text-align: center; opacity: 0.6;">Keine Tickets vorhanden</p>';
+            return;
+        }
+
+        let html = '<table><thead><tr><th>ID</th><th>Ersteller</th><th>Topic</th><th>Status</th><th>Priorität</th><th>Datum</th></tr></thead><tbody>';
+
+        tickets.reverse().forEach(ticket => {
+            const user = memberMap[ticket.userId] || { display: ticket.userId };
+            const date = new Date(ticket.timestamp).toLocaleString('de-DE');
+            const priority = ['🟢', '🟠', '🔴'][ticket.priority || 0];
+
+            html += `<tr>
+                <td>${ticket.id}</td>
+                <td>${user.display}</td>
+                <td>${ticket.topic}</td>
+                <td>${ticket.status}</td>
+                <td>${priority}</td>
+                <td style="font-size: 0.85rem;">${date}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    renderTickets();
+</script>
+{% endblock %}

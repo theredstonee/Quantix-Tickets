@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - TRS Tickets{% endblock %}
+
+{% block content %}
+<main style="padding: 2rem 0;">
+    <h1><i class="fas fa-ticket-alt"></i> Admin Panel</h1>
+    <p style="opacity: 0.7;">Server: <strong>{{ guildName }}</strong> ({{ guildId }})</p>
+
+    {% if msg == 'saved' %}
+        <div role="alert" style="background: #d1f2eb; border: 1px solid #2bb780; padding: 1rem; border-radius: 6px; margin: 1rem 0;">✅ Konfiguration gespeichert!</div>
+    {% elif msg == 'sent' %}
+        <div role="alert" style="background: #d1f2eb; border: 1px solid #2bb780; padding: 1rem; border-radius: 6px; margin: 1rem 0;">✅ Panel-Nachricht gesendet!</div>
+    {% elif msg == 'edited' %}
+        <div role="alert" style="background: #d1f2eb; border: 1px solid #2bb780; padding: 1rem; border-radius: 6px; margin: 1rem 0;">✅ Panel-Nachricht bearbeitet!</div>
+    {% elif msg == 'error' %}
+        <div role="alert" style="background: #f8d7da; border: 1px solid #c33; padding: 1rem; border-radius: 6px; margin: 1rem 0;">❌ Fehler beim Speichern!</div>
+    {% elif msg == 'nopanel' %}
+        <div role="alert" style="background: #f8d7da; border: 1px solid #c33; padding: 1rem; border-radius: 6px; margin: 1rem 0;">❌ Kein Panel konfiguriert!</div>
+    {% endif %}
+
+    <form method="POST" autocomplete="off">
+        <fieldset>
+            <legend><i class="fas fa-server"></i> Server Einstellungen</legend>
+
+            <label>Ticket Kategorie
+                <select name="ticketCategoryId">
+                    <option value="">-- Kategorie wählen --</option>
+                    {% for ch in channels %}
+                        {% if ch.type == 4 %}
+                            <option value="{{ ch.id }}" {% if cfg.ticketCategoryId == ch.id %}selected{% endif %}>📁 {{ ch.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label>Log Channel
+                <select name="logChannelId">
+                    <option value="">-- Channel wählen --</option>
+                    {% for ch in channels %}
+                        {% if ch.type == 0 %}
+                            <option value="{{ ch.id }}" {% if cfg.logChannelId == ch.id %}selected{% endif %}># {{ ch.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label>Transcript Channel
+                <select name="transcriptChannelId">
+                    <option value="">-- Channel wählen --</option>
+                    {% for ch in channels %}
+                        {% if ch.type == 0 %}
+                            <option value="{{ ch.id }}" {% if cfg.transcriptChannelId == ch.id %}selected{% endif %}># {{ ch.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label>Team Rolle
+                <select name="teamRoleId">
+                    <option value="">-- Rolle wählen --</option>
+                    {% for role in roles %}
+                        <option value="{{ role.id }}" {% if cfg.teamRoleId == role.id %}selected{% endif %}>@ {{ role.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Topics (JSON)</legend>
+            <label>Topics JSON
+                <textarea name="topicsJson" rows="8">{{ cfg.topics|tojson(indent=2) if cfg.topics else '[]' }}</textarea>
+            </label>
+            <p style="font-size: 0.85rem; opacity: 0.7;">Format: [{"label": "Bug", "value": "bug", "emoji": "🐞"}]</p>
+        </fieldset>
+
+        <fieldset>
+            <legend>Formular Felder (JSON)</legend>
+            <label>Form Fields JSON
+                <textarea name="formFieldsJson" rows="8">{{ cfg.formFields|tojson(indent=2) if cfg.formFields else '[]' }}</textarea>
+            </label>
+            <p style="font-size: 0.85rem; opacity: 0.7;">Format: [{"label": "Name", "id": "name", "style": "short", "required": true}]</p>
+        </fieldset>
+
+        <fieldset>
+            <legend>Ticket Embed</legend>
+            <label>Titel <input name="embedTitle" value="{{ cfg.ticketEmbed.title if cfg.ticketEmbed else '' }}"></label>
+            <label>Beschreibung <textarea name="embedDescription" rows="4">{{ cfg.ticketEmbed.description if cfg.ticketEmbed else '' }}</textarea></label>
+            <label>Farbe <input name="embedColor" value="{{ cfg.ticketEmbed.color if cfg.ticketEmbed else '#2b90d9' }}"></label>
+            <label>Footer <input name="embedFooter" value="{{ cfg.ticketEmbed.footer if cfg.ticketEmbed else '' }}"></label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Panel Embed</legend>
+            <label>Titel <input name="panelTitle" value="{{ cfg.panelEmbed.title if cfg.panelEmbed else '' }}"></label>
+            <label>Beschreibung <textarea name="panelDescription" rows="4">{{ cfg.panelEmbed.description if cfg.panelEmbed else '' }}</textarea></label>
+            <label>Farbe <input name="panelColor" value="{{ cfg.panelEmbed.color if cfg.panelEmbed else '#5865F2' }}"></label>
+            <label>Footer <input name="panelFooter" value="{{ cfg.panelEmbed.footer if cfg.panelEmbed else '' }}"></label>
+        </fieldset>
+
+        <button type="submit">💾 Konfiguration speichern</button>
+    </form>
+
+    <hr>
+
+    <h2>Panel Aktionen</h2>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <form action="/panel/send" method="POST" style="display: inline-flex; gap: 0.5rem; align-items: center;">
+            <select name="channelId" required style="min-width: 250px;">
+                <option value="">-- Channel wählen --</option>
+                {% for ch in channels %}
+                    {% if ch.type == 0 %}
+                        <option value="{{ ch.id }}" {% if cfg.panelChannelId == ch.id %}selected{% endif %}># {{ ch.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <button type="submit"><i class="fas fa-paper-plane"></i> Panel senden</button>
+        </form>
+
+        <form action="/panel/edit" method="POST" style="display: inline;">
+            <button type="submit"><i class="fas fa-edit"></i> Panel bearbeiten</button>
+        </form>
+
+        <a href="/tickets" role="button" class="secondary"><i class="fas fa-history"></i> Ticket Historie</a>
+    </div>
+
+    <footer style="margin-top: 3rem; text-align: center; opacity: 0.6;">
+        <p>TRS Tickets ©️ • Version {{ version }}</p>
+    </footer>
+</main>
+{% endblock %}
