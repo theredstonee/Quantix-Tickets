@@ -6,8 +6,10 @@
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "php -S localhost:3000 -t backend",
     "dev:bot": "cd bot && python main.py",
-    "build": "cd frontend && npm run build",
-    "start": "npm run build && npm run dev:backend"
+    "build": "cd frontend && DISPLAY=:0 npm run build",
+    "build:win": "cd frontend && npm run build",
+    "start": "npm run build && npm run dev:backend",
+    "start:win": "npm run build:win && npm run dev:backend"
   },
   "keywords": ["discord", "ticket", "bot", "php", "vite", "vue"],
   "author": "Ohev Tamerin",
