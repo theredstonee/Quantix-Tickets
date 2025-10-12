@@ -8,7 +8,7 @@
         "de": [
           "🎨 Vollständig responsive Website für Mobile, Tablet und Desktop",
           "📱 Full-Width Design auf allen Seiten (keine Breitenbeschränkung mehr)",
-          "🌍 Korrekte Darstellung der Flaggen-Emojis (🇩🇪🇬🇧🇮🇱)",
+          "🌍 Flaggen als SVG-Dateien hinterlegt für konsistente Darstellung",
           "🖥️ Optimierte Skalierung für alle Bildschirmgrößen",
           "✨ Einheitliches Design auf allen Unterseiten",
           "🌙 Verbesserter Footer-Abstand im Dark Mode",
@@ -18,7 +18,7 @@
         "en": [
           "🎨 Fully responsive website for mobile, tablet and desktop",
           "📱 Full-width design on all pages (no width restrictions)",
-          "🌍 Correct display of flag emojis (🇩🇪🇬🇧🇮🇱)",
+          "🌍 Flags stored as SVG files for consistent display",
           "🖥️ Optimized scaling for all screen sizes",
           "✨ Consistent design across all subpages",
           "🌙 Improved footer spacing in Dark Mode",
@@ -28,7 +28,7 @@
         "he": [
           "🎨 אתר רספונסיבי לחלוטין למובייל, טאבלט ושולחן עבודה",
           "📱 עיצוב רוחב מלא בכל הדפים (ללא הגבלת רוחב)",
-          "🌍 תצוגה נכונה של אימוג'י דגלים (🇩🇪🇬🇧🇮🇱)",
+          "🌍 דגלים נשמרים כקבצי SVG לתצוגה עקבית",
           "🖥️ התאמת גודל אופטימלית לכל גדלי מסך",
           "✨ עיצוב אחיד בכל תתי הדפים",
           "🌙 מרווח תחתון משופר במצב כהה",

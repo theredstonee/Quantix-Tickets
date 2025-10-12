@@ -191,7 +191,8 @@
       }
 
       fieldset {
-        min-width: 320px !important;
+        flex: 1 1 600px !important;
+        min-width: 500px !important;
       }
     }
 
@@ -202,7 +203,7 @@
     th,td { padding:.6rem .8rem; }
     table input, table select { width:100%; }
     .grid { display:flex; flex-wrap:wrap; gap:2rem; }
-    fieldset { flex:1 1 400px; min-width:370px; padding:2rem; }
+    fieldset { flex:1 1 800px; min-width:740px; padding:2rem; }
     textarea { width:100%; font-family: monospace; resize:vertical; }
     .bad { border:1px solid var(--error-border); padding:1rem 1.5rem; border-radius:6px; background: var(--error-bg); margin:1rem 0; }
     .good { border:1px solid var(--success-border); padding:1rem 1.5rem; border-radius:6px; background: var(--success-bg); margin:1rem 0; }
@@ -276,9 +277,9 @@
 <body>
   <div style="position: fixed; top: 1.5rem; right: 5.5rem; z-index: 1000;">
     <select onchange="window.location.href='/set-language/' + this.value" style="background: var(--accent-color); color: #000; border: 0; padding: 0.75rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-      <option value="de" <%= lang === 'de' ? 'selected' : '' %>>🇩🇪 Deutsch</option>
-      <option value="en" <%= lang === 'en' ? 'selected' : '' %>>🇬🇧 English</option>
-      <option value="he" <%= lang === 'he' ? 'selected' : '' %>>🇮🇱 עברית</option>
+      <option value="de" <%= lang === 'de' ? 'selected' : '' %>>Deutsch</option>
+      <option value="en" <%= lang === 'en' ? 'selected' : '' %>>English</option>
+      <option value="he" <%= lang === 'he' ? 'selected' : '' %>>עברית</option>
     </select>
   </div>
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
