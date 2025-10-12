@@ -3,6 +3,7 @@
 <html lang="de" data-theme="light">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>Ticket #<%= ticket.id.toString().padStart(5, '0') %></title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -34,6 +35,11 @@
       color: var(--accent-color);
     }
 
+    [data-theme="dark"] code {
+      background: #0a1a0f;
+      color: var(--accent-color);
+    }
+
     html, body {
       height: 100%;
       margin: 0;
@@ -44,10 +50,40 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      max-width: 1200px;
-      padding: 0 5rem;
+      width: 100%;
+      max-width: 100%;
+      padding: 0 2rem;
       line-height: 1.8;
-      margin: 0 auto;
+      margin: 0;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 0 1rem;
+      }
+
+      h1 { font-size: 1.8rem; }
+      h2 { font-size: 1.4rem; }
+
+      .theme-toggle {
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        font-size: 1.2rem !important;
+      }
+
+      ul {
+        padding-left: 1.5rem;
+      }
+    }
+
+    /* Tablet Responsive */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      body {
+        padding: 0 2rem;
+      }
     }
 
     main {
@@ -57,14 +93,47 @@
     h1, h2 {
       color: var(--accent-color);
     }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: var(--accent-color);
+      color: #000;
+      border: 0;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      background: var(--accent-hover);
+    }
+
+    [data-theme="dark"] .theme-toggle {
+      background: var(--accent-color);
+      box-shadow: 0 2px 12px rgba(0,255,136,0.4);
+    }
   </style>
   <script>
     // Load saved theme
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedTheme = localStorage.getItem('trs-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
   </script>
 </head>
 <body>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
+    <i id="themeIcon" class="fas fa-moon"></i>
+  </button>
   <h1>Ticket #<%= ticket.id.toString().padStart(5, '0') %></h1>
   <p>Status: <strong><%= ticket.status %></strong></p>
   <p>Thema: <strong><%= ticket.topic %></strong></p>
@@ -88,5 +157,24 @@
   <% if (ticket.transcript) { %>
     | <a href="/transcripts/<%= ticket.transcript %>" target="_blank">📄 Transcript</a>
   <% } %>
+
+  <script>
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('trs-theme', newTheme);
+      document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    // Theme beim Laden setzen
+    (function() {
+      const savedTheme = localStorage.getItem('trs-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    })();
+  </script>
 </body>
 </html>
