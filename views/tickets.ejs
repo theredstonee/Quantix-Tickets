@@ -244,7 +244,12 @@
     .form-data dt{font-weight:bold;margin-top:.3rem}
     .form-data dd{margin-left:1rem}
     tr.hide{display:none}
-    footer{margin:2.2rem 0 .8rem;font-size:.65rem;opacity:.55}
+    footer{margin:2.2rem 0 .8rem;margin-bottom: 3rem; padding-bottom: 2rem; font-size:.65rem;opacity:.55}
+
+    [data-theme="dark"] footer {
+      margin-bottom: 4rem;
+      padding-bottom: 3rem;
+    }
     @media (max-width:880px){ thead th:nth-child(9), tbody td:nth-child(9){display:none} }
     @media (max-width:680px){ thead th:nth-child(8), tbody td:nth-child(8){display:none} }
 
@@ -279,7 +284,7 @@
     }
   </style>
 </head>
-<body class="container">
+<body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
     <i id="themeIcon" class="fas fa-moon"></i>
   </button>

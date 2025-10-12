@@ -207,7 +207,12 @@
     .bad { border:1px solid var(--error-border); padding:1rem 1.5rem; border-radius:6px; background: var(--error-bg); margin:1rem 0; }
     .good { border:1px solid var(--success-border); padding:1rem 1.5rem; border-radius:6px; background: var(--success-bg); margin:1rem 0; }
     .actions form { display:inline-block; margin-right:1rem; }
-    footer { margin-top:3rem; font-size:.7rem; opacity:.6; }
+    footer { margin-top:3rem; margin-bottom: 3rem; padding-bottom: 2rem; font-size:.7rem; opacity:.6; }
+
+    [data-theme="dark"] footer {
+      margin-bottom: 4rem;
+      padding-bottom: 3rem;
+    }
     .placeholder-list code { margin-right:.4rem; }
     .add-btn { margin-top:.5rem; }
     .soft-note { font-size:.7rem; opacity:.65; }
@@ -268,7 +273,7 @@
     }
   </style>
 </head>
-<body class="container">
+<body>
   <div style="position: fixed; top: 1.5rem; right: 5.5rem; z-index: 1000;">
     <select onchange="window.location.href='/set-language/' + this.value" style="background: var(--accent-color); color: #000; border: 0; padding: 0.75rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
       <option value="de" <%= lang === 'de' ? 'selected' : '' %>>🇩🇪 Deutsch</option>

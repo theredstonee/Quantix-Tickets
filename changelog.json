@@ -7,24 +7,33 @@
       "changes": {
         "de": [
           "🎨 Vollständig responsive Website für Mobile, Tablet und Desktop",
-          "📱 Full-Width Design auf allen Seiten",
+          "📱 Full-Width Design auf allen Seiten (keine Breitenbeschränkung mehr)",
           "🌍 Korrekte Darstellung der Flaggen-Emojis (🇩🇪🇬🇧🇮🇱)",
           "🖥️ Optimierte Skalierung für alle Bildschirmgrößen",
-          "✨ Einheitliches Design auf allen Unterseiten"
+          "✨ Einheitliches Design auf allen Unterseiten",
+          "🌙 Verbesserter Footer-Abstand im Dark Mode",
+          "📢 Automatisches Changelog-System für /broadcast Command",
+          "🌐 Multi-Sprach-Support für Broadcast-Nachrichten"
         ],
         "en": [
           "🎨 Fully responsive website for mobile, tablet and desktop",
-          "📱 Full-width design on all pages",
+          "📱 Full-width design on all pages (no width restrictions)",
           "🌍 Correct display of flag emojis (🇩🇪🇬🇧🇮🇱)",
           "🖥️ Optimized scaling for all screen sizes",
-          "✨ Consistent design across all subpages"
+          "✨ Consistent design across all subpages",
+          "🌙 Improved footer spacing in Dark Mode",
+          "📢 Automatic changelog system for /broadcast command",
+          "🌐 Multi-language support for broadcast messages"
         ],
         "he": [
           "🎨 אתר רספונסיבי לחלוטין למובייל, טאבלט ושולחן עבודה",
-          "📱 עיצוב רוחב מלא בכל הדפים",
+          "📱 עיצוב רוחב מלא בכל הדפים (ללא הגבלת רוחב)",
           "🌍 תצוגה נכונה של אימוג'י דגלים (🇩🇪🇬🇧🇮🇱)",
           "🖥️ התאמת גודל אופטימלית לכל גדלי מסך",
-          "✨ עיצוב אחיד בכל תתי הדפים"
+          "✨ עיצוב אחיד בכל תתי הדפים",
+          "🌙 מרווח תחתון משופר במצב כהה",
+          "📢 מערכת שינויים אוטומטית עבור פקודת /broadcast",
+          "🌐 תמיכה ברב-לשוניות עבור הודעות שידור"
         ]
       }
     },

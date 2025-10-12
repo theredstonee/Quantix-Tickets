@@ -94,6 +94,20 @@
       color: var(--accent-color);
     }
 
+    footer {
+      margin-top: 3rem;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      text-align: center;
+      font-size: 0.75rem;
+      opacity: 0.6;
+    }
+
+    [data-theme="dark"] footer {
+      margin-bottom: 4rem;
+      padding-bottom: 3rem;
+    }
+
     .theme-toggle {
       position: fixed;
       top: 1.5rem;
@@ -157,6 +171,10 @@
   <% if (ticket.transcript) { %>
     | <a href="/transcripts/<%= ticket.transcript %>" target="_blank">📄 Transcript</a>
   <% } %>
+
+  <footer>
+    <p>TRS Tickets ©️</p>
+  </footer>
 
   <script>
     // Theme Toggle
