@@ -1,0 +1,13 @@
+{
+  "name": "trs-tickets/backend",
+  "description": "TRS Tickets PHP Backend",
+  "type": "project",
+  "require": {
+    "php": ">=8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "TRSTickets\\": "src/"
+    }
+  }
+}

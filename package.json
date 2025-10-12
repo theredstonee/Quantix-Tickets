@@ -1,21 +1,17 @@
 {
-  "name": "bot",
+  "name": "trs-tickets",
   "version": "0.3.0",
-  "private": true,
-  "description": "TRS Tickets Discord Bot",
-  "main": "index.js",
+  "description": "TRS Tickets - Discord Ticket Bot with Web Panel",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js"
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "php -S localhost:3000 -t backend",
+    "dev:bot": "cd bot && python main.py",
+    "build": "cd frontend && DISPLAY=:0 npm run build",
+    "build:win": "cd frontend && npm run build",
+    "start": "npm run build && npm run dev:backend",
+    "start:win": "npm run build:win && npm run dev:backend"
   },
-  "dependencies": {
-    "discord.js": "^14.14.1",
-    "dotenv": "^16.4.5",
-    "express": "^4.18.2",
-    "express-session": "^1.18.0",
-    "passport": "^0.7.0",
-    "passport-discord": "^0.1.4",
-    "cookie-parser": "^1.4.6",
-    "ejs": "^3.1.9"
-  }
+  "keywords": ["discord", "ticket", "bot", "php", "vite", "vue"],
+  "author": "Ohev Tamerin",
+  "license": "MIT"
 }
