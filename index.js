@@ -48,10 +48,52 @@ const PRIORITY_STATES = [
   { dot: '🔴', embedColor: 0xd92b2b, label: 'Rot'    }
 ];
 
-// Helper: Team-Rolle aus Config holen
+// Helper: Team-Rolle aus Config holen (Legacy)
 function getTeamRole(guildId){
   const cfg = readCfg(guildId);
   return cfg.teamRoleId || null;
+}
+
+// Helper: Priority-Rollen für spezifische Priorität
+function getPriorityRoles(guildId, priority = null){
+  const cfg = readCfg(guildId);
+
+  // Neue Struktur: priorityRoles
+  if(cfg.priorityRoles){
+    if(priority !== null){
+      // Spezifische Priorität
+      const roles = cfg.priorityRoles[priority.toString()] || [];
+      return Array.isArray(roles) ? roles : [];
+    }
+    // Alle Rollen (flattened)
+    const allRoles = [];
+    Object.values(cfg.priorityRoles).forEach(roleList => {
+      if(Array.isArray(roleList)) allRoles.push(...roleList);
+    });
+    return [...new Set(allRoles)]; // Deduplizieren
+  }
+
+  // Fallback: Legacy teamRoleId
+  const legacyRole = cfg.teamRoleId;
+  return legacyRole ? [legacyRole] : [];
+}
+
+// Helper: Alle Team-Rollen (alle Prioritäten + Legacy)
+function getAllTeamRoles(guildId){
+  const cfg = readCfg(guildId);
+  const roles = new Set();
+
+  // Neue Struktur
+  if(cfg.priorityRoles){
+    Object.values(cfg.priorityRoles).forEach(roleList => {
+      if(Array.isArray(roleList)) roleList.forEach(r => roles.add(r));
+    });
+  }
+
+  // Legacy
+  if(cfg.teamRoleId) roles.add(cfg.teamRoleId);
+
+  return Array.from(roles).filter(r => r && r.trim());
 }
 
 /* ================= Command Collection ================= */
@@ -113,7 +155,14 @@ function readCfg(guildId){
         guildId: guildId,
         topics: [],
         formFields: [],
-        teamRoleId: '1387525699908272218', // Default Team-Rolle
+        teamRoleId: '1387525699908272218', // Legacy - wird durch priorityRoles ersetzt
+        priorityRoles: {
+          '0': [], // Grün - keine Rollen standardmäßig
+          '1': [], // Orange - keine Rollen standardmäßig
+          '2': []  // Rot - keine Rollen standardmäßig
+        },
+        githubCommitsEnabled: true, // Standardmäßig AN
+        githubWebhookChannelId: null, // Log-Channel für GitHub Commits
         ticketEmbed: {
           title: '🎫 Ticket #{ticketNumber}',
           description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
@@ -567,6 +616,45 @@ client.on(Events.InteractionCreate, async i => {
     }
 
     if(i.isButton()){
+      // GitHub Commits Toggle Button
+      if(i.customId.startsWith('github_toggle:')){
+        const guildId = i.customId.split(':')[1];
+        if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+
+        const cfg = readCfg(guildId);
+        const currentStatus = cfg.githubCommitsEnabled !== false;
+        const newStatus = !currentStatus;
+
+        cfg.githubCommitsEnabled = newStatus;
+        writeCfg(guildId, cfg);
+
+        // Update embed
+        const embed = new EmbedBuilder()
+          .setTitle('⚙️ GitHub Commit Logs')
+          .setDescription(
+            `**New Status:** ${newStatus ? '✅ Enabled' : '❌ Disabled'}\n\n` +
+            `GitHub commit notifications will ${newStatus ? 'now' : 'no longer'} be logged to this server.\n\n` +
+            `${cfg.githubWebhookChannelId ? `**Log Channel:** <#${cfg.githubWebhookChannelId}>` : '⚠️ **No log channel set!** Please configure a channel in the panel.'}`
+          )
+          .setColor(newStatus ? 0x00ff88 : 0xff4444)
+          .setFooter({ text: 'TRS Tickets ©️' })
+          .setTimestamp();
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`github_toggle:${guildId}`)
+            .setLabel(newStatus ? 'Disable Logging' : 'Enable Logging')
+            .setEmoji(newStatus ? '❌' : '✅')
+            .setStyle(newStatus ? ButtonStyle.Danger : ButtonStyle.Success)
+        );
+
+        await i.update({ embeds: [embed], components: [row] });
+
+        // Log event
+        await logEvent(i.guild, `⚙️ GitHub Commit Logs ${newStatus ? 'enabled' : 'disabled'} by <@${i.user.id}>`);
+        return;
+      }
+
       const guildId = i.guild.id;
       const log = loadTickets(guildId);
       const ticket = log.find(t=>t.channelId===i.channel.id);

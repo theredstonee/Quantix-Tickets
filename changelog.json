@@ -1,6 +1,39 @@
 {
-  "currentVersion": "Beta 0.3.1",
+  "currentVersion": "Beta 0.3.2",
   "versions": [
+    {
+      "version": "Beta 0.3.2",
+      "date": "2025-10-12",
+      "changes": {
+        "de": [
+          "🔧 GitHub Commit-Logs Toggle System mit Admin-Command",
+          "👥 Multi-Level Prioritäts-Rollen System (Grün/Orange/Rot)",
+          "👀 Live-Vorschau für Rollenanzahl pro Priorität im Panel",
+          "⚙️ Server-spezifische Konfiguration für GitHub-Logs (Standard: AN)",
+          "🎛️ Interaktive Toggle-Buttons für GitHub Commit Benachrichtigungen",
+          "🛡️ Mehrfach-Rollen-Auswahl pro Prioritätsstufe",
+          "🔄 Verbesserte POST-Handler für Prioritätsrollen-Verwaltung"
+        ],
+        "en": [
+          "🔧 GitHub Commit Logs Toggle System with Admin Command",
+          "👥 Multi-Level Priority Roles System (Green/Orange/Red)",
+          "👀 Live Preview for Role Count per Priority in Panel",
+          "⚙️ Server-specific Configuration for GitHub Logs (Default: ON)",
+          "🎛️ Interactive Toggle Buttons for GitHub Commit Notifications",
+          "🛡️ Multiple Role Selection per Priority Level",
+          "🔄 Enhanced POST Handlers for Priority Role Management"
+        ],
+        "he": [
+          "🔧 מערכת Toggle ללוגים של GitHub עם פקודת מנהל",
+          "👥 מערכת תפקידי עדיפות רב-רמתית (ירוק/כתום/אדום)",
+          "👀 תצוגה מקדימה חיה של מספר תפקידים לכל עדיפות בפאנל",
+          "⚙️ הגדרה ספציפית לשרת עבור לוגי GitHub (ברירת מחדל: מופעל)",
+          "🎛️ כפתורי Toggle אינטראקטיביים להתראות Commit של GitHub",
+          "🛡️ בחירת תפקידים מרובים לכל רמת עדיפות",
+          "🔄 מטפלי POST משופרים לניהול תפקידי עדיפות"
+        ]
+      }
+    },
     {
       "version": "Beta 0.3.1",
       "date": "2025-10-12",

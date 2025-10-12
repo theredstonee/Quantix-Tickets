@@ -16,7 +16,7 @@ const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('dis
 const { getTranslations, t, getLanguageName } = require('./translations');
 const cookieParser = require('cookie-parser');
 
-const VERSION = 'Beta 0.3.0'; // Bot Version
+const VERSION = 'Beta 0.3.2'; // Bot Version
 
 /* ====== Config laden (Multi-Server) ====== */
 const CONFIG_DIR = path.join(__dirname, 'configs');
@@ -383,6 +383,24 @@ module.exports = (client)=>{
       if(req.body.logChannelId) cfg.logChannelId = req.body.logChannelId.trim();
       if(req.body.transcriptChannelId) cfg.transcriptChannelId = req.body.transcriptChannelId.trim();
       if(req.body.teamRoleId) cfg.teamRoleId = req.body.teamRoleId.trim();
+
+      // ---------- Priority Rollen (Multi-Select) ----------
+      if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
+
+      // Grün (0)
+      cfg.priorityRoles['0'] = Array.isArray(req.body.priorityRoles_0)
+        ? req.body.priorityRoles_0.filter(r => r && r.trim())
+        : (req.body.priorityRoles_0 ? [req.body.priorityRoles_0.trim()] : []);
+
+      // Orange (1)
+      cfg.priorityRoles['1'] = Array.isArray(req.body.priorityRoles_1)
+        ? req.body.priorityRoles_1.filter(r => r && r.trim())
+        : (req.body.priorityRoles_1 ? [req.body.priorityRoles_1.trim()] : []);
+
+      // Rot (2)
+      cfg.priorityRoles['2'] = Array.isArray(req.body.priorityRoles_2)
+        ? req.body.priorityRoles_2.filter(r => r && r.trim())
+        : (req.body.priorityRoles_2 ? [req.body.priorityRoles_2.trim()] : []);
 
       // ---------- Topics: Tabellen-Werte haben Vorrang ----------
       const labelInputs = [].concat(req.body.label||[]);
