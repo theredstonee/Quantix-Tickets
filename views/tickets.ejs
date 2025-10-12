@@ -101,9 +101,108 @@
       flex-direction: column;
       min-height: 100vh;
       max-width: 1500px;
-      padding: 0 5rem;
+      padding: 0 2rem;
       line-height: 1.8;
       margin: 0 auto;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 0 1rem;
+      }
+
+      h1 { font-size: 1.5rem; }
+
+      .controls .row {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+      }
+
+      #search {
+        flex: 1 1 auto !important;
+        min-width: 100% !important;
+      }
+
+      .chipbar {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .chip {
+        font-size: 0.65rem !important;
+        padding: 0.4rem 0.8rem !important;
+      }
+
+      #refreshBar {
+        flex-direction: column !important;
+        gap: 0.5rem;
+        padding: 0.7rem !important;
+      }
+
+      #refreshBar button {
+        width: 100%;
+      }
+
+      /* Table Responsive */
+      table {
+        font-size: 0.75rem;
+        overflow-x: auto;
+        display: block;
+      }
+
+      thead th {
+        padding: 0.6rem 0.5rem !important;
+        font-size: 0.7rem !important;
+      }
+
+      tbody td {
+        padding: 0.6rem 0.5rem !important;
+      }
+
+      /* Hide less important columns on mobile */
+      thead th:nth-child(9), tbody td:nth-child(9),
+      thead th:nth-child(8), tbody td:nth-child(8),
+      thead th:nth-child(6), tbody td:nth-child(6) {
+        display: none;
+      }
+
+      .badge {
+        font-size: 0.6rem !important;
+        padding: 0.15rem 0.35rem !important;
+      }
+
+      .theme-toggle {
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        font-size: 1.2rem !important;
+      }
+
+      .back {
+        font-size: 0.9rem !important;
+      }
+
+      label.inline {
+        font-size: 0.7rem !important;
+      }
+    }
+
+    /* Tablet Responsive */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      body {
+        padding: 0 2rem;
+      }
+
+      table {
+        font-size: 0.75rem;
+      }
+
+      /* Hide one column on tablet */
+      thead th:nth-child(9), tbody td:nth-child(9) {
+        display: none;
+      }
     }
 
     main {

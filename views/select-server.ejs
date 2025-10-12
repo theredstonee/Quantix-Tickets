@@ -75,9 +75,80 @@
       flex-direction: column;
       min-height: 100vh;
       max-width: 900px;
-      padding: 0 5rem;
+      padding: 0 2rem;
       line-height: 1.8;
       margin: 0 auto;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 0 1rem;
+      }
+
+      h1 { font-size: 1.8rem; }
+
+      .sub {
+        font-size: 0.85rem !important;
+      }
+
+      .server-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+      }
+
+      .server-card {
+        padding: 1.5rem !important;
+      }
+
+      .server-icon {
+        width: 48px !important;
+        height: 48px !important;
+      }
+
+      .server-name {
+        font-size: 1rem !important;
+        flex-wrap: wrap;
+      }
+
+      .current-badge {
+        font-size: 0.65rem !important;
+        padding: 0.15rem 0.4rem !important;
+        margin-left: 0 !important;
+        margin-top: 0.3rem;
+      }
+
+      .server-id {
+        font-size: 0.7rem !important;
+      }
+
+      .submit-btn {
+        width: 100% !important;
+      }
+
+      .theme-toggle {
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        font-size: 1.2rem !important;
+      }
+
+      .no-servers {
+        padding: 2rem !important;
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Tablet Responsive */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      body {
+        padding: 0 2rem;
+      }
+
+      .server-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
     }
 
     main {

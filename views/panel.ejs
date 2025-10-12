@@ -101,9 +101,96 @@
       flex-direction: column;
       min-height: 100vh;
       max-width: 1400px;
-      padding: 0 5rem;
+      padding: 0 2rem;
       line-height: 1.8;
       margin: 0 auto;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 0 1rem;
+      }
+
+      h1 { font-size: 1.5rem; }
+
+      table { font-size: 0.85rem; overflow-x: auto; display: block; }
+      th, td { padding: 0.4rem 0.6rem !important; }
+
+      .grid { flex-direction: column !important; }
+      fieldset { min-width: 100% !important; padding: 1rem !important; }
+
+      textarea { font-size: 0.9rem; }
+      input, select { font-size: 0.9rem; }
+
+      .add-btn, button[type="submit"] {
+        width: 100%;
+        padding: 0.8rem !important;
+      }
+
+      .actions form {
+        display: block !important;
+        width: 100%;
+        margin-bottom: 0.5rem !important;
+      }
+
+      .actions select,
+      .actions button {
+        width: 100% !important;
+        margin-right: 0 !important;
+        margin-bottom: 0.5rem;
+      }
+
+      .theme-toggle {
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        font-size: 1.2rem !important;
+      }
+
+      [style*="position: fixed"] select {
+        top: 0.5rem !important;
+        right: 3.5rem !important;
+        font-size: 0.85rem !important;
+        padding: 0.5rem !important;
+      }
+
+      .header-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+      }
+
+      /* Tabellen horizontal scrollbar */
+      table {
+        min-width: 600px;
+      }
+
+      /* Formfelder Stack */
+      .topic-row {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+      }
+
+      .topic-row input {
+        width: 100% !important;
+      }
+    }
+
+    /* Tablet Responsive */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      body {
+        padding: 0 2rem;
+      }
+
+      .grid {
+        gap: 1.5rem !important;
+      }
+
+      fieldset {
+        min-width: 320px !important;
+      }
     }
 
     main {
