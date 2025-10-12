@@ -1,0 +1,56 @@
+{
+  "currentVersion": "Beta 0.3.1",
+  "versions": [
+    {
+      "version": "Beta 0.3.1",
+      "date": "2025-10-12",
+      "changes": {
+        "de": [
+          "🎨 Vollständig responsive Website für Mobile, Tablet und Desktop",
+          "📱 Full-Width Design auf allen Seiten",
+          "🌍 Korrekte Darstellung der Flaggen-Emojis (🇩🇪🇬🇧🇮🇱)",
+          "🖥️ Optimierte Skalierung für alle Bildschirmgrößen",
+          "✨ Einheitliches Design auf allen Unterseiten"
+        ],
+        "en": [
+          "🎨 Fully responsive website for mobile, tablet and desktop",
+          "📱 Full-width design on all pages",
+          "🌍 Correct display of flag emojis (🇩🇪🇬🇧🇮🇱)",
+          "🖥️ Optimized scaling for all screen sizes",
+          "✨ Consistent design across all subpages"
+        ],
+        "he": [
+          "🎨 אתר רספונסיבי לחלוטין למובייל, טאבלט ושולחן עבודה",
+          "📱 עיצוב רוחב מלא בכל הדפים",
+          "🌍 תצוגה נכונה של אימוג'י דגלים (🇩🇪🇬🇧🇮🇱)",
+          "🖥️ התאמת גודל אופטימלית לכל גדלי מסך",
+          "✨ עיצוב אחיד בכל תתי הדפים"
+        ]
+      }
+    },
+    {
+      "version": "Beta 0.3.0",
+      "date": "2025-10-10",
+      "changes": {
+        "de": [
+          "🌐 Multi-Sprach-Unterstützung (Deutsch, Englisch, Hebräisch)",
+          "🎨 Neues Design für die Homepage",
+          "⚡ Performance-Verbesserungen",
+          "🐛 Diverse Bugfixes"
+        ],
+        "en": [
+          "🌐 Multi-language support (German, English, Hebrew)",
+          "🎨 New design for the homepage",
+          "⚡ Performance improvements",
+          "🐛 Various bug fixes"
+        ],
+        "he": [
+          "🌐 תמיכה ברב-לשוניות (גרמנית, אנגלית, עברית)",
+          "🎨 עיצוב חדש לעמוד הבית",
+          "⚡ שיפורי ביצועים",
+          "🐛 תיקוני באגים שונים"
+        ]
+      }
+    }
+  ]
+}

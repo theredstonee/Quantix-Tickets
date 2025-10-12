@@ -1,11 +1,26 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const { getGuildLanguage } = require('../translations');
 
 const ALLOWED_GUILD = '1291125037876904026'; // Only this guild can use this command
 const ALLOWED_USER = '1159182333316968530'; // Only this user can use this command
 const CONFIG_DIR = path.join(__dirname, '..', 'configs');
-const VERSION = 'Beta 0.3.0';
+const CHANGELOG_PATH = path.join(__dirname, '..', 'changelog.json');
+
+// Load changelog
+function loadChangelog() {
+  try {
+    const data = fs.readFileSync(CHANGELOG_PATH, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error('Error loading changelog:', err);
+    return { currentVersion: 'Beta 0.3.1', versions: [] };
+  }
+}
+
+const changelog = loadChangelog();
+const VERSION = changelog.currentVersion;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -81,24 +96,58 @@ module.exports = {
           continue;
         }
 
+        // Get guild language
+        const guildLang = getGuildLanguage(guildId) || 'de';
+
+        // Get current version changelog
+        const currentVersionData = changelog.versions.find(v => v.version === VERSION);
+        const changes = currentVersionData?.changes?.[guildLang] || currentVersionData?.changes?.de || [];
+
+        // Create localized texts
+        const texts = {
+          de: {
+            title: '📢 Versions-Update',
+            description: `**TRS Tickets Bot** wurde auf Version **${VERSION}** aktualisiert`,
+            versionLabel: '🆕 Version',
+            dateLabel: '📅 Datum',
+            changesLabel: '✨ Änderungen'
+          },
+          en: {
+            title: '📢 Version Update',
+            description: `**TRS Tickets Bot** has been updated to version **${VERSION}**`,
+            versionLabel: '🆕 Version',
+            dateLabel: '📅 Date',
+            changesLabel: '✨ Changes'
+          },
+          he: {
+            title: '📢 עדכון גרסה',
+            description: `**בוט TRS Tickets** עודכן לגרסה **${VERSION}**`,
+            versionLabel: '🆕 גרסה',
+            dateLabel: '📅 תאריך',
+            changesLabel: '✨ שינויים'
+          }
+        };
+
+        const t = texts[guildLang] || texts.de;
+
         // Create version update embed
         const embed = new EmbedBuilder()
           .setColor('#00b894')
-          .setTitle('📢 Version Update')
-          .setDescription(customMessage || `**TRS Tickets Bot** has been updated to version **${VERSION}**`)
+          .setTitle(t.title)
+          .setDescription(customMessage || t.description)
           .addFields([
-            { name: '🆕 Version', value: VERSION, inline: true },
-            { name: '📅 Date', value: new Date().toLocaleDateString('de-DE'), inline: true }
+            { name: t.versionLabel, value: VERSION, inline: true },
+            { name: t.dateLabel, value: new Date().toLocaleDateString(guildLang === 'de' ? 'de-DE' : guildLang === 'he' ? 'he-IL' : 'en-US'), inline: true }
           ])
           .setFooter({ text: 'TRS Tickets ©️' })
           .setTimestamp();
 
-        // Add default changelog if no custom message
-        if (!customMessage) {
+        // Add automatic changelog if no custom message
+        if (!customMessage && changes.length > 0) {
           embed.addFields([
             {
-              name: '✨ Updates',
-              value: '• Improved multi-language support\n• New home page design\n• Performance improvements\n• Bug fixes'
+              name: t.changesLabel,
+              value: changes.join('\n')
             }
           ]);
         }
