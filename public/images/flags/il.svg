@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="800" viewBox="0 0 1100 800" aria-label="Flag of Israel">
+  <!-- background -->
+  <rect width="1100" height="800" fill="#ffffff"/>
+  <!-- blue stripes -->
+  <rect x="0" y="66.667" width="1100" height="66.667" fill="#0038B8"/>
+  <rect x="0" y="666.667" width="1100" height="66.667" fill="#0038B8"/>
+  <!-- Star of David (Magen David) -->
+  <polygon points="550.000,160.000 342.154,520.000 757.846,520.000" fill="none" stroke="#0038B8" stroke-width="66.667" stroke-linejoin="bevel"/>
+  <polygon points="550.000,640.000 342.154,280.000 757.846,280.000" fill="none" stroke="#0038B8" stroke-width="66.667" stroke-linejoin="bevel"/>
+</svg>
