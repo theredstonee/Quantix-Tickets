@@ -421,9 +421,11 @@
       line-height: 1;
     }
 
-    /* Flag Emoji Fix */
-    .lang-btn i.fas {
-      display: none;
+    /* SVG Flag Styling */
+    .lang-btn img {
+      display: block;
+      border-radius: 2px;
+      object-fit: cover;
     }
 
     .lang-btn:hover {
@@ -487,12 +489,12 @@
   </button>
 
   <div class="language-selector">
-    <a href="/set-user-language/de" class="lang-btn <%= lang === 'de' ? 'active' : '' %>" title="Deutsch">🇩🇪</a>
-    <a href="/set-user-language/en" class="lang-btn <%= lang === 'en' ? 'active' : '' %>" title="English">🇬🇧</a>
-    <a href="/set-user-language/he" class="lang-btn <%= lang === 'he' ? 'active' : '' %>" title="עברית">🇮🇱</a>
-    <a href="/set-user-language/ja" class="lang-btn <%= lang === 'ja' ? 'active' : '' %>" title="日本語">🇯🇵</a>
-    <a href="/set-user-language/ru" class="lang-btn <%= lang === 'ru' ? 'active' : '' %>" title="Русский">🇷🇺</a>
-    <a href="/set-user-language/pt" class="lang-btn <%= lang === 'pt' ? 'active' : '' %>" title="Português">🇵🇹</a>
+    <a href="/set-user-language/de" class="lang-btn <%= lang === 'de' ? 'active' : '' %>" title="Deutsch"><img src="/images/flags/de.svg" alt="DE" width="24" height="18"></a>
+    <a href="/set-user-language/en" class="lang-btn <%= lang === 'en' ? 'active' : '' %>" title="English"><img src="/images/flags/gb.svg" alt="EN" width="24" height="18"></a>
+    <a href="/set-user-language/he" class="lang-btn <%= lang === 'he' ? 'active' : '' %>" title="עברית"><img src="/images/flags/il.svg" alt="HE" width="24" height="18"></a>
+    <a href="/set-user-language/ja" class="lang-btn <%= lang === 'ja' ? 'active' : '' %>" title="日本語"><img src="/images/flags/jp.svg" alt="JA" width="24" height="18"></a>
+    <a href="/set-user-language/ru" class="lang-btn <%= lang === 'ru' ? 'active' : '' %>" title="Русский"><img src="/images/flags/ru.svg" alt="RU" width="24" height="18"></a>
+    <a href="/set-user-language/pt" class="lang-btn <%= lang === 'pt' ? 'active' : '' %>" title="Português"><img src="/images/flags/pt.svg" alt="PT" width="24" height="18"></a>
   </div>
 
   <div class="hero">
