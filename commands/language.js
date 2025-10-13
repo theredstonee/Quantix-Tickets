@@ -7,10 +7,9 @@ module.exports = {
     .setDescriptionLocalizations({
       de: 'Server-Sprache festlegen',
       'en-US': 'Set the server language for the bot',
-      he: 'הגדר שפת שרת',
       ja: 'サーバー言語を設定',
       ru: 'Установить язык сервера',
-      pt: 'Definir idioma do servidor'
+      'pt-BR': 'Definir idioma do servidor'
     })
     .addStringOption(option =>
       option.setName('language')
@@ -18,10 +17,9 @@ module.exports = {
         .setDescriptionLocalizations({
           de: 'Sprache auswählen',
           'en-US': 'Choose the language for bot responses',
-          he: 'בחר שפה',
           ja: '言語を選択',
           ru: 'Выбрать язык',
-          pt: 'Selecionar idioma'
+          'pt-BR': 'Selecionar idioma'
         })
         .setRequired(true)
         .addChoices(
