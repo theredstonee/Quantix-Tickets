@@ -38,7 +38,7 @@ const {
 } = require('discord.js');
 const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
 
-const VERSION   = 'Alpha 1.0';
+const VERSION   = 'Beta 0.3.4';
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },

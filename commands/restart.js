@@ -25,7 +25,7 @@ module.exports = {
       )
       .setColor(0xff9900)
       .setTimestamp()
-      .setFooter({ text: 'TRS Tickets ©️' });
+      .setFooter({ text: 'TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten' });
 
     await interaction.reply({
       embeds: [embed],

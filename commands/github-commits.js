@@ -61,7 +61,7 @@ module.exports = {
         `${cfg.githubWebhookChannelId ? `**Log Channel:** <#${cfg.githubWebhookChannelId}>` : '⚠️ **No log channel set!** Please configure a channel in the panel.'}`
       )
       .setColor(currentStatus ? 0x00ff88 : 0xff4444)
-      .setFooter({ text: 'TRS Tickets ©️' })
+      .setFooter({ text: 'TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten' })
       .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(

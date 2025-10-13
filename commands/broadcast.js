@@ -129,7 +129,7 @@ module.exports = {
             { name: t.versionLabel, value: VERSION, inline: true },
             { name: t.dateLabel, value: new Date().toLocaleDateString(guildLang === 'de' ? 'de-DE' : guildLang === 'he' ? 'he-IL' : 'en-US'), inline: true }
           ])
-          .setFooter({ text: 'TRS Tickets ©️' })
+          .setFooter({ text: 'TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten' })
           .setTimestamp();
 
         if (!customMessage && changes.length > 0) {
