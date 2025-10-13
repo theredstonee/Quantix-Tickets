@@ -9,14 +9,9 @@ const translations = {
 
 const CONFIG_DIR = path.join(__dirname, 'configs');
 
-/**
- * Get guild's language from config
- * @param {string} guildId - Discord guild ID
- * @returns {string} Language code (de, en, or he)
- */
 function getGuildLanguage(guildId) {
   try {
-    if (!guildId) return 'de'; // Default to German
+    if (!guildId) return 'de';
     const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
 
     if (!fs.existsSync(configPath)) return 'de';
@@ -29,16 +24,10 @@ function getGuildLanguage(guildId) {
   }
 }
 
-/**
- * Set guild's language in config
- * @param {string} guildId - Discord guild ID
- * @param {string} lang - Language code (de, en, or he)
- */
 function setGuildLanguage(guildId, lang) {
   try {
     if (!guildId) return false;
 
-    // Validate language
     if (!['de', 'en', 'he'].includes(lang)) {
       lang = 'de';
     }
@@ -59,13 +48,6 @@ function setGuildLanguage(guildId, lang) {
   }
 }
 
-/**
- * Get translated text for a guild
- * @param {string} guildId - Discord guild ID
- * @param {string} key - Translation key (e.g., 'ticket.created')
- * @param {object} replacements - Object with placeholder replacements
- * @returns {string} Translated text
- */
 function t(guildId, key, replacements = {}) {
   const lang = getGuildLanguage(guildId);
   const keys = key.split('.');
@@ -75,7 +57,7 @@ function t(guildId, key, replacements = {}) {
     if (value && typeof value === 'object') {
       value = value[k];
     } else {
-      return key; // Return key if translation not found
+      return key;
     }
   }
 
@@ -83,7 +65,6 @@ function t(guildId, key, replacements = {}) {
     return key;
   }
 
-  // Replace placeholders
   let result = value;
   for (const [placeholder, replacement] of Object.entries(replacements)) {
     result = result.replace(new RegExp(`\\{${placeholder}\\}`, 'g'), replacement);
@@ -92,20 +73,10 @@ function t(guildId, key, replacements = {}) {
   return result;
 }
 
-/**
- * Get all translations for a language
- * @param {string} lang - Language code
- * @returns {object} Translation object
- */
 function getTranslations(lang = 'de') {
   return translations[lang] || translations.de;
 }
 
-/**
- * Get language name
- * @param {string} lang - Language code
- * @returns {string} Language name
- */
 function getLanguageName(lang) {
   const names = {
     de: 'Deutsch',

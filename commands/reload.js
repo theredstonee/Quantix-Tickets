@@ -1,4 +1,3 @@
-// commands/reload.js
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { t } = require('../translations');
 const fs = require('fs');
@@ -18,7 +17,6 @@ module.exports = {
     const guildId = interaction.guild?.id;
 
     try {
-      // Multi-Server Configs Cache leeren
       let configCount = 0;
       const configDir = path.join(__dirname, '..', 'configs');
       if (fs.existsSync(configDir)) {
@@ -30,13 +28,11 @@ module.exports = {
         });
       }
 
-      // Legacy config.json Cache leeren
       const legacyPath = path.join(__dirname, '..', 'config.json');
       if (fs.existsSync(legacyPath)) {
         delete require.cache[require.resolve(legacyPath)];
       }
 
-      // Command Files neu laden
       const commandFiles = fs.readdirSync(path.join(__dirname)).filter(f => f.endsWith('.js'));
       let reloadedCount = 0;
       for (const file of commandFiles) {
@@ -45,7 +41,6 @@ module.exports = {
         reloadedCount++;
       }
 
-      // Translation Cache leeren
       const translationsPath = path.join(__dirname, '..', 'translations.js');
       if (fs.existsSync(translationsPath)) {
         delete require.cache[require.resolve(translationsPath)];

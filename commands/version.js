@@ -1,4 +1,3 @@
-// commands/version.js
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { t } = require('../translations');
 

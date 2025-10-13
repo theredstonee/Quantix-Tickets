@@ -3,12 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const { getGuildLanguage } = require('../translations');
 
-const ALLOWED_GUILD = '1291125037876904026'; // Only this guild can use this command
-const ALLOWED_USER = '1159182333316968530'; // Only this user can use this command
+const ALLOWED_GUILD = '1291125037876904026';
+const ALLOWED_USER = '1159182333316968530';
 const CONFIG_DIR = path.join(__dirname, '..', 'configs');
 const CHANGELOG_PATH = path.join(__dirname, '..', 'changelog.json');
 
-// Load changelog
 function loadChangelog() {
   try {
     const data = fs.readFileSync(CHANGELOG_PATH, 'utf8');
@@ -32,7 +31,6 @@ module.exports = {
         .setRequired(false)),
 
   async execute(interaction) {
-    // Check if command is executed in the allowed guild
     if (interaction.guild.id !== ALLOWED_GUILD) {
       return interaction.reply({
         content: '❌ This command can only be used in the authorized server.',
@@ -40,7 +38,6 @@ module.exports = {
       });
     }
 
-    // Check if user is the authorized user
     if (interaction.user.id !== ALLOWED_USER) {
       return interaction.reply({
         content: '❌ You are not authorized to use this command.',
@@ -52,7 +49,6 @@ module.exports = {
 
     const customMessage = interaction.options.getString('message');
 
-    // Get all guild configs
     let guildConfigs = [];
     try {
       const files = fs.readdirSync(CONFIG_DIR);
@@ -73,7 +69,6 @@ module.exports = {
 
     for (const { guildId, config } of guildConfigs) {
       try {
-        // Get guild
         const guild = await interaction.client.guilds.fetch(guildId).catch(() => null);
         if (!guild) {
           failCount++;
@@ -81,7 +76,6 @@ module.exports = {
           continue;
         }
 
-        // Get log channel
         const logChannelId = config.logChannelId;
         if (!logChannelId) {
           failCount++;
@@ -96,14 +90,11 @@ module.exports = {
           continue;
         }
 
-        // Get guild language
         const guildLang = getGuildLanguage(guildId) || 'de';
 
-        // Get current version changelog
         const currentVersionData = changelog.versions.find(v => v.version === VERSION);
         const changes = currentVersionData?.changes?.[guildLang] || currentVersionData?.changes?.de || [];
 
-        // Create localized texts
         const texts = {
           de: {
             title: '📢 Versions-Update',
@@ -130,7 +121,6 @@ module.exports = {
 
         const t = texts[guildLang] || texts.de;
 
-        // Create version update embed
         const embed = new EmbedBuilder()
           .setColor('#00b894')
           .setTitle(t.title)
@@ -142,7 +132,6 @@ module.exports = {
           .setFooter({ text: 'TRS Tickets ©️' })
           .setTimestamp();
 
-        // Add automatic changelog if no custom message
         if (!customMessage && changes.length > 0) {
           embed.addFields([
             {
@@ -162,7 +151,6 @@ module.exports = {
       }
     }
 
-    // Create summary embed
     const summaryEmbed = new EmbedBuilder()
       .setColor(failCount === 0 ? '#00b894' : '#ffc107')
       .setTitle('📊 Broadcast Summary')
@@ -174,7 +162,6 @@ module.exports = {
       ])
       .setTimestamp();
 
-    // Add results (limit to first 10)
     if (results.length > 0) {
       const resultText = results.slice(0, 10).join('\n');
       summaryEmbed.addFields([
