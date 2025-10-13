@@ -454,27 +454,289 @@ async function createTranscript(channel, ticket, opts = {}) {
   }
   const txt = lines.join('\n');
 
-  // Sehr schlichtes HTML
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Transcript ${ticket.id}</title>
-<style>
-body{font-family:Arial;background:#111;color:#eee}
-.m{margin:4px 0}.t{color:#888;font-size:11px;margin-right:6px}
-.a{color:#4ea1ff;font-weight:bold;margin-right:4px}
-.att{color:#ffa500;font-size:11px;display:block;margin-left:2rem}
-</style></head><body>
-<h1>Transcript Ticket ${ticket.id}</h1>
-<p>Channel: ${channel.name}<br>Erstellt: ${new Date(ticket.timestamp).toISOString()}<br>Nachrichten: ${messages.length}</p>
-<hr>
-${messages.map(m=>{
-  const atts = m.attachments.size
-    ? [...m.attachments.values()].map(a=>`<span class='att'>📎 <a href='${a.url}'>${a.name}</a></span>`).join('')
-    : '';
-  const time = new Date(m.createdTimestamp).toISOString();
-  const auth = m.author ? (m.author.tag || m.author.id) : 'Unbekannt';
-  const text = mentionToName(m.content || '').replace(/</g,'&lt;');
-  return `<div class='m'><span class='t'>${time}</span><span class='a'>${auth}</span><span>${text}</span>${atts}</div>`;
-}).join('')}
-</body></html>`;
+  // Modernes Discord-ähnliches HTML-Design
+  const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transcript - Ticket #${ticket.id}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: #dcddde;
+      line-height: 1.6;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #36393f;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #00ff88 0%, #00b894 100%);
+      padding: 2.5rem;
+      color: white;
+      border-bottom: 4px solid #00dd77;
+    }
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .header .ticket-badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .meta {
+      background: #2f3136;
+      padding: 1.5rem 2.5rem;
+      border-bottom: 1px solid #202225;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .meta-label {
+      color: #b9bbbe;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .meta-value {
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    .messages {
+      padding: 2rem 2.5rem;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .message {
+      display: flex;
+      gap: 1rem;
+      padding: 0.75rem 0;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .message:hover {
+      background: #32353b;
+      padding-left: 0.5rem;
+      margin-left: -0.5rem;
+      padding-right: 0.5rem;
+      margin-right: -0.5rem;
+    }
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00ff88, #00b894);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+    }
+    .message-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .message-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+    .author {
+      color: #00ff88;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .timestamp {
+      color: #72767d;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .message-text {
+      color: #dcddde;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .attachments {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .attachment {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #2f3136;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      border-left: 3px solid #00ff88;
+      text-decoration: none;
+      color: #00b8ff;
+      font-weight: 500;
+      transition: all 0.2s;
+      max-width: fit-content;
+    }
+    .attachment:hover {
+      background: #292b2f;
+      transform: translateX(4px);
+    }
+    .attachment-icon {
+      font-size: 1.2rem;
+    }
+    .footer {
+      background: #2f3136;
+      padding: 1.5rem 2.5rem;
+      border-top: 1px solid #202225;
+      text-align: center;
+      color: #72767d;
+      font-size: 0.875rem;
+    }
+    .footer a {
+      color: #00ff88;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #2f3136;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #202225;
+      border-radius: 6px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00ff88;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      .header, .meta, .messages, .footer {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+      }
+      .header h1 {
+        font-size: 1.75rem;
+      }
+      .meta {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>
+        🎫 <span class="ticket-badge">#${ticket.id.toString().padStart(5, '0')}</span>
+      </h1>
+      <p style="opacity: 0.95; font-size: 1.1rem; margin-top: 0.5rem;">Ticket Transcript</p>
+    </div>
+
+    <div class="meta">
+      <div class="meta-item">
+        <span class="meta-label">📝 Channel</span>
+        <span class="meta-value">${channel.name}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">📅 Erstellt</span>
+        <span class="meta-value">${new Date(ticket.timestamp).toLocaleString('de-DE', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        })}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">💬 Nachrichten</span>
+        <span class="meta-value">${messages.length}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">📊 Status</span>
+        <span class="meta-value">${ticket.status || 'Geschlossen'}</span>
+      </div>
+    </div>
+
+    <div class="messages">
+      ${messages.map(m => {
+        const author = m.author ? (m.author.tag || m.author.username || m.author.id) : 'Unbekannt';
+        const authorInitial = author.charAt(0).toUpperCase();
+        const time = new Date(m.createdTimestamp).toLocaleString('de-DE', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const text = mentionToName(m.content || '')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+
+        const attachments = m.attachments.size
+          ? `<div class="attachments">${[...m.attachments.values()]
+              .map(a => `<a href="${a.url}" class="attachment" target="_blank">
+                <span class="attachment-icon">📎</span>
+                <span>${a.name}</span>
+              </a>`).join('')}</div>`
+          : '';
+
+        return `<div class="message">
+          <div class="avatar">${authorInitial}</div>
+          <div class="message-content">
+            <div class="message-header">
+              <span class="author">${author}</span>
+              <span class="timestamp">${time}</span>
+            </div>
+            <div class="message-text">${text || '<em style="color: #72767d;">Keine Nachricht</em>'}</div>
+            ${attachments}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="footer">
+      <p>Erstellt mit <strong>TRS Tickets Bot</strong> • <a href="https://github.com/TheRedstoneE/TRS-Tickets-Bot" target="_blank">GitHub</a></p>
+      <p style="margin-top: 0.5rem; font-size: 0.75rem;">© ${new Date().getFullYear()} TRS Tickets • Alle Rechte vorbehalten</p>
+    </div>
+  </div>
+</body>
+</html>`;
 
   const tTxt  = path.join(__dirname, `transcript_${ticket.id}.txt`);
   const tHtml = path.join(__dirname, `transcript_${ticket.id}.html`);

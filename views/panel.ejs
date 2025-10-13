@@ -396,6 +396,55 @@
         </div>
       </fieldset>
 
+      <!-- GitHub Commit Logs (NEU) -->
+      <fieldset>
+        <legend><i class="fab fa-github"></i> GitHub Commit Logs</legend>
+        <p class="soft-note">Konfiguriere wo GitHub Commits vom TRS-Tickets-Bot Repository geloggt werden sollen.</p>
+
+        <label>📢 GitHub Webhook Channel
+          <select name="githubWebhookChannelId">
+            <option value=""><%= t.web.select_channel %></option>
+            <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
+              <option value="<%= ch.id %>" <%= cfg.githubWebhookChannelId === ch.id ? 'selected' : '' %>>
+                # <%= ch.name %>
+              </option>
+            <% }) %>
+          </select>
+        </label>
+
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--fieldset-bg); border-radius: 6px; border-left: 4px solid <%= cfg.githubCommitsEnabled !== false ? '#00ff88' : '#ff4444' %>;">
+          <strong>Status:</strong>
+          <%= cfg.githubCommitsEnabled !== false ? '✅ Aktiviert' : '❌ Deaktiviert' %>
+          <br>
+          <span style="font-size: 0.85rem; opacity: 0.8;">
+            Verwende den <code>/github-commits</code> Command im Discord um den Status zu ändern.
+          </span>
+          <% if (cfg.githubWebhookChannelId) { %>
+            <br>
+            <span style="font-size: 0.85rem; opacity: 0.8;">
+              Logs werden gesendet an: <strong><%= channels.find(ch => ch.id === cfg.githubWebhookChannelId)?.name || 'Unbekannt' %></strong>
+            </span>
+          <% } else { %>
+            <br>
+            <span style="font-size: 0.85rem; opacity: 0.8; color: #ff6666;">
+              ⚠️ Kein Webhook-Channel ausgewählt! Bitte wähle einen Channel aus.
+            </span>
+          <% } %>
+        </div>
+
+        <p class="soft-note" style="margin-top: 1rem;">
+          💡 <strong>Webhook URL Setup:</strong><br>
+          1. Wähle oben den Channel aus<br>
+          2. Speichere die Einstellungen<br>
+          3. Füge in deinem GitHub Repository die Webhook-URL hinzu:<br>
+          <code style="font-size: 0.75rem; word-break: break-all;">
+            <%= process.env.PUBLIC_BASE_URL || 'https://trstickets.theredstonee.de' %>/webhook/github
+          </code><br>
+          4. Content-Type: <code>application/json</code><br>
+          5. Event: <strong>Pushes</strong> (oder "Just the push event")
+        </p>
+      </fieldset>
+
       <!-- Topics -->
       <fieldset>
         <legend><%= t.web.topics %></legend>

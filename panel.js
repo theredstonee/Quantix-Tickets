@@ -140,6 +140,7 @@ module.exports = (client)=>{
   router.use(passport.initialize());
   router.use(passport.session());
   router.use(express.urlencoded({extended:true}));
+  router.use(express.json()); // für GitHub Webhook JSON Payloads
 
   /* ====== Language Middleware ====== */
   router.use((req, res, next) => {
@@ -402,6 +403,13 @@ module.exports = (client)=>{
         ? req.body.priorityRoles_2.filter(r => r && r.trim())
         : (req.body.priorityRoles_2 ? [req.body.priorityRoles_2.trim()] : []);
 
+      // ---------- GitHub Webhook Channel ----------
+      if(req.body.githubWebhookChannelId){
+        cfg.githubWebhookChannelId = req.body.githubWebhookChannelId.trim();
+      } else {
+        cfg.githubWebhookChannelId = null;
+      }
+
       // ---------- Topics: Tabellen-Werte haben Vorrang ----------
       const labelInputs = [].concat(req.body.label||[]);
       const valueInputs = [].concat(req.body.value||[]);
@@ -576,6 +584,75 @@ module.exports = (client)=>{
     const file = path.join(__dirname, `transcript_${id}.html`);
     if(!fs.existsSync(file)) return res.status(404).send('Transcript nicht gefunden');
     res.sendFile(file);
+  });
+
+  /* ====== GitHub Webhook ====== */
+  router.post('/webhook/github', async (req, res) => {
+    try {
+      // Webhook sofort bestätigen
+      res.status(200).send('OK');
+
+      const payload = req.body;
+      const event = req.headers['x-github-event'];
+
+      // Nur Push-Events verarbeiten
+      if (event !== 'push') return;
+
+      const repository = payload.repository?.full_name || 'Unknown';
+      const commits = payload.commits || [];
+      const pusher = payload.pusher?.name || 'Unknown';
+      const ref = payload.ref || '';
+      const branch = ref.replace('refs/heads/', '');
+
+      // Nur für TRS-Tickets-Bot Repository
+      if (!repository.toLowerCase().includes('trs-tickets-bot')) return;
+
+      // Commits an alle Server senden, die GitHub Logs aktiviert haben
+      const guilds = await client.guilds.fetch();
+      for (const [guildId, guild] of guilds) {
+        try {
+          const cfg = readCfg(guildId);
+
+          // Prüfe ob GitHub Commits aktiviert sind und ein Channel konfiguriert ist
+          if (cfg.githubCommitsEnabled === false || !cfg.githubWebhookChannelId) continue;
+
+          const channel = await guild.channels.fetch(cfg.githubWebhookChannelId).catch(() => null);
+          if (!channel) continue;
+
+          // Embed für jeden Commit erstellen
+          for (const commit of commits.slice(0, 5)) { // Max 5 Commits
+            const embed = new EmbedBuilder()
+              .setTitle('📝 New Commit')
+              .setDescription(commit.message || 'No commit message')
+              .setColor(0x00ff88)
+              .addFields(
+                { name: '👤 Author', value: commit.author?.name || 'Unknown', inline: true },
+                { name: '🌿 Branch', value: branch, inline: true },
+                { name: '📦 Repository', value: repository, inline: false }
+              )
+              .setTimestamp(new Date(commit.timestamp))
+              .setFooter({ text: 'TRS Tickets Bot Updates' });
+
+            if (commit.url) {
+              embed.setURL(commit.url);
+            }
+
+            await channel.send({ embeds: [embed] });
+          }
+
+          // Wenn mehr als 5 Commits, zeige eine Zusammenfassung
+          if (commits.length > 5) {
+            await channel.send(`_... und ${commits.length - 5} weitere Commit(s)_`);
+          }
+
+        } catch (err) {
+          console.error(`GitHub Webhook Error für Guild ${guildId}:`, err);
+        }
+      }
+
+    } catch (err) {
+      console.error('GitHub Webhook Error:', err);
+    }
   });
 
   return router;
