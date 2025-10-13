@@ -10,8 +10,7 @@ module.exports = {
     .setName('version')
     .setDescription('Show current bot version')
     .setDescriptionLocalizations({
-      de: 'Zeige aktuelle Bot-Version',
-      he: 'הצג גרסת בוט נוכחית'
+      de: 'Zeige aktuelle Bot-Version'
     })
     .setDMPermission(false),
 

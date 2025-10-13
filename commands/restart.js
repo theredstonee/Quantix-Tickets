@@ -7,8 +7,7 @@ module.exports = {
     .setName('restart')
     .setDescription('Restart the bot')
     .setDescriptionLocalizations({
-      de: 'Bot neu starten',
-      he: 'אתחל מחדש את הבוט'
+      de: 'Bot neu starten'
     })
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDMPermission(false),

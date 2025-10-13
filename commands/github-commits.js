@@ -30,8 +30,7 @@ module.exports = {
     .setName('github-commits')
     .setDescription('Toggle GitHub commit logging for this server')
     .setDescriptionLocalizations({
-      de: 'GitHub Commit-Logs für diesen Server ein-/ausschalten',
-      he: 'הפעל/כבה רישום קומיטים של GitHub עבור שרת זה'
+      de: 'GitHub Commit-Logs für diesen Server ein-/ausschalten'
     })
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 

@@ -9,8 +9,7 @@ module.exports = {
     .setName('reload')
     .setDescription('Reload bot configuration and commands')
     .setDescriptionLocalizations({
-      de: 'Config und Commands neu laden',
-      he: 'טען מחדש הגדרות ופקודות'
+      de: 'Config und Commands neu laden'
     })
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDMPermission(false),
