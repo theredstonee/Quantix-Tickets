@@ -1,27 +1,34 @@
-# TRS Tickets Bot - Python Edition
+# TRS Tickets Bot - Python Version (Vollständig)
 
-Discord.js Bot auf Python portiert mit discord.py und Flask.
+**KOMPLETT IN PYTHON** - Discord Bot + Web Panel
+
+Vollständig portierte Version des TRS Tickets Bots mit discord.py und Flask.
 
 ## Struktur
 
 ```
 ├── main.py                 # Haupteintrag (startet Bot + Web-Panel)
-├── bot.py                  # Discord Bot (discord.py)
-├── web_panel.py           # Flask Web-Panel (OAuth, Admin)
+├── bot.py                  # Discord Bot (discord.py) + ALLE Commands
+├── panel_flask.py         # Flask Web-Panel (OAuth, Admin)
 ├── config.py              # Config-Verwaltung (Multi-Server)
 ├── requirements.txt       # Python Dependencies
 ├── .env                   # Umgebungsvariablen
-├── .env.example          # Beispiel-.env-Datei
 ├── utils/
 │   ├── __init__.py
 │   ├── translations.py    # Übersetzungssystem
 │   ├── helpers.py         # Helper-Funktionen, Rate-Limiting
 │   └── transcripts.py     # Transcript-Generierung
 ├── templates/            # Jinja2-Templates (für Flask)
-│   └── base.html        # Basis-Template
-├── translations/        # JSON-Übersetzungen (de, en, he)
+│   ├── base.html
+│   ├── home.html
+│   ├── panel.html
+│   ├── select_server.html
+│   ├── tickets.html
+│   ├── terms_of_service.html
+│   ├── privacy_policy.html
+│   └── imprint.html
 ├── configs/            # Server-spezifische Configs
-└── public/            # Static Files (CSS/JS)
+└── transcripts/       # Generierte Transkripte
 ```
 
 ## Installation
@@ -108,22 +115,32 @@ python web_panel.py
 
 ### Bot (bot.py)
 
-- Slash Commands (`/dashboard`, `/setlanguage`)
+**Alle Slash Commands:**
+- `/dashboard` - Link zum Web-Panel
+- `/setlanguage` - Sprache ändern
+- `/version` - Bot-Version anzeigen (Beta 0.3.2)
+- `/github-commits` - GitHub Commit Logs toggle
+- `/reload` - Config neu laden ohne Neustart
+- `/restart` - Bot komplett neu starten
+
+**Interaktionen:**
 - Select Menus (Topic-Auswahl)
 - Buttons (Close, Claim, Priority, Add User)
 - Modals (Formulare für Tickets)
-- Ticket-System mit Prioritäten
+- Ticket-System mit 3 Prioritäten (🟢 🟠 🔴)
 - Multi-Server-Support
 - Rate-Limiting für Kanal-Umbenennungen
 
-### Web-Panel (web_panel.py)
+### Web-Panel (panel_flask.py)
 
 - Discord OAuth2-Login
-- Server-Auswahl
+- Server-Auswahl (Multi-Server)
 - Admin-Panel für Config
-- Ticket-History
-- Transcript-Anzeige
-- Multi-Language-Support
+- Ticket-History mit Namen statt IDs
+- Transcript-Anzeige (HTML + TXT)
+- GitHub Webhook Endpoint
+- Multi-Language-Support (DE, EN, HE)
+- Prioritäten-Rollen Management
 
 ### Helper-Module
 
@@ -210,5 +227,5 @@ Gleiches wie Original-Bot.
 
 ---
 
-**Version:** Alpha 1.0 (Python)
-**Basiert auf:** TRS Tickets Bot v6.4 (JavaScript)
+**Version:** Beta 0.3.2 (Python - Vollständig portiert)
+**Basiert auf:** TRS Tickets Bot Beta 0.3.2 (ursprünglich Node.js)
