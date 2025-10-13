@@ -1,33 +1,32 @@
-// --- index.js | Ticket‑Bot v6.4 (Channelname Priority-Fix + Dynamische Formulare) ---
-// Neue Features ggü. deiner v6.3.2 FINAL:
-//  ✅ Dynamische Formular-Felder pro Topic (Modal bevor Channel erstellt wird)
-//  ✅ Formular-Konfiguration über config.json (cfg.formFields)
-//  ✅ Unterstützt bis zu 5 Felder (Discord Limit) – überschüssige werden ignoriert
-//  ✅ Felder können global oder topicspezifisch sein
-//  ✅ Erfasste Antworten werden dem Ticket-Embed als Felder hinzugefügt
-//  ✅ Speicherung der ausgefüllten Werte in tickets.json unter ticket.formData
-//  ✅ Channelname Priority-Fix (Rename Queue) unverändert beibehalten
-//
-//  Konfiguration (config.json -> formFields Beispiel):
-//  "formFields": [
-//     { "label": "Wie heißt du in Minecraft?", "id": "mcname", "style": "short", "required": true },
-//     { "label": "Welcher Dienst ist betroffen?", "id": "service", "style": "short", "required": true },
-//     { "label": "Beschreibe dein Anliegen", "id": "beschreibung", "style": "paragraph", "required": true },
-//     { "label": "Event ID (nur für event)", "id": "eventid", "style": "short", "required": false, "topic": "event" }
-//  ]
-//  Felder mit "topic" erscheinen nur für dieses Topic. Ohne "topic" = für alle Topics.
-//  Optional kann "topic" auch ein Array sein: "topic": ["bug","server"].
-//  style: "short" oder "paragraph". required: true/false. "id" optional (sonst auto f0,f1,...).
-//
-//  WICHTIG: Beim Auswählen eines Topics öffnet sich zuerst das Formular (falls Felder vorhanden). Erst nach Absenden wird der Channel erstellt.
-//
-//  Nur Code rund um Formulare wurde zusätzlich eingefügt.
-
 require('dotenv').config();
 
-/* ================= Imports ================= */
+const fs = require('fs');
 const path = require('path');
-const fs   = require('fs');
+
+let REQUIRED_APP_KEY;
+try {
+  const keyPath = path.join(__dirname, 'app.key');
+  REQUIRED_APP_KEY = fs.readFileSync(keyPath, 'utf8').trim();
+  if(!REQUIRED_APP_KEY || REQUIRED_APP_KEY.length < 10){
+    throw new Error('Invalid key format');
+  }
+} catch(err) {
+  console.error('\n❌ CRITICAL ERROR: app.key file not found or invalid!');
+  console.error('📝 Please ensure app.key file exists in the root directory');
+  console.error('🔐 Contact the developer for the correct app.key file');
+  console.error('⛔ Bot startup aborted for security reasons\n');
+  process.exit(1);
+}
+
+if (!process.env.APPLICATION_KEY || process.env.APPLICATION_KEY !== REQUIRED_APP_KEY) {
+  console.error('\n❌ CRITICAL ERROR: Invalid or missing APPLICATION_KEY!');
+  console.error('📝 Please set APPLICATION_KEY in your .env file');
+  console.error('🔐 Contact the developer for the correct APPLICATION_KEY');
+  console.error('⛔ Bot startup aborted for security reasons\n');
+  process.exit(1);
+}
+
+console.log('✅ Application Key verified successfully');
 const express = require('express');
 const {
   Client, GatewayIntentBits, Partials,
@@ -39,64 +38,53 @@ const {
 } = require('discord.js');
 const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
 
-/* ================= Konstanten ================= */
-const VERSION   = 'Alpha 1.0';                     // Bot Version
-const PREFIX    = '🎫│';                           // Präfix vor Ticket Channels
+const VERSION   = 'Alpha 1.0';
+const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },
   { dot: '🟠', embedColor: 0xff9900, label: 'Orange' },
   { dot: '🔴', embedColor: 0xd92b2b, label: 'Rot'    }
 ];
 
-// Helper: Team-Rolle aus Config holen (Legacy)
 function getTeamRole(guildId){
   const cfg = readCfg(guildId);
   return cfg.teamRoleId || null;
 }
 
-// Helper: Priority-Rollen für spezifische Priorität
 function getPriorityRoles(guildId, priority = null){
   const cfg = readCfg(guildId);
 
-  // Neue Struktur: priorityRoles
   if(cfg.priorityRoles){
     if(priority !== null){
-      // Spezifische Priorität
       const roles = cfg.priorityRoles[priority.toString()] || [];
       return Array.isArray(roles) ? roles : [];
     }
-    // Alle Rollen (flattened)
     const allRoles = [];
     Object.values(cfg.priorityRoles).forEach(roleList => {
       if(Array.isArray(roleList)) allRoles.push(...roleList);
     });
-    return [...new Set(allRoles)]; // Deduplizieren
+    return [...new Set(allRoles)];
   }
 
-  // Fallback: Legacy teamRoleId
   const legacyRole = cfg.teamRoleId;
   return legacyRole ? [legacyRole] : [];
 }
 
-// Helper: Alle Team-Rollen (alle Prioritäten + Legacy)
 function getAllTeamRoles(guildId){
   const cfg = readCfg(guildId);
   const roles = new Set();
 
-  // Neue Struktur
   if(cfg.priorityRoles){
     Object.values(cfg.priorityRoles).forEach(roleList => {
       if(Array.isArray(roleList)) roleList.forEach(r => roles.add(r));
     });
   }
 
-  // Legacy
   if(cfg.teamRoleId) roles.add(cfg.teamRoleId);
 
   return Array.from(roles).filter(r => r && r.trim());
 }
 
-/* ================= Command Collection ================= */
 const { Collection } = require('discord.js');
 const commandsCollection = new Collection();
 
@@ -114,13 +102,11 @@ function loadCommands(){
   console.log(`📦 ${commandsCollection.size} Commands geladen`);
 }
 
-/* ================= Pfade / Dateien ================= */
 const CONFIG_DIR   = path.join(__dirname,'configs');
-const CFG_PATH     = path.join(__dirname,'config.json'); // Legacy fallback
-const COUNTER_PATH = path.join(__dirname,'ticketCounter.json'); // Legacy
-const TICKETS_PATH = path.join(__dirname,'tickets.json'); // Legacy
+const CFG_PATH     = path.join(__dirname,'config.json');
+const COUNTER_PATH = path.join(__dirname,'ticketCounter.json');
+const TICKETS_PATH = path.join(__dirname,'tickets.json');
 
-// Pro-Server Pfade
 function getTicketsPath(guildId){
   if(!guildId) return TICKETS_PATH;
   return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
@@ -130,19 +116,16 @@ function getCounterPath(guildId){
   return path.join(CONFIG_DIR, `${guildId}_counter.json`);
 }
 
-/* ================= Safe JSON Helpers ================= */
 function safeRead(file, fallback){
   try { const raw = fs.readFileSync(file,'utf8'); return raw?JSON.parse(raw):fallback; } catch { return fallback; }
 }
 function safeWrite(file, data){ fs.writeFileSync(file, JSON.stringify(data,null,2)); }
 
-/* ================= Multi-Server Config System ================= */
 if(!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
 
 function readCfg(guildId){
   try {
     if(!guildId){
-      // Fallback auf legacy config.json
       return safeRead(CFG_PATH, {}) || {};
     }
     const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
@@ -150,19 +133,18 @@ function readCfg(guildId){
       const data = JSON.parse(fs.readFileSync(configPath,'utf8'));
       return data || {};
     } catch {
-      // Wenn keine Config existiert, erstelle default
       const defaultCfg = {
         guildId: guildId,
         topics: [],
         formFields: [],
-        teamRoleId: '1387525699908272218', // Legacy - wird durch priorityRoles ersetzt
+        teamRoleId: '1387525699908272218',
         priorityRoles: {
-          '0': [], // Grün - keine Rollen standardmäßig
-          '1': [], // Orange - keine Rollen standardmäßig
-          '2': []  // Rot - keine Rollen standardmäßig
+          '0': [],
+          '1': [],
+          '2': []
         },
-        githubCommitsEnabled: true, // Standardmäßig AN
-        githubWebhookChannelId: null, // Log-Channel für GitHub Commits
+        githubCommitsEnabled: true,
+        githubWebhookChannelId: null,
         ticketEmbed: {
           title: '🎫 Ticket #{ticketNumber}',
           description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
@@ -188,7 +170,6 @@ function readCfg(guildId){
 function writeCfg(guildId, data){
   try {
     if(!guildId){
-      // Legacy fallback
       safeWrite(CFG_PATH, data);
       return;
     }
@@ -199,11 +180,9 @@ function writeCfg(guildId, data){
   }
 }
 
-// Initialize other files (legacy)
 if(!fs.existsSync(COUNTER_PATH)) safeWrite(COUNTER_PATH, { last: 0 });
 if(!fs.existsSync(TICKETS_PATH)) safeWrite(TICKETS_PATH, []);
 
-// Helper-Funktionen für Tickets
 function loadTickets(guildId){
   const ticketsPath = getTicketsPath(guildId);
   if(!fs.existsSync(ticketsPath)) safeWrite(ticketsPath, []);
@@ -214,19 +193,18 @@ function saveTickets(guildId, tickets){
   safeWrite(ticketsPath, tickets);
 }
 
-/* ================= Express / Panel ================= */
 const app = express();
 app.set('view engine','ejs');
 app.set('views', path.join(__dirname,'views'));
 app.use(express.urlencoded({ extended:true }));
-app.use(express.static('public')); // für CSS/JS
+app.use(express.static('public'));
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.MessageContent  // <-- für Message-Inhalt-Zugriff
+    GatewayIntentBits.MessageContent
   ],
   partials: [Partials.Channel, Partials.Message]
 });
@@ -237,7 +215,6 @@ app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 const TOKEN = process.env.DISCORD_TOKEN;
 const PANEL_FIXED_URL = 'https://trstickets.theredstonee.de/panel';
 
-/* ================= Counter ================= */
 function nextTicket(guildId){
   const counterPath = getCounterPath(guildId);
   if(!fs.existsSync(counterPath)) safeWrite(counterPath, {last:0});
@@ -247,7 +224,6 @@ function nextTicket(guildId){
   return c.last;
 }
 
-/* ================= Button Rows ================= */
 function buttonRows(claimed, guildId = null){
   const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('request_close').setEmoji('❓').setLabel(t(guildId, 'buttons.request_close')).setStyle(ButtonStyle.Secondary)
@@ -265,7 +241,6 @@ function buttonRows(claimed, guildId = null){
   return [row1,row2,row3];
 }
 
-/* ================= Panel Select ================= */
 function buildPanelSelect(cfg){
   const topics = (cfg.topics||[]).filter(t => t && t.label && t.value);
   if(topics.length === 0){
@@ -279,13 +254,11 @@ function buildPanelSelect(cfg){
   );
 }
 
-/* ================= Slash Command Deploy ================= */
 async function deployCommands(){
   loadCommands();
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   const commands = Array.from(commandsCollection.values()).map(cmd => cmd.data.toJSON());
 
-  // Deploy commands to all guilds where bot is present
   const guilds = await client.guilds.fetch();
   for(const [guildId, guild] of guilds){
     try {
@@ -300,40 +273,32 @@ async function deployCommands(){
   }
 }
 
-/* ================= Cleanup alte Server-Daten (2 Monate inaktiv) ================= */
 async function cleanupOldServerData(){
   try {
-    const TWO_MONTHS_MS = 60 * 24 * 60 * 60 * 1000; // 60 Tage in Millisekunden
+    const TWO_MONTHS_MS = 60 * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
-    // Hole alle Server-IDs wo der Bot aktuell ist
     const activeGuilds = new Set(client.guilds.cache.map(g => g.id));
 
-    // Durchsuche alle Config-Dateien
     const configFiles = fs.readdirSync(CONFIG_DIR).filter(f => f.endsWith('.json') && !f.includes('_tickets') && !f.includes('_counter'));
 
     let deletedCount = 0;
     for(const file of configFiles){
       const guildId = file.replace('.json', '');
 
-      // Prüfe ob Bot noch auf dem Server ist
       if(activeGuilds.has(guildId)){
-        continue; // Bot ist noch auf Server, nicht löschen
+        continue;
       }
 
-      // Bot ist nicht mehr auf Server, prüfe Alter der Datei
       const configPath = path.join(CONFIG_DIR, file);
       const stats = fs.statSync(configPath);
-      const fileAge = now - stats.mtimeMs; // Zeit seit letzter Änderung
+      const fileAge = now - stats.mtimeMs;
 
       if(fileAge > TWO_MONTHS_MS){
-        // Datei ist älter als 2 Monate und Bot ist nicht mehr auf Server
         console.log(`🗑️ Lösche alte Server-Daten: ${guildId} (${Math.floor(fileAge / (24*60*60*1000))} Tage alt)`);
 
-        // Lösche Config
         fs.unlinkSync(configPath);
 
-        // Lösche zugehörige Tickets und Counter
         const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
         const counterPath = path.join(CONFIG_DIR, `${guildId}_counter.json`);
 
@@ -360,7 +325,6 @@ client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} bereit`);
 });
 
-// Guild Create Event - Deploy commands when bot joins a new server
 client.on(Events.GuildCreate, async (guild) => {
   console.log(`🆕 Bot joined new guild: ${guild.name} (${guild.id})`);
   try {
@@ -377,7 +341,6 @@ client.on(Events.GuildCreate, async (guild) => {
   }
 });
 
-/* ================= Ticket Embed Builder ================= */
 function buildTicketEmbed(cfg, i, topic, nr){
   const t = cfg.ticketEmbed || {};
   const rep = s => (s||'')
@@ -392,14 +355,12 @@ function buildTicketEmbed(cfg, i, topic, nr){
   return e;
 }
 
-/* ================= Channel Name Helpers (FIX mit Queue) ================= */
 function buildChannelName(ticketNumber, priorityIndex){
   const num = ticketNumber.toString().padStart(5,'0');
   const st  = PRIORITY_STATES[priorityIndex] || PRIORITY_STATES[0];
   return `${PREFIX}${st.dot}ticket-${num}`;
 }
-// Debounce + Queue
-const renameQueue = new Map(); // channelId -> { desiredName, timer, lastApplied }
+const renameQueue = new Map();
 const RENAME_MIN_INTERVAL_MS = 3000;
 const RENAME_MAX_DELAY_MS    = 8000;
 function scheduleChannelRename(channel, desired){
@@ -420,7 +381,6 @@ function scheduleChannelRename(channel, desired){
 }
 function renameChannelIfNeeded(channel, ticket){ const desired = buildChannelName(ticket.id, ticket.priority||0); if(channel.name === desired) return; scheduleChannelRename(channel, desired); }
 
-/* ================= Logging ================= */
 async function logEvent(guild, text){
   const cfg = readCfg(guild.id);
   if(!cfg.logChannelId) return;
@@ -428,7 +388,6 @@ async function logEvent(guild, text){
     const ch = await guild.channels.fetch(cfg.logChannelId);
     if(!ch) return;
 
-    // Berliner Zeitzone
     const now = new Date();
     const berlinTime = now.toLocaleString('de-DE', {
       timeZone: 'Europe/Berlin',
@@ -438,7 +397,7 @@ async function logEvent(guild, text){
 
     const embed = new EmbedBuilder()
       .setDescription(text)
-      .setColor(0x00ff00) // Grün
+      .setColor(0x00ff00)
       .setTimestamp()
       .setFooter({ text: 'TRS Tickets ©️' });
 
@@ -446,12 +405,10 @@ async function logEvent(guild, text){
   } catch {}
 }
 
-/* ================= Transcript ================= */
 async function createTranscript(channel, ticket, opts = {}) {
   const { AttachmentBuilder } = require('discord.js');
   const resolveMentions = !!opts.resolveMentions;
 
-  // bis zu 1000 Nachrichten sammeln
   let messages = [];
   let lastId;
   while (messages.length < 1000) {
@@ -462,7 +419,6 @@ async function createTranscript(channel, ticket, opts = {}) {
   }
   messages.sort((a,b)=> a.createdTimestamp - b.createdTimestamp);
 
-  // Hilfsfunktionen für Mentions -> Namen
   const rolesCache   = channel.guild.roles.cache;
   const chansCache   = channel.guild.channels.cache;
   const membersCache = channel.guild.members.cache;
@@ -471,26 +427,22 @@ async function createTranscript(channel, ticket, opts = {}) {
     if (!resolveMentions || !text) return text;
 
     return text
-      // User Mentions <@123> / <@!123>
       .replace(/<@!?(\d{17,20})>/g, (_, id) => {
         const m = membersCache.get(id);
         const tag  = m?.user?.tag || id;
         const name = m?.displayName || tag;
         return `@${name}`;
       })
-      // Rollen <@&123>
       .replace(/<@&(\d{17,20})>/g, (_, id) => {
         const r = rolesCache.get(id);
         return `@${(r && r.name) || `Rolle:${id}`}`;
       })
-      // Channels <#123>
       .replace(/<#(\d{17,20})>/g, (_, id) => {
         const c = chansCache.get(id);
         return `#${(c && c.name) || id}`;
       });
   };
 
-  // TXT-Inhalt
   const lines = [
     `# Transcript Ticket ${ticket.id}`,
     `Channel: ${channel.name}`,
@@ -509,7 +461,6 @@ async function createTranscript(channel, ticket, opts = {}) {
   }
   const txt = lines.join('\n');
 
-  // Modernes Discord-ähnliches HTML-Design
   const html = `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -802,15 +753,14 @@ async function createTranscript(channel, ticket, opts = {}) {
 }
 
 
-/* ================= FormField Helper ================= */
 function getFormFieldsForTopic(cfg, topicValue){
   const all = Array.isArray(cfg.formFields)? cfg.formFields : [];
   return all.filter(f => {
     if(!f) return false;
-    if(!f.topic) return true; // global
+    if(!f.topic) return true;
     if(Array.isArray(f.topic)) return f.topic.includes(topicValue);
     return f.topic === topicValue;
-  }).slice(0,5); // Discord Limit
+  }).slice(0,5);
 }
 function normalizeField(field, index){
   return {
@@ -821,19 +771,15 @@ function normalizeField(field, index){
   };
 }
 
-/* ================= Interactions ================= */
 client.on(Events.InteractionCreate, async i => {
   try {
-    // Load config for this guild
     const cfg = readCfg(i.guild?.id) || {};
 
     if(i.isChatInputCommand()){
-      // /setlanguage Command Handler
       if(i.commandName === 'setlanguage'){
         const guildId = i.guild?.id;
         if(!guildId) return i.reply({ content: '❌ This command can only be used in a server.', ephemeral: true });
 
-        // Check if user has admin permission
         if(!i.member.permissions.has(PermissionsBitField.Flags.Administrator)){
           return i.reply({ content: t(guildId, 'language.only_admin'), ephemeral: true });
         }
@@ -850,11 +796,9 @@ client.on(Events.InteractionCreate, async i => {
 
       const command = commandsCollection.get(i.commandName);
       if(command){
-        // Spezielle Behandlung für reload - Commands neu deployen nach Reload
         if(i.commandName === 'reload'){
           try {
             await command.execute(i);
-            // Nach erfolgreichem Reload, Commands neu deployen
             loadCommands();
             await deployCommands();
           } catch(err){
@@ -862,7 +806,6 @@ client.on(Events.InteractionCreate, async i => {
           }
           return;
         }
-        // Normale Command-Ausführung
         try {
           await command.execute(i);
         } catch(err){
@@ -875,7 +818,6 @@ client.on(Events.InteractionCreate, async i => {
       }
     }
 
-    // Topic Auswahl -> ggf. Formular anzeigen
     if(i.isStringSelectMenu() && i.customId==='topic'){
       if(i.values[0] === 'none') return i.reply({content:'⚠️ Keine Topics konfiguriert. Bitte konfiguriere zuerst Topics im Panel.',ephemeral:true});
       const topic = cfg.topics?.find(t=>t.value===i.values[0]);
@@ -883,7 +825,6 @@ client.on(Events.InteractionCreate, async i => {
 
       const formFields = getFormFieldsForTopic(cfg, topic.value);
 
-      // Panel-Nachricht zurücksetzen (Select-Menü refresh)
       const resetPanelMessage = async () => {
         try {
           const row = buildPanelSelect(cfg);
@@ -902,7 +843,6 @@ client.on(Events.InteractionCreate, async i => {
       };
 
       if(formFields.length){
-        // Panel zurücksetzen und Modal anzeigen
         await resetPanelMessage();
 
         const modal = new ModalBuilder().setCustomId(`modal_newticket:${topic.value}`).setTitle(`Ticket: ${topic.label}`.substring(0,45));
@@ -919,13 +859,11 @@ client.on(Events.InteractionCreate, async i => {
         return i.showModal(modal);
       }
 
-      // Kein Formular -> Panel mit update zurücksetzen und Ticket erstellen
       await resetPanelMessage();
       await i.deferReply({ ephemeral: true });
       return await createTicketChannel(i, topic, {}, cfg);
     }
 
-    // Modal Submit (neues Ticket)
     if(i.isModalSubmit() && i.customId.startsWith('modal_newticket:')){
       const topicValue = i.customId.split(':')[1];
       const topic = cfg.topics?.find(t=>t.value===topicValue);
@@ -938,7 +876,6 @@ client.on(Events.InteractionCreate, async i => {
     }
 
     if(i.isButton()){
-      // GitHub Commits Toggle Button
       if(i.customId.startsWith('github_toggle:')){
         const guildId = i.customId.split(':')[1];
         if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
@@ -950,7 +887,6 @@ client.on(Events.InteractionCreate, async i => {
         cfg.githubCommitsEnabled = newStatus;
         writeCfg(guildId, cfg);
 
-        // Update embed
         const embed = new EmbedBuilder()
           .setTitle('⚙️ GitHub Commit Logs')
           .setDescription(
@@ -972,7 +908,6 @@ client.on(Events.InteractionCreate, async i => {
 
         await i.update({ embeds: [embed], components: [row] });
 
-        // Log event
         await logEvent(i.guild, `⚙️ GitHub Commit Logs ${newStatus ? 'enabled' : 'disabled'} by <@${i.user.id}>`);
         return;
       }
@@ -993,18 +928,15 @@ client.on(Events.InteractionCreate, async i => {
         return i.reply({ephemeral:true,content:'Anfrage gesendet'});
       }
 
-      // Unclaim: Nur Claimer kann unclaimen
       if(i.customId==='unclaim'){
         if(!isClaimer && !isTeam) return i.reply({ephemeral:true,content:'Nur der Claimer kann unclaimen'});
 
-        // Berechtigungen zurücksetzen: Ersteller + Team (alle hinzugefügten User behalten Zugriff)
         try {
           const permissions = [
             { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
             { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
           ];
 
-          // Team-Rolle hinzufügen wenn existent
           if(TEAM_ROLE && TEAM_ROLE.trim()){
             try {
               await i.guild.roles.fetch(TEAM_ROLE);
@@ -1014,7 +946,6 @@ client.on(Events.InteractionCreate, async i => {
             }
           }
 
-          // Hinzugefügte User auch erlauben
           if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
             ticket.addedUsers.forEach(uid => {
               permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
@@ -1023,7 +954,6 @@ client.on(Events.InteractionCreate, async i => {
 
           await i.channel.permissionOverwrites.set(permissions);
 
-          // Team-Rolle pingen bei Unclaim
           const mentionTeam = TEAM_ROLE ? `<@&${TEAM_ROLE}>` : '';
           await i.channel.send(`🔄 <@${i.user.id}> ${t(guildId, 'messages.ticket_unclaimed', { user: `<@${i.user.id}>` })} ${mentionTeam}`);
         } catch(err) {
@@ -1036,17 +966,14 @@ client.on(Events.InteractionCreate, async i => {
         return;
       }
 
-      // Andere Buttons: Nur Team
       if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team'});
 
       switch(i.customId){
         case 'team_close':
         case 'close': {
-          // Status speichern
          ticket.status = 'geschlossen';
          saveTickets(guildId, log);
 
-         // Namen statt @IDs
         const closer = await i.guild.members.fetch(i.user.id).catch(()=>null);
         const closerTag  = closer?.user?.tag || i.user.tag || i.user.username || i.user.id;
         const closerName = closer?.displayName || closerTag;
@@ -1055,14 +982,11 @@ client.on(Events.InteractionCreate, async i => {
 
         await i.reply({ ephemeral:true, content:'Ticket wird geschlossen…' });
 
-        // Keine Mentions mehr, nur Namen anzeigen (damit der Transcript sauber ist)
         await i.channel.send(`🔒 Ticket geschlossen von ${closerName} (${closerTag}) • ${teamLabel}`);
 
-        // Transcript erstellen (mit Mention-Umwandlung, siehe Funktion unten)
         let files = null;
         try { files = await createTranscript(i.channel, ticket, { resolveMentions: true }); } catch {}
 
-        // Transcript hochladen (falls Channel konfiguriert)
         const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
         if (transcriptChannelId && files){
           try {
@@ -1084,7 +1008,6 @@ client.on(Events.InteractionCreate, async i => {
          } catch {}
        }
 
-  // Logging & Channel löschen
   logEvent(i.guild, t(guildId, 'logs.ticket_closed', { id: ticket.id, user: closerTag }));
   setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
   return;
@@ -1092,7 +1015,6 @@ client.on(Events.InteractionCreate, async i => {
         case 'claim':
           ticket.claimer = i.user.id; saveTickets(guildId, log);
 
-          // Berechtigungen anpassen: Claimer + Ersteller + Team + hinzugefügte User
           try {
             const permissions = [
               { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
@@ -1100,7 +1022,6 @@ client.on(Events.InteractionCreate, async i => {
               { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
             ];
 
-            // Team-Rolle hinzufügen wenn existent
             if(TEAM_ROLE && TEAM_ROLE.trim()){
               try {
                 await i.guild.roles.fetch(TEAM_ROLE);
@@ -1110,7 +1031,6 @@ client.on(Events.InteractionCreate, async i => {
               }
             }
 
-            // Hinzugefügte User behalten Zugriff
             if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
               ticket.addedUsers.forEach(uid => {
                 permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
@@ -1119,7 +1039,6 @@ client.on(Events.InteractionCreate, async i => {
 
             await i.channel.permissionOverwrites.set(permissions);
 
-            // Team-Rolle pingen bei Claim
             const mentionTeam = TEAM_ROLE ? `<@&${TEAM_ROLE}>` : '';
             await i.channel.send(`✅ <@${i.user.id}> ${t(guildId, 'messages.ticket_claimed', { user: `<@${i.user.id}>` })} ${mentionTeam}`);
           } catch(err) {
@@ -1164,20 +1083,16 @@ client.on(Events.InteractionCreate, async i => {
         const ticket = log.find(t=>t.channelId===i.channel.id);
         if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz'});
 
-        // Prüfen ob User schon Zugriff hat
         if(!ticket.addedUsers) ticket.addedUsers = [];
         if(ticket.addedUsers.includes(id) || ticket.userId === id || ticket.claimer === id)
           return i.reply({ephemeral:true,content:'Hat bereits Zugriff'});
 
-        // User zur Liste hinzufügen
         ticket.addedUsers.push(id);
         saveTickets(guildId, log);
 
-        // Berechtigungen setzen
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
         await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`});
 
-        // Team-Rolle pingen bei User hinzufügen
         const TEAM_ROLE_ADD = getTeamRole(guildId);
         const mentionTeam = TEAM_ROLE_ADD ? `<@&${TEAM_ROLE_ADD}>` : '';
         await i.channel.send(`➕ <@${id}> ${t(guildId, 'messages.user_added_success', { user: `<@${id}>` }).replace('✅', '')} ${mentionTeam}`);
@@ -1194,12 +1109,10 @@ client.on(Events.InteractionCreate, async i => {
   }
 });
 
-/* ================= Ticket Erstellung (mit optionalen Formular-Daten) ================= */
 async function createTicketChannel(interaction, topic, formData, cfg){
   const guildId = interaction.guild.id;
   const nr = nextTicket(guildId);
 
-  // Parent-Kategorie validieren
   let parentId = null;
   if(cfg.ticketCategoryId && cfg.ticketCategoryId.trim()){
     try {
@@ -1212,13 +1125,11 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     }
   }
 
-  // Permission Overwrites vorbereiten
   const permOverwrites = [
     { id:interaction.guild.id, deny: PermissionsBitField.Flags.ViewChannel },
     { id:interaction.user.id, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
   ];
 
-  // Team-Rolle hinzufügen wenn gültig (Legacy)
   const TEAM_ROLE = getTeamRole(guildId);
   if(TEAM_ROLE && TEAM_ROLE.trim()){
     try {
@@ -1229,7 +1140,6 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     }
   }
 
-  // Priority-Rollen hinzufügen (default priority = 0 = Green)
   const priorityRoles = getPriorityRoles(guildId, 0);
   for(const roleId of priorityRoles){
     if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
@@ -1249,12 +1159,9 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     permissionOverwrites: permOverwrites
   });
   const embed = buildTicketEmbed(cfg, interaction, topic, nr);
-  // Formular-Ergebnisse als Fields anhängen
   const formKeys = Object.keys(formData||{});
   if(formKeys.length){
-    // Labels der Formular-Felder finden
     const formFields = getFormFieldsForTopic(cfg, topic.value).map(normalizeField);
-    // Max 25 Felder
     const fields = formKeys.slice(0,25).map(k=>{
       const field = formFields.find(f=>f.id===k);
       const label = field ? field.label : k;
@@ -1264,11 +1171,9 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   }
   await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
 
-  // Team-Rolle + Priority-Rollen pingen
   const mentions = [];
   if (TEAM_ROLE) mentions.push(`<@&${TEAM_ROLE}>`);
 
-  // Priority-Rollen für Green (0) pingen
   const greenRoles = getPriorityRoles(guildId, 0);
   for(const roleId of greenRoles){
     if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
@@ -1280,7 +1185,6 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     await ch.send({ content: `${mentions.join(' ')} ${t(guildId, 'ticket.created')}` });
   }
 
-  // Nutzer informieren
   if(interaction.deferred){
     await interaction.editReply({ content:`Ticket erstellt: ${ch}` });
   } else if(interaction.isModalSubmit()){
@@ -1288,7 +1192,6 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   } else {
     await interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
   }
-  // Speichern
   const ticketsPath = getTicketsPath(guildId);
   if(!fs.existsSync(ticketsPath)) safeWrite(ticketsPath, []);
   const log = safeRead(ticketsPath, []);
@@ -1296,7 +1199,6 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   safeWrite(ticketsPath, log);
   logEvent(interaction.guild, t(guildId, 'logs.ticket_created', { id: nr, user: `<@${interaction.user.id}>`, topic: topic.label }));
 
-  // Panel Reset (Dropdown wiederherstellen)
   try {
     if(cfg.panelMessageId && cfg.panelChannelId){
       const panelChannel = await interaction.guild.channels.fetch(cfg.panelChannelId).catch(()=>null);
@@ -1316,10 +1218,9 @@ async function createTicketChannel(interaction, topic, formData, cfg){
         }
       }
     }
-  } catch(e){ /* ignorieren */ }
+  } catch(e){ }
 }
 
-/* ================= Priority Update ================= */
 async function updatePriority(interaction, ticket, log, dir, guildId){
   renameChannelIfNeeded(interaction.channel, ticket);
   const msg = await interaction.channel.messages.fetch({limit:10}).then(c=>c.find(m=>m.embeds.length)).catch(()=>null);
@@ -1327,31 +1228,26 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
   if(msg){ const e = EmbedBuilder.from(msg.embeds[0]); e.setColor(state.embedColor); await msg.edit({embeds:[e]}); }
   saveTickets(guildId, log);
 
-  // Channel-Berechtigungen für neue Priority-Rollen aktualisieren
   try {
     const currentPriority = ticket.priority || 0;
     const newPriorityRoles = getPriorityRoles(guildId, currentPriority);
     const allPriorityRoles = getAllTeamRoles(guildId);
 
-    // Basis-Berechtigungen (Ersteller + @everyone deny)
     const permissions = [
       { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
       { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
     ];
 
-    // Claimer hinzufügen wenn vorhanden
     if(ticket.claimer){
       permissions.push({ id: ticket.claimer, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
     }
 
-    // Hinzugefügte User
     if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
       ticket.addedUsers.forEach(uid => {
         permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
       });
     }
 
-    // Legacy Team-Rolle
     const TEAM_ROLE = getTeamRole(guildId);
     if(TEAM_ROLE && TEAM_ROLE.trim()){
       try {
@@ -1360,7 +1256,6 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
       } catch {}
     }
 
-    // Neue Priority-Rollen hinzufügen
     for(const roleId of newPriorityRoles){
       if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
         try {
@@ -1372,7 +1267,6 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
       }
     }
 
-    // Alle anderen Priority-Rollen entfernen (die nicht zur aktuellen Priorität gehören)
     for(const roleId of allPriorityRoles){
       if(roleId && roleId.trim() && !newPriorityRoles.includes(roleId) && roleId !== TEAM_ROLE){
         try {
@@ -1387,12 +1281,10 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
     console.error('Fehler beim Aktualisieren der Priority-Rollen-Berechtigungen:', err);
   }
 
-  // Team-Rolle + neue Priority-Rollen pingen
   const mentions = [];
   const TEAM_ROLE = getTeamRole(guildId);
   if (TEAM_ROLE) mentions.push(`<@&${TEAM_ROLE}>`);
 
-  // Neue Priority-Rollen pingen
   const newPriorityRoles = getPriorityRoles(guildId, ticket.priority || 0);
   for(const roleId of newPriorityRoles){
     if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
@@ -1408,12 +1300,9 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
   await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
 }
 
-/* ================= Message Delete für unbefugte Nutzer (nur wenn geclaimed) ================= */
 client.on(Events.MessageCreate, async (message) => {
-  // Ignoriere Bot-Nachrichten
   if(message.author.bot) return;
 
-  // Prüfe ob es ein Ticket-Channel ist
   if(!message.channel.name || !message.channel.name.startsWith(PREFIX)) return;
 
   try {
@@ -1423,10 +1312,8 @@ client.on(Events.MessageCreate, async (message) => {
     const ticket = log.find(t => t.channelId === message.channel.id);
     if(!ticket) return;
 
-    // Nur prüfen wenn Ticket geclaimed ist
     if(!ticket.claimer) return;
 
-    // Berechtigte Nutzer
     const authorId = message.author.id;
     const isCreator = ticket.userId === authorId;
     const isClaimer = ticket.claimer === authorId;
@@ -1434,15 +1321,12 @@ client.on(Events.MessageCreate, async (message) => {
     const TEAM_ROLE = getTeamRole(guildId);
     const isTeam = TEAM_ROLE ? message.member?.roles?.cache?.has(TEAM_ROLE) : false;
 
-    // Wenn nicht berechtigt -> löschen
     if(!isCreator && !isClaimer && !isAdded && !isTeam){
       await message.delete().catch(()=>{});
 
-      // DM an den Nutzer senden
       try {
         await message.author.send(`❌ Du hast keine Berechtigung in Ticket #${ticket.id} zu schreiben. Dieses Ticket wurde geclaimed und ist nur für Ersteller, Claimer, hinzugefügte Nutzer und Team-Mitglieder zugänglich.`);
       } catch {
-        // DM fehlgeschlagen (DMs deaktiviert)
       }
     }
   } catch(err) {

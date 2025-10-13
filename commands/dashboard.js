@@ -1,4 +1,3 @@
-// commands/dashboard.js
 const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 
 module.exports = {

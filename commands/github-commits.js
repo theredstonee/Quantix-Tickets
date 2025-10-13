@@ -1,4 +1,3 @@
-// commands/github-commits.js - GitHub Commit Logs Toggle
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { t } = require('../translations');
 const fs = require('fs');
@@ -43,7 +42,6 @@ module.exports = {
       });
     }
 
-    // Check admin permissions
     if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
       return interaction.reply({
         content: t(guildId, 'language.only_admin') || '❌ Only administrators can use this command.',
@@ -53,10 +51,8 @@ module.exports = {
 
     const cfg = readCfg(guildId);
 
-    // Default: enabled
     const currentStatus = cfg.githubCommitsEnabled !== false;
 
-    // Create status embed
     const embed = new EmbedBuilder()
       .setTitle('⚙️ GitHub Commit Logs')
       .setDescription(
@@ -68,7 +64,6 @@ module.exports = {
       .setFooter({ text: 'TRS Tickets ©️' })
       .setTimestamp();
 
-    // Create toggle button
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`github_toggle:${guildId}`)

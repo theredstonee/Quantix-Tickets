@@ -1,4 +1,3 @@
-// commands/update.js
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { exec } = require('child_process');
 const util = require('util');
@@ -16,7 +15,6 @@ module.exports = {
     try {
       console.log('🔄 Update angefordert von', interaction.user.tag);
 
-      // Git pull
       const { stdout, stderr } = await execPromise('git pull');
 
       let response = '📥 **Git Pull Output:**\n```\n' + stdout + '\n```';
@@ -24,7 +22,6 @@ module.exports = {
         response += '\n⚠️ **Stderr:**\n```\n' + stderr + '\n```';
       }
 
-      // Prüfen ob Updates vorhanden waren
       if (stdout.includes('Already up to date') || stdout.includes('Bereits aktuell')) {
         response += '\n✅ Bereits auf dem neuesten Stand!';
         await interaction.editReply(response);
@@ -34,13 +31,11 @@ module.exports = {
       response += '\n\n🔄 Bot wird neu gestartet...';
       await interaction.editReply(response);
 
-      // NPM Install (falls package.json geändert wurde)
       console.log('📦 Running npm install...');
       await execPromise('npm install').catch(err => {
         console.warn('⚠️ npm install warning:', err.message);
       });
 
-      // Bot neu starten
       setTimeout(() => {
         console.log('🔄 Restarting after update...');
         process.exit(0);

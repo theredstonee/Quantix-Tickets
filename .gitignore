@@ -1,0 +1,8 @@
+~/ticketbot/
+/node_modules
+/config.json
+/ticketCounter.json
+/tickets.json
+/.env
+/CLAUDE.md
+/app.key

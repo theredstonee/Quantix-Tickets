@@ -1,10 +1,3 @@
-// panel.js – HTML Ticket-Verlauf mit Namen statt IDs (angepasst)
-// Änderungen: robuster POST-/panel-Handler für korrektes Speichern der Embeds & FormFields
-//  - Leere Felder werden als leer gespeichert (nicht mehr "verschluckt")
-//  - Hex-Farbe wird validiert & mit führendem # normalisiert
-//  - Topics: Tabellenwerte haben Vorrang, sonst topicsJson
-//  - /tickets rendert tickets.ejs inkl. Member-Map für Namen statt IDs
-
 require('dotenv').config();
 const express  = require('express');
 const session  = require('express-session');
@@ -19,13 +12,11 @@ const { marked } = require('marked');
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 
-const VERSION = 'Beta 0.3.3'; // Bot Version
+const VERSION = 'Beta 0.3.3';
 
-// Markdown Parser mit DOMPurify (XSS Protection)
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
 
-// Marked konfigurieren
 marked.setOptions({
   breaks: true,
   gfm: true,
@@ -33,7 +24,6 @@ marked.setOptions({
   mangle: false
 });
 
-// Markdown zu HTML konvertieren (sanitized)
 function renderMarkdown(text){
   if(!text) return '';
   try {
@@ -45,17 +35,14 @@ function renderMarkdown(text){
   }
 }
 
-/* ====== Config laden (Multi-Server) ====== */
 const CONFIG_DIR = path.join(__dirname, 'configs');
 if(!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
 
-// Legacy config.json als Fallback
 const LEGACY_CONFIG = path.join(__dirname, 'config.json');
 
 function readCfg(guildId){
   try {
     if(!guildId){
-      // Fallback auf legacy config.json
       try {
         const data = JSON.parse(fs.readFileSync(LEGACY_CONFIG,'utf8'));
         return data || {};
@@ -68,12 +55,11 @@ function readCfg(guildId){
       const data = JSON.parse(fs.readFileSync(configPath,'utf8'));
       return data || {};
     } catch {
-      // Wenn keine Config existiert, erstelle default
       const defaultCfg = {
         guildId: guildId,
         topics: [],
         formFields: [],
-        teamRoleId: '1387525699908272218', // Default Team-Rolle
+        teamRoleId: '1387525699908272218',
         ticketEmbed: {
           title: '🎫 Ticket #{ticketNumber}',
           description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
@@ -109,16 +95,13 @@ function writeCfg(guildId, data){
   }
 }
 
-let cfg = readCfg(); // Legacy fallback
+let cfg = readCfg();
 
-/* ====== Basis-URL (für Callback) ====== */
 const BASE = process.env.PUBLIC_BASE_URL || '';
 
-/* ====== Passport Serialisierung ====== */
 passport.serializeUser((u,d)=>d(null,u));
 passport.deserializeUser((u,d)=>d(null,u));
 
-/* ====== Discord Strategy ====== */
 passport.use(new Strategy({
   clientID: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
@@ -130,7 +113,6 @@ passport.use(new Strategy({
 module.exports = (client)=>{
   const router = express.Router();
 
-  /* ====== Log Helper ====== */
   async function logEvent(guildId, text, user){
     try {
       const cfg = readCfg(guildId);
@@ -155,7 +137,6 @@ module.exports = (client)=>{
     }
   }
 
-  /* ====== Session ====== */
   router.use(cookieParser());
   router.use(session({
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
@@ -167,11 +148,9 @@ module.exports = (client)=>{
   router.use(passport.initialize());
   router.use(passport.session());
   router.use(express.urlencoded({extended:true}));
-  router.use(express.json()); // für GitHub Webhook JSON Payloads
+  router.use(express.json());
 
-  /* ====== Language Middleware ====== */
   router.use((req, res, next) => {
-    // Get language from guild config if available, otherwise use cookie
     const guildId = req.session?.selectedGuild;
     let lang = 'de';
 
@@ -184,23 +163,20 @@ module.exports = (client)=>{
 
     res.locals.lang = lang;
     res.locals.t = getTranslations(lang);
-    res.locals.renderMarkdown = renderMarkdown; // Markdown helper für alle Templates
+    res.locals.renderMarkdown = renderMarkdown;
     next();
   });
 
-  /* ====== Helper: Auth Middleware (Server-spezifisch) ====== */
   function isAuth(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
-    // Prüfe ob ein Server ausgewählt wurde
     if(!req.session.selectedGuild) return res.redirect('/select-server');
 
     const guildId = req.session.selectedGuild;
     const entry = req.user.guilds?.find(g=>g.id===guildId);
     if(!entry) return res.status(403).send('Du bist nicht auf diesem Server oder der Bot ist nicht auf dem Server.');
 
-    // Nur Administrator darf zugreifen
-    const ADMIN = 0x8n; // Administrator Permission
+    const ADMIN = 0x8n;
     if(!(BigInt(entry.permissions) & ADMIN)) {
       return res.status(403).send('Keine Berechtigung. Du brauchst Administrator-Rechte auf diesem Server.');
     }
@@ -208,7 +184,6 @@ module.exports = (client)=>{
     next();
   }
 
-  /* ====== Root ====== */
   router.get('/', (req,res)=>{
     const lang = req.cookies.lang || 'de';
     const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
@@ -220,7 +195,6 @@ module.exports = (client)=>{
     });
   });
 
-  /* ====== Terms of Service (No Auth Required) ====== */
   router.get('/terms-of-service', (req, res) => {
     const lang = req.cookies.lang || 'de';
     res.render('terms-of-service', {
@@ -229,7 +203,6 @@ module.exports = (client)=>{
     });
   });
 
-  /* ====== Privacy Policy (No Auth Required) ====== */
   router.get('/privacy-policy', (req, res) => {
     const lang = req.cookies.lang || 'de';
     res.render('privacy-policy', {
@@ -238,7 +211,6 @@ module.exports = (client)=>{
     });
   });
 
-  /* ====== Imprint / Impressum (No Auth Required) ====== */
   router.get('/imprint', (req, res) => {
     const lang = req.cookies.lang || 'de';
     res.render('imprint', {
@@ -247,16 +219,13 @@ module.exports = (client)=>{
     });
   });
 
-  /* ====== Server Auswahl ====== */
   router.get('/select-server', async (req,res)=>{
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
     try {
-      // Hole alle Guilds wo der Bot ist
       const botGuilds = await client.guilds.fetch();
       const botGuildIds = new Set(botGuilds.map(g => g.id));
 
-      // Filter User-Guilds: Nur wo Bot ist UND User Admin ist
       const ADMIN = 0x8n;
       const availableServers = (req.user.guilds || [])
         .filter(g => {
@@ -286,14 +255,12 @@ module.exports = (client)=>{
     }
   });
 
-  /* ====== Server Auswahl speichern ====== */
   router.post('/select-server', (req,res)=>{
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
     const guildId = req.body.guildId;
     if(!guildId) return res.redirect('/select-server');
 
-    // Prüfe ob User Admin auf dem Server ist
     const ADMIN = 0x8n;
     const entry = req.user.guilds?.find(g=>g.id===guildId);
     if(!entry || !(BigInt(entry.permissions) & ADMIN)){
@@ -304,7 +271,6 @@ module.exports = (client)=>{
     res.redirect('/panel');
   });
 
-  /* ====== Login Rate-Limit ====== */
   router.get('/login', (req,res,next)=>{
     if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/panel');
     const now = Date.now();
@@ -315,7 +281,6 @@ module.exports = (client)=>{
     next();
   }, passport.authenticate('discord'));
 
-  /* ====== OAuth Callback ====== */
   router.get('/auth/discord/callback', (req,res,next)=>{
     passport.authenticate('discord',(err,user)=>{
       if(err){
@@ -331,17 +296,14 @@ module.exports = (client)=>{
     })(req,res,next);
   });
 
-  /* ====== Logout ====== */
   router.get('/logout',(req,res)=>{ req.logout?.(()=>{}); req.session.destroy(()=>res.redirect('/')); });
 
-  /* ====== User Language Preference (Cookie-based, No Auth) ====== */
   router.get('/set-user-language/:lang', (req, res) => {
     const lang = ['de', 'en', 'he'].includes(req.params.lang) ? req.params.lang : 'de';
-    res.cookie('lang', lang, { maxAge: 365 * 24 * 60 * 60 * 1000, path: '/' }); // 1 year
+    res.cookie('lang', lang, { maxAge: 365 * 24 * 60 * 60 * 1000, path: '/' });
     res.redirect('/');
   });
 
-  /* ====== Language Switch (Guild-based) ====== */
   router.get('/set-language/:lang', isAuth, async (req, res) => {
     const lang = ['de', 'en', 'he'].includes(req.params.lang) ? req.params.lang : 'de';
     const guildId = req.session.selectedGuild;
@@ -351,7 +313,6 @@ module.exports = (client)=>{
       cfg.language = lang;
       writeCfg(guildId, cfg);
 
-      // Log Event
       const langName = getLanguageName(lang);
       await logEvent(guildId, t(guildId, 'logs.language_changed', { language: langName }), req.user);
     }
@@ -359,12 +320,10 @@ module.exports = (client)=>{
     res.redirect(req.get('referer') || '/panel');
   });
 
-  /* ====== Panel Ansicht ====== */
   router.get('/panel', isAuth, async (req,res)=>{
     const guildId = req.session.selectedGuild;
     const cfg = readCfg(guildId);
 
-    // Channels und Rollen vom Server laden
     let channels = [];
     let roles = [];
     let guildName = 'Server';
@@ -372,17 +331,15 @@ module.exports = (client)=>{
       const guild = await client.guilds.fetch(guildId);
       guildName = guild.name;
 
-      // Channels laden
       const fetchedChannels = await guild.channels.fetch();
       channels = fetchedChannels
-        .filter(ch => ch.type === 0 || ch.type === 4) // Text Channels (0) und Kategorien (4)
+        .filter(ch => ch.type === 0 || ch.type === 4)
         .map(ch => ({ id: ch.id, name: ch.name, type: ch.type }))
         .sort((a,b) => a.name.localeCompare(b.name));
 
-      // Rollen laden
       const fetchedRoles = await guild.roles.fetch();
       roles = fetchedRoles
-        .filter(r => r.id !== guild.id) // @everyone ausschließen
+        .filter(r => r.id !== guild.id)
         .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
         .sort((a,b) => a.name.localeCompare(b.name));
     } catch(err) {
@@ -400,52 +357,44 @@ module.exports = (client)=>{
     });
   });
 
-  /* ====== Panel speichern (Topics + FormFields + Embeds + Server Settings – FIXED) ====== */
   router.post('/panel', isAuth, async (req,res)=>{
     try {
       const guildId = req.session.selectedGuild;
       const cfg = readCfg(guildId);
 
-      // ---------- Server Settings ----------
-      cfg.guildId = guildId; // Immer die ausgewählte Guild
+      cfg.guildId = guildId;
       if(req.body.ticketCategoryId) cfg.ticketCategoryId = req.body.ticketCategoryId.trim();
       if(req.body.logChannelId) cfg.logChannelId = req.body.logChannelId.trim();
       if(req.body.transcriptChannelId) cfg.transcriptChannelId = req.body.transcriptChannelId.trim();
       if(req.body.teamRoleId) cfg.teamRoleId = req.body.teamRoleId.trim();
 
-      // ---------- Priority Rollen (Multi-Select) ----------
       if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
 
-      // Grün (0)
       cfg.priorityRoles['0'] = Array.isArray(req.body.priorityRoles_0)
         ? req.body.priorityRoles_0.filter(r => r && r.trim())
         : (req.body.priorityRoles_0 ? [req.body.priorityRoles_0.trim()] : []);
 
-      // Orange (1)
       cfg.priorityRoles['1'] = Array.isArray(req.body.priorityRoles_1)
         ? req.body.priorityRoles_1.filter(r => r && r.trim())
         : (req.body.priorityRoles_1 ? [req.body.priorityRoles_1.trim()] : []);
 
-      // Rot (2)
       cfg.priorityRoles['2'] = Array.isArray(req.body.priorityRoles_2)
         ? req.body.priorityRoles_2.filter(r => r && r.trim())
         : (req.body.priorityRoles_2 ? [req.body.priorityRoles_2.trim()] : []);
 
-      // ---------- GitHub Webhook Channel ----------
       if(req.body.githubWebhookChannelId){
         cfg.githubWebhookChannelId = req.body.githubWebhookChannelId.trim();
       } else {
         cfg.githubWebhookChannelId = null;
       }
 
-      // ---------- Topics: Tabellen-Werte haben Vorrang ----------
       const labelInputs = [].concat(req.body.label||[]);
       const valueInputs = [].concat(req.body.value||[]);
       const emojiInputs = [].concat(req.body.emoji||[]);
       let tableTopics = [];
       for(let i=0;i<labelInputs.length;i++){
         const L=(labelInputs[i]||'').trim();
-        if(!L) continue; // nur ausgefüllte Zeilen
+        if(!L) continue;
         const V=(valueInputs[i]||'').trim() || L.toLowerCase().replace(/\s+/g,'-');
         const E=(emojiInputs[i]||'').trim();
         tableTopics.push({ label:L, value:V, emoji:E||undefined });
@@ -454,11 +403,10 @@ module.exports = (client)=>{
         cfg.topics = tableTopics;
       } else {
         const rawJson=(req.body.topicsJson||'').trim();
-        if(rawJson){ try{ const parsed=JSON.parse(rawJson); if(Array.isArray(parsed)) cfg.topics=parsed; }catch{/*ignore*/} }
+        if(rawJson){ try{ const parsed=JSON.parse(rawJson); if(Array.isArray(parsed)) cfg.topics=parsed; }catch{} }
         if(!Array.isArray(cfg.topics)) cfg.topics = [];
       }
 
-      // ---------- Form Fields (JSON direkt) ----------
       if(Object.prototype.hasOwnProperty.call(req.body,'formFieldsJson')){
         try {
           const ff = JSON.parse(req.body.formFieldsJson);
@@ -466,11 +414,9 @@ module.exports = (client)=>{
         } catch { cfg.formFields = []; }
       }
 
-      // ---------- Embeds (Ticket & Panel) – echte Übernahme auch bei leeren Strings ----------
       const ensureHex = (s, fallback) => {
         const str = (s ?? '').toString().trim();
         if(/^#?[0-9a-fA-F]{6}$/.test(str)){ return str.startsWith('#') ? str : '#'+str; }
-        // wenn ungültig und fallback vorhanden → fallback normalisieren
         const fb = (fallback ?? '').toString().trim() || '#2b90d9';
         return fb.startsWith('#') ? fb : '#'+fb;
       };
@@ -478,7 +424,6 @@ module.exports = (client)=>{
         Object.prototype.hasOwnProperty.call(req.body, bodyKey) ? req.body[bodyKey] : (current ?? '')
       );
 
-      // Ticket Embed
       const prevTE = cfg.ticketEmbed || {};
       cfg.ticketEmbed = {
         title:       take('embedTitle',       prevTE.title),
@@ -487,7 +432,6 @@ module.exports = (client)=>{
         footer:      take('embedFooter',      prevTE.footer)
       };
 
-      // Panel Embed
       const prevPE = cfg.panelEmbed || {};
       cfg.panelEmbed = {
         title:       take('panelTitle',       prevPE.title),
@@ -498,14 +442,12 @@ module.exports = (client)=>{
 
       writeCfg(guildId, cfg);
 
-      // Log Event
       await logEvent(guildId, t(guildId, 'logs.config_updated'), req.user);
 
       res.redirect('/panel?msg=saved');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
 
-  /* ====== Panel Nachricht senden ====== */
   router.post('/panel/send', isAuth, async (req,res)=>{
     try {
       const guildId = req.session.selectedGuild;
@@ -519,14 +461,12 @@ module.exports = (client)=>{
       cfg.panelMessageId = sent.id;
       writeCfg(guildId, cfg);
 
-      // Log Event
       await logEvent(guildId, t(guildId, 'logs.panel_sent', { channel: `<#${cfg.panelChannelId}>` }), req.user);
 
       res.redirect('/panel?msg=sent');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
 
-  /* ====== Panel Nachricht bearbeiten ====== */
   router.post('/panel/edit', isAuth, async (req,res)=>{
     const guildId = req.session.selectedGuild;
     const cfg = readCfg(guildId);
@@ -539,15 +479,13 @@ module.exports = (client)=>{
       const embed   = buildPanelEmbed(cfg);
       await msg.edit({ embeds: embed? [embed]: undefined, components:[row] });
 
-      // Log Event
       await logEvent(guildId, t(guildId, 'logs.panel_edited', { channel: `<#${cfg.panelChannelId}>` }), req.user);
 
       res.redirect('/panel?msg=edited');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
 
-  /* ====== Tickets Helper ====== */
-  const TICKETS_PATH = path.join(__dirname,'tickets.json'); // Legacy fallback
+  const TICKETS_PATH = path.join(__dirname,'tickets.json');
   function getTicketsPath(guildId){
     if(!guildId) return TICKETS_PATH;
     return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
@@ -585,7 +523,6 @@ module.exports = (client)=>{
     return map;
   }
 
-  /* ====== Tickets HTML Übersicht (NAMEN statt IDs) ====== */
   router.get('/tickets', isAuth, async (req,res)=>{
     try {
       const guildId = req.session.selectedGuild;
@@ -602,10 +539,8 @@ module.exports = (client)=>{
     } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden'); }
   });
 
-  /* ====== Tickets JSON für Fetch ====== */
   router.get('/tickets/data', isAuth, (req,res)=>{ res.json(loadTickets(req.session.selectedGuild)); });
 
-  /* ====== Transcript Serve ====== */
   router.get('/transcript/:id', isAuth, (req,res)=>{
     const id = req.params.id.replace(/[^0-9]/g,'');
     if(!id) return res.status(400).send('ID fehlt');
@@ -614,10 +549,8 @@ module.exports = (client)=>{
     res.sendFile(file);
   });
 
-  /* ====== GitHub Webhook ====== */
   router.post('/webhook/github', async (req, res) => {
     try {
-      // Webhook sofort bestätigen
       res.status(200).send('OK');
 
       const payload = req.body;
@@ -625,7 +558,6 @@ module.exports = (client)=>{
 
       console.log(`📡 GitHub Webhook erhalten: Event=${event}, Repo=${payload.repository?.full_name || 'Unknown'}`);
 
-      // Nur Push-Events verarbeiten
       if (event !== 'push') {
         console.log(`⏭️ Event ${event} ignoriert (nur push wird verarbeitet)`);
         return;
@@ -639,13 +571,11 @@ module.exports = (client)=>{
 
       console.log(`🔀 Push Event: ${commits.length} Commit(s) auf ${branch} von ${pusher}`);
 
-      // Nur für TRS-Tickets-Bot Repository
       if (!repository.toLowerCase().includes('trs-tickets-bot')) {
         console.log(`⏭️ Repository ${repository} ist nicht TRS-Tickets-Bot, ignoriere Webhook`);
         return;
       }
 
-      // Commits an alle Server senden, die GitHub Logs aktiviert haben
       const guilds = await client.guilds.fetch();
       console.log(`📤 Verarbeite Webhook für ${guilds.size} Server...`);
 
@@ -654,7 +584,6 @@ module.exports = (client)=>{
         try {
           const cfg = readCfg(guildId);
 
-          // Prüfe ob GitHub Commits aktiviert sind und ein Channel konfiguriert ist
           if (cfg.githubCommitsEnabled === false) {
             console.log(`⏭️ Guild ${guildData.name || guildId} (${guildId}): GitHub Logs deaktiviert`);
             continue;
@@ -665,7 +594,6 @@ module.exports = (client)=>{
             continue;
           }
 
-          // Guild vollständig fetchen
           const guild = await client.guilds.fetch(guildId);
           if (!guild) {
             console.log(`❌ Guild ${guildId}: Konnte Guild nicht fetchen`);
@@ -680,8 +608,7 @@ module.exports = (client)=>{
 
           console.log(`✅ Guild ${guild.name} (${guildId}): Sende ${commits.length} Commit(s) zu #${channel.name}`);
 
-          // Embed für jeden Commit erstellen
-          for (const commit of commits.slice(0, 5)) { // Max 5 Commits
+          for (const commit of commits.slice(0, 5)) {
             const embed = new EmbedBuilder()
               .setTitle('📝 New Commit')
               .setDescription(commit.message || 'No commit message')
@@ -701,9 +628,12 @@ module.exports = (client)=>{
             await channel.send({ embeds: [embed] });
           }
 
-          // Wenn mehr als 5 Commits, zeige eine Zusammenfassung
           if (commits.length > 5) {
-            await channel.send(`_... und ${commits.length - 5} weitere Commit(s)_`);
+            const moreEmbed = new EmbedBuilder()
+              .setDescription(`... und ${commits.length - 5} weitere Commit(s)`)
+              .setColor(0x00ff88)
+              .setFooter({ text: 'TRS Tickets Bot Updates' });
+            await channel.send({ embeds: [moreEmbed] });
           }
 
           sentCount++;
@@ -720,10 +650,8 @@ module.exports = (client)=>{
     }
   });
 
-  /* ====== Uptime Robot Health Check / Bot Status ====== */
   router.get('/health', (req, res) => {
     try {
-      // Bot Status prüfen
       const isOnline = client && client.isReady && client.isReady();
       const uptime = client?.uptime || 0;
       const guildsCount = client?.guilds?.cache?.size || 0;
@@ -737,10 +665,9 @@ module.exports = (client)=>{
         });
       }
 
-      // Bot ist online - 200 OK für Uptime Robot
       res.status(200).json({
         status: 'online',
-        uptime: Math.floor(uptime / 1000), // in Sekunden
+        uptime: Math.floor(uptime / 1000),
         uptimeFormatted: formatUptime(uptime),
         guilds: guildsCount,
         ping: ping,
@@ -760,7 +687,6 @@ module.exports = (client)=>{
     }
   });
 
-  /* ====== Bot Status Page (öffentlich) ====== */
   router.get('/status', (req, res) => {
     try {
       const isOnline = client && client.isReady && client.isReady();
@@ -773,7 +699,6 @@ module.exports = (client)=>{
       const statusText = isOnline ? 'ONLINE' : 'OFFLINE';
       const statusEmoji = isOnline ? '🟢' : '🔴';
 
-      // Einfache HTML Status-Seite
       const html = `
 <!DOCTYPE html>
 <html lang="de">
@@ -924,9 +849,6 @@ module.exports = (client)=>{
   return router;
 };
 
-/* ====== Helper Functions ====== */
-
-// Uptime Formatter
 function formatUptime(ms) {
   if (!ms) return '0s';
 
@@ -944,7 +866,6 @@ function formatUptime(ms) {
   return parts.join(' ') || '0s';
 }
 
-// Panel Select Builder
 function buildPanelSelect(cfg){
   const topics = (cfg.topics||[]).filter(t => t && t.label && t.value);
   if(topics.length === 0){
@@ -955,7 +876,6 @@ function buildPanelSelect(cfg){
   );
 }
 
-// Panel Embed Builder
 function buildPanelEmbed(cfg){
   if(!cfg.panelEmbed || (!cfg.panelEmbed.title && !cfg.panelEmbed.description)) return null;
   const e = new EmbedBuilder();

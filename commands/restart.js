@@ -1,4 +1,3 @@
-// commands/restart.js
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { t } = require('../translations');
 
@@ -30,15 +29,14 @@ module.exports = {
 
     await interaction.reply({
       embeds: [embed],
-      ephemeral: false // Öffentlich, damit alle sehen dass der Bot restartet
+      ephemeral: false
     });
 
     console.log(`⚠️ RESTART angefordert von ${interaction.user.tag} (${interaction.user.id}) auf Server ${interaction.guild?.name} (${guildId})`);
 
-    // Bot neu starten nach kurzer Verzögerung
     setTimeout(() => {
       console.log('🔄 Führe Restart durch...');
-      process.exit(0); // Exit Code 0 = clean exit (PM2/Docker sollte automatisch neu starten)
+      process.exit(0);
     }, 2000);
   }
 };
