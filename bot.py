@@ -881,6 +881,154 @@ async def setlanguage_command(interaction: discord.Interaction, language: str):
     )
 
 
+@bot.tree.command(name="version", description="Show current bot version")
+async def version_command(interaction: discord.Interaction):
+    """Display bot version and changelog."""
+    embed = discord.Embed(
+        title='🤖 TRS Tickets Bot',
+        description=(
+            f"**Version:** {VERSION}\n"
+            f"**Release Date:** 2025-10-12\n\n"
+            f"**New in {VERSION}:**\n"
+            "🔧 GitHub Commit Logs Toggle System\n"
+            "👥 Multi-Level Priority Roles (Green/Orange/Red)\n"
+            "👀 Live Preview for Role Count per Priority\n"
+            "⚙️ Server-specific GitHub Logs Configuration\n"
+            "🎛️ Interactive Toggle Buttons for GitHub Notifications\n"
+            "🛡️ Multiple Role Selection per Priority Level\n\n"
+            "[GitHub Repository](https://github.com/TheRedstoneE/TRS-Tickets-Bot)"
+        ),
+        color=0x00ff88,
+        timestamp=datetime.now()
+    )
+    embed.set_footer(text='TRS Tickets ©️')
+
+    await interaction.response.send_message(embed=embed, ephemeral=False)
+
+
+@bot.tree.command(name="github-commits", description="Toggle GitHub commit logging for this server")
+async def github_commits_command(interaction: discord.Interaction):
+    """Toggle GitHub commit logging."""
+    guild_id = str(interaction.guild.id)
+
+    # Check admin permission
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            t(guild_id, 'language.only_admin') or '❌ Only administrators can use this command.',
+            ephemeral=True
+        )
+        return
+
+    cfg = config.read_config(guild_id)
+
+    # Default: enabled
+    current_status = cfg.get('githubCommitsEnabled', True)
+
+    # Toggle status
+    cfg['githubCommitsEnabled'] = not current_status
+    config.write_config(guild_id, cfg)
+
+    new_status = cfg['githubCommitsEnabled']
+
+    # Create status embed
+    embed = discord.Embed(
+        title='⚙️ GitHub Commit Logs',
+        description=(
+            f"**Status Updated:** {':white_check_mark: Enabled' if new_status else ':x: Disabled'}\n\n"
+            f"GitHub commit notifications will {'now ' if new_status else 'no longer '}be logged to this server.\n\n"
+            f"{f'**Log Channel:** <#{cfg.get(\"githubWebhookChannelId\")}>' if cfg.get('githubWebhookChannelId') else ':warning: **No log channel set!** Please configure a channel in the panel.'}"
+        ),
+        color=0x00ff88 if new_status else 0xff4444,
+        timestamp=datetime.now()
+    )
+    embed.set_footer(text='TRS Tickets ©️')
+
+    await interaction.response.send_message(embed=embed, ephemeral=False)
+
+    print(f"📝 GitHub Commits {'enabled' if new_status else 'disabled'} on {interaction.guild.name} by {interaction.user.name}")
+
+
+@bot.tree.command(name="reload", description="Reload bot configuration")
+async def reload_command(interaction: discord.Interaction):
+    """Reload bot configuration and clear caches."""
+    guild_id = str(interaction.guild.id)
+
+    # Check admin permission
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            t(guild_id, 'language.only_admin') or '❌ Only administrators can use this command.',
+            ephemeral=True
+        )
+        return
+
+    try:
+        # Reload config module
+        import importlib
+        importlib.reload(config)
+
+        # Reload translations
+        from utils import translations
+        importlib.reload(translations)
+
+        # Reload helpers
+        from utils import helpers
+        importlib.reload(helpers)
+
+        await interaction.response.send_message(
+            "✅ **Reload Erfolgreich!**\n"
+            "📦 Module neu geladen\n"
+            "⚙️ Config-Cache aktualisiert\n"
+            "🔄 Bot läuft weiter ohne Neustart",
+            ephemeral=True
+        )
+
+        print(f"🔄 Reload durchgeführt von {interaction.user.name} auf Server {interaction.guild.name}")
+
+    except Exception as e:
+        await interaction.response.send_message(
+            f"❌ **Fehler beim Neuladen:**\n```{str(e)}```",
+            ephemeral=True
+        )
+        print(f"Reload Error: {e}")
+
+
+@bot.tree.command(name="restart", description="Restart the bot")
+async def restart_command(interaction: discord.Interaction):
+    """Restart the bot with clean exit."""
+    guild_id = str(interaction.guild.id)
+
+    # Check admin permission
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message(
+            t(guild_id, 'language.only_admin') or '❌ Only administrators can use this command.',
+            ephemeral=True
+        )
+        return
+
+    embed = discord.Embed(
+        title='🔄 Bot Restart',
+        description=(
+            '**Bot wird neu gestartet...**\n\n'
+            '⏱️ Erwartete Downtime: ~5-10 Sekunden\n'
+            '✅ Alle Konfigurationen bleiben erhalten\n'
+            '📝 Commands werden automatisch neu registriert\n\n'
+            f'Angefordert von: {interaction.user.mention}'
+        ),
+        color=0xff9900,
+        timestamp=datetime.now()
+    )
+    embed.set_footer(text='TRS Tickets ©️')
+
+    await interaction.response.send_message(embed=embed, ephemeral=False)
+
+    print(f"⚠️ RESTART angefordert von {interaction.user.name} ({interaction.user.id}) auf Server {interaction.guild.name} ({guild_id})")
+
+    # Exit with clean code (PM2/Docker should auto-restart)
+    await asyncio.sleep(2)
+    await bot.close()
+    exit(0)
+
+
 # ==================== Run Bot ====================
 
 if __name__ == "__main__":
