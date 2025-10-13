@@ -6,3 +6,7 @@
 /.env
 /CLAUDE.md
 /app.key
+/configs
+transcript_*.html
+transcript_*.txt
+pnpm-lock.yaml
