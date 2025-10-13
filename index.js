@@ -795,12 +795,17 @@ client.on(Events.InteractionCreate, async i => {
 
       const command = commandsCollection.get(i.commandName);
       if(command){
-        // Spezielle Behandlung für reload
+        // Spezielle Behandlung für reload - Commands neu deployen nach Reload
         if(i.commandName === 'reload'){
-          // Reload wird von commands/reload.js gehandhabt
-          loadCommands();
-          await deployCommands();
-          return i.reply({ content:'✅ Config & Commands neu geladen!', ephemeral:true });
+          try {
+            await command.execute(i);
+            // Nach erfolgreichem Reload, Commands neu deployen
+            loadCommands();
+            await deployCommands();
+          } catch(err){
+            console.error('Reload Error:', err);
+          }
+          return;
         }
         // Normale Command-Ausführung
         try {
