@@ -594,44 +594,179 @@
       </div>
 
       <div class="feature-card">
-        <h3><i class="fas fa-tools"></i> <%= lang === 'de' ? 'Web-Verwaltung' : lang === 'en' ? 'Web Management' : 'ניהול אינטרנט' %></h3>
-        <p><%= lang === 'de' ? 'Umfassendes Admin-Panel zur Konfiguration von Topics, Formularen und Embeds.' : lang === 'en' ? 'Comprehensive admin panel for configuring topics, forms and embeds.' : 'פאנל ניהול מקיף להגדרת נושאים, טפסים והטבעות.' %></p>
+        <h3><i class="fas fa-tools"></i> <%
+          const webMgmtTitle = {
+            de: 'Web-Verwaltung',
+            en: 'Web Management',
+            he: 'ניהול אינטרנט',
+            ja: 'Web管理',
+            ru: 'Веб-управление',
+            pt: 'Gerenciamento Web'
+          };
+        %><%= webMgmtTitle[lang] || webMgmtTitle.de %></h3>
+        <p><%
+          const webMgmtDesc = {
+            de: 'Umfassendes Admin-Panel zur Konfiguration von Topics, Formularen und Embeds.',
+            en: 'Comprehensive admin panel for configuring topics, forms and embeds.',
+            he: 'פאנל ניהול מקיף להגדרת נושאים, טפסים והטבעות.',
+            ja: 'トピック、フォーム、埋め込みを設定するための包括的な管理パネル。',
+            ru: 'Комплексная админ-панель для настройки тем, форм и встраиваний.',
+            pt: 'Painel de administração abrangente para configurar tópicos, formulários e embeds.'
+          };
+        %><%= webMgmtDesc[lang] || webMgmtDesc.de %></p>
       </div>
 
       <div class="feature-card">
-        <h3><i class="fas fa-shield-alt"></i> <%= lang === 'de' ? 'DSGVO-konform' : lang === 'en' ? 'GDPR Compliant' : 'תואם GDPR' %></h3>
-        <p><%= lang === 'de' ? 'Vollständige Datenschutzerklärung und Nutzungsbedingungen mit Datenlöschung nach 2 Monaten.' : lang === 'en' ? 'Complete privacy policy and terms of service with data deletion after 2 months.' : 'מדיניות פרטיות ותנאי שימוש מלאים עם מחיקת נתונים לאחר חודשיים.' %></p>
+        <h3><i class="fas fa-shield-alt"></i> <%
+          const gdprTitle = {
+            de: 'DSGVO-konform',
+            en: 'GDPR Compliant',
+            he: 'תואם GDPR',
+            ja: 'GDPR準拠',
+            ru: 'Соответствие GDPR',
+            pt: 'Compatível com GDPR'
+          };
+        %><%= gdprTitle[lang] || gdprTitle.de %></h3>
+        <p><%
+          const gdprDesc = {
+            de: 'Vollständige Datenschutzerklärung und Nutzungsbedingungen mit Datenlöschung nach 2 Monaten.',
+            en: 'Complete privacy policy and terms of service with data deletion after 2 months.',
+            he: 'מדיניות פרטיות ותנאי שימוש מלאים עם מחיקת נתונים לאחר חודשיים.',
+            ja: '完全なプライバシーポリシーと利用規約、2ヶ月後のデータ削除付き。',
+            ru: 'Полная политика конфиденциальности и условия использования с удалением данных через 2 месяца.',
+            pt: 'Política de privacidade completa e termos de serviço com exclusão de dados após 2 meses.'
+          };
+        %><%= gdprDesc[lang] || gdprDesc.de %></p>
       </div>
 
       <div class="feature-card">
-        <h3><i class="fas fa-tasks"></i> <%= lang === 'de' ? 'Ticket-Verwaltung' : lang === 'en' ? 'Ticket Management' : 'ניהול כרטיסים' %></h3>
-        <p><%= lang === 'de' ? 'Prioritäten, Claiming, Transkripte und vollständige Ticket-Historie im Web-Panel.' : lang === 'en' ? 'Priorities, claiming, transcripts and complete ticket history in the web panel.' : 'עדיפויות, תפיסה, תמלילים והיסטוריית כרטיסים מלאה בפאנל האינטרנט.' %></p>
+        <h3><i class="fas fa-tasks"></i> <%
+          const ticketMgmtTitle = {
+            de: 'Ticket-Verwaltung',
+            en: 'Ticket Management',
+            he: 'ניהול כרטיסים',
+            ja: 'チケット管理',
+            ru: 'Управление тикетами',
+            pt: 'Gerenciamento de Tickets'
+          };
+        %><%= ticketMgmtTitle[lang] || ticketMgmtTitle.de %></h3>
+        <p><%
+          const ticketMgmtDesc = {
+            de: 'Prioritäten, Claiming, Transkripte und vollständige Ticket-Historie im Web-Panel.',
+            en: 'Priorities, claiming, transcripts and complete ticket history in the web panel.',
+            he: 'עדיפויות, תפיסה, תמלילים והיסטוריית כרטיסים מלאה בפאנל האינטרנט.',
+            ja: '優先度、担当、トランスクリプト、完全なチケット履歴をWebパネルで。',
+            ru: 'Приоритеты, назначение, транскрипты и полная история тикетов в веб-панели.',
+            pt: 'Prioridades, atribuição, transcrições e histórico completo de tickets no painel web.'
+          };
+        %><%= ticketMgmtDesc[lang] || ticketMgmtDesc.de %></p>
       </div>
 
       <div class="feature-card">
-        <h3><i class="fas fa-clipboard-list"></i> <%= lang === 'de' ? 'Dynamische Formulare' : lang === 'en' ? 'Dynamic Forms' : 'טפסים דינמיים' %></h3>
-        <p><%= lang === 'de' ? 'Erstelle benutzerdefinierte Formularfelder für jeden Ticket-Typ über das Web-Panel.' : lang === 'en' ? 'Create custom form fields for each ticket type via the web panel.' : 'צור שדות טופס מותאמים אישית לכל סוג כרטיס דרך פאנל האינטרנט.' %></p>
+        <h3><i class="fas fa-clipboard-list"></i> <%
+          const formsTitle = {
+            de: 'Dynamische Formulare',
+            en: 'Dynamic Forms',
+            he: 'טפסים דינמיים',
+            ja: '動的フォーム',
+            ru: 'Динамические формы',
+            pt: 'Formulários Dinâmicos'
+          };
+        %><%= formsTitle[lang] || formsTitle.de %></h3>
+        <p><%
+          const formsDesc = {
+            de: 'Erstelle benutzerdefinierte Formularfelder für jeden Ticket-Typ über das Web-Panel.',
+            en: 'Create custom form fields for each ticket type via the web panel.',
+            he: 'צור שדות טופס מותאמים אישית לכל סוג כרטיס דרך פאנל האינטרנט.',
+            ja: 'Webパネルから各チケットタイプのカスタムフォームフィールドを作成。',
+            ru: 'Создавайте пользовательские поля формы для каждого типа тикета через веб-панель.',
+            pt: 'Crie campos de formulário personalizados para cada tipo de ticket através do painel web.'
+          };
+        %><%= formsDesc[lang] || formsDesc.de %></p>
       </div>
 
       <div class="feature-card">
-        <h3><i class="fas fa-moon"></i> <%= lang === 'de' ? 'Dark Mode' : lang === 'en' ? 'Dark Mode' : 'מצב כהה' %></h3>
-        <p><%= lang === 'de' ? 'Modernes Design mit automatischem Dark Mode und RTL-Unterstützung für Hebräisch.' : lang === 'en' ? 'Modern design with automatic dark mode and RTL support for Hebrew.' : 'עיצוב מודרני עם מצב כהה אוטומטי ותמיכה ב-RTL לעברית.' %></p>
+        <h3><i class="fas fa-moon"></i> <%
+          const darkModeTitle = {
+            de: 'Dark Mode',
+            en: 'Dark Mode',
+            he: 'מצב כהה',
+            ja: 'ダークモード',
+            ru: 'Тёмный режим',
+            pt: 'Modo Escuro'
+          };
+        %><%= darkModeTitle[lang] || darkModeTitle.de %></h3>
+        <p><%
+          const darkModeDesc = {
+            de: 'Modernes Design mit automatischem Dark Mode und RTL-Unterstützung für Hebräisch.',
+            en: 'Modern design with automatic dark mode and RTL support for Hebrew.',
+            he: 'עיצוב מודרני עם מצב כהה אוטומטי ותמיכה ב-RTL לעברית.',
+            ja: '自動ダークモードとヘブライ語のRTLサポートを備えたモダンなデザイン。',
+            ru: 'Современный дизайн с автоматическим тёмным режимом и поддержкой RTL для иврита.',
+            pt: 'Design moderno com modo escuro automático e suporte RTL para hebraico.'
+          };
+        %><%= darkModeDesc[lang] || darkModeDesc.de %></p>
       </div>
     </div>
     <div class="legal-links">
       <a href="/imprint">
-        <i class="fas fa-file-alt"></i> <%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %>
+        <i class="fas fa-file-alt"></i> <%
+          const imprintText = {
+            de: 'Impressum',
+            en: 'Legal Notice',
+            he: 'מידע משפטי',
+            ja: '法的通知',
+            ru: 'Правовая информация',
+            pt: 'Aviso Legal'
+          };
+        %><%= imprintText[lang] || imprintText.de %>
       </a>
       <a href="/terms-of-service">
-        <i class="fas fa-file-contract"></i> <%= lang === 'de' ? 'Nutzungsbedingungen' : lang === 'en' ? 'Terms of Service' : 'תנאי שימוש' %>
+        <i class="fas fa-file-contract"></i> <%
+          const tosText = {
+            de: 'Nutzungsbedingungen',
+            en: 'Terms of Service',
+            he: 'תנאי שימוש',
+            ja: '利用規約',
+            ru: 'Условия использования',
+            pt: 'Termos de Uso'
+          };
+        %><%= tosText[lang] || tosText.de %>
       </a>
       <a href="/privacy-policy">
-        <i class="fas fa-lock"></i> <%= lang === 'de' ? 'Datenschutzerklärung' : lang === 'en' ? 'Privacy Policy' : 'מדיניות פרטיות' %>
+        <i class="fas fa-lock"></i> <%
+          const privacyText = {
+            de: 'Datenschutzerklärung',
+            en: 'Privacy Policy',
+            he: 'מדיניות פרטיות',
+            ja: 'プライバシーポリシー',
+            ru: 'Политика конфиденциальности',
+            pt: 'Política de Privacidade'
+          };
+        %><%= privacyText[lang] || privacyText.de %>
       </a>
     </div>
 
   <footer>
-    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <%= lang === 'de' ? 'Betrieben von' : lang === 'en' ? 'Operated by' : 'מופעל על ידי' %> Ohev Tamerin | <a href="/imprint"><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %></a></p>
+    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <%
+      const operatedByText = {
+        de: 'Betrieben von',
+        en: 'Operated by',
+        he: 'מופעל על ידי',
+        ja: '運営',
+        ru: 'Управляется',
+        pt: 'Operado por'
+      };
+    %><%= operatedByText[lang] || operatedByText.de %> Ohev Tamerin | <a href="/imprint"><%
+      const footerImprintText = {
+        de: 'Impressum',
+        en: 'Legal Notice',
+        he: 'מידע משפטי',
+        ja: '法的通知',
+        ru: 'Правовая информация',
+        pt: 'Aviso Legal'
+      };
+    %><%= footerImprintText[lang] || footerImprintText.de %></a></p>
   </footer>
   </div>
 
