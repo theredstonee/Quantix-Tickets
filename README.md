@@ -1,6 +1,6 @@
 # 🎫 TRS Tickets Bot
 
-**Version:** Beta 0.3.4
+**Version:** Beta 0.3.5
 
 Ein professioneller Multi-Server Discord-Ticket-Bot mit Web-Dashboard, Multi-Language-Support und dynamischen Formularen für Discord-Server.
 
@@ -30,6 +30,9 @@ Ein professioneller Multi-Server Discord-Ticket-Bot mit Web-Dashboard, Multi-Lan
 - 🇩🇪 **Deutsch** - Vollständige deutsche Übersetzung
 - 🇬🇧 **English** - Full English translation
 - 🇮🇱 **עברית (Hebrew)** - תמיכה מלאה בעברית
+- 🇯🇵 **日本語 (Japanese)** - 完全な日本語翻訳
+- 🇷🇺 **Русский (Russian)** - Полный русский перевод
+- 🇵🇹 **Português (Portuguese)** - Tradução completa em português
 - 🔄 **Server-Sprache** - `/language` Command für Server-Language
 - 👤 **User-Sprache** - `/userlanguage` Command für persönliche Web-Panel-Sprache
 
@@ -257,7 +260,8 @@ Team-Mitglieder benötigen Admin oder "Manage Guild" Berechtigung für das Web-D
 TRS-Tickets-Bot-1/
 ├── index.js                    # Hauptdatei (Bot-Logic + Security)
 ├── panel.js                    # Web-Dashboard (Express + OAuth + Webhook)
-├── translations.js             # Multi-Language System (de, en, he)
+├── translations.js             # Multi-Language System (de, en, he, ja, ru, pt)
+├── version.config.js           # Zentrale VERSION Variable & Konfiguration
 ├── app.key                     # 🔐 Application Key (NICHT in Git!)
 ├── config.json                 # Legacy Config (optional)
 ├── tickets.json                # Legacy Tickets (optional)
@@ -341,16 +345,16 @@ Bei Problemen oder Feature-Wünschen:
 
 ## ✨ Features Highlights
 
-### Version Beta 0.3.4 (2025-10-13)
-- 🔐 **Application Key Security System** - Verhindert unbefugte Bot-Nutzung
-- 📝 **README.md komplett überarbeitet** - Alle Features vollständig dokumentiert
-- ⚖️ **Lizenz geändert** - Alle Rechte vorbehalten © Theredstonee
-- 🛡️ **Sicherheit verbessert** - Setup-Details aus README entfernt
-- 📚 **Vollständige Dokumentation** - Multi-Server, Priority Roles & alle Features
+### Version Beta 0.3.5 (2025-10-13)
+- 🌐 **Neue Sprachen** - Japanisch (🇯🇵), Russisch (🇷🇺), Portugiesisch (🇵🇹) hinzugefügt
+- 📦 **Zentrales Version-Management** - Alle Versionen verwenden zentrale VERSION Variable
+- 🎌 **Sprach-Flaggen** - Verbesserte Sprachauswahl mit Unicode Flaggen
+- 🔧 **Code-Struktur verbessert** - Bessere Wartbarkeit und Organisation
+- ✨ **Zentrale Konfiguration** - Einfachere Version-Updates durch version.config.js
 
 ### Kern-Features
 - 🌍 **Multi-Server** - Unbegrenzt viele Server mit einem Bot
-- 🌐 **Multi-Language** - Deutsch, English, עברית (Hebrew)
+- 🌐 **Multi-Language** - Deutsch, English, עברית, 日本語, Русский, Português (6 Sprachen)
 - 👥 **Priority Roles** - Team-Rollen basierend auf Ticket-Priorität
 - 🔐 **Security System** - Application Key verhindert unbefugte Nutzung
 - 📄 **Modern Transcripts** - HTML mit Dark Theme & Mobile Support
@@ -363,15 +367,16 @@ Bei Problemen oder Feature-Wünschen:
 
 Siehe [changelog.json](./changelog.json) für die vollständige Versionshistorie.
 
-**Latest Changes (Beta 0.3.4):**
-- Application Key Security System implemented
-- README.md completely redesigned with all features
-- License changed to "All Rights Reserved"
-- Removed setup details from README for security
-- Full documentation of multi-server, priority roles & all features
+**Latest Changes (Beta 0.3.5):**
+- New languages: Japanese, Russian, Portuguese added
+- Centralized version management system implemented
+- Language flags for improved language selection
+- Improved codebase structure and maintainability
+- All components now use centralized VERSION variable
+- Easier version updates through centralized configuration
 
 ---
 
 **TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten**
 
-**Version:** Beta 0.3.4 | **Status:** [status.theredstonee.de](https://status.theredstonee.de)
+**Version:** Beta 0.3.5 | **Status:** [status.theredstonee.de](https://status.theredstonee.de)

@@ -11,8 +11,7 @@ const cookieParser = require('cookie-parser');
 const { marked } = require('marked');
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
-
-const VERSION = 'Beta 0.3.3';
+const { VERSION, COPYRIGHT } = require('./version.config');
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
@@ -125,7 +124,7 @@ module.exports = (client)=>{
         .setDescription(text)
         .setColor(0x00ff00)
         .setTimestamp()
-        .setFooter({ text: 'TRS Tickets ©️' });
+        .setFooter({ text: COPYRIGHT });
 
       if(user){
         embed.setAuthor({ name: `${user.username}`, iconURL: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : undefined });
@@ -299,13 +298,13 @@ module.exports = (client)=>{
   router.get('/logout',(req,res)=>{ req.logout?.(()=>{}); req.session.destroy(()=>res.redirect('/')); });
 
   router.get('/set-user-language/:lang', (req, res) => {
-    const lang = ['de', 'en', 'he'].includes(req.params.lang) ? req.params.lang : 'de';
+    const lang = ['de', 'en', 'he', 'ja', 'ru', 'pt'].includes(req.params.lang) ? req.params.lang : 'de';
     res.cookie('lang', lang, { maxAge: 365 * 24 * 60 * 60 * 1000, path: '/' });
     res.redirect('/');
   });
 
   router.get('/set-language/:lang', isAuth, async (req, res) => {
-    const lang = ['de', 'en', 'he'].includes(req.params.lang) ? req.params.lang : 'de';
+    const lang = ['de', 'en', 'he', 'ja', 'ru', 'pt'].includes(req.params.lang) ? req.params.lang : 'de';
     const guildId = req.session.selectedGuild;
 
     if (guildId) {

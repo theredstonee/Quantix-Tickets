@@ -37,8 +37,8 @@ const {
   StringSelectMenuBuilder
 } = require('discord.js');
 const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
+const { VERSION, COPYRIGHT } = require('./version.config');
 
-const VERSION   = 'Beta 0.3.4';
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },
@@ -149,13 +149,13 @@ function readCfg(guildId){
           title: '🎫 Ticket #{ticketNumber}',
           description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
           color: '#2b90d9',
-          footer: 'TRS Tickets ©️'
+          footer: COPYRIGHT
         },
         panelEmbed: {
           title: '🎫 Ticket System',
           description: 'Wähle dein Thema',
           color: '#5865F2',
-          footer: 'TRS Tickets ©️'
+          footer: COPYRIGHT
         }
       };
       writeCfg(guildId, defaultCfg);
@@ -399,7 +399,7 @@ async function logEvent(guild, text){
       .setDescription(text)
       .setColor(0x00ff00)
       .setTimestamp()
-      .setFooter({ text: 'TRS Tickets ©️' });
+      .setFooter({ text: COPYRIGHT });
 
     await ch.send({ embeds: [embed] });
   } catch {}

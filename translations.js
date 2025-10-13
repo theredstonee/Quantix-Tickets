@@ -4,7 +4,10 @@ const path = require('path');
 const translations = {
   de: require('./translations/de.json'),
   en: require('./translations/en.json'),
-  he: require('./translations/he.json')
+  he: require('./translations/he.json'),
+  ja: require('./translations/ja.json'),
+  ru: require('./translations/ru.json'),
+  pt: require('./translations/pt.json')
 };
 
 const CONFIG_DIR = path.join(__dirname, 'configs');
@@ -28,7 +31,7 @@ function setGuildLanguage(guildId, lang) {
   try {
     if (!guildId) return false;
 
-    if (!['de', 'en', 'he'].includes(lang)) {
+    if (!['de', 'en', 'he', 'ja', 'ru', 'pt'].includes(lang)) {
       lang = 'de';
     }
 
@@ -81,7 +84,10 @@ function getLanguageName(lang) {
   const names = {
     de: 'Deutsch',
     en: 'English',
-    he: 'עברית'
+    he: 'עברית',
+    ja: '日本語',
+    ru: 'Русский',
+    pt: 'Português'
   };
   return names[lang] || 'Deutsch';
 }

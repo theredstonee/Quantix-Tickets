@@ -2,6 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('disc
 const fs = require('fs');
 const path = require('path');
 const { getGuildLanguage } = require('../translations');
+const { COPYRIGHT } = require('../version.config');
 
 const ALLOWED_GUILD = '1291125037876904026';
 const ALLOWED_USER = '1159182333316968530';
@@ -116,6 +117,27 @@ module.exports = {
             versionLabel: '🆕 גרסה',
             dateLabel: '📅 תאריך',
             changesLabel: '✨ שינויים'
+          },
+          ja: {
+            title: '📢 バージョンアップデート',
+            description: `**TRS Tickets Bot** がバージョン **${VERSION}** にアップデートされました`,
+            versionLabel: '🆕 バージョン',
+            dateLabel: '📅 日付',
+            changesLabel: '✨ 変更点'
+          },
+          ru: {
+            title: '📢 Обновление версии',
+            description: `**TRS Tickets Bot** обновлен до версии **${VERSION}**`,
+            versionLabel: '🆕 Версия',
+            dateLabel: '📅 Дата',
+            changesLabel: '✨ Изменения'
+          },
+          pt: {
+            title: '📢 Atualização de Versão',
+            description: `**TRS Tickets Bot** foi atualizado para a versão **${VERSION}**`,
+            versionLabel: '🆕 Versão',
+            dateLabel: '📅 Data',
+            changesLabel: '✨ Mudanças'
           }
         };
 
@@ -127,9 +149,16 @@ module.exports = {
           .setDescription(customMessage || t.description)
           .addFields([
             { name: t.versionLabel, value: VERSION, inline: true },
-            { name: t.dateLabel, value: new Date().toLocaleDateString(guildLang === 'de' ? 'de-DE' : guildLang === 'he' ? 'he-IL' : 'en-US'), inline: true }
+            { name: t.dateLabel, value: new Date().toLocaleDateString(
+              guildLang === 'de' ? 'de-DE' :
+              guildLang === 'he' ? 'he-IL' :
+              guildLang === 'ja' ? 'ja-JP' :
+              guildLang === 'ru' ? 'ru-RU' :
+              guildLang === 'pt' ? 'pt-PT' :
+              'en-US'
+            ), inline: true }
           ])
-          .setFooter({ text: 'TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten' })
+          .setFooter({ text: COPYRIGHT })
           .setTimestamp();
 
         if (!customMessage && changes.length > 0) {

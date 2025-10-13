@@ -1,6 +1,60 @@
 {
-  "currentVersion": "Beta 0.3.4",
+  "currentVersion": "Beta 0.3.5",
   "versions": [
+    {
+      "version": "Beta 0.3.5",
+      "date": "2025-10-13",
+      "changes": {
+        "de": [
+          "🌐 Neue Sprachen: Japanisch, Russisch, Portugiesisch hinzugefügt",
+          "📦 Zentrales Version-Management-System implementiert",
+          "🎌 Sprach-Flaggen für bessere Sprach-Auswahl",
+          "🔧 Verbesserte Code-Struktur und Wartbarkeit",
+          "✨ Alle Komponenten verwenden jetzt zentrale VERSION Variable",
+          "🚀 Einfachere Version-Updates durch zentrale Konfiguration"
+        ],
+        "en": [
+          "🌐 New languages: Japanese, Russian, Portuguese added",
+          "📦 Centralized version management system implemented",
+          "🎌 Language flags for improved language selection",
+          "🔧 Improved codebase structure and maintainability",
+          "✨ All components now use centralized VERSION variable",
+          "🚀 Easier version updates through centralized configuration"
+        ],
+        "he": [
+          "🌐 שפות חדשות: יפנית, רוסית, פורטוגזית נוספו",
+          "📦 מערכת ניהול גרסאות מרכזית מיושמת",
+          "🎌 דגלי שפה לבחירת שפה משופרת",
+          "🔧 מבנה קוד משופר ותחזוקה",
+          "✨ כל הרכיבים משתמשים כעת במשתנה VERSION מרכזי",
+          "🚀 עדכוני גרסה קלים יותר באמצעות הגדרה מרכזית"
+        ],
+        "ja": [
+          "🌐 新しい言語追加：日本語、ロシア語、ポルトガル語",
+          "📦 中央バージョン管理システムの実装",
+          "🎌 言語選択を改善するための言語フラグ",
+          "🔧 コードベースの構造と保守性の向上",
+          "✨ すべてのコンポーネントが中央VERSION変数を使用",
+          "🚀 中央設定による簡単なバージョン更新"
+        ],
+        "ru": [
+          "🌐 Новые языки: японский, русский, португальский добавлены",
+          "📦 Реализована централизованная система управления версиями",
+          "🎌 Языковые флаги для улучшенного выбора языка",
+          "🔧 Улучшенная структура кода и удобство обслуживания",
+          "✨ Все компоненты теперь используют централизованную переменную VERSION",
+          "🚀 Более простое обновление версий через централизованную конфигурацию"
+        ],
+        "pt": [
+          "🌐 Novos idiomas: Japonês, Russo, Português adicionados",
+          "📦 Sistema de gerenciamento de versão centralizado implementado",
+          "🎌 Bandeiras de idiomas para melhor seleção de idioma",
+          "🔧 Estrutura de código e manutenibilidade melhoradas",
+          "✨ Todos os componentes agora usam variável VERSION centralizada",
+          "🚀 Atualizações de versão mais fáceis através de configuração centralizada"
+        ]
+      }
+    },
     {
       "version": "Beta 0.3.4",
       "date": "2025-10-13",
