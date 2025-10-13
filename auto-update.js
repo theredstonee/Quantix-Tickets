@@ -140,9 +140,9 @@ function restartBot() {
         }
       });
     } else {
-      // Kein PM2, verwende process.exit
+      // Kein PM2, verwende process.exit und lasse systemd den Restart machen
       logUpdate('ℹ️ Kein PM2 erkannt, verwende process.exit()');
-      logUpdate('⚠️ WICHTIG: Stelle sicher, dass der Bot mit einem Process Manager läuft!');
+      logUpdate('💡 systemd wird den Bot automatisch neu starten (Restart=always)');
 
       setTimeout(() => {
         logUpdate('🔄 Bot wird in 2 Sekunden beendet...');
