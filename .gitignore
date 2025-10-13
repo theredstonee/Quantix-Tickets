@@ -10,3 +10,13 @@
 transcript_*.html
 transcript_*.txt
 pnpm-lock.yaml
+
+# Auto-Update Logs
+update.log
+
+# PM2 Logs
+logs/
+*.log
+
+# PM2 Process Files
+.pm2/

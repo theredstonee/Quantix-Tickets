@@ -12,6 +12,7 @@ const { marked } = require('marked');
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 const { VERSION, COPYRIGHT } = require('./version.config');
+const { handleAutoUpdate, showUpdateLog } = require('./auto-update');
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
@@ -685,6 +686,12 @@ module.exports = (client)=>{
       });
     }
   });
+
+  // Auto-Update Webhook
+  router.post('/webhook/auto-update', handleAutoUpdate);
+
+  // Auto-Update Log Viewer
+  router.get('/update-log', showUpdateLog);
 
   router.get('/status', (req, res) => {
     try {
