@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { t } = require('../translations');
 
-const VERSION = 'Beta 0.3.3';
+const VERSION = 'Beta 0.3.4';
 const RELEASE_DATE = '2025-10-13';
 
 module.exports = {
@@ -22,14 +22,15 @@ module.exports = {
         `**Version:** ${VERSION}\n` +
         `**Release Date:** ${RELEASE_DATE}\n\n` +
         `**New in ${VERSION}:**\n` +
-        `🔧 Fixed Hebrew locale issue in slash commands\n` +
-        `✅ All 9 commands now load correctly\n` +
-        `📊 New /status command with link to status page\n` +
-        `🐛 Fixed UnknownEnumValueError for github-commits, version, reload, restart\n\n` +
+        `🔐 Application Key Security System implemented\n` +
+        `📝 README.md completely redesigned with all features\n` +
+        `⚖️ License changed to "All Rights Reserved"\n` +
+        `🛡️ Removed setup details from README for security\n` +
+        `📚 Full documentation of multi-server, priority roles & all features\n\n` +
         `[GitHub Repository](https://github.com/TheRedstoneE/TRS-Tickets-Bot)`
       )
       .setColor(0x00ff88)
-      .setFooter({ text: 'TRS Tickets ©️' })
+      .setFooter({ text: 'TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten' })
       .setTimestamp();
 
     await interaction.reply({

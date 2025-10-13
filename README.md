@@ -1,6 +1,6 @@
 # 🎫 TRS Tickets Bot
 
-**Version:** Beta 0.3.3
+**Version:** Beta 0.3.4
 
 Ein professioneller Multi-Server Discord-Ticket-Bot mit Web-Dashboard, Multi-Language-Support und dynamischen Formularen für Discord-Server.
 
@@ -310,7 +310,13 @@ TRS-Tickets-Bot-1/
 
 ## 📝 Lizenz
 
-Dieses Projekt ist unter der MIT-Lizenz veröffentlicht und für den privaten/kommerziellen Gebrauch bestimmt.
+**Alle Rechte vorbehalten © Theredstonee**
+
+Dieses Projekt ist urheberrechtlich geschützt. Die Nutzung, Vervielfältigung, Änderung oder Weitergabe des Codes ist ohne ausdrückliche schriftliche Genehmigung des Urhebers untersagt.
+
+**Für Lizenzanfragen kontaktiere:**
+- 💬 Discord: [dc.theredstonee.de](https://dc.theredstonee.de)
+- 🌐 Website: [theredstonee.de](https://theredstonee.de)
 
 ## 🐛 Fehler melden & Contribution
 
@@ -323,7 +329,7 @@ Bei Problemen oder Feature-Wünschen:
 - Teste deine Änderungen gründlich
 - Dokumentiere neue Features
 - Folge dem bestehenden Code-Style
-- Alle Kommentare wurden entfernt (für sauberen Production-Code)
+- Halte den Code sauber und professionell
 
 ## 📮 Support & Links
 
@@ -335,10 +341,12 @@ Bei Problemen oder Feature-Wünschen:
 
 ## ✨ Features Highlights
 
-### Version Beta 0.3.3 (2025-10-13)
-- ✅ **Hebrew Locale Fix** - All 9 commands now load correctly
-- 📊 **New /status Command** - Link to status page
-- 🐛 **Fixed UnknownEnumValueError** - For github-commits, version, reload, restart commands
+### Version Beta 0.3.4 (2025-10-13)
+- 🔐 **Application Key Security System** - Verhindert unbefugte Bot-Nutzung
+- 📝 **README.md komplett überarbeitet** - Alle Features vollständig dokumentiert
+- ⚖️ **Lizenz geändert** - Alle Rechte vorbehalten © Theredstonee
+- 🛡️ **Sicherheit verbessert** - Setup-Details aus README entfernt
+- 📚 **Vollständige Dokumentation** - Multi-Server, Priority Roles & alle Features
 
 ### Kern-Features
 - 🌍 **Multi-Server** - Unbegrenzt viele Server mit einem Bot
@@ -355,14 +363,15 @@ Bei Problemen oder Feature-Wünschen:
 
 Siehe [changelog.json](./changelog.json) für die vollständige Versionshistorie.
 
-**Latest Changes (Beta 0.3.3):**
-- Fixed Hebrew locale issue in slash commands
-- All 9 commands now load correctly
-- New /status command with link to status page
-- Fixed UnknownEnumValueError for github-commits, version, reload, restart
+**Latest Changes (Beta 0.3.4):**
+- Application Key Security System implemented
+- README.md completely redesigned with all features
+- License changed to "All Rights Reserved"
+- Removed setup details from README for security
+- Full documentation of multi-server, priority roles & all features
 
 ---
 
-**TRS Tickets ©️ • Version Beta 0.3.3 • Made with ❤️ by TheRedstoneE**
+**TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten**
 
-🤖 This README was generated with assistance from [Claude Code](https://claude.com/claude-code)
+**Version:** Beta 0.3.4 | **Status:** [status.theredstonee.de](https://status.theredstonee.de)

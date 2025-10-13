@@ -1,6 +1,36 @@
 {
-  "currentVersion": "Beta 0.3.3",
+  "currentVersion": "Beta 0.3.4",
   "versions": [
+    {
+      "version": "Beta 0.3.4",
+      "date": "2025-10-13",
+      "changes": {
+        "de": [
+          "🔐 Application Key Security System implementiert",
+          "📝 README.md vollständig überarbeitet mit allen Features",
+          "⚖️ Lizenz auf 'Alle Rechte vorbehalten' geändert",
+          "🛡️ Setup-Informationen aus README entfernt (Security)",
+          "📚 Vollständige Dokumentation: Multi-Server, Priority Roles & alle Features",
+          "🌐 Security Notice mit Kontaktinformationen hinzugefügt"
+        ],
+        "en": [
+          "🔐 Application Key Security System implemented",
+          "📝 README.md completely redesigned with all features",
+          "⚖️ License changed to 'All Rights Reserved'",
+          "🛡️ Removed setup details from README for security",
+          "📚 Full documentation: Multi-Server, Priority Roles & all features",
+          "🌐 Added Security Notice with contact information"
+        ],
+        "he": [
+          "🔐 מערכת אבטחה Application Key מיושמת",
+          "📝 README.md עוצב מחדש לחלוטין עם כל התכונות",
+          "⚖️ הרישיון שונה ל'כל הזכויות שמורות'",
+          "🛡️ פרטי התקנה הוסרו מה-README לצורך אבטחה",
+          "📚 תיעוד מלא: רב-שרת, תפקידי עדיפות וכל התכונות",
+          "🌐 נוסף הודעת אבטחה עם פרטי קשר"
+        ]
+      }
+    },
     {
       "version": "Beta 0.3.3",
       "date": "2025-10-13",
