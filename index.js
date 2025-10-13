@@ -1163,7 +1163,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     { id:interaction.user.id, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
   ];
 
-  // Team-Rolle hinzufügen wenn gültig
+  // Team-Rolle hinzufügen wenn gültig (Legacy)
   const TEAM_ROLE = getTeamRole(guildId);
   if(TEAM_ROLE && TEAM_ROLE.trim()){
     try {
@@ -1171,6 +1171,19 @@ async function createTicketChannel(interaction, topic, formData, cfg){
       permOverwrites.push({ id:TEAM_ROLE, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
     } catch {
       console.error('Team-Rolle nicht gefunden:', TEAM_ROLE);
+    }
+  }
+
+  // Priority-Rollen hinzufügen (default priority = 0 = Green)
+  const priorityRoles = getPriorityRoles(guildId, 0);
+  for(const roleId of priorityRoles){
+    if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
+      try {
+        await interaction.guild.roles.fetch(roleId);
+        permOverwrites.push({ id:roleId, allow:[PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+      } catch {
+        console.error('Priority-Rolle nicht gefunden:', roleId);
+      }
     }
   }
 
@@ -1196,9 +1209,20 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   }
   await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
 
-  // Team-Rolle pingen (TEAM_ROLE bereits oben definiert)
-  if (TEAM_ROLE) {
-    await ch.send({ content: `<@&${TEAM_ROLE}> ${t(guildId, 'ticket.created')}` });
+  // Team-Rolle + Priority-Rollen pingen
+  const mentions = [];
+  if (TEAM_ROLE) mentions.push(`<@&${TEAM_ROLE}>`);
+
+  // Priority-Rollen für Green (0) pingen
+  const greenRoles = getPriorityRoles(guildId, 0);
+  for(const roleId of greenRoles){
+    if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
+      mentions.push(`<@&${roleId}>`);
+    }
+  }
+
+  if(mentions.length > 0){
+    await ch.send({ content: `${mentions.join(' ')} ${t(guildId, 'ticket.created')}` });
   }
 
   // Nutzer informieren
@@ -1248,10 +1272,81 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
   if(msg){ const e = EmbedBuilder.from(msg.embeds[0]); e.setColor(state.embedColor); await msg.edit({embeds:[e]}); }
   saveTickets(guildId, log);
 
-  // Team-Rolle pingen bei Priority-Änderung
+  // Channel-Berechtigungen für neue Priority-Rollen aktualisieren
+  try {
+    const currentPriority = ticket.priority || 0;
+    const newPriorityRoles = getPriorityRoles(guildId, currentPriority);
+    const allPriorityRoles = getAllTeamRoles(guildId);
+
+    // Basis-Berechtigungen (Ersteller + @everyone deny)
+    const permissions = [
+      { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+      { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+    ];
+
+    // Claimer hinzufügen wenn vorhanden
+    if(ticket.claimer){
+      permissions.push({ id: ticket.claimer, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+    }
+
+    // Hinzugefügte User
+    if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
+      ticket.addedUsers.forEach(uid => {
+        permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+      });
+    }
+
+    // Legacy Team-Rolle
+    const TEAM_ROLE = getTeamRole(guildId);
+    if(TEAM_ROLE && TEAM_ROLE.trim()){
+      try {
+        await interaction.guild.roles.fetch(TEAM_ROLE);
+        permissions.push({ id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+      } catch {}
+    }
+
+    // Neue Priority-Rollen hinzufügen
+    for(const roleId of newPriorityRoles){
+      if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
+        try {
+          await interaction.guild.roles.fetch(roleId);
+          permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+        } catch {
+          console.error('Priority-Rolle nicht gefunden:', roleId);
+        }
+      }
+    }
+
+    // Alle anderen Priority-Rollen entfernen (die nicht zur aktuellen Priorität gehören)
+    for(const roleId of allPriorityRoles){
+      if(roleId && roleId.trim() && !newPriorityRoles.includes(roleId) && roleId !== TEAM_ROLE){
+        try {
+          await interaction.guild.roles.fetch(roleId);
+          permissions.push({ id: roleId, deny: [PermissionsBitField.Flags.ViewChannel] });
+        } catch {}
+      }
+    }
+
+    await interaction.channel.permissionOverwrites.set(permissions);
+  } catch(err) {
+    console.error('Fehler beim Aktualisieren der Priority-Rollen-Berechtigungen:', err);
+  }
+
+  // Team-Rolle + neue Priority-Rollen pingen
+  const mentions = [];
   const TEAM_ROLE = getTeamRole(guildId);
-  if (TEAM_ROLE) {
-    await interaction.channel.send({ content: `<@&${TEAM_ROLE}> ${t(guildId, 'messages.priority_changed', { priority: state.label })}` });
+  if (TEAM_ROLE) mentions.push(`<@&${TEAM_ROLE}>`);
+
+  // Neue Priority-Rollen pingen
+  const newPriorityRoles = getPriorityRoles(guildId, ticket.priority || 0);
+  for(const roleId of newPriorityRoles){
+    if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
+      mentions.push(`<@&${roleId}>`);
+    }
+  }
+
+  if(mentions.length > 0){
+    await interaction.channel.send({ content: `${mentions.join(' ')} ${t(guildId, 'messages.priority_changed', { priority: state.label })}` });
   }
 
   logEvent(interaction.guild, t(guildId, 'logs.priority_changed', { id: ticket.id, direction: dir, priority: state.label }));

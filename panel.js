@@ -15,8 +15,35 @@ const path = require('path');
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { getTranslations, t, getLanguageName } = require('./translations');
 const cookieParser = require('cookie-parser');
+const { marked } = require('marked');
+const createDOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
 
 const VERSION = 'Beta 0.3.2'; // Bot Version
+
+// Markdown Parser mit DOMPurify (XSS Protection)
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
+
+// Marked konfigurieren
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+  headerIds: false,
+  mangle: false
+});
+
+// Markdown zu HTML konvertieren (sanitized)
+function renderMarkdown(text){
+  if(!text) return '';
+  try {
+    const html = marked.parse(text);
+    return DOMPurify.sanitize(html);
+  } catch(err) {
+    console.error('Markdown Error:', err);
+    return text;
+  }
+}
 
 /* ====== Config laden (Multi-Server) ====== */
 const CONFIG_DIR = path.join(__dirname, 'configs');
@@ -157,6 +184,7 @@ module.exports = (client)=>{
 
     res.locals.lang = lang;
     res.locals.t = getTranslations(lang);
+    res.locals.renderMarkdown = renderMarkdown; // Markdown helper für alle Templates
     next();
   });
 
