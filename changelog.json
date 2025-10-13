@@ -1,6 +1,30 @@
 {
-  "currentVersion": "Beta 0.3.2",
+  "currentVersion": "Beta 0.3.3",
   "versions": [
+    {
+      "version": "Beta 0.3.3",
+      "date": "2025-10-13",
+      "changes": {
+        "de": [
+          "🔧 Hebrew Locale Issue in Slash Commands behoben",
+          "✅ Alle 9 Commands laden jetzt korrekt",
+          "📊 Neuer /status Command mit Link zur Status-Seite",
+          "🐛 UnknownEnumValueError für github-commits, version, reload, restart behoben"
+        ],
+        "en": [
+          "🔧 Fixed Hebrew locale issue in slash commands",
+          "✅ All 9 commands now load correctly",
+          "📊 New /status command with link to status page",
+          "🐛 Fixed UnknownEnumValueError for github-commits, version, reload, restart"
+        ],
+        "he": [
+          "🔧 תוקן בעיית locale עברי בפקודות slash",
+          "✅ כל 9 הפקודות נטענות כעת בצורה תקינה",
+          "📊 פקודת /status חדשה עם קישור לעמוד הסטטוס",
+          "🐛 תוקן UnknownEnumValueError עבור github-commits, version, reload, restart"
+        ]
+      }
+    },
     {
       "version": "Beta 0.3.2",
       "date": "2025-10-12",

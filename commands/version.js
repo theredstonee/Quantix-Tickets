@@ -2,8 +2,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { t } = require('../translations');
 
-const VERSION = 'Beta 0.3.2';
-const RELEASE_DATE = '2025-10-12';
+const VERSION = 'Beta 0.3.3';
+const RELEASE_DATE = '2025-10-13';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -23,12 +23,10 @@ module.exports = {
         `**Version:** ${VERSION}\n` +
         `**Release Date:** ${RELEASE_DATE}\n\n` +
         `**New in ${VERSION}:**\n` +
-        `🔧 GitHub Commit Logs Toggle System\n` +
-        `👥 Multi-Level Priority Roles (Green/Orange/Red)\n` +
-        `👀 Live Preview for Role Count per Priority\n` +
-        `⚙️ Server-specific GitHub Logs Configuration\n` +
-        `🎛️ Interactive Toggle Buttons for GitHub Notifications\n` +
-        `🛡️ Multiple Role Selection per Priority Level\n\n` +
+        `🔧 Fixed Hebrew locale issue in slash commands\n` +
+        `✅ All 9 commands now load correctly\n` +
+        `📊 New /status command with link to status page\n` +
+        `🐛 Fixed UnknownEnumValueError for github-commits, version, reload, restart\n\n` +
         `[GitHub Repository](https://github.com/TheRedstoneE/TRS-Tickets-Bot)`
       )
       .setColor(0x00ff88)

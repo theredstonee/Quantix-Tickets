@@ -19,7 +19,7 @@ const { marked } = require('marked');
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 
-const VERSION = 'Beta 0.3.2'; // Bot Version
+const VERSION = 'Beta 0.3.3'; // Bot Version
 
 // Markdown Parser mit DOMPurify (XSS Protection)
 const window = new JSDOM('').window;
