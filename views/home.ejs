@@ -495,6 +495,8 @@
     <a href="/set-user-language/ja" class="lang-btn <%= lang === 'ja' ? 'active' : '' %>" title="日本語"><img src="/images/flags/jp.svg" alt="JA" width="24" height="18"></a>
     <a href="/set-user-language/ru" class="lang-btn <%= lang === 'ru' ? 'active' : '' %>" title="Русский"><img src="/images/flags/ru.svg" alt="RU" width="24" height="18"></a>
     <a href="/set-user-language/pt" class="lang-btn <%= lang === 'pt' ? 'active' : '' %>" title="Português"><img src="/images/flags/pt.svg" alt="PT" width="24" height="18"></a>
+    <a href="/set-user-language/es" class="lang-btn <%= lang === 'es' ? 'active' : '' %>" title="Español"><img src="/images/flags/es.svg" alt="ES" width="24" height="18"></a>
+    <a href="/set-user-language/id" class="lang-btn <%= lang === 'id' ? 'active' : '' %>" title="Bahasa Indonesia"><img src="/images/flags/id.svg" alt="ID" width="24" height="18"></a>
   </div>
 
   <div class="hero">
@@ -506,7 +508,9 @@
         he: 'מערכת כרטיסים מקצועית עבור Discord',
         ja: 'Discord用のプロフェッショナルチケットシステム',
         ru: 'Профессиональная система тикетов для Discord',
-        pt: 'Sistema de Tickets Profissional para Discord'
+        pt: 'Sistema de Tickets Profissional para Discord',
+        es: 'Sistema de Tickets Profesional para Discord',
+        id: 'Sistem Tiket Profesional untuk Discord'
       };
     %><%= heroTexts[lang] || heroTexts.de %></p>
     <div class="version-badge">Beta 0.3.5</div>
@@ -520,7 +524,9 @@
             he: 'מחובר בתור',
             ja: 'ログイン中：',
             ru: 'Вошли как',
-            pt: 'Conectado como'
+            pt: 'Conectado como',
+            es: 'Conectado como',
+            id: 'Login sebagai'
           };
         %><%= loggedInTexts[lang] || loggedInTexts.de %> <strong><%= user.username %></strong>
       </div>
@@ -533,7 +539,9 @@
               he: 'עבור לפאנל ניהול',
               ja: '管理パネルへ',
               ru: 'Перейти в админ-панель',
-              pt: 'Ir para Painel Admin'
+              pt: 'Ir para Painel Admin',
+              es: 'Ir al Panel de Administración',
+              id: 'Buka Panel Admin'
             };
           %><%= adminPanelTexts[lang] || adminPanelTexts.de %>
         </a>
@@ -545,7 +553,9 @@
               he: 'התנתק',
               ja: 'ログアウト',
               ru: 'Выйти',
-              pt: 'Sair'
+              pt: 'Sair',
+              es: 'Cerrar Sesión',
+              id: 'Keluar'
             };
           %><%= logoutTexts[lang] || logoutTexts.de %>
         </a>
@@ -560,7 +570,9 @@
               he: 'התחבר עם Discord',
               ja: 'Discordでログイン',
               ru: 'Войти через Discord',
-              pt: 'Entrar com Discord'
+              pt: 'Entrar com Discord',
+              es: 'Iniciar Sesión con Discord',
+              id: 'Masuk dengan Discord'
             };
           %><%= loginTexts[lang] || loginTexts.de %>
         </a>
@@ -578,17 +590,21 @@
             he: 'רב-לשוני',
             ja: '多言語対応',
             ru: 'Мультиязычность',
-            pt: 'Multi-Idioma'
+            pt: 'Multi-Idioma',
+            es: 'Multi-Idioma',
+            id: 'Multi-Bahasa'
           };
         %><%= multiLangTitle[lang] || multiLangTitle.de %></h3>
         <p><%
           const multiLangDesc = {
-            de: 'Unterstützt Deutsch, Englisch, Hebräisch, Japanisch, Russisch und Portugiesisch mit vollständiger Übersetzung.',
-            en: 'Supports German, English, Hebrew, Japanese, Russian and Portuguese with complete translation.',
-            he: 'תומך בגרמנית, אנגלית, עברית, יפנית, רוסית ופורטוגזית עם תרגום מלא.',
-            ja: 'ドイツ語、英語、ヘブライ語、日本語、ロシア語、ポルトガル語を完全翻訳でサポート。',
-            ru: 'Поддержка немецкого, английского, иврита, японского, русского и португальского с полным переводом.',
-            pt: 'Suporta alemão, inglês, hebraico, japonês, russo e português com tradução completa.'
+            de: 'Unterstützt Deutsch, Englisch, Hebräisch, Japanisch, Russisch, Portugiesisch, Spanisch und Indonesisch mit vollständiger Übersetzung.',
+            en: 'Supports German, English, Hebrew, Japanese, Russian, Portuguese, Spanish and Indonesian with complete translation.',
+            he: 'תומך בגרמנית, אנגלית, עברית, יפנית, רוסית, פורטוגזית, ספרדית ואינדונזית עם תרגום מלא.',
+            ja: 'ドイツ語、英語、ヘブライ語、日本語、ロシア語、ポルトガル語、スペイン語、インドネシア語を完全翻訳でサポート。',
+            ru: 'Поддержка немецкого, английского, иврита, японского, русского, португальского, испанского и индонезийского с полным переводом.',
+            pt: 'Suporta alemão, inglês, hebraico, japonês, russo, português, espanhol e indonésio com tradução completa.',
+            es: 'Soporta alemán, inglés, hebreo, japonés, ruso, portugués, español e indonesio con traducción completa.',
+            id: 'Mendukung Jerman, Inggris, Ibrani, Jepang, Rusia, Portugis, Spanyol dan Indonesia dengan terjemahan lengkap.'
           };
         %><%= multiLangDesc[lang] || multiLangDesc.de %></p>
       </div>
@@ -601,7 +617,9 @@
             he: 'ניהול אינטרנט',
             ja: 'Web管理',
             ru: 'Веб-управление',
-            pt: 'Gerenciamento Web'
+            pt: 'Gerenciamento Web',
+            es: 'Gestión Web',
+            id: 'Manajemen Web'
           };
         %><%= webMgmtTitle[lang] || webMgmtTitle.de %></h3>
         <p><%
@@ -611,7 +629,9 @@
             he: 'פאנל ניהול מקיף להגדרת נושאים, טפסים והטבעות.',
             ja: 'トピック、フォーム、埋め込みを設定するための包括的な管理パネル。',
             ru: 'Комплексная админ-панель для настройки тем, форм и встраиваний.',
-            pt: 'Painel de administração abrangente para configurar tópicos, formulários e embeds.'
+            pt: 'Painel de administração abrangente para configurar tópicos, formulários e embeds.',
+            es: 'Panel de administración completo para configurar temas, formularios e incrustaciones.',
+            id: 'Panel admin komprehensif untuk mengonfigurasi topik, formulir dan embed.'
           };
         %><%= webMgmtDesc[lang] || webMgmtDesc.de %></p>
       </div>
@@ -624,7 +644,9 @@
             he: 'תואם GDPR',
             ja: 'GDPR準拠',
             ru: 'Соответствие GDPR',
-            pt: 'Compatível com GDPR'
+            pt: 'Compatível com GDPR',
+            es: 'Cumplimiento GDPR',
+            id: 'Sesuai GDPR'
           };
         %><%= gdprTitle[lang] || gdprTitle.de %></h3>
         <p><%
@@ -634,7 +656,9 @@
             he: 'מדיניות פרטיות ותנאי שימוש מלאים עם מחיקת נתונים לאחר חודשיים.',
             ja: '完全なプライバシーポリシーと利用規約、2ヶ月後のデータ削除付き。',
             ru: 'Полная политика конфиденциальности и условия использования с удалением данных через 2 месяца.',
-            pt: 'Política de privacidade completa e termos de serviço com exclusão de dados após 2 meses.'
+            pt: 'Política de privacidade completa e termos de serviço com exclusão de dados após 2 meses.',
+            es: 'Política de privacidad completa y términos de servicio con eliminación de datos después de 2 meses.',
+            id: 'Kebijakan privasi lengkap dan ketentuan layanan dengan penghapusan data setelah 2 bulan.'
           };
         %><%= gdprDesc[lang] || gdprDesc.de %></p>
       </div>
@@ -647,7 +671,9 @@
             he: 'ניהול כרטיסים',
             ja: 'チケット管理',
             ru: 'Управление тикетами',
-            pt: 'Gerenciamento de Tickets'
+            pt: 'Gerenciamento de Tickets',
+            es: 'Gestión de Tickets',
+            id: 'Manajemen Tiket'
           };
         %><%= ticketMgmtTitle[lang] || ticketMgmtTitle.de %></h3>
         <p><%
@@ -657,7 +683,9 @@
             he: 'עדיפויות, תפיסה, תמלילים והיסטוריית כרטיסים מלאה בפאנל האינטרנט.',
             ja: '優先度、担当、トランスクリプト、完全なチケット履歴をWebパネルで。',
             ru: 'Приоритеты, назначение, транскрипты и полная история тикетов в веб-панели.',
-            pt: 'Prioridades, atribuição, transcrições e histórico completo de tickets no painel web.'
+            pt: 'Prioridades, atribuição, transcrições e histórico completo de tickets no painel web.',
+            es: 'Prioridades, asignación, transcripciones e historial completo de tickets en el panel web.',
+            id: 'Prioritas, penugasan, transkrip dan riwayat tiket lengkap di panel web.'
           };
         %><%= ticketMgmtDesc[lang] || ticketMgmtDesc.de %></p>
       </div>
@@ -670,7 +698,9 @@
             he: 'טפסים דינמיים',
             ja: '動的フォーム',
             ru: 'Динамические формы',
-            pt: 'Formulários Dinâmicos'
+            pt: 'Formulários Dinâmicos',
+            es: 'Formularios Dinámicos',
+            id: 'Formulir Dinamis'
           };
         %><%= formsTitle[lang] || formsTitle.de %></h3>
         <p><%
@@ -680,7 +710,9 @@
             he: 'צור שדות טופס מותאמים אישית לכל סוג כרטיס דרך פאנל האינטרנט.',
             ja: 'Webパネルから各チケットタイプのカスタムフォームフィールドを作成。',
             ru: 'Создавайте пользовательские поля формы для каждого типа тикета через веб-панель.',
-            pt: 'Crie campos de formulário personalizados para cada tipo de ticket através do painel web.'
+            pt: 'Crie campos de formulário personalizados para cada tipo de ticket através do painel web.',
+            es: 'Crea campos de formulario personalizados para cada tipo de ticket a través del panel web.',
+            id: 'Buat bidang formulir kustom untuk setiap jenis tiket melalui panel web.'
           };
         %><%= formsDesc[lang] || formsDesc.de %></p>
       </div>
@@ -693,7 +725,9 @@
             he: 'מצב כהה',
             ja: 'ダークモード',
             ru: 'Тёмный режим',
-            pt: 'Modo Escuro'
+            pt: 'Modo Escuro',
+            es: 'Modo Oscuro',
+            id: 'Mode Gelap'
           };
         %><%= darkModeTitle[lang] || darkModeTitle.de %></h3>
         <p><%
@@ -703,7 +737,9 @@
             he: 'עיצוב מודרני עם מצב כהה אוטומטי ותמיכה ב-RTL לעברית.',
             ja: '自動ダークモードとヘブライ語のRTLサポートを備えたモダンなデザイン。',
             ru: 'Современный дизайн с автоматическим тёмным режимом и поддержкой RTL для иврита.',
-            pt: 'Design moderno com modo escuro automático e suporte RTL para hebraico.'
+            pt: 'Design moderno com modo escuro automático e suporte RTL para hebraico.',
+            es: 'Diseño moderno con modo oscuro automático y soporte RTL para hebreo.',
+            id: 'Desain modern dengan mode gelap otomatis dan dukungan RTL untuk bahasa Ibrani.'
           };
         %><%= darkModeDesc[lang] || darkModeDesc.de %></p>
       </div>
@@ -717,7 +753,9 @@
             he: 'מידע משפטי',
             ja: '法的通知',
             ru: 'Правовая информация',
-            pt: 'Aviso Legal'
+            pt: 'Aviso Legal',
+            es: 'Aviso Legal',
+            id: 'Pemberitahuan Hukum'
           };
         %><%= imprintText[lang] || imprintText.de %>
       </a>
@@ -729,7 +767,9 @@
             he: 'תנאי שימוש',
             ja: '利用規約',
             ru: 'Условия использования',
-            pt: 'Termos de Uso'
+            pt: 'Termos de Uso',
+            es: 'Términos de Servicio',
+            id: 'Ketentuan Layanan'
           };
         %><%= tosText[lang] || tosText.de %>
       </a>
@@ -741,7 +781,9 @@
             he: 'מדיניות פרטיות',
             ja: 'プライバシーポリシー',
             ru: 'Политика конфиденциальности',
-            pt: 'Política de Privacidade'
+            pt: 'Política de Privacidade',
+            es: 'Política de Privacidad',
+            id: 'Kebijakan Privasi'
           };
         %><%= privacyText[lang] || privacyText.de %>
       </a>
@@ -755,7 +797,9 @@
         he: 'מופעל על ידי',
         ja: '運営',
         ru: 'Управляется',
-        pt: 'Operado por'
+        pt: 'Operado por',
+        es: 'Operado por',
+        id: 'Dioperasikan oleh'
       };
     %><%= operatedByText[lang] || operatedByText.de %> Ohev Tamerin | <a href="/imprint"><%
       const footerImprintText = {
@@ -764,7 +808,9 @@
         he: 'מידע משפטי',
         ja: '法的通知',
         ru: 'Правовая информация',
-        pt: 'Aviso Legal'
+        pt: 'Aviso Legal',
+        es: 'Aviso Legal',
+        id: 'Pemberitahuan Hukum'
       };
     %><%= footerImprintText[lang] || footerImprintText.de %></a></p>
   </footer>

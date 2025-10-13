@@ -9,7 +9,9 @@ module.exports = {
       'en-US': 'Set the server language for the bot',
       ja: 'サーバー言語を設定',
       ru: 'Установить язык сервера',
-      'pt-BR': 'Definir idioma do servidor'
+      'pt-BR': 'Definir idioma do servidor',
+      'es-ES': 'Establecer el idioma del servidor',
+      id: 'Atur bahasa server'
     })
     .addStringOption(option =>
       option.setName('language')
@@ -19,7 +21,9 @@ module.exports = {
           'en-US': 'Choose the language for bot responses',
           ja: '言語を選択',
           ru: 'Выбрать язык',
-          'pt-BR': 'Selecionar idioma'
+          'pt-BR': 'Selecionar idioma',
+          'es-ES': 'Elegir el idioma',
+          id: 'Pilih bahasa'
         })
         .setRequired(true)
         .addChoices(
@@ -28,7 +32,9 @@ module.exports = {
           { name: '🇮🇱 עברית (Hebrew)', value: 'he' },
           { name: '🇯🇵 日本語 (Japanese)', value: 'ja' },
           { name: '🇷🇺 Русский (Russian)', value: 'ru' },
-          { name: '🇵🇹 Português (Portuguese)', value: 'pt' }
+          { name: '🇵🇹 Português (Portuguese)', value: 'pt' },
+          { name: '🇪🇸 Español (Spanish)', value: 'es' },
+          { name: '🇮🇩 Bahasa Indonesia (Indonesian)', value: 'id' }
         ))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 };

@@ -428,8 +428,8 @@
   <div class="lang-dropdown">
     <button class="lang-dropdown-toggle" onclick="toggleLangDropdown()">
       <%
-        const langFlags = { de: 'de', en: 'gb', he: 'il', ja: 'jp', ru: 'ru', pt: 'pt' };
-        const langNames = { de: 'Deutsch', en: 'English', he: 'עברית', ja: '日本語', ru: 'Русский', pt: 'Português' };
+        const langFlags = { de: 'de', en: 'gb', he: 'il', ja: 'jp', ru: 'ru', pt: 'pt', es: 'es', id: 'id' };
+        const langNames = { de: 'Deutsch', en: 'English', he: 'עברית', ja: '日本語', ru: 'Русский', pt: 'Português', es: 'Español', id: 'Bahasa Indonesia' };
       %>
       <img src="/images/flags/<%= langFlags[lang] %>.svg" alt="<%= lang %>">
       <span><%= langNames[lang] %></span>
@@ -460,6 +460,14 @@
         <img src="/images/flags/pt.svg" alt="PT">
         <span>Português</span>
       </a>
+      <a href="/set-language/es" class="lang-dropdown-item <%= lang === 'es' ? 'active' : '' %>">
+        <img src="/images/flags/es.svg" alt="ES">
+        <span>Español</span>
+      </a>
+      <a href="/set-language/id" class="lang-dropdown-item <%= lang === 'id' ? 'active' : '' %>">
+        <img src="/images/flags/id.svg" alt="ID">
+        <span>Bahasa Indonesia</span>
+      </a>
     </div>
   </div>
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
@@ -469,13 +477,13 @@
 
   <div class="nav-buttons">
     <a href="/">
-      <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : 'Zur Startseite' %>
+      <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : 'Zur Startseite' %>
     </a>
     <a href="/select-server" class="secondary-btn">
-      <i class="fas fa-server"></i> <%= lang === 'de' ? 'Server wechseln' : lang === 'en' ? 'Change Server' : lang === 'he' ? 'החלף שרת' : lang === 'ja' ? 'サーバーを変更' : lang === 'ru' ? 'Сменить сервер' : lang === 'pt' ? 'Trocar Servidor' : 'Server wechseln' %>
+      <i class="fas fa-server"></i> <%= lang === 'de' ? 'Server wechseln' : lang === 'en' ? 'Change Server' : lang === 'he' ? 'החלף שרת' : lang === 'ja' ? 'サーバーを変更' : lang === 'ru' ? 'Сменить сервер' : lang === 'pt' ? 'Trocar Servidor' : lang === 'es' ? 'Cambiar Servidor' : lang === 'id' ? 'Ganti Server' : 'Server wechseln' %>
     </a>
     <a href="/tickets" class="secondary-btn">
-      <i class="fas fa-history"></i> <%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : lang === 'he' ? 'היסטוריית כרטיסים' : lang === 'ja' ? 'チケット履歴' : lang === 'ru' ? 'История тикетов' : lang === 'pt' ? 'Histórico de Tickets' : 'Ticket-Verlauf' %>
+      <i class="fas fa-history"></i> <%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : lang === 'he' ? 'היסטוריית כרטיסים' : lang === 'ja' ? 'チケット履歴' : lang === 'ru' ? 'История тикетов' : lang === 'pt' ? 'Histórico de Tickets' : lang === 'es' ? 'Historial de Tickets' : lang === 'id' ? 'Riwayat Tiket' : 'Ticket-Verlauf' %>
     </a>
   </div>
 

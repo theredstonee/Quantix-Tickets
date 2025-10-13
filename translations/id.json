@@ -1,0 +1,284 @@
+{
+  "ticket": {
+    "created": "Tiket Anda telah dibuat!",
+    "topic": "Topik",
+    "status": "Status",
+    "priority": "Prioritas",
+    "open": "Terbuka",
+    "closed": "Ditutup",
+    "claimed": "Diklaim",
+    "unclaimed": "Tidak diklaim",
+    "claimedBy": "Diklaim oleh",
+    "createdBy": "Dibuat oleh",
+    "closedBy": "Ditutup oleh",
+    "createdAt": "Dibuat pada",
+    "closedAt": "Ditutup pada",
+    "transcript": "Transkrip",
+    "noTranscript": "Tidak ada transkrip tersedia",
+    "deleteConfirm": "Apakah Anda yakin ingin menghapus tiket ini?",
+    "deleted": "Tiket telah dihapus",
+    "userAdded": "telah ditambahkan ke tiket",
+    "closeRequested": "telah meminta untuk menutup tiket ini",
+    "ticketClosed": "Tiket ditutup oleh"
+  },
+  "buttons": {
+    "close": "Tutup",
+    "claim": "Klaim",
+    "unclaim": "Lepas Klaim",
+    "delete": "Hapus",
+    "transcript": "Transkrip",
+    "addUser": "Tambah Pengguna",
+    "removeUser": "Hapus Pengguna",
+    "priorityUp": "Prioritas Naik",
+    "priorityDown": "Prioritas Turun",
+    "requestClose": "Minta Tutup",
+    "cancel": "Batal",
+    "confirm": "Konfirmasi",
+    "save": "Simpan",
+    "edit": "Edit",
+    "back": "Kembali"
+  },
+  "messages": {
+    "ticketCreated": "✅ Tiket Anda **#{ticketNumber}** telah dibuat: {channelMention}",
+    "ticketClosed": "🔒 Tiket **#{ticketNumber}** telah ditutup.",
+    "ticketDeleted": "🗑️ Tiket **#{ticketNumber}** telah dihapus.",
+    "ticketClaimed": "✅ {userMention} telah mengklaim tiket ini.",
+    "ticketUnclaimed": "❌ {userMention} telah melepas klaim tiket ini.",
+    "priorityChanged": "🔄 Prioritas tiket diubah menjadi **{priority}**.",
+    "userAdded": "✅ {userMention} telah ditambahkan ke tiket.",
+    "userRemoved": "❌ {userMention} telah dihapus dari tiket.",
+    "closeRequested": "🔔 {userMention} telah meminta untuk menutup tiket ini.",
+    "transcriptCreated": "📄 Transkrip telah dibuat.",
+    "noPermission": "❌ Anda tidak memiliki izin untuk melakukan ini.",
+    "error": "❌ Terjadi kesalahan. Silakan coba lagi nanti.",
+    "invalidTicket": "❌ Tiket tidak valid.",
+    "ticketNotFound": "❌ Tiket tidak ditemukan.",
+    "alreadyClaimed": "❌ Tiket ini sudah diklaim.",
+    "notClaimed": "❌ Tiket ini tidak diklaim.",
+    "cannotCloseOwn": "❌ Anda tidak dapat menutup tiket Anda sendiri. Gunakan tombol 'Minta Tutup'.",
+    "selectUser": "Pilih pengguna untuk ditambahkan ke tiket:",
+    "selectUserRemove": "Pilih pengguna untuk dihapus dari tiket:"
+  },
+  "panel": {
+    "title": "Panel Admin",
+    "dashboard": "Dasbor",
+    "tickets": "Tiket",
+    "settings": "Pengaturan",
+    "logout": "Keluar",
+    "welcome": "Selamat datang",
+    "totalTickets": "Total Tiket",
+    "openTickets": "Tiket Terbuka",
+    "closedTickets": "Tiket Ditutup",
+    "topics": "Topik",
+    "addTopic": "Tambah Topik",
+    "editTopic": "Edit Topik",
+    "deleteTopic": "Hapus Topik",
+    "formFields": "Bidang Formulir",
+    "addField": "Tambah Bidang",
+    "editField": "Edit Bidang",
+    "deleteField": "Hapus Bidang",
+    "embeds": "Embed",
+    "ticketEmbed": "Embed Tiket",
+    "panelEmbed": "Embed Panel",
+    "editEmbed": "Edit Embed",
+    "panelMessage": "Pesan Panel",
+    "sendPanel": "Kirim Panel",
+    "updatePanel": "Perbarui Panel",
+    "channelId": "ID Channel",
+    "categoryId": "ID Kategori",
+    "logChannel": "Channel Log",
+    "transcriptChannel": "Channel Transkrip",
+    "language": "Bahasa",
+    "save": "Simpan",
+    "saved": "Pengaturan disimpan!",
+    "error": "Terjadi kesalahan saat menyimpan pengaturan.",
+    "topicLabel": "Label",
+    "topicValue": "Nilai",
+    "topicEmoji": "Emoji",
+    "fieldLabel": "Label",
+    "fieldId": "ID",
+    "fieldStyle": "Gaya",
+    "fieldRequired": "Wajib",
+    "fieldTopic": "Topik",
+    "short": "Pendek",
+    "paragraph": "Paragraf",
+    "embedTitle": "Judul",
+    "embedDescription": "Deskripsi",
+    "embedColor": "Warna",
+    "embedFooter": "Footer",
+    "placeholders": "Placeholder yang tersedia:",
+    "ticketNumber": "Nomor Tiket",
+    "userMention": "Mention Pengguna",
+    "userId": "ID Pengguna",
+    "topicLabelPlaceholder": "Label Topik",
+    "topicValuePlaceholder": "Nilai Topik",
+    "noTickets": "Tidak ada tiket ditemukan.",
+    "viewTranscript": "Lihat Transkrip",
+    "ticketDetails": "Detail Tiket",
+    "ticketId": "ID Tiket",
+    "ticketChannel": "Channel Tiket",
+    "ticketUser": "Pengguna",
+    "ticketTopic": "Topik",
+    "ticketStatus": "Status",
+    "ticketPriority": "Prioritas",
+    "ticketClaimer": "Diklaim Oleh",
+    "ticketCreated": "Dibuat",
+    "ticketClosed": "Ditutup",
+    "ticketFormData": "Data Formulir",
+    "priority_0": "🟢 Rendah",
+    "priority_1": "🟠 Sedang",
+    "priority_2": "🔴 Tinggi",
+    "allTopics": "Semua Topik",
+    "globalField": "Global (semua topik)"
+  },
+  "language": {
+    "changed": "✅ Bahasa diubah menjadi <strong>Bahasa Indonesia</strong>.",
+    "german": "Deutsch",
+    "english": "English",
+    "hebrew": "עברית",
+    "japanese": "日本語",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "spanish": "Español",
+    "indonesian": "Bahasa Indonesia"
+  },
+  "web": {
+    "title": "TRS Ticket Bot",
+    "tagline": "Sistem tiket Discord profesional dengan panel admin web",
+    "features": "Fitur",
+    "getStarted": "Mulai",
+    "documentation": "Dokumentasi",
+    "support": "Dukungan",
+    "feature1Title": "Dukungan Multi-Bahasa",
+    "feature1Desc": "Dukungan terjemahan lengkap untuk Jerman, Inggris, Ibrani, Jepang, Rusia, Portugis, Spanyol, dan Indonesia.",
+    "feature2Title": "Manajemen Web",
+    "feature2Desc": "Pengaturan komprehensif untuk topik, formulir, dan embed melalui panel admin intuitif.",
+    "feature3Title": "Kepatuhan GDPR",
+    "feature3Desc": "Dibangun dengan mempertimbangkan privasi data. Kebijakan privasi lengkap dan kepatuhan GDPR.",
+    "feature4Title": "Manajemen Tiket",
+    "feature4Desc": "Sistem tiket yang kuat dengan prioritas, klaim, transkrip, dan logging otomatis.",
+    "feature5Title": "Formulir Dinamis",
+    "feature5Desc": "Buat formulir kustom untuk setiap topik tiket dengan berbagai jenis bidang.",
+    "feature6Title": "Mode Gelap",
+    "feature6Desc": "Antarmuka modern dengan dukungan mode gelap untuk pengalaman pengguna yang lebih baik.",
+    "imprint": "Imprint",
+    "tos": "Syarat Layanan",
+    "privacy": "Kebijakan Privasi",
+    "operatedBy": "Dioperasikan oleh"
+  },
+  "logs": {
+    "ticketCreated": "Tiket dibuat",
+    "ticketClosed": "Tiket ditutup",
+    "ticketDeleted": "Tiket dihapus",
+    "ticketClaimed": "Tiket diklaim",
+    "ticketUnclaimed": "Tiket tidak diklaim",
+    "priorityChanged": "Prioritas diubah",
+    "userAdded": "Pengguna ditambahkan",
+    "userRemoved": "Pengguna dihapus",
+    "closeRequested": "Penutupan diminta",
+    "transcriptCreated": "Transkrip dibuat"
+  },
+  "tos": {
+    "title": "Syarat Layanan",
+    "intro": "Dengan menggunakan TRS Ticket Bot, Anda setuju untuk mematuhi syarat layanan berikut.",
+    "acceptance": {
+      "title": "1. Penerimaan Syarat",
+      "content": "Dengan mengakses dan menggunakan bot ini, Anda menerima dan setuju untuk terikat oleh syarat dan ketentuan perjanjian ini. Selain itu, saat menggunakan layanan tertentu bot ini, Anda akan tunduk pada pedoman atau aturan apa pun yang berlaku untuk layanan tersebut."
+    },
+    "description": {
+      "title": "2. Deskripsi Layanan",
+      "content": "TRS Ticket Bot menyediakan sistem manajemen tiket untuk server Discord dengan panel admin web. Layanan ini mencakup pembuatan tiket, manajemen, transkrip, dan fitur administratif."
+    },
+    "userObligations": {
+      "title": "3. Kewajiban Pengguna",
+      "content": "Anda setuju untuk menggunakan bot hanya untuk tujuan yang sah dan dengan cara yang tidak melanggar hak, membatasi, atau menghambat penggunaan bot oleh orang lain. Perilaku yang dilarang termasuk melecehkan atau menyebabkan kesusahan atau ketidaknyamanan pada orang lain, menyampaikan konten cabul atau ofensif, atau mengganggu aliran dialog normal."
+    },
+    "privacy": {
+      "title": "4. Privasi",
+      "content": "Penggunaan Anda atas bot tunduk pada Kebijakan Privasi kami. Silakan tinjau kebijakan kami untuk memahami praktik kami mengenai pengumpulan, penggunaan, dan pengungkapan informasi pribadi."
+    },
+    "modifications": {
+      "title": "5. Modifikasi Layanan",
+      "content": "Kami berhak untuk memodifikasi atau menghentikan, sementara atau permanen, layanan (atau bagian mana pun darinya) dengan atau tanpa pemberitahuan setiap saat. Anda setuju bahwa kami tidak akan bertanggung jawab kepada Anda atau pihak ketiga mana pun atas modifikasi, penangguhan, atau penghentian layanan."
+    },
+    "termination": {
+      "title": "6. Penghentian",
+      "content": "Kami dapat menghentikan atau menangguhkan akses Anda ke layanan segera, tanpa pemberitahuan atau tanggung jawab sebelumnya, atas alasan apa pun, termasuk tanpa batasan jika Anda melanggar Syarat."
+    },
+    "disclaimer": {
+      "title": "7. Penafian",
+      "content": "Layanan kami disediakan \"SEBAGAIMANA ADANYA\" dan \"SEBAGAIMANA TERSEDIA\" tanpa jaminan dalam bentuk apa pun, baik tersurat maupun tersirat, termasuk, tetapi tidak terbatas pada jaminan tersirat tentang kelayakan untuk diperdagangkan, kesesuaian untuk tujuan tertentu, atau non-pelanggaran."
+    },
+    "limitation": {
+      "title": "8. Batasan Tanggung Jawab",
+      "content": "Dalam keadaan apa pun kami tidak akan bertanggung jawab atas kerusakan tidak langsung, insidental, khusus, konsekuensial atau hukuman, termasuk tanpa batasan, kehilangan keuntungan, data, penggunaan, niat baik, atau kerugian tidak berwujud lainnya."
+    },
+    "governing": {
+      "title": "9. Hukum yang Mengatur",
+      "content": "Syarat ini akan diatur dan ditafsirkan sesuai dengan hukum Jerman, tanpa memperhatikan ketentuan konflik hukumnya."
+    },
+    "contact": {
+      "title": "10. Informasi Kontak",
+      "content": "Jika Anda memiliki pertanyaan tentang Syarat ini, silakan hubungi kami di:"
+    }
+  },
+  "privacy": {
+    "title": "Kebijakan Privasi",
+    "intro": "Kebijakan Privasi ini menjelaskan bagaimana TRS Ticket Bot mengumpulkan, menggunakan, dan melindungi data pribadi Anda.",
+    "dataCollection": {
+      "title": "1. Data yang Kami Kumpulkan",
+      "content": "Kami mengumpulkan jenis informasi berikut:",
+      "userIds": "ID Pengguna Discord dan nama pengguna",
+      "serverIds": "ID Server Discord dan nama server",
+      "messageContent": "Konten pesan dalam channel tiket",
+      "ticketData": "Data terkait tiket (topik, status, prioritas, timestamp)",
+      "formData": "Tanggapan dari formulir tiket kustom"
+    },
+    "dataUsage": {
+      "title": "2. Bagaimana Kami Menggunakan Data Anda",
+      "content": "Kami menggunakan data yang dikumpulkan untuk:",
+      "provideService": "Menyediakan dan memelihara fungsionalitas sistem tiket",
+      "manageTickets": "Mengelola dan melacak tiket dukungan",
+      "generateTranscripts": "Menghasilkan transkrip tiket untuk tujuan pencatatan",
+      "improveService": "Meningkatkan dan mengoptimalkan bot dan layanan kami"
+    },
+    "dataStorage": {
+      "title": "3. Penyimpanan dan Keamanan Data",
+      "content": "Data Anda disimpan dengan aman di server kami. Kami menerapkan langkah-langkah keamanan teknis dan organisasi yang sesuai untuk melindungi data Anda dari akses tidak sah, perubahan, pengungkapan, atau penghancuran. Data tiket disimpan selama diperlukan untuk menyediakan layanan dan sesuai dengan kewajiban hukum kami."
+    },
+    "dataSharing": {
+      "title": "4. Berbagi Data",
+      "content": "Kami tidak membagikan, menjual, atau menyewakan data pribadi Anda kepada pihak ketiga. Data Anda hanya dapat diakses oleh administrator server Discord yang berwenang melalui panel admin."
+    },
+    "userRights": {
+      "title": "5. Hak Anda",
+      "content": "Berdasarkan GDPR, Anda memiliki hak berikut:",
+      "access": "Hak untuk mengakses data pribadi Anda",
+      "rectification": "Hak untuk memperbaiki data yang tidak akurat atau tidak lengkap",
+      "erasure": "Hak untuk menghapus data pribadi Anda",
+      "restriction": "Hak untuk membatasi pemrosesan data Anda",
+      "portability": "Hak atas portabilitas data",
+      "objection": "Hak untuk menolak pemrosesan data Anda"
+    },
+    "dataDeletion": {
+      "title": "6. Penghapusan Data",
+      "content": "Anda dapat meminta penghapusan data pribadi Anda kapan saja. Tiket tertutup dan transkirpnya dapat dihapus melalui panel admin. Untuk penghapusan lengkap semua data Anda, silakan hubungi administrator server atau operator bot."
+    },
+    "cookies": {
+      "title": "7. Cookie dan Teknologi Pelacakan",
+      "content": "Panel admin web kami menggunakan cookie sesi untuk otentikasi dan manajemen sesi. Cookie ini diperlukan untuk fungsionalitas panel dan tidak digunakan untuk tujuan pelacakan."
+    },
+    "thirdParty": {
+      "title": "8. Layanan Pihak Ketiga",
+      "content": "Bot ini berinteraksi dengan API Discord. Penggunaan Discord Anda tunduk pada Kebijakan Privasi Discord sendiri. Kami mendorong Anda untuk meninjau kebijakan privasi mereka."
+    },
+    "changes": {
+      "title": "9. Perubahan pada Kebijakan Ini",
+      "content": "Kami dapat memperbarui Kebijakan Privasi kami dari waktu ke waktu. Kami akan memberi tahu Anda tentang perubahan apa pun dengan memposting kebijakan privasi baru di halaman ini dan memperbarui tanggal \"Terakhir diperbarui\"."
+    },
+    "contact": {
+      "title": "10. Hubungi Kami",
+      "content": "Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini atau ingin menggunakan hak-hak Anda, silakan hubungi kami di:"
+    }
+  }
+}
