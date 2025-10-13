@@ -1,29 +1,56 @@
 # 🎫 TRS Tickets Bot
 
-**Version:** Alpha 1.0
+**Version:** Beta 0.3.3
 
-Ein professioneller Discord-Ticket-Bot mit Web-Dashboard und dynamischen Formularen für Discord-Server.
+Ein professioneller Multi-Server Discord-Ticket-Bot mit Web-Dashboard, Multi-Language-Support und dynamischen Formularen für Discord-Server.
 
 ## ✨ Features
 
-### Ticket-System
+### 🎫 Ticket-System
 - 📋 **Dynamische Formulare** - Konfigurierbare Eingabefelder pro Ticket-Kategorie
-- 🎨 **Prioritätssystem** - 3 Stufen (🟢 Grün, 🟠 Orange, 🔴 Rot)
+- 🎨 **Prioritätssystem** - 3 Stufen (🟢 Grün, 🟠 Orange, 🔴 Rot) mit automatischer Farbe & Channel-Umbenennung
+- 👥 **Priority-based Role Access** - Unterschiedliche Team-Rollen pro Prioritätsstufe
 - ✅ **Claim-System** - Team-Mitglieder können Tickets beanspruchen
-- 📄 **Automatische Transcripts** - HTML & TXT Export bei Ticket-Schließung
+- 📄 **Automatische Transcripts** - Moderne HTML & TXT Exports bei Ticket-Schließung
 - 🔒 **Berechtigungssystem** - Automatische Channel-Permissions für Ersteller & Team
 - 🏷️ **Themen/Topics** - Mehrere konfigurierbare Ticket-Kategorien
+- ➕ **User hinzufügen** - Weitere Nutzer zum Ticket hinzufügen
 
-### Web-Dashboard
-- 🌐 **Admin-Panel** - Webbasierte Konfiguration
+### 🌐 Web-Dashboard
+- 🌍 **Multi-Server Support** - Ein Bot für unbegrenzt viele Server
 - 🔐 **Discord OAuth** - Sichere Anmeldung über Discord
-- 📊 **Ticket-Übersicht** - Alle Tickets mit Filter & Sortierung
+- 📊 **Ticket-Übersicht** - Alle Tickets mit Usernames & Filter
 - 🎨 **Dark Theme** - Modernes Schwarz-Grün Design
-- 📱 **Responsive** - Funktioniert auf Desktop & Mobile
+- 📱 **Responsive** - Funktioniert perfekt auf Desktop & Mobile
+- ⚙️ **Server-Konfiguration** - Channel-Dropdowns, Role-Management, GitHub Integration
+- 🏆 **Priority Role Management** - Team-Rollen pro Prioritätsstufe konfigurieren
+- 📄 **Transcript Viewer** - HTML-Transcripts direkt im Browser ansehen
 
-### Management-Befehle
+### 🌍 Multi-Language Support
+- 🇩🇪 **Deutsch** - Vollständige deutsche Übersetzung
+- 🇬🇧 **English** - Full English translation
+- 🇮🇱 **עברית (Hebrew)** - תמיכה מלאה בעברית
+- 🔄 **Server-Sprache** - `/language` Command für Server-Language
+- 👤 **User-Sprache** - `/userlanguage` Command für persönliche Web-Panel-Sprache
+
+### 🔐 Security & Deployment
+- 🔑 **Application Key System** - Verhindert unbefugte Bot-Nutzung nach Clone
+- 🗑️ **Auto-Cleanup** - Alte Server-Daten werden nach 2 Monaten automatisch gelöscht
+- 📝 **Changelog System** - Automatisches Changelog für Updates
+
+### 📡 GitHub Integration
+- 🔔 **Webhook Support** - Automatische Commit-Benachrichtigungen in Discord
+- 🎨 **Rich Embeds** - Schöne Embed-Darstellung für Commits
+- ⚙️ **Toggle Command** - `/github-commits` zum Aktivieren/Deaktivieren
+
+### 💬 Slash Commands
 - `/dashboard` - Link zum Web-Dashboard anzeigen
-- `/version` - Bot-Version anzeigen
+- `/version` - Bot-Version und Changelog anzeigen
+- `/status` - Bot-Status-Seite Link
+- `/language` - Server-Sprache einstellen (Admin-only)
+- `/userlanguage` - Persönliche Web-Panel-Sprache wählen
+- `/github-commits` - GitHub Commit Logs aktivieren/deaktivieren
+- `/broadcast` - Update-Nachricht an alle Server senden (Bot-Owner only)
 - `/reload` - Bot-Konfiguration neu laden
 - `/restart` - Bot neu starten
 - `/update` - Neueste Version von GitHub ziehen & neu starten
@@ -39,7 +66,7 @@ Ein professioneller Discord-Ticket-Bot mit Web-Dashboard und dynamischen Formula
 
 1. **Repository klonen**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/TheRedstoneE/TRS-Tickets-Bot.git
    cd TRS-Tickets-Bot-1
    ```
 
@@ -48,20 +75,36 @@ Ein professioneller Discord-Ticket-Bot mit Web-Dashboard und dynamischen Formula
    npm install
    ```
 
-3. **Umgebungsvariablen konfigurieren**
+3. **🔐 Application Key erstellen** (WICHTIG!)
+
+   Der Bot benötigt eine `app.key` Datei für die Sicherheit. Kontaktiere den Entwickler für den korrekten Key oder erstelle einen eigenen:
+
+   ```bash
+   echo "YOUR_SECURE_KEY_HERE" > app.key
+   ```
+
+   ⚠️ **Wichtig**: Die `app.key` Datei ist in `.gitignore` und wird NICHT mit Git geteilt!
+
+4. **Umgebungsvariablen konfigurieren**
 
    Erstelle eine `.env` Datei:
    ```env
    DISCORD_TOKEN=your_bot_token
    CLIENT_ID=your_client_id
    CLIENT_SECRET=your_client_secret
-   PUBLIC_BASE_URL=https://trstickets.theredstonee.de
+   APPLICATION_KEY=YOUR_SECURE_KEY_HERE
+   PUBLIC_BASE_URL=https://yourdomain.com
    SESSION_SECRET=random_secret_string
+   PANEL_URL=https://yourdomain.com/panel
    ```
 
-4. **Bot-Konfiguration anpassen**
+   ⚠️ **Wichtig**: `APPLICATION_KEY` muss EXAKT mit dem Inhalt der `app.key` Datei übereinstimmen!
 
-   Bearbeite `config.json`:
+5. **Bot-Konfiguration anpassen** (Optional - Multi-Server unterstützt)
+
+   Für den ersten Start ist keine manuelle Konfiguration nötig. Der Bot erstellt automatisch Konfigurationen für jeden Server im `configs/` Ordner.
+
+   Optional kannst du eine `config.json` für Legacy-Support erstellen:
    ```json
    {
      "guildId": "YOUR_GUILD_ID",
@@ -71,18 +114,36 @@ Ein professioneller Discord-Ticket-Bot mit Web-Dashboard und dynamischen Formula
    }
    ```
 
-5. **Bot starten**
+6. **Bot starten**
    ```bash
    node index.js
    ```
 
-   Der Bot startet auf Port 3000 (Web-Panel).
+   Der Bot startet auf Port 3000 (Web-Panel) und ist unter `http://localhost:3000` erreichbar.
+
+### 🔒 Security Hinweis
+
+Der Bot verwendet ein **Application Key System** zum Schutz vor unbefugter Nutzung:
+
+- Ohne die `app.key` Datei startet der Bot NICHT
+- Die `.env` Datei muss den gleichen Key enthalten
+- Beide Dateien sind in `.gitignore` und werden nicht öffentlich geteilt
+- Dies erlaubt die sichere Veröffentlichung des Repositories auf GitHub
 
 ## ⚙️ Konfiguration
 
+**Empfohlen**: Nutze das Web-Dashboard (`/dashboard`) für einfache Konfiguration!
+
+### Multi-Server Support
+
+Der Bot unterstützt unbegrenzt viele Server gleichzeitig:
+- Jeder Server hat seine eigene Konfiguration in `configs/{guildId}.json`
+- Jeder Server hat eigene Tickets in `configs/{guildId}_tickets.json`
+- Jeder Server hat einen eigenen Ticket-Counter in `configs/{guildId}_counter.json`
+
 ### Ticket-Kategorien (Topics)
 
-Definiere Ticket-Themen im Web-Dashboard oder direkt in `config.json`:
+Definiere Ticket-Themen im Web-Dashboard oder direkt in der Server-Config:
 
 ```json
 "topics": [
@@ -98,6 +159,22 @@ Definiere Ticket-Themen im Web-Dashboard oder direkt in `config.json`:
   }
 ]
 ```
+
+### Priority-based Role Access
+
+Konfiguriere verschiedene Team-Rollen pro Prioritätsstufe im Web-Dashboard:
+
+```json
+"priorityRoles": {
+  "0": ["ROLE_ID_1", "ROLE_ID_2"],
+  "1": ["ROLE_ID_3"],
+  "2": ["ROLE_ID_4", "ROLE_ID_5"]
+}
+```
+
+- **Stufe 0 (🟢 Grün)**: Basis-Support-Team
+- **Stufe 1 (🟠 Orange)**: Erweitertes Support-Team
+- **Stufe 2 (🔴 Rot)**: Senior-Support / Admins
 
 ### Formular-Felder
 
@@ -124,7 +201,7 @@ Konfiguriere dynamische Formular-Felder, die beim Ticket-Erstellen ausgefüllt w
 **Optionen:**
 - `style`: `"short"` (Textfeld) oder `"paragraph"` (Textbereich)
 - `required`: `true` oder `false`
-- `topic`: Optional - Feld nur für bestimmte Topics anzeigen
+- `topic`: Optional - Feld nur für bestimmte Topics anzeigen (String oder Array)
 
 ### Ticket-Embed Anpassung
 
@@ -134,6 +211,15 @@ Passe das Ticket-Embed im Web-Dashboard an mit folgenden Platzhaltern:
 - `{userId}` - User-ID
 - `{topicLabel}` - Topic-Name
 - `{topicValue}` - Topic-Wert
+
+### GitHub Webhook Integration
+
+1. Erstelle einen Webhook in deinem GitHub Repository
+2. Webhook URL: `https://yourdomain.com/github/webhook`
+3. Content type: `application/json`
+4. Events: `push` oder `Just the push event`
+5. Konfiguriere den Log-Channel im Web-Dashboard
+6. Toggle Commit-Logs mit `/github-commits`
 
 ## 📖 Verwendung
 
@@ -151,31 +237,40 @@ Passe das Ticket-Embed im Web-Dashboard an mit folgenden Platzhaltern:
 ### Für Team-Mitglieder
 
 **Ticket-Buttons:**
-- ✅ **Claim** - Ticket beanspruchen
+- ✅ **Claim** - Ticket beanspruchen (nur für Team-Rolle & Priority-Rollen)
 - 🔄 **Unclaim** - Claim aufheben (nur Claimer)
-- 🔺 **Priorität Hoch** - Priorität erhöhen
-- 🔻 **Priorität Herab** - Priorität senken
-- 🔒 **Schließen** - Ticket schließen
-- ➕ **Nutzer** - Zusätzlichen Nutzer hinzufügen
+- 🔺 **Priorität Hoch** - Priorität erhöhen (0 → 1 → 2)
+- 🔻 **Priorität Herab** - Priorität senken (2 → 1 → 0)
+- 🔒 **Schließen** - Ticket schließen (nur Team)
+- ➕ **Nutzer** - Zusätzlichen Nutzer hinzufügen (nur Team)
 
 **Slash-Befehle:**
 - `/dashboard` - Dashboard-Link anzeigen
-- `/version` - Bot-Version anzeigen
+- `/version` - Bot-Version & Changelog anzeigen
+- `/status` - Status-Seite Link
+- `/language` - Server-Sprache einstellen (Admin-only)
+- `/userlanguage` - Persönliche Web-Panel-Sprache wählen
+- `/github-commits` - GitHub Commit Logs toggle
+- `/broadcast` - Update an alle Server (Bot-Owner only)
 - `/reload` - Config neu laden
 - `/restart` - Bot neu starten
 - `/update` - Update von GitHub & Neustart
 
 ### Web-Dashboard
 
-**Zugriff:** `https://trstickets.theredstonee.de/panel`
+**Zugriff:** Nutze `/dashboard` Command oder öffne `https://yourdomain.com/panel`
 
 **Features:**
-- ⚙️ Server-Einstellungen & Channel-Auswahl
-- 🏷️ Topics & Kategorien verwalten
-- 📝 Formular-Felder konfigurieren
-- 🎨 Embed-Design anpassen
-- 📊 Ticket-Verlauf ansehen
-- 📄 Transcripts herunterladen
+- 🌐 **Server-Auswahl** - Zwischen mehreren Servern wechseln
+- ⚙️ **Server-Einstellungen** - Channel-Dropdowns, Role-Management
+- 🏷️ **Topics & Kategorien** - Ticket-Kategorien verwalten
+- 📝 **Formular-Felder** - Dynamische Felder konfigurieren
+- 🎨 **Embed-Design** - Ticket & Panel Embeds anpassen
+- 🏆 **Priority Roles** - Team-Rollen pro Priorität zuweisen
+- 📡 **GitHub Integration** - Webhook Channel konfigurieren
+- 📊 **Ticket-Verlauf** - Alle Tickets mit Usernames ansehen
+- 📄 **Transcripts** - HTML & TXT Transcripts direkt im Browser ansehen
+- 🌍 **Multi-Language** - Interface in Deutsch, English oder עברית
 
 ## 🔐 Berechtigungen
 
@@ -192,66 +287,125 @@ Passe das Ticket-Embed im Web-Dashboard an mit folgenden Platzhaltern:
 - ✅ **Server Members Intent**
 - ✅ **Message Content Intent** (für Auto-Delete bei geclaimten Tickets)
 
-### Team-Rolle
-Definiert in `index.js` - Konstante `TEAM_ROLE`:
-```javascript
-const TEAM_ROLE = 'YOUR_TEAM_ROLE_ID';
-```
+### Team-Rollen
+Konfigurierbar im Web-Dashboard:
+- **teamRoleId** - Basis Team-Rolle (hat immer Zugriff)
+- **priorityRoles** - Object mit Rollen pro Priorität (0, 1, 2)
+
+Team-Mitglieder benötigen Admin oder "Manage Guild" Berechtigung für das Web-Dashboard.
 
 ## 📁 Projekt-Struktur
 
 ```
 TRS-Tickets-Bot-1/
-├── index.js              # Hauptdatei (Bot-Logic)
-├── panel.js              # Web-Dashboard (Express Router)
-├── config.json           # Bot-Konfiguration
-├── tickets.json          # Ticket-Datenbank
-├── ticketCounter.json    # Ticket-Zähler
-├── commands/             # Slash-Commands
-│   ├── dashboard.js      # Dashboard-Link
-│   ├── version.js        # Version anzeigen
-│   ├── reload.js         # Config & Commands neu laden
-│   ├── restart.js        # Bot neu starten
-│   └── update.js         # Git pull & Neustart
-├── views/                # EJS Templates
-│   ├── panel.ejs         # Admin-Panel
-│   └── tickets.ejs       # Ticket-Übersicht
-├── .env                  # Umgebungsvariablen
-├── README.md             # Diese Datei
-└── CLAUDE.md             # Claude Code Dokumentation
+├── index.js                    # Hauptdatei (Bot-Logic + Security)
+├── panel.js                    # Web-Dashboard (Express + OAuth + Webhook)
+├── translations.js             # Multi-Language System (de, en, he)
+├── app.key                     # 🔐 Application Key (NICHT in Git!)
+├── config.json                 # Legacy Config (optional)
+├── tickets.json                # Legacy Tickets (optional)
+├── ticketCounter.json          # Legacy Counter (optional)
+├── changelog.json              # Version Changelog
+├── configs/                    # Multi-Server Konfigurationen
+│   ├── {guildId}.json          # Server-Konfiguration
+│   ├── {guildId}_tickets.json  # Server-Tickets
+│   └── {guildId}_counter.json  # Server-Counter
+├── commands/                   # Slash-Commands
+│   ├── dashboard.js            # Dashboard-Link
+│   ├── version.js              # Version & Changelog
+│   ├── status.js               # Status-Seite Link
+│   ├── language.js             # Server-Sprache (renamed from setlanguage.js)
+│   ├── userlanguage.js         # User Web-Panel Sprache
+│   ├── github-commits.js       # GitHub Commit Logs Toggle
+│   ├── broadcast.js            # Update-Broadcast (Owner-only)
+│   ├── reload.js               # Config & Commands neu laden
+│   ├── restart.js              # Bot neu starten
+│   └── update.js               # Git pull & Neustart
+├── views/                      # EJS Templates
+│   ├── panel.ejs               # Admin-Panel (Multi-Server)
+│   ├── tickets.ejs             # Ticket-Übersicht
+│   ├── ticketDetail.ejs        # Ticket-Details
+│   ├── transcript.ejs          # Transcript Viewer
+│   ├── imprint.ejs             # Impressum
+│   ├── privacy.ejs             # Datenschutz
+│   └── terms.ejs               # Nutzungsbedingungen
+├── public/                     # Statische Assets
+│   └── flags/                  # SVG Flaggen für Language-Support
+├── transcript_*.html           # Generated Transcripts (ignoriert)
+├── transcript_*.txt            # Generated Transcripts (ignoriert)
+├── .env                        # 🔐 Umgebungsvariablen (NICHT in Git!)
+├── .gitignore                  # Git Ignore Rules
+├── README.md                   # Diese Datei
+├── CLAUDE.md                   # Claude Code Dokumentation
+├── package.json                # NPM Dependencies
+└── package-lock.json           # NPM Lock File
 ```
 
 ## 🛠️ Technologien
 
-- **Discord.js v14** - Discord Bot Framework
-- **Express.js** - Web-Server
-- **Passport.js** - Discord OAuth
-- **EJS** - Template Engine
-- **Node.js** - Runtime
+- **Discord.js v14** - Discord Bot Framework mit Full Intents
+- **Express.js** - Web-Server für Dashboard & Webhooks
+- **Passport.js** - Discord OAuth 2.0 Integration
+- **EJS** - Template Engine für dynamische Views
+- **Node.js 16+** - JavaScript Runtime
+- **Express-Session** - Session Management
+- **Body-Parser** - Request Parsing
 
 ## 📝 Lizenz
 
-Dieses Projekt ist für den privaten/Server-internen Gebrauch bestimmt.
+Dieses Projekt ist unter der MIT-Lizenz veröffentlicht und für den privaten/kommerziellen Gebrauch bestimmt.
 
-## 🐛 Fehler melden
+## 🐛 Fehler melden & Contribution
 
-Bei Problemen oder Feature-Wünschen erstelle ein Issue im Repository oder kontaktiere das Entwickler-Team.
+Bei Problemen oder Feature-Wünschen:
+1. Erstelle ein Issue im [GitHub Repository](https://github.com/TheRedstoneE/TRS-Tickets-Bot/issues)
+2. Nutze `/status` für die Live-Status-Seite
+3. Kontaktiere das Entwickler-Team auf Discord
+
+**Pull Requests** sind willkommen! Bitte beachte:
+- Teste deine Änderungen gründlich
+- Dokumentiere neue Features
+- Folge dem bestehenden Code-Style
+- Alle Kommentare wurden entfernt (für sauberen Production-Code)
 
 ## 📮 Support & Links
 
 - 🌐 **Website:** [theredstonee.de](https://theredstonee.de)
 - 💬 **Discord Server:** [dc.theredstonee.de](https://dc.theredstonee.de)
 - 🎫 **Ticket Panel:** [trstickets.theredstonee.de](https://trstickets.theredstonee.de)
+- 📊 **Status Page:** [status.theredstonee.de](https://status.theredstonee.de)
+- 💻 **GitHub:** [github.com/TheRedstoneE/TRS-Tickets-Bot](https://github.com/TheRedstoneE/TRS-Tickets-Bot)
 
 ## ✨ Features Highlights
 
-- ✅ **Auto-Delete** - Unbefugte Nachrichten werden automatisch gelöscht (nur bei geclaimten Tickets)
-- 🔐 **Claim-System** - Berechtigungen werden automatisch angepasst
-- 📋 **Formular-System** - Dynamische Eingabefelder pro Topic
-- 🎨 **Prioritäten** - 3 Stufen mit automatischer Channel-Umbenennung
-- 📊 **Web-Dashboard** - Channel-Dropdowns & Server-Einstellungen
-- 📄 **Transcripts** - Automatischer Export bei Ticket-Schließung
+### Version Beta 0.3.3 (2025-10-13)
+- ✅ **Hebrew Locale Fix** - All 9 commands now load correctly
+- 📊 **New /status Command** - Link to status page
+- 🐛 **Fixed UnknownEnumValueError** - For github-commits, version, reload, restart commands
+
+### Kern-Features
+- 🌍 **Multi-Server** - Unbegrenzt viele Server mit einem Bot
+- 🌐 **Multi-Language** - Deutsch, English, עברית (Hebrew)
+- 👥 **Priority Roles** - Team-Rollen basierend auf Ticket-Priorität
+- 🔐 **Security System** - Application Key verhindert unbefugte Nutzung
+- 📄 **Modern Transcripts** - HTML mit Dark Theme & Mobile Support
+- 🔔 **GitHub Webhooks** - Automatische Commit-Benachrichtigungen
+- 🗑️ **Auto-Cleanup** - 2-Monats automatische Datenlöschung
+- 📋 **Dynamic Forms** - Topic-spezifische Eingabefelder
+- 🎨 **Dark Dashboard** - Modernes Schwarz-Grün Design
+
+## 🔄 Changelog
+
+Siehe [changelog.json](./changelog.json) für die vollständige Versionshistorie.
+
+**Latest Changes (Beta 0.3.3):**
+- Fixed Hebrew locale issue in slash commands
+- All 9 commands now load correctly
+- New /status command with link to status page
+- Fixed UnknownEnumValueError for github-commits, version, reload, restart
 
 ---
 
-**TRS Tickets ©️ • Version Alpha 1.0**
+**TRS Tickets ©️ • Version Beta 0.3.3 • Made with ❤️ by TheRedstoneE**
+
+🤖 This README was generated with assistance from [Claude Code](https://claude.com/claude-code)
