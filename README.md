@@ -59,76 +59,33 @@ Ein professioneller Multi-Server Discord-Ticket-Bot mit Web-Dashboard, Multi-Lan
 
 ### Voraussetzungen
 - Node.js 16.x oder höher
-- Git
 - Discord Bot Application ([Discord Developer Portal](https://discord.com/developers/applications))
 
-### Setup
+### 🔐 Security Notice
 
-1. **Repository klonen**
-   ```bash
-   git clone https://github.com/TheRedstoneE/TRS-Tickets-Bot.git
-   cd TRS-Tickets-Bot-1
-   ```
+Dieser Bot verwendet ein **Application Key System** zum Schutz vor unbefugter Nutzung:
 
-2. **Dependencies installieren**
-   ```bash
-   npm install
-   ```
+- Der Bot benötigt eine `app.key` Datei und passende `.env` Konfiguration
+- Ohne diese Dateien startet der Bot nicht
+- Diese Dateien sind aus Sicherheitsgründen nicht im Repository enthalten
 
-3. **🔐 Application Key erstellen** (WICHTIG!)
+**Für Zugriff auf den Bot kontaktiere bitte:**
+- 💬 **Discord Server:** [dc.theredstonee.de](https://dc.theredstonee.de)
+- 🌐 **Website:** [theredstonee.de](https://theredstonee.de)
 
-   Der Bot benötigt eine `app.key` Datei für die Sicherheit. Kontaktiere den Entwickler für den korrekten Key oder erstelle einen eigenen:
+### 📦 Dependencies
 
-   ```bash
-   echo "YOUR_SECURE_KEY_HERE" > app.key
-   ```
+```bash
+npm install
+```
 
-   ⚠️ **Wichtig**: Die `app.key` Datei ist in `.gitignore` und wird NICHT mit Git geteilt!
-
-4. **Umgebungsvariablen konfigurieren**
-
-   Erstelle eine `.env` Datei:
-   ```env
-   DISCORD_TOKEN=your_bot_token
-   CLIENT_ID=your_client_id
-   CLIENT_SECRET=your_client_secret
-   APPLICATION_KEY=YOUR_SECURE_KEY_HERE
-   PUBLIC_BASE_URL=https://yourdomain.com
-   SESSION_SECRET=random_secret_string
-   PANEL_URL=https://yourdomain.com/panel
-   ```
-
-   ⚠️ **Wichtig**: `APPLICATION_KEY` muss EXAKT mit dem Inhalt der `app.key` Datei übereinstimmen!
-
-5. **Bot-Konfiguration anpassen** (Optional - Multi-Server unterstützt)
-
-   Für den ersten Start ist keine manuelle Konfiguration nötig. Der Bot erstellt automatisch Konfigurationen für jeden Server im `configs/` Ordner.
-
-   Optional kannst du eine `config.json` für Legacy-Support erstellen:
-   ```json
-   {
-     "guildId": "YOUR_GUILD_ID",
-     "ticketCategoryId": "CATEGORY_ID",
-     "logChannelId": "LOG_CHANNEL_ID",
-     "transcriptChannelId": "TRANSCRIPT_CHANNEL_ID"
-   }
-   ```
-
-6. **Bot starten**
-   ```bash
-   node index.js
-   ```
-
-   Der Bot startet auf Port 3000 (Web-Panel) und ist unter `http://localhost:3000` erreichbar.
-
-### 🔒 Security Hinweis
-
-Der Bot verwendet ein **Application Key System** zum Schutz vor unbefugter Nutzung:
-
-- Ohne die `app.key` Datei startet der Bot NICHT
-- Die `.env` Datei muss den gleichen Key enthalten
-- Beide Dateien sind in `.gitignore` und werden nicht öffentlich geteilt
-- Dies erlaubt die sichere Veröffentlichung des Repositories auf GitHub
+**Hauptabhängigkeiten:**
+- discord.js v14
+- express
+- passport
+- passport-discord
+- ejs
+- dotenv
 
 ## ⚙️ Konfiguration
 
