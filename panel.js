@@ -623,8 +623,13 @@ module.exports = (client)=>{
       const payload = req.body;
       const event = req.headers['x-github-event'];
 
+      console.log(`📡 GitHub Webhook erhalten: Event=${event}, Repo=${payload.repository?.full_name || 'Unknown'}`);
+
       // Nur Push-Events verarbeiten
-      if (event !== 'push') return;
+      if (event !== 'push') {
+        console.log(`⏭️ Event ${event} ignoriert (nur push wird verarbeitet)`);
+        return;
+      }
 
       const repository = payload.repository?.full_name || 'Unknown';
       const commits = payload.commits || [];
@@ -632,20 +637,41 @@ module.exports = (client)=>{
       const ref = payload.ref || '';
       const branch = ref.replace('refs/heads/', '');
 
+      console.log(`🔀 Push Event: ${commits.length} Commit(s) auf ${branch} von ${pusher}`);
+
       // Nur für TRS-Tickets-Bot Repository
-      if (!repository.toLowerCase().includes('trs-tickets-bot')) return;
+      if (!repository.toLowerCase().includes('trs-tickets-bot')) {
+        console.log(`⏭️ Repository ${repository} ist nicht TRS-Tickets-Bot, ignoriere Webhook`);
+        return;
+      }
 
       // Commits an alle Server senden, die GitHub Logs aktiviert haben
       const guilds = await client.guilds.fetch();
+      console.log(`📤 Verarbeite Webhook für ${guilds.size} Server...`);
+
+      let sentCount = 0;
       for (const [guildId, guild] of guilds) {
         try {
           const cfg = readCfg(guildId);
 
           // Prüfe ob GitHub Commits aktiviert sind und ein Channel konfiguriert ist
-          if (cfg.githubCommitsEnabled === false || !cfg.githubWebhookChannelId) continue;
+          if (cfg.githubCommitsEnabled === false) {
+            console.log(`⏭️ Guild ${guild.name} (${guildId}): GitHub Logs deaktiviert`);
+            continue;
+          }
+
+          if (!cfg.githubWebhookChannelId) {
+            console.log(`⚠️ Guild ${guild.name} (${guildId}): Kein Webhook Channel konfiguriert`);
+            continue;
+          }
 
           const channel = await guild.channels.fetch(cfg.githubWebhookChannelId).catch(() => null);
-          if (!channel) continue;
+          if (!channel) {
+            console.log(`❌ Guild ${guild.name} (${guildId}): Channel ${cfg.githubWebhookChannelId} nicht gefunden`);
+            continue;
+          }
+
+          console.log(`✅ Guild ${guild.name} (${guildId}): Sende ${commits.length} Commit(s) zu #${channel.name}`);
 
           // Embed für jeden Commit erstellen
           for (const commit of commits.slice(0, 5)) { // Max 5 Commits
@@ -673,10 +699,14 @@ module.exports = (client)=>{
             await channel.send(`_... und ${commits.length - 5} weitere Commit(s)_`);
           }
 
+          sentCount++;
+
         } catch (err) {
           console.error(`GitHub Webhook Error für Guild ${guildId}:`, err);
         }
       }
+
+      console.log(`✅ GitHub Webhook erfolgreich an ${sentCount} Server gesendet`);
 
     } catch (err) {
       console.error('GitHub Webhook Error:', err);
