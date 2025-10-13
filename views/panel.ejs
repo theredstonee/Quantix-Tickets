@@ -152,13 +152,6 @@
         font-size: 1.2rem !important;
       }
 
-      [style*="position: fixed"] select {
-        top: 0.5rem !important;
-        right: 3.5rem !important;
-        font-size: 0.85rem !important;
-        padding: 0.5rem !important;
-      }
-
       .header-flex {
         flex-direction: column;
         align-items: flex-start !important;
@@ -333,18 +326,141 @@
         justify-content: center;
       }
     }
+
+    /* Custom Language Dropdown with Flags */
+    .lang-dropdown {
+      position: fixed;
+      top: 1.5rem;
+      right: 5.5rem;
+      z-index: 1000;
+    }
+
+    .lang-dropdown-toggle {
+      background: var(--accent-color);
+      color: #000;
+      border: 0;
+      padding: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .lang-dropdown-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .lang-dropdown-toggle img {
+      width: 24px;
+      height: 18px;
+      border-radius: 2px;
+    }
+
+    .lang-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: none;
+      min-width: 180px;
+      overflow: hidden;
+    }
+
+    .lang-dropdown-menu.show {
+      display: block;
+    }
+
+    .lang-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: var(--text-color);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .lang-dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .lang-dropdown-item:hover {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    .lang-dropdown-item.active {
+      background: var(--accent-color);
+      color: #000;
+      font-weight: 600;
+    }
+
+    .lang-dropdown-item img {
+      width: 24px;
+      height: 18px;
+      border-radius: 2px;
+    }
+
+    @media (max-width: 768px) {
+      .lang-dropdown {
+        top: 0.5rem;
+        right: 3.5rem;
+      }
+
+      .lang-dropdown-toggle {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <div style="position: fixed; top: 1.5rem; right: 5.5rem; z-index: 1000;">
-    <select onchange="window.location.href='/set-language/' + this.value" style="background: var(--accent-color); color: #000; border: 0; padding: 0.75rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-      <option value="de" <%= lang === 'de' ? 'selected' : '' %>>🇩🇪 Deutsch</option>
-      <option value="en" <%= lang === 'en' ? 'selected' : '' %>>🇬🇧 English</option>
-      <option value="he" <%= lang === 'he' ? 'selected' : '' %>>🇮🇱 עברית</option>
-      <option value="ja" <%= lang === 'ja' ? 'selected' : '' %>>🇯🇵 日本語</option>
-      <option value="ru" <%= lang === 'ru' ? 'selected' : '' %>>🇷🇺 Русский</option>
-      <option value="pt" <%= lang === 'pt' ? 'selected' : '' %>>🇵🇹 Português</option>
-    </select>
+  <div class="lang-dropdown">
+    <button class="lang-dropdown-toggle" onclick="toggleLangDropdown()">
+      <%
+        const langFlags = { de: 'de', en: 'gb', he: 'il', ja: 'jp', ru: 'ru', pt: 'pt' };
+        const langNames = { de: 'Deutsch', en: 'English', he: 'עברית', ja: '日本語', ru: 'Русский', pt: 'Português' };
+      %>
+      <img src="/images/flags/<%= langFlags[lang] %>.svg" alt="<%= lang %>">
+      <span><%= langNames[lang] %></span>
+      <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.25rem;"></i>
+    </button>
+    <div class="lang-dropdown-menu" id="langDropdownMenu">
+      <a href="/set-language/de" class="lang-dropdown-item <%= lang === 'de' ? 'active' : '' %>">
+        <img src="/images/flags/de.svg" alt="DE">
+        <span>Deutsch</span>
+      </a>
+      <a href="/set-language/en" class="lang-dropdown-item <%= lang === 'en' ? 'active' : '' %>">
+        <img src="/images/flags/gb.svg" alt="EN">
+        <span>English</span>
+      </a>
+      <a href="/set-language/he" class="lang-dropdown-item <%= lang === 'he' ? 'active' : '' %>">
+        <img src="/images/flags/il.svg" alt="HE">
+        <span>עברית</span>
+      </a>
+      <a href="/set-language/ja" class="lang-dropdown-item <%= lang === 'ja' ? 'active' : '' %>">
+        <img src="/images/flags/jp.svg" alt="JA">
+        <span>日本語</span>
+      </a>
+      <a href="/set-language/ru" class="lang-dropdown-item <%= lang === 'ru' ? 'active' : '' %>">
+        <img src="/images/flags/ru.svg" alt="RU">
+        <span>Русский</span>
+      </a>
+      <a href="/set-language/pt" class="lang-dropdown-item <%= lang === 'pt' ? 'active' : '' %>">
+        <img src="/images/flags/pt.svg" alt="PT">
+        <span>Português</span>
+      </a>
+    </div>
   </div>
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
     <i id="themeIcon" class="fas fa-moon"></i>
@@ -675,6 +791,21 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', savedTheme);
   document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 })();
+
+// Language Dropdown Toggle
+function toggleLangDropdown() {
+  const menu = document.getElementById('langDropdownMenu');
+  menu.classList.toggle('show');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+  const dropdown = document.querySelector('.lang-dropdown');
+  const menu = document.getElementById('langDropdownMenu');
+  if (dropdown && !dropdown.contains(event.target)) {
+    menu.classList.remove('show');
+  }
+});
 </script>
 </body>
 </html>
