@@ -180,7 +180,7 @@
   <div class="info-box">
     <p><strong><%= t.tos.operator %>:</strong> Ohev Tamerin</p>
     <p><strong><%= t.tos.contact %>:</strong> <a href="mailto:info@theredstonee.de">info@theredstonee.de</a></p>
-    <p><strong><%= t.tos.last_updated %>:</strong> <%= new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'he' ? 'he-IL' : lang === 'ja' ? 'ja-JP' : lang === 'ru' ? 'ru-RU' : lang === 'pt' ? 'pt-PT' : 'en-US') %></p>
+    <p><strong><%= t.tos.last_updated %>:</strong> <%= new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'he' ? 'he-IL' : lang === 'ja' ? 'ja-JP' : lang === 'ru' ? 'ru-RU' : lang === 'pt' ? 'pt-PT' : lang === 'es' ? 'es-ES' : lang === 'id' ? 'id-ID' : 'en-US') %></p>
   </div>
 
   <!-- Section 1: Terms of Service -->
@@ -262,7 +262,7 @@
   <a href="/" role="button" class="back-btn secondary">← <%= t.tos.back_to_panel %></a>
 
   <footer>
-    <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten | <%= lang === 'de' ? 'Betrieben von' : lang === 'en' ? 'Operated by' : lang === 'he' ? 'מופעל על ידי' : lang === 'ja' ? '運営者' : lang === 'ru' ? 'Управляется' : lang === 'pt' ? 'Operado por' : 'Betrieben von' %> Ohev Tamerin | <a href="/imprint"><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : lang === 'he' ? 'מידע משפטי' : lang === 'ja' ? '法的通知' : lang === 'ru' ? 'Правовая информация' : lang === 'pt' ? 'Aviso Legal' : 'Impressum' %></a> | <a href="/privacy-policy"><%= lang === 'de' ? 'Datenschutz' : lang === 'en' ? 'Privacy' : lang === 'he' ? 'פרטיות' : lang === 'ja' ? 'プライバシー' : lang === 'ru' ? 'Конфиденциальность' : lang === 'pt' ? 'Privacidade' : 'Datenschutz' %></a></p>
+    <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten | <%= lang === 'de' ? 'Betrieben von' : lang === 'en' ? 'Operated by' : lang === 'he' ? 'מופעל על ידי' : lang === 'ja' ? '運営者' : lang === 'ru' ? 'Управляется' : lang === 'pt' ? 'Operado por' : lang === 'es' ? 'Operado por' : lang === 'id' ? 'Dioperasikan oleh' : 'Betrieben von' %> Ohev Tamerin | <a href="/imprint"><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : lang === 'he' ? 'מידע משפטי' : lang === 'ja' ? '法的通知' : lang === 'ru' ? 'Правовая информация' : lang === 'pt' ? 'Aviso Legal' : lang === 'es' ? 'Aviso Legal' : lang === 'id' ? 'Pemberitahuan Hukum' : 'Impressum' %></a> | <a href="/privacy-policy"><%= lang === 'de' ? 'Datenschutz' : lang === 'en' ? 'Privacy' : lang === 'he' ? 'פרטיות' : lang === 'ja' ? 'プライバシー' : lang === 'ru' ? 'Конфиденциальность' : lang === 'pt' ? 'Privacidade' : lang === 'es' ? 'Privacidad' : lang === 'id' ? 'Privasi' : 'Datenschutz' %></a></p>
   </footer>
 
   <script>
