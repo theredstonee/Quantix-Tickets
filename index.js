@@ -300,8 +300,63 @@ async function deployCommands(){
   }
 }
 
+/* ================= Cleanup alte Server-Daten (2 Monate inaktiv) ================= */
+async function cleanupOldServerData(){
+  try {
+    const TWO_MONTHS_MS = 60 * 24 * 60 * 60 * 1000; // 60 Tage in Millisekunden
+    const now = Date.now();
+
+    // Hole alle Server-IDs wo der Bot aktuell ist
+    const activeGuilds = new Set(client.guilds.cache.map(g => g.id));
+
+    // Durchsuche alle Config-Dateien
+    const configFiles = fs.readdirSync(CONFIG_DIR).filter(f => f.endsWith('.json') && !f.includes('_tickets') && !f.includes('_counter'));
+
+    let deletedCount = 0;
+    for(const file of configFiles){
+      const guildId = file.replace('.json', '');
+
+      // Prüfe ob Bot noch auf dem Server ist
+      if(activeGuilds.has(guildId)){
+        continue; // Bot ist noch auf Server, nicht löschen
+      }
+
+      // Bot ist nicht mehr auf Server, prüfe Alter der Datei
+      const configPath = path.join(CONFIG_DIR, file);
+      const stats = fs.statSync(configPath);
+      const fileAge = now - stats.mtimeMs; // Zeit seit letzter Änderung
+
+      if(fileAge > TWO_MONTHS_MS){
+        // Datei ist älter als 2 Monate und Bot ist nicht mehr auf Server
+        console.log(`🗑️ Lösche alte Server-Daten: ${guildId} (${Math.floor(fileAge / (24*60*60*1000))} Tage alt)`);
+
+        // Lösche Config
+        fs.unlinkSync(configPath);
+
+        // Lösche zugehörige Tickets und Counter
+        const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
+        const counterPath = path.join(CONFIG_DIR, `${guildId}_counter.json`);
+
+        if(fs.existsSync(ticketsPath)) fs.unlinkSync(ticketsPath);
+        if(fs.existsSync(counterPath)) fs.unlinkSync(counterPath);
+
+        deletedCount++;
+      }
+    }
+
+    if(deletedCount > 0){
+      console.log(`✅ ${deletedCount} alte Server-Konfiguration(en) gelöscht`);
+    } else {
+      console.log(`✅ Keine alten Server-Daten zum Löschen gefunden`);
+    }
+  } catch(err){
+    console.error('❌ Fehler beim Cleanup alter Server-Daten:', err);
+  }
+}
+
 client.once('ready', async () => {
   await deployCommands();
+  await cleanupOldServerData();
   console.log(`🤖 ${client.user.tag} bereit`);
 });
 

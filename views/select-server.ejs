@@ -316,7 +316,6 @@
         <% }); %>
       </div>
 
-      <button type="submit" class="submit-btn">✅ <%= t.web.select_btn %></button>
     </form>
   <% } else { %>
     <div class="no-servers">
@@ -332,11 +331,16 @@
   </footer>
 
   <script>
-    // Visual feedback for card selection
+    // Auto-submit on card click
     document.querySelectorAll('.server-card').forEach(card => {
       card.addEventListener('click', () => {
         document.querySelectorAll('.server-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
+
+        // Auto-submit form after selection
+        setTimeout(() => {
+          document.getElementById('serverForm').submit();
+        }, 200);
       });
     });
 

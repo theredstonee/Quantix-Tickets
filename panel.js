@@ -650,18 +650,25 @@ module.exports = (client)=>{
       console.log(`📤 Verarbeite Webhook für ${guilds.size} Server...`);
 
       let sentCount = 0;
-      for (const [guildId, guild] of guilds) {
+      for (const [guildId, guildData] of guilds) {
         try {
           const cfg = readCfg(guildId);
 
           // Prüfe ob GitHub Commits aktiviert sind und ein Channel konfiguriert ist
           if (cfg.githubCommitsEnabled === false) {
-            console.log(`⏭️ Guild ${guild.name} (${guildId}): GitHub Logs deaktiviert`);
+            console.log(`⏭️ Guild ${guildData.name || guildId} (${guildId}): GitHub Logs deaktiviert`);
             continue;
           }
 
           if (!cfg.githubWebhookChannelId) {
-            console.log(`⚠️ Guild ${guild.name} (${guildId}): Kein Webhook Channel konfiguriert`);
+            console.log(`⚠️ Guild ${guildData.name || guildId} (${guildId}): Kein Webhook Channel konfiguriert`);
+            continue;
+          }
+
+          // Guild vollständig fetchen
+          const guild = await client.guilds.fetch(guildId);
+          if (!guild) {
+            console.log(`❌ Guild ${guildId}: Konnte Guild nicht fetchen`);
             continue;
           }
 
