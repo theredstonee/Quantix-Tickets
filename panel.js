@@ -655,10 +655,231 @@ module.exports = (client)=>{
     }
   });
 
+  /* ====== Uptime Robot Health Check / Bot Status ====== */
+  router.get('/health', (req, res) => {
+    try {
+      // Bot Status prüfen
+      const isOnline = client && client.isReady && client.isReady();
+      const uptime = client?.uptime || 0;
+      const guildsCount = client?.guilds?.cache?.size || 0;
+      const ping = client?.ws?.ping || 0;
+
+      if (!isOnline) {
+        return res.status(503).json({
+          status: 'offline',
+          message: 'Bot ist offline',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      // Bot ist online - 200 OK für Uptime Robot
+      res.status(200).json({
+        status: 'online',
+        uptime: Math.floor(uptime / 1000), // in Sekunden
+        uptimeFormatted: formatUptime(uptime),
+        guilds: guildsCount,
+        ping: ping,
+        version: VERSION,
+        timestamp: new Date().toISOString()
+      });
+
+      console.log(`✅ Health Check: Bot Online | ${guildsCount} Guilds | ${ping}ms`);
+    } catch (err) {
+      console.error('Health Check Error:', err);
+      res.status(503).json({
+        status: 'error',
+        message: 'Health Check Fehler',
+        error: err.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  /* ====== Bot Status Page (öffentlich) ====== */
+  router.get('/status', (req, res) => {
+    try {
+      const isOnline = client && client.isReady && client.isReady();
+      const uptime = client?.uptime || 0;
+      const guildsCount = client?.guilds?.cache?.size || 0;
+      const ping = client?.ws?.ping || 0;
+      const user = client?.user;
+
+      const statusColor = isOnline ? '#00ff88' : '#ff4444';
+      const statusText = isOnline ? 'ONLINE' : 'OFFLINE';
+      const statusEmoji = isOnline ? '🟢' : '🔴';
+
+      // Einfache HTML Status-Seite
+      const html = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRS Tickets Bot - Status</title>
+  <meta http-equiv="refresh" content="30">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 3rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      background: ${statusColor};
+      color: #000;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px ${statusColor}55;
+    }
+    .bot-name {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .version {
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+    .stats {
+      margin-top: 2rem;
+    }
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      border-left: 3px solid ${statusColor};
+    }
+    .stat-label {
+      opacity: 0.8;
+    }
+    .stat-value {
+      font-weight: bold;
+      color: ${statusColor};
+    }
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      opacity: 0.5;
+      font-size: 0.85rem;
+    }
+    .refresh-info {
+      text-align: center;
+      margin-top: 1rem;
+      opacity: 0.6;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="status-badge">${statusEmoji} ${statusText}</div>
+      <h1 class="bot-name">${user ? user.username : 'TRS Tickets Bot'}</h1>
+      <p class="version">Version ${VERSION}</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-label">📊 Status</span>
+        <span class="stat-value">${statusText}</span>
+      </div>
+      ${isOnline ? `
+      <div class="stat-item">
+        <span class="stat-label">⏱️ Uptime</span>
+        <span class="stat-value">${formatUptime(uptime)}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">🏠 Server</span>
+        <span class="stat-value">${guildsCount} Guilds</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">🏓 Ping</span>
+        <span class="stat-value">${ping}ms</span>
+      </div>
+      ` : `
+      <div class="stat-item">
+        <span class="stat-label">⚠️ Info</span>
+        <span class="stat-value">Bot ist offline</span>
+      </div>
+      `}
+      <div class="stat-item">
+        <span class="stat-label">🕐 Letzte Prüfung</span>
+        <span class="stat-value">${new Date().toLocaleTimeString('de-DE')}</span>
+      </div>
+    </div>
+
+    <div class="refresh-info">
+      ↻ Automatische Aktualisierung alle 30 Sekunden
+    </div>
+
+    <div class="footer">
+      <p>TRS Tickets Bot ©️ ${new Date().getFullYear()}</p>
+      <p style="margin-top: 0.5rem;"><a href="/" style="color: ${statusColor}; text-decoration: none;">← Zurück zur Homepage</a></p>
+    </div>
+  </div>
+</body>
+</html>
+      `;
+
+      res.status(200).send(html);
+    } catch (err) {
+      console.error('Status Page Error:', err);
+      res.status(500).send('Status-Seite konnte nicht geladen werden.');
+    }
+  });
+
   return router;
 };
 
-/* ====== Helper für Select & Embed ====== */
+/* ====== Helper Functions ====== */
+
+// Uptime Formatter
+function formatUptime(ms) {
+  if (!ms) return '0s';
+
+  const seconds = Math.floor((ms / 1000) % 60);
+  const minutes = Math.floor((ms / (1000 * 60)) % 60);
+  const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0) parts.push(`${seconds}s`);
+
+  return parts.join(' ') || '0s';
+}
+
+// Panel Select Builder
 function buildPanelSelect(cfg){
   const topics = (cfg.topics||[]).filter(t => t && t.label && t.value);
   if(topics.length === 0){
@@ -668,6 +889,8 @@ function buildPanelSelect(cfg){
     new StringSelectMenuBuilder().setCustomId('topic').setPlaceholder('Thema wählen …').addOptions(topics.map(t=>({ label:t.label, value:t.value, emoji:t.emoji||undefined })))
   );
 }
+
+// Panel Embed Builder
 function buildPanelEmbed(cfg){
   if(!cfg.panelEmbed || (!cfg.panelEmbed.title && !cfg.panelEmbed.description)) return null;
   const e = new EmbedBuilder();
