@@ -3,17 +3,25 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('setlanguage')
-    .setDescription('Set server language / Server-Sprache festlegen / הגדר שפת שרת / サーバー言語を設定 / Установить язык / Definir idioma')
+    .setDescription('Set the server language for the bot')
     .setDescriptionLocalizations({
       de: 'Server-Sprache festlegen',
-      'en-US': 'Set server language'
+      'en-US': 'Set the server language for the bot',
+      he: 'הגדר שפת שרת',
+      ja: 'サーバー言語を設定',
+      ru: 'Установить язык сервера',
+      pt: 'Definir idioma do servidor'
     })
     .addStringOption(option =>
       option.setName('language')
-        .setDescription('Select language / Sprache auswählen / בחר שפה / 言語を選択 / Выбрать язык / Selecionar idioma')
+        .setDescription('Choose the language for bot responses')
         .setDescriptionLocalizations({
           de: 'Sprache auswählen',
-          'en-US': 'Select language'
+          'en-US': 'Choose the language for bot responses',
+          he: 'בחר שפה',
+          ja: '言語を選択',
+          ru: 'Выбрать язык',
+          pt: 'Selecionar idioma'
         })
         .setRequired(true)
         .addChoices(
