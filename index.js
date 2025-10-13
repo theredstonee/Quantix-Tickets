@@ -1,7 +1,32 @@
 require('dotenv').config();
 
+const fs = require('fs');
 const path = require('path');
-const fs   = require('fs');
+
+let REQUIRED_APP_KEY;
+try {
+  const keyPath = path.join(__dirname, 'app.key');
+  REQUIRED_APP_KEY = fs.readFileSync(keyPath, 'utf8').trim();
+  if(!REQUIRED_APP_KEY || REQUIRED_APP_KEY.length < 10){
+    throw new Error('Invalid key format');
+  }
+} catch(err) {
+  console.error('\n❌ CRITICAL ERROR: app.key file not found or invalid!');
+  console.error('📝 Please ensure app.key file exists in the root directory');
+  console.error('🔐 Contact the developer for the correct app.key file');
+  console.error('⛔ Bot startup aborted for security reasons\n');
+  process.exit(1);
+}
+
+if (!process.env.APPLICATION_KEY || process.env.APPLICATION_KEY !== REQUIRED_APP_KEY) {
+  console.error('\n❌ CRITICAL ERROR: Invalid or missing APPLICATION_KEY!');
+  console.error('📝 Please set APPLICATION_KEY in your .env file');
+  console.error('🔐 Contact the developer for the correct APPLICATION_KEY');
+  console.error('⛔ Bot startup aborted for security reasons\n');
+  process.exit(1);
+}
+
+console.log('✅ Application Key verified successfully');
 const express = require('express');
 const {
   Client, GatewayIntentBits, Partials,

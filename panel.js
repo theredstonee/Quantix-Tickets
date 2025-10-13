@@ -629,7 +629,11 @@ module.exports = (client)=>{
           }
 
           if (commits.length > 5) {
-            await channel.send(`_... und ${commits.length - 5} weitere Commit(s)_`);
+            const moreEmbed = new EmbedBuilder()
+              .setDescription(`... und ${commits.length - 5} weitere Commit(s)`)
+              .setColor(0x00ff88)
+              .setFooter({ text: 'TRS Tickets Bot Updates' });
+            await channel.send({ embeds: [moreEmbed] });
           }
 
           sentCount++;
