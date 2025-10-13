@@ -273,6 +273,66 @@
       background: var(--accent-color) !important;
       color: #000 !important;
     }
+
+    .nav-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-buttons a {
+      padding: 0.6rem 1.2rem;
+      background: var(--accent-color);
+      color: #000;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 2px solid transparent;
+    }
+
+    .nav-buttons a:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,184,148,0.3);
+    }
+
+    [data-theme="dark"] .nav-buttons a {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    [data-theme="dark"] .nav-buttons a:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 12px rgba(0,255,136,0.4);
+    }
+
+    .nav-buttons a.secondary-btn {
+      background: transparent;
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .nav-buttons a.secondary-btn:hover {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        flex-direction: column;
+      }
+
+      .nav-buttons a {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -287,6 +347,18 @@
     <i id="themeIcon" class="fas fa-moon"></i>
   </button>
   <h1><i class="fas fa-ticket-alt"></i> <%= t.web.title %></h1>
+
+  <div class="nav-buttons">
+    <a href="/">
+      <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : 'חזרה לדף הבית' %>
+    </a>
+    <a href="/select-server" class="secondary-btn">
+      <i class="fas fa-server"></i> <%= lang === 'de' ? 'Server wechseln' : lang === 'en' ? 'Change Server' : 'החלף שרת' %>
+    </a>
+    <a href="/tickets" class="secondary-btn">
+      <i class="fas fa-history"></i> <%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : 'היסטוריית כרטיסים' %>
+    </a>
+  </div>
 
   <% if (msg==='saved')  { %><p class="good"><%= t.web.messages.saved %></p><% } %>
   <% if (msg==='sent')   { %><p class="good"><%= t.web.messages.sent %></p><% } %>

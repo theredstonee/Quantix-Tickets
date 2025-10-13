@@ -224,6 +224,55 @@
       background: var(--accent-color);
       box-shadow: 0 2px 12px rgba(0,255,136,0.4);
     }
+
+    .nav-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-buttons a {
+      padding: 0.6rem 1.2rem;
+      background: var(--accent-color);
+      color: #000;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 2px solid transparent;
+    }
+
+    .nav-buttons a:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,184,148,0.3);
+    }
+
+    [data-theme="dark"] .nav-buttons a {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    [data-theme="dark"] .nav-buttons a:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 12px rgba(0,255,136,0.4);
+    }
+
+    @media (max-width: 768px) {
+      .nav-buttons {
+        flex-direction: column;
+      }
+
+      .nav-buttons a {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -232,6 +281,12 @@
   </button>
   <h1><i class="fas fa-server"></i> <%= t.web.server_selection %></h1>
   <p class="sub"><%= t.web.select_server %></p>
+
+  <div class="nav-buttons">
+    <a href="/">
+      <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : 'חזרה לדף הבית' %>
+    </a>
+  </div>
 
   <% if (servers && servers.length > 0) { %>
     <form method="POST" action="/select-server" id="serverForm">
