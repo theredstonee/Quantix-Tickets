@@ -195,7 +195,7 @@
   <div class="info-box">
     <p><strong><%= t.tos.operator %>:</strong> Ohev Tamerin</p>
     <p><strong><%= t.tos.contact %>:</strong> <a href="mailto:info@theredstonee.de">info@theredstonee.de</a></p>
-    <p><strong><%= t.tos.last_updated %>:</strong> <%= new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'he' ? 'he-IL' : 'en-US') %></p>
+    <p><strong><%= t.tos.last_updated %>:</strong> <%= new Date().toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'he' ? 'he-IL' : lang === 'ja' ? 'ja-JP' : lang === 'ru' ? 'ru-RU' : lang === 'pt' ? 'pt-PT' : 'en-US') %></p>
   </div>
 
   <!-- Section 1: Verantwortlicher -->
@@ -257,8 +257,8 @@
   <!-- Section 5: Data Retention -->
   <h2><%= t.privacy?.section_5_title || '5. Data Retention' %></h2>
   <div class="info-box">
-    <p><strong><%= lang === 'de' ? 'Wichtig' : lang === 'en' ? 'Important' : 'חשוב' %>:</strong></p>
-    <p><%= lang === 'de' ? 'Alle Bot-Daten (Tickets, Nachrichten, Formular-Antworten, Konfiguration) werden <strong>automatisch 2 Monate nach dem Entfernen des Bots vom Server</strong> vollständig gelöscht.' : lang === 'en' ? 'All bot data (tickets, messages, form responses, configuration) will be <strong>automatically deleted 2 months after removing the bot from the server</strong>.' : 'כל נתוני הבוט (כרטיסים, הודעות, תגובות לטופס, תצורה) <strong>יימחקו אוטומטית חודשיים לאחר הסרת הבוט מהשרת</strong>.' %></p>
+    <p><strong><%= lang === 'de' ? 'Wichtig' : lang === 'en' ? 'Important' : lang === 'he' ? 'חשוב' : lang === 'ja' ? '重要' : lang === 'ru' ? 'Важно' : lang === 'pt' ? 'Importante' : 'Wichtig' %>:</strong></p>
+    <p><%= lang === 'de' ? 'Alle Bot-Daten (Tickets, Nachrichten, Formular-Antworten, Konfiguration) werden <strong>automatisch 2 Monate nach dem Entfernen des Bots vom Server</strong> vollständig gelöscht.' : lang === 'en' ? 'All bot data (tickets, messages, form responses, configuration) will be <strong>automatically deleted 2 months after removing the bot from the server</strong>.' : lang === 'he' ? 'כל נתוני הבוט (כרטיסים, הודעות, תגובות לטופס, תצורה) <strong>יימחקו אוטומטית חודשיים לאחר הסרת הבוט מהשרת</strong>.' : lang === 'ja' ? 'すべてのボットデータ（チケット、メッセージ、フォーム回答、設定）は、<strong>サーバーからボットを削除してから2ヶ月後に自動的に削除されます</strong>。' : lang === 'ru' ? 'Все данные бота (тикеты, сообщения, ответы форм, конфигурация) будут <strong>автоматически удалены через 2 месяца после удаления бота с сервера</strong>.' : lang === 'pt' ? 'Todos os dados do bot (tickets, mensagens, respostas de formulários, configuração) serão <strong>automaticamente excluídos 2 meses após remover o bot do servidor</strong>.' : 'Alle Bot-Daten werden automatisch 2 Monate nach Entfernen gelöscht.' %></p>
   </div>
   <ul>
     <li><%- t.privacy?.section_5_1 || '**Bot active:** Data stored during active use' %></li>
@@ -318,7 +318,7 @@
   <a href="/" role="button" class="back-btn secondary">← <%= t.tos.back_to_panel %></a>
 
   <footer>
-    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <%= lang === 'de' ? 'Betrieben von' : lang === 'en' ? 'Operated by' : 'מופעל על ידי' %> Ohev Tamerin | <a href="/imprint"><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %></a> | <a href="/terms-of-service"><%= lang === 'de' ? 'AGB' : lang === 'en' ? 'Terms' : 'תנאים' %></a></p>
+    <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten | <%= lang === 'de' ? 'Betrieben von' : lang === 'en' ? 'Operated by' : lang === 'he' ? 'מופעל על ידי' : lang === 'ja' ? '運営者' : lang === 'ru' ? 'Управляется' : lang === 'pt' ? 'Operado por' : 'Betrieben von' %> Ohev Tamerin | <a href="/imprint"><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : lang === 'he' ? 'מידע משפטי' : lang === 'ja' ? '法的通知' : lang === 'ru' ? 'Правовая информация' : lang === 'pt' ? 'Aviso Legal' : 'Impressum' %></a> | <a href="/terms-of-service"><%= lang === 'de' ? 'AGB' : lang === 'en' ? 'Terms' : lang === 'he' ? 'תנאים' : lang === 'ja' ? '規約' : lang === 'ru' ? 'Условия' : lang === 'pt' ? 'Termos' : 'AGB' %></a></p>
   </footer>
 
   <script>

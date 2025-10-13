@@ -169,9 +169,9 @@
     <i id="themeIcon" class="fas fa-moon"></i>
   </button>
 
-  <h1><i class="fas fa-file-alt"></i> <%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : 'מידע משפטי' %></h1>
+  <h1><i class="fas fa-file-alt"></i> <%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : lang === 'he' ? 'מידע משפטי' : lang === 'ja' ? '法的通知' : lang === 'ru' ? 'Юридическая информация' : lang === 'pt' ? 'Aviso Legal' : 'Impressum' %></h1>
 
-  <p><%= lang === 'de' ? 'Angaben gemäß § 5 TMG' : lang === 'en' ? 'Information in accordance with § 5 TMG (German Telemedia Act)' : 'מידע בהתאם ל-§ 5 TMG' %></p>
+  <p><%= lang === 'de' ? 'Angaben gemäß § 5 TMG' : lang === 'en' ? 'Information in accordance with § 5 TMG (German Telemedia Act)' : lang === 'he' ? 'מידע בהתאם ל-§ 5 TMG' : lang === 'ja' ? 'TMG第5条に基づく情報' : lang === 'ru' ? 'Информация в соответствии с § 5 TMG' : lang === 'pt' ? 'Informações de acordo com § 5 TMG' : 'Angaben gemäß § 5 TMG' %></p>
 
   <!-- Betreiber / Operator -->
   <h2><%= lang === 'de' ? '1. Diensteanbieter' : lang === 'en' ? '1. Service Provider' : '1. ספק השירות' %></h2>
@@ -221,10 +221,10 @@
   <h2><%= lang === 'de' ? '7. Urheberrecht' : lang === 'en' ? '7. Copyright' : '7. זכויות יוצרים' %></h2>
   <p><%= lang === 'de' ? 'Die durch den Bot und die Webseite erstellten Inhalte unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des Betreibers.' : lang === 'en' ? 'The content created by the bot and website is subject to German copyright law. Duplication, editing, distribution and any type of exploitation outside the limits of copyright law require the written consent of the operator.' : 'התוכן שנוצר על ידי הבוט והאתר כפוף לחוק זכויות היוצרים הגרמני.' %></p>
 
-  <a href="/" role="button" class="back-btn secondary">← <%= lang === 'de' ? 'Zurück zur Startseite' : lang === 'en' ? 'Back to Home' : 'חזרה לדף הבית' %></a>
+  <a href="/" role="button" class="back-btn secondary">← <%= lang === 'de' ? 'Zurück zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : 'Zurück zur Startseite' %></a>
 
   <footer>
-    <p>TRS Tickets ©️ <%= new Date().getFullYear() %> | <a href="/terms-of-service"><%= lang === 'de' ? 'Nutzungsbedingungen' : lang === 'en' ? 'Terms of Service' : 'תנאי שימוש' %></a> | <a href="/privacy-policy"><%= lang === 'de' ? 'Datenschutzerklärung' : lang === 'en' ? 'Privacy Policy' : 'מדיניות פרטיות' %></a></p>
+    <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten | <a href="/terms-of-service"><%= lang === 'de' ? 'Nutzungsbedingungen' : lang === 'en' ? 'Terms of Service' : lang === 'he' ? 'תנאי שימוש' : lang === 'ja' ? '利用規約' : lang === 'ru' ? 'Условия использования' : lang === 'pt' ? 'Termos de Serviço' : 'Nutzungsbedingungen' %></a> | <a href="/privacy-policy"><%= lang === 'de' ? 'Datenschutzerklärung' : lang === 'en' ? 'Privacy Policy' : lang === 'he' ? 'מדיניות פרטיות' : lang === 'ja' ? 'プライバシーポリシー' : lang === 'ru' ? 'Политика конфиденциальности' : lang === 'pt' ? 'Política de Privacidade' : 'Datenschutzerklärung' %></a></p>
   </footer>
 
   <script>

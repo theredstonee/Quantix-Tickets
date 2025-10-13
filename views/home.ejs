@@ -487,38 +487,80 @@
   </button>
 
   <div class="language-selector">
-    <a href="/set-user-language/de" class="lang-btn <%= lang === 'de' ? 'active' : '' %>" title="Deutsch">
-      <img src="/images/flags/de.svg" alt="DE" style="width: 28px; height: 20px;">
-    </a>
-    <a href="/set-user-language/en" class="lang-btn <%= lang === 'en' ? 'active' : '' %>" title="English">
-      <img src="/images/flags/gb.svg" alt="GB" style="width: 28px; height: 20px;">
-    </a>
-    <a href="/set-user-language/he" class="lang-btn <%= lang === 'he' ? 'active' : '' %>" title="עברית">
-      <img src="/images/flags/il.svg" alt="IL" style="width: 28px; height: 20px;">
-    </a>
+    <a href="/set-user-language/de" class="lang-btn <%= lang === 'de' ? 'active' : '' %>" title="Deutsch">🇩🇪</a>
+    <a href="/set-user-language/en" class="lang-btn <%= lang === 'en' ? 'active' : '' %>" title="English">🇬🇧</a>
+    <a href="/set-user-language/he" class="lang-btn <%= lang === 'he' ? 'active' : '' %>" title="עברית">🇮🇱</a>
+    <a href="/set-user-language/ja" class="lang-btn <%= lang === 'ja' ? 'active' : '' %>" title="日本語">🇯🇵</a>
+    <a href="/set-user-language/ru" class="lang-btn <%= lang === 'ru' ? 'active' : '' %>" title="Русский">🇷🇺</a>
+    <a href="/set-user-language/pt" class="lang-btn <%= lang === 'pt' ? 'active' : '' %>" title="Português">🇵🇹</a>
   </div>
 
   <div class="hero">
     <h1><i class="fas fa-ticket-alt"></i> TRS Tickets</h1>
-    <p><%= lang === 'de' ? 'Professionelles Ticket-System für Discord' : lang === 'en' ? 'Professional Ticket System for Discord' : 'מערכת כרטיסים מקצועית עבור Discord' %></p>
-    <div class="version-badge">Beta 0.3.3</div>
+    <p><%
+      const heroTexts = {
+        de: 'Professionelles Ticket-System für Discord',
+        en: 'Professional Ticket System for Discord',
+        he: 'מערכת כרטיסים מקצועית עבור Discord',
+        ja: 'Discord用のプロフェッショナルチケットシステム',
+        ru: 'Профессиональная система тикетов для Discord',
+        pt: 'Sistema de Tickets Profissional para Discord'
+      };
+    %><%= heroTexts[lang] || heroTexts.de %></p>
+    <div class="version-badge">Beta 0.3.5</div>
 
     <% if (isAuthenticated && user) { %>
       <div class="user-info">
-        <%= lang === 'de' ? 'Angemeldet als' : lang === 'en' ? 'Logged in as' : 'מחובר בתור' %> <strong><%= user.username %></strong>
+        <%
+          const loggedInTexts = {
+            de: 'Angemeldet als',
+            en: 'Logged in as',
+            he: 'מחובר בתור',
+            ja: 'ログイン中：',
+            ru: 'Вошли как',
+            pt: 'Conectado como'
+          };
+        %><%= loggedInTexts[lang] || loggedInTexts.de %> <strong><%= user.username %></strong>
       </div>
       <div class="button-container">
         <a href="/select-server" class="btn-primary">
-          <i class="fas fa-cog"></i> <%= lang === 'de' ? 'Zum Admin Panel' : lang === 'en' ? 'Go to Admin Panel' : 'עבור לפאנל ניהול' %>
+          <i class="fas fa-cog"></i> <%
+            const adminPanelTexts = {
+              de: 'Zum Admin Panel',
+              en: 'Go to Admin Panel',
+              he: 'עבור לפאנל ניהול',
+              ja: '管理パネルへ',
+              ru: 'Перейти в админ-панель',
+              pt: 'Ir para Painel Admin'
+            };
+          %><%= adminPanelTexts[lang] || adminPanelTexts.de %>
         </a>
         <a href="/logout" class="btn-secondary">
-          <i class="fas fa-sign-out-alt"></i> <%= lang === 'de' ? 'Abmelden' : lang === 'en' ? 'Logout' : 'התנתק' %>
+          <i class="fas fa-sign-out-alt"></i> <%
+            const logoutTexts = {
+              de: 'Abmelden',
+              en: 'Logout',
+              he: 'התנתק',
+              ja: 'ログアウト',
+              ru: 'Выйти',
+              pt: 'Sair'
+            };
+          %><%= logoutTexts[lang] || logoutTexts.de %>
         </a>
       </div>
     <% } else { %>
       <div class="button-container">
         <a href="/login" class="btn-primary">
-          <i class="fab fa-discord"></i> <%= lang === 'de' ? 'Mit Discord anmelden' : lang === 'en' ? 'Login with Discord' : 'התחבר עם Discord' %>
+          <i class="fab fa-discord"></i> <%
+            const loginTexts = {
+              de: 'Mit Discord anmelden',
+              en: 'Login with Discord',
+              he: 'התחבר עם Discord',
+              ja: 'Discordでログイン',
+              ru: 'Войти через Discord',
+              pt: 'Entrar com Discord'
+            };
+          %><%= loginTexts[lang] || loginTexts.de %>
         </a>
       </div>
     <% } %>
@@ -527,8 +569,26 @@
   <div class="content-wrapper">
     <div class="features">
       <div class="feature-card">
-        <h3><i class="fas fa-language"></i> <%= lang === 'de' ? 'Multi-Sprache' : lang === 'en' ? 'Multi-Language' : 'רב-לשוני' %></h3>
-        <p><%= lang === 'de' ? 'Unterstützt Deutsch, Englisch und Hebräisch mit vollständiger Übersetzung für Bot und Web-Panel.' : lang === 'en' ? 'Supports German, English and Hebrew with complete translation for bot and web panel.' : 'תומך בגרמנית, אנגלית ועברית עם תרגום מלא לבוט ולפאנל אינטרנט.' %></p>
+        <h3><i class="fas fa-language"></i> <%
+          const multiLangTitle = {
+            de: 'Multi-Sprache',
+            en: 'Multi-Language',
+            he: 'רב-לשוני',
+            ja: '多言語対応',
+            ru: 'Мультиязычность',
+            pt: 'Multi-Idioma'
+          };
+        %><%= multiLangTitle[lang] || multiLangTitle.de %></h3>
+        <p><%
+          const multiLangDesc = {
+            de: 'Unterstützt Deutsch, Englisch, Hebräisch, Japanisch, Russisch und Portugiesisch mit vollständiger Übersetzung.',
+            en: 'Supports German, English, Hebrew, Japanese, Russian and Portuguese with complete translation.',
+            he: 'תומך בגרמנית, אנגלית, עברית, יפנית, רוסית ופורטוגזית עם תרגום מלא.',
+            ja: 'ドイツ語、英語、ヘブライ語、日本語、ロシア語、ポルトガル語を完全翻訳でサポート。',
+            ru: 'Поддержка немецкого, английского, иврита, японского, русского и португальского с полным переводом.',
+            pt: 'Suporta alemão, inglês, hebraico, japonês, russo e português com tradução completa.'
+          };
+        %><%= multiLangDesc[lang] || multiLangDesc.de %></p>
       </div>
 
       <div class="feature-card">

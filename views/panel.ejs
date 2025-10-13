@@ -338,9 +338,12 @@
 <body>
   <div style="position: fixed; top: 1.5rem; right: 5.5rem; z-index: 1000;">
     <select onchange="window.location.href='/set-language/' + this.value" style="background: var(--accent-color); color: #000; border: 0; padding: 0.75rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-      <option value="de" <%= lang === 'de' ? 'selected' : '' %>>Deutsch</option>
-      <option value="en" <%= lang === 'en' ? 'selected' : '' %>>English</option>
-      <option value="he" <%= lang === 'he' ? 'selected' : '' %>>עברית</option>
+      <option value="de" <%= lang === 'de' ? 'selected' : '' %>>🇩🇪 Deutsch</option>
+      <option value="en" <%= lang === 'en' ? 'selected' : '' %>>🇬🇧 English</option>
+      <option value="he" <%= lang === 'he' ? 'selected' : '' %>>🇮🇱 עברית</option>
+      <option value="ja" <%= lang === 'ja' ? 'selected' : '' %>>🇯🇵 日本語</option>
+      <option value="ru" <%= lang === 'ru' ? 'selected' : '' %>>🇷🇺 Русский</option>
+      <option value="pt" <%= lang === 'pt' ? 'selected' : '' %>>🇵🇹 Português</option>
     </select>
   </div>
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
@@ -350,13 +353,13 @@
 
   <div class="nav-buttons">
     <a href="/">
-      <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : 'חזרה לדף הבית' %>
+      <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : 'Zur Startseite' %>
     </a>
     <a href="/select-server" class="secondary-btn">
-      <i class="fas fa-server"></i> <%= lang === 'de' ? 'Server wechseln' : lang === 'en' ? 'Change Server' : 'החלף שרת' %>
+      <i class="fas fa-server"></i> <%= lang === 'de' ? 'Server wechseln' : lang === 'en' ? 'Change Server' : lang === 'he' ? 'החלף שרת' : lang === 'ja' ? 'サーバーを変更' : lang === 'ru' ? 'Сменить сервер' : lang === 'pt' ? 'Trocar Servidor' : 'Server wechseln' %>
     </a>
     <a href="/tickets" class="secondary-btn">
-      <i class="fas fa-history"></i> <%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : 'היסטוריית כרטיסים' %>
+      <i class="fas fa-history"></i> <%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : lang === 'he' ? 'היסטוריית כרטיסים' : lang === 'ja' ? 'チケット履歴' : lang === 'ru' ? 'История тикетов' : lang === 'pt' ? 'Histórico de Tickets' : 'Ticket-Verlauf' %>
     </a>
   </div>
 
@@ -640,7 +643,7 @@
   </div>
 
   <footer>
-    <p>TRS Tickets ©️ • Version <%= version %></p>
+    <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten • Version <%= version %></p>
     <p class="soft-note">Änderungen speichern sofort in <code>config.json</code></p>
   </footer>
 
