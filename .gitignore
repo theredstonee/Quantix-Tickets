@@ -3,3 +3,4 @@
 /config.json
 /ticketCounter.json
 /tickets.json
+/.env
