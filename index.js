@@ -85,6 +85,26 @@ function getAllTeamRoles(guildId){
   return Array.from(roles).filter(r => r && r.trim());
 }
 
+function getHierarchicalPriorityRoles(guildId, priority = 0){
+  const cfg = readCfg(guildId);
+  const roles = new Set();
+
+  if(!cfg.priorityRoles){
+    const legacyRole = cfg.teamRoleId;
+    return legacyRole ? [legacyRole] : [];
+  }
+
+  // Hierarchisch: Rot (2) sieht 2+1+0, Orange (1) sieht 1+0, Grün (0) sieht nur 0
+  for(let level = priority; level >= 0; level--){
+    const levelRoles = cfg.priorityRoles[level.toString()] || [];
+    if(Array.isArray(levelRoles)){
+      levelRoles.forEach(r => roles.add(r));
+    }
+  }
+
+  return Array.from(roles).filter(r => r && r.trim());
+}
+
 const { Collection } = require('discord.js');
 const commandsCollection = new Collection();
 
@@ -946,6 +966,18 @@ client.on(Events.InteractionCreate, async i => {
             }
           }
 
+          const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, ticket.priority || 0);
+          for(const roleId of hierarchicalRoles){
+            if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
+              try {
+                await i.guild.roles.fetch(roleId);
+                permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+              } catch {
+                console.error('Priority-Rolle nicht gefunden beim Unclaim:', roleId);
+              }
+            }
+          }
+
           if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
             ticket.addedUsers.forEach(uid => {
               permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
@@ -1028,6 +1060,18 @@ client.on(Events.InteractionCreate, async i => {
                 permissions.push({ id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
               } catch {
                 console.error('Team-Rolle nicht gefunden beim Claim:', TEAM_ROLE);
+              }
+            }
+
+            const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, ticket.priority || 0);
+            for(const roleId of hierarchicalRoles){
+              if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
+                try {
+                  await i.guild.roles.fetch(roleId);
+                  permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+                } catch {
+                  console.error('Priority-Rolle nicht gefunden beim Claim:', roleId);
+                }
               }
             }
 
@@ -1230,7 +1274,7 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
 
   try {
     const currentPriority = ticket.priority || 0;
-    const newPriorityRoles = getPriorityRoles(guildId, currentPriority);
+    const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, currentPriority);
     const allPriorityRoles = getAllTeamRoles(guildId);
 
     const permissions = [
@@ -1256,7 +1300,7 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
       } catch {}
     }
 
-    for(const roleId of newPriorityRoles){
+    for(const roleId of hierarchicalRoles){
       if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
         try {
           await interaction.guild.roles.fetch(roleId);
@@ -1268,7 +1312,7 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
     }
 
     for(const roleId of allPriorityRoles){
-      if(roleId && roleId.trim() && !newPriorityRoles.includes(roleId) && roleId !== TEAM_ROLE){
+      if(roleId && roleId.trim() && !hierarchicalRoles.includes(roleId) && roleId !== TEAM_ROLE){
         try {
           await interaction.guild.roles.fetch(roleId);
           permissions.push({ id: roleId, deny: [PermissionsBitField.Flags.ViewChannel] });
@@ -1285,8 +1329,8 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
   const TEAM_ROLE = getTeamRole(guildId);
   if (TEAM_ROLE) mentions.push(`<@&${TEAM_ROLE}>`);
 
-  const newPriorityRoles = getPriorityRoles(guildId, ticket.priority || 0);
-  for(const roleId of newPriorityRoles){
+  const currentPriorityRoles = getPriorityRoles(guildId, ticket.priority || 0);
+  for(const roleId of currentPriorityRoles){
     if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
       mentions.push(`<@&${roleId}>`);
     }
