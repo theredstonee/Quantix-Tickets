@@ -957,27 +957,6 @@ client.on(Events.InteractionCreate, async i => {
             { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
           ];
 
-          if(TEAM_ROLE && TEAM_ROLE.trim()){
-            try {
-              await i.guild.roles.fetch(TEAM_ROLE);
-              permissions.push({ id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
-            } catch {
-              console.error('Team-Rolle nicht gefunden beim Unclaim:', TEAM_ROLE);
-            }
-          }
-
-          const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, ticket.priority || 0);
-          for(const roleId of hierarchicalRoles){
-            if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
-              try {
-                await i.guild.roles.fetch(roleId);
-                permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
-              } catch {
-                console.error('Priority-Rolle nicht gefunden beim Unclaim:', roleId);
-              }
-            }
-          }
-
           if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
             ticket.addedUsers.forEach(uid => {
               permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
@@ -986,8 +965,7 @@ client.on(Events.InteractionCreate, async i => {
 
           await i.channel.permissionOverwrites.set(permissions);
 
-          const mentionTeam = TEAM_ROLE ? `<@&${TEAM_ROLE}>` : '';
-          await i.channel.send(`🔄 <@${i.user.id}> ${t(guildId, 'messages.ticket_unclaimed', { user: `<@${i.user.id}>` })} ${mentionTeam}`);
+          await i.channel.send(`🔄 <@${i.user.id}> ${t(guildId, 'messages.ticket_unclaimed', { user: `<@${i.user.id}>` })}`);
         } catch(err) {
           console.error('Fehler beim Zurücksetzen der Berechtigungen:', err);
         }
@@ -1054,27 +1032,6 @@ client.on(Events.InteractionCreate, async i => {
               { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
             ];
 
-            if(TEAM_ROLE && TEAM_ROLE.trim()){
-              try {
-                await i.guild.roles.fetch(TEAM_ROLE);
-                permissions.push({ id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
-              } catch {
-                console.error('Team-Rolle nicht gefunden beim Claim:', TEAM_ROLE);
-              }
-            }
-
-            const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, ticket.priority || 0);
-            for(const roleId of hierarchicalRoles){
-              if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
-                try {
-                  await i.guild.roles.fetch(roleId);
-                  permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
-                } catch {
-                  console.error('Priority-Rolle nicht gefunden beim Claim:', roleId);
-                }
-              }
-            }
-
             if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
               ticket.addedUsers.forEach(uid => {
                 permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
@@ -1083,8 +1040,7 @@ client.on(Events.InteractionCreate, async i => {
 
             await i.channel.permissionOverwrites.set(permissions);
 
-            const mentionTeam = TEAM_ROLE ? `<@&${TEAM_ROLE}>` : '';
-            await i.channel.send(`✅ <@${i.user.id}> ${t(guildId, 'messages.ticket_claimed', { user: `<@${i.user.id}>` })} ${mentionTeam}`);
+            await i.channel.send(`✅ <@${i.user.id}> ${t(guildId, 'messages.ticket_claimed', { user: `<@${i.user.id}>` })}`);
           } catch(err) {
             console.error('Fehler beim Setzen der Berechtigungen:', err);
           }
