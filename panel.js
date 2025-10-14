@@ -299,13 +299,13 @@ module.exports = (client)=>{
   router.get('/logout',(req,res)=>{ req.logout?.(()=>{}); req.session.destroy(()=>res.redirect('/')); });
 
   router.get('/set-user-language/:lang', (req, res) => {
-    const lang = ['de', 'en', 'he', 'ja', 'ru', 'pt', 'es', 'id'].includes(req.params.lang) ? req.params.lang : 'de';
+    const lang = ['de', 'en', 'he', 'ja', 'ru', 'pt', 'es', 'id', 'zh', 'ar'].includes(req.params.lang) ? req.params.lang : 'de';
     res.cookie('lang', lang, { maxAge: 365 * 24 * 60 * 60 * 1000, path: '/' });
     res.redirect('/');
   });
 
   router.get('/set-language/:lang', isAuth, async (req, res) => {
-    const lang = ['de', 'en', 'he', 'ja', 'ru', 'pt', 'es', 'id'].includes(req.params.lang) ? req.params.lang : 'de';
+    const lang = ['de', 'en', 'he', 'ja', 'ru', 'pt', 'es', 'id', 'zh', 'ar'].includes(req.params.lang) ? req.params.lang : 'de';
     const guildId = req.session.selectedGuild;
 
     if (guildId) {

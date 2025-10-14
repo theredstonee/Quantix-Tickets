@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <rect width="900" height="600" fill="#165B31"/>
+  <g fill="#FFF">
+    <text x="450" y="250" font-family="Arial" font-size="90" text-anchor="middle" font-weight="bold">العربية</text>
+    <path d="M 200,400 L 700,400 L 700,410 L 200,410 Z"/>
+    <path d="M 690,385 L 720,400 L 690,415 Z"/>
+  </g>
+</svg>
