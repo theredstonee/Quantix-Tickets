@@ -20,11 +20,11 @@ module.exports = {
         `**Version:** ${VERSION}\n` +
         `**Release Date:** ${RELEASE_DATE}\n\n` +
         `**New in ${VERSION}:**\n` +
-        `🌐 Multi-language support: Japanese, Russian, Portuguese added\n` +
-        `📦 Centralized version management system\n` +
-        `🎌 Language flags and improved language selection\n` +
-        `🔧 Improved codebase structure and maintainability\n` +
-        `✨ Updated all components to use centralized VERSION variable\n\n` +
+        `🔒 Claim/Unclaim System: Team role removed from permissions\n` +
+        `👥 Only creator, claimer and added users have access to claimed tickets\n` +
+        `🎯 Hierarchical priority roles remain active and functional\n` +
+        `🗑️ Chinese language completely removed (zh.json, flag, commands)\n` +
+        `🛡️ Improved security and privacy for claimed tickets\n\n` +
         `[GitHub Repository](${REPOSITORY})`
       )
       .setColor(0x00ff88)

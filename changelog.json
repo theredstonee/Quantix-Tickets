@@ -1,6 +1,75 @@
 {
-  "currentVersion": "Beta 0.3.5",
+  "currentVersion": "Beta 0.3.6",
   "versions": [
+    {
+      "version": "Beta 0.3.6",
+      "date": "2025-10-14",
+      "changes": {
+        "de": [
+          "🔒 Claim/Unclaim System: Team-Rolle entfernt aus Berechtigungen",
+          "👥 Nur Creator, Claimer und hinzugefügte Nutzer haben Zugriff auf geclaimte Tickets",
+          "🎯 Hierarchische Priority-Rollen bleiben aktiv und funktionsfähig",
+          "🗑️ Chinesische Sprache komplett entfernt (zh.json, Flagge, Commands)",
+          "🛡️ Verbesserte Sicherheit und Privatsphäre für geclaimte Tickets"
+        ],
+        "en": [
+          "🔒 Claim/Unclaim System: Team role removed from permissions",
+          "👥 Only creator, claimer and added users have access to claimed tickets",
+          "🎯 Hierarchical priority roles remain active and functional",
+          "🗑️ Chinese language completely removed (zh.json, flag, commands)",
+          "🛡️ Improved security and privacy for claimed tickets"
+        ],
+        "he": [
+          "🔒 מערכת Claim/Unclaim: תפקיד צוות הוסר מהרשאות",
+          "👥 רק יוצר, claimer ומשתמשים שנוספו יש גישה לכרטיסים שנתפסו",
+          "🎯 תפקידי עדיפות היררכיים נשארים פעילים ותפקודיים",
+          "🗑️ שפה סינית הוסרה לחלוטין (zh.json, דגל, פקודות)",
+          "🛡️ אבטחה ופרטיות משופרת עבור כרטיסים שנתפסו"
+        ],
+        "ja": [
+          "🔒 Claim/Unclaimシステム: チームロールを権限から削除",
+          "👥 作成者、クレーマー、追加されたユーザーのみがクレームされたチケットにアクセス可能",
+          "🎯 階層的優先度ロールはアクティブで機能的なまま",
+          "🗑️ 中国語を完全に削除 (zh.json, フラグ, コマンド)",
+          "🛡️ クレームされたチケットのセキュリティとプライバシーの向上"
+        ],
+        "ru": [
+          "🔒 Система Claim/Unclaim: Роль команды удалена из разрешений",
+          "👥 Только создатель, claimer и добавленные пользователи имеют доступ к claimed тикетам",
+          "🎯 Иерархические роли приоритета остаются активными и функциональными",
+          "🗑️ Китайский язык полностью удален (zh.json, флаг, команды)",
+          "🛡️ Улучшенная безопасность и конфиденциальность для claimed тикетов"
+        ],
+        "pt": [
+          "🔒 Sistema Claim/Unclaim: Função de equipe removida das permissões",
+          "👥 Apenas criador, claimer e usuários adicionados têm acesso a tickets claimed",
+          "🎯 Funções de prioridade hierárquicas permanecem ativas e funcionais",
+          "🗑️ Idioma chinês completamente removido (zh.json, bandeira, comandos)",
+          "🛡️ Segurança e privacidade melhoradas para tickets claimed"
+        ],
+        "es": [
+          "🔒 Sistema Claim/Unclaim: Rol de equipo eliminado de permisos",
+          "👥 Solo creador, claimer y usuarios agregados tienen acceso a tickets reclamados",
+          "🎯 Roles de prioridad jerárquicos permanecen activos y funcionales",
+          "🗑️ Idioma chino completamente eliminado (zh.json, bandera, comandos)",
+          "🛡️ Seguridad y privacidad mejoradas para tickets reclamados"
+        ],
+        "id": [
+          "🔒 Sistem Claim/Unclaim: Peran tim dihapus dari izin",
+          "👥 Hanya pembuat, claimer, dan pengguna yang ditambahkan yang memiliki akses ke tiket yang diklaim",
+          "🎯 Peran prioritas hierarkis tetap aktif dan fungsional",
+          "🗑️ Bahasa Mandarin sepenuhnya dihapus (zh.json, bendera, perintah)",
+          "🛡️ Keamanan dan privasi yang ditingkatkan untuk tiket yang diklaim"
+        ],
+        "ar": [
+          "🔒 نظام Claim/Unclaim: تمت إزالة دور الفريق من الأذونات",
+          "👥 المنشئ والمطالب والمستخدمون المضافون فقط لديهم حق الوصول إلى التذاكر المطالب بها",
+          "🎯 أدوار الأولوية الهرمية تظل نشطة وفعالة",
+          "🗑️ تمت إزالة اللغة الصينية بالكامل (zh.json، العلم، الأوامر)",
+          "🛡️ تحسين الأمان والخصوصية للتذاكر المطالب بها"
+        ]
+      }
+    },
     {
       "version": "Beta 0.3.5",
       "date": "2025-10-13",
