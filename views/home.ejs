@@ -497,7 +497,6 @@
     <a href="/set-user-language/pt" class="lang-btn <%= lang === 'pt' ? 'active' : '' %>" title="Português"><img src="/images/flags/pt.svg" alt="PT" width="24" height="18"></a>
     <a href="/set-user-language/es" class="lang-btn <%= lang === 'es' ? 'active' : '' %>" title="Español"><img src="/images/flags/es.svg" alt="ES" width="24" height="18"></a>
     <a href="/set-user-language/id" class="lang-btn <%= lang === 'id' ? 'active' : '' %>" title="Bahasa Indonesia"><img src="/images/flags/id.svg" alt="ID" width="24" height="18"></a>
-    <a href="/set-user-language/zh" class="lang-btn <%= lang === 'zh' ? 'active' : '' %>" title="中文"><img src="/images/flags/zh.svg" alt="ZH" width="24" height="18"></a>
     <a href="/set-user-language/ar" class="lang-btn <%= lang === 'ar' ? 'active' : '' %>" title="العربية"><img src="/images/flags/ar.svg" alt="AR" width="24" height="18"></a>
   </div>
 
@@ -611,16 +610,15 @@
         %><%= multiLangTitle[lang] || multiLangTitle.de %></h3>
         <p><%
           const multiLangDesc = {
-            de: 'Unterstützt Deutsch, Englisch, Hebräisch, Japanisch, Russisch, Portugiesisch, Spanisch, Indonesisch, Chinesisch und Arabisch mit vollständiger Übersetzung.',
-            en: 'Supports German, English, Hebrew, Japanese, Russian, Portuguese, Spanish, Indonesian, Chinese and Arabic with complete translation.',
-            he: 'תומך בגרמנית, אנגלית, עברית, יפנית, רוסית, פורטוגזית, ספרדית, אינדונזית, סינית וערבית עם תרגום מלא.',
-            ja: 'ドイツ語、英語、ヘブライ語、日本語、ロシア語、ポルトガル語、スペイン語、インドネシア語、中国語、アラビア語を完全翻訳でサポート。',
-            ru: 'Поддержка немецкого, английского, иврита, японского, русского, португальского, испанского, индонезийского, китайского и арабского с полным переводом.',
-            pt: 'Suporta alemão, inglês, hebraico, japonês, russo, português, espanhol, indonésio, chinês e árabe com tradução completa.',
-            es: 'Soporta alemán, inglés, hebreo, japonés, ruso, portugués, español, indonesio, chino y árabe con traducción completa.',
-            id: 'Mendukung Jerman, Inggris, Ibrani, Jepang, Rusia, Portugis, Spanyol, Indonesia, Mandarin dan Arab dengan terjemahan lengkap.',
-            zh: '支持德语、英语、希伯来语、日语、俄语、葡萄牙语、西班牙语、印尼语、中文和阿拉伯语的完整翻译。',
-            ar: 'يدعم الألمانية والإنجليزية والعبرية واليابانية والروسية والبرتغالية والإسبانية والإندونيسية والصينية والعربية مع الترجمة الكاملة.'
+            de: 'Unterstützt Deutsch, Englisch, Hebräisch, Japanisch, Russisch, Portugiesisch, Spanisch, Indonesisch und Arabisch mit vollständiger Übersetzung.',
+            en: 'Supports German, English, Hebrew, Japanese, Russian, Portuguese, Spanish, Indonesian and Arabic with complete translation.',
+            he: 'תומך בגרמנית, אנגלית, עברית, יפנית, רוסית, פורטוגזית, ספרדית, אינדונזית וערבית עם תרגום מלא.',
+            ja: 'ドイツ語、英語、ヘブライ語、日本語、ロシア語、ポルトガル語、スペイン語、インドネシア語、アラビア語を完全翻訳でサポート。',
+            ru: 'Поддержка немецкого, английского, иврита, японского, русского, португальского, испанского, индонезийского и арабского с полным переводом.',
+            pt: 'Suporta alemão, inglês, hebraico, japonês, russo, português, espanhol, indonésio e árabe com tradução completa.',
+            es: 'Soporta alemán, inglés, hebreo, japonés, ruso, portugués, español, indonesio y árabe con traducción completa.',
+            id: 'Mendukung Jerman, Inggris, Ibrani, Jepang, Rusia, Portugis, Spanyol, Indonesia dan Arab dengan terjemahan lengkap.',
+            ar: 'يدعم الألمانية والإنجليزية والعبرية واليابانية والروسية والبرتغالية والإسبانية والإندونيسية والعربية مع الترجمة الكاملة.'
           };
         %><%= multiLangDesc[lang] || multiLangDesc.de %></p>
       </div>
