@@ -10,7 +10,6 @@ const translations = {
   pt: require('./translations/pt.json'),
   es: require('./translations/es.json'),
   id: require('./translations/id.json'),
-  zh: require('./translations/zh.json'),
   ar: require('./translations/ar.json')
 };
 
@@ -35,7 +34,7 @@ function setGuildLanguage(guildId, lang) {
   try {
     if (!guildId) return false;
 
-    if (!['de', 'en', 'he', 'ja', 'ru', 'pt', 'es', 'id', 'zh', 'ar'].includes(lang)) {
+    if (!['de', 'en', 'he', 'ja', 'ru', 'pt', 'es', 'id', 'ar'].includes(lang)) {
       lang = 'de';
     }
 
@@ -94,7 +93,6 @@ function getLanguageName(lang) {
     pt: 'Português',
     es: 'Español',
     id: 'Bahasa Indonesia',
-    zh: '中文',
     ar: 'العربية'
   };
   return names[lang] || 'Deutsch';

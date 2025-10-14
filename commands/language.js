@@ -12,7 +12,6 @@ module.exports = {
       'pt-BR': 'Definir idioma do servidor',
       'es-ES': 'Establecer el idioma del servidor',
       id: 'Atur bahasa server',
-      'zh-CN': '设置服务器语言',
       ar: 'تعيين لغة الخادم'
     })
     .addStringOption(option =>
@@ -26,7 +25,6 @@ module.exports = {
           'pt-BR': 'Selecionar idioma',
           'es-ES': 'Elegir el idioma',
           id: 'Pilih bahasa',
-          'zh-CN': '选择语言',
           ar: 'اختر اللغة'
         })
         .setRequired(true)
@@ -39,7 +37,6 @@ module.exports = {
           { name: '🇵🇹 Português (Portuguese)', value: 'pt' },
           { name: '🇪🇸 Español (Spanish)', value: 'es' },
           { name: '🇮🇩 Bahasa Indonesia (Indonesian)', value: 'id' },
-          { name: '🇨🇳 中文 (Chinese)', value: 'zh' },
           { name: '🇸🇦 العربية (Arabic)', value: 'ar' }
         ))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
