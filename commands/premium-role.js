@@ -16,8 +16,7 @@ module.exports = {
       ru: 'Управление Premium ролью на Theredstonee Projects (только владелец)',
       'pt-BR': 'Gerenciar Cargo Premium no Theredstonee Projects (Apenas Proprietário)',
       'es-ES': 'Administrar Rol Premium en Theredstonee Projects (Solo Propietario)',
-      id: 'Kelola Peran Premium di Theredstonee Projects (Hanya Pemilik)',
-      ar: 'إدارة دور Premium في Theredstonee Projects (المالك فقط)'
+      id: 'Kelola Peran Premium di Theredstonee Projects (Hanya Pemilik)'
     })
     .setDMPermission(false)
     .addSubcommand(subcommand =>
@@ -31,8 +30,7 @@ module.exports = {
           ru: 'Добавить Premium роль пользователю',
           'pt-BR': 'Adicionar cargo Premium a um usuário',
           'es-ES': 'Agregar rol Premium a un usuario',
-          id: 'Tambahkan peran Premium ke pengguna',
-          ar: 'إضافة دور Premium إلى مستخدم'
+          id: 'Tambahkan peran Premium ke pengguna'
         })
         .addUserOption(option =>
           option
@@ -45,8 +43,7 @@ module.exports = {
               ru: 'Пользователь, который должен получить Premium роль',
               'pt-BR': 'Usuário que deve receber o cargo Premium',
               'es-ES': 'Usuario que debe recibir el rol Premium',
-              id: 'Pengguna yang harus menerima peran Premium',
-              ar: 'المستخدم الذي يجب أن يحصل على دور Premium'
+              id: 'Pengguna yang harus menerima peran Premium'
             })
             .setRequired(true)
         )
@@ -62,8 +59,7 @@ module.exports = {
           ru: 'Удалить Premium роль у пользователя',
           'pt-BR': 'Remover cargo Premium de um usuário',
           'es-ES': 'Eliminar rol Premium de un usuario',
-          id: 'Hapus peran Premium dari pengguna',
-          ar: 'إزالة دور Premium من مستخدم'
+          id: 'Hapus peran Premium dari pengguna'
         })
         .addUserOption(option =>
           option
@@ -76,8 +72,7 @@ module.exports = {
               ru: 'Пользователь, который должен потерять Premium роль',
               'pt-BR': 'Usuário que deve perder o cargo Premium',
               'es-ES': 'Usuario que debe perder el rol Premium',
-              id: 'Pengguna yang harus kehilangan peran Premium',
-              ar: 'المستخدم الذي يجب أن يفقد دور Premium'
+              id: 'Pengguna yang harus kehilangan peran Premium'
             })
             .setRequired(true)
         )

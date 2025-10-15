@@ -14,8 +14,7 @@ module.exports = {
       ru: 'Управление статусом Betatester (только владелец)',
       'pt-BR': 'Gerenciar Status de Betatester (Apenas Proprietário)',
       'es-ES': 'Administrar Estado de Betatester (Solo Propietario)',
-      id: 'Kelola Status Betatester (Hanya Pemilik)',
-      ar: 'إدارة حالة Betatester (المالك فقط)'
+      id: 'Kelola Status Betatester (Hanya Pemilik)'
     })
     .setDMPermission(false)
     .addSubcommand(subcommand =>
@@ -29,8 +28,7 @@ module.exports = {
           ru: 'Добавить статус Betatester на сервер',
           'pt-BR': 'Adicionar status de Betatester a um servidor',
           'es-ES': 'Agregar estado de Betatester a un servidor',
-          id: 'Tambahkan status Betatester ke server',
-          ar: 'إضافة حالة Betatester إلى خادم'
+          id: 'Tambahkan status Betatester ke server'
         })
         .addStringOption(option =>
           option
@@ -43,8 +41,7 @@ module.exports = {
               ru: 'Сервер (ID или имя)',
               'pt-BR': 'Servidor (ID da guilda ou nome)',
               'es-ES': 'Servidor (ID del servidor o nombre)',
-              id: 'Server (ID Guild atau nama)',
-              ar: 'الخادم (معرف الخادم أو الاسم)'
+              id: 'Server (ID Guild atau nama)'
             })
             .setRequired(true)
             .setAutocomplete(true)
@@ -60,8 +57,7 @@ module.exports = {
               ru: 'Длительность в днях (по умолчанию: 30)',
               'pt-BR': 'Duração em dias (padrão: 30)',
               'es-ES': 'Duración en días (predeterminado: 30)',
-              id: 'Durasi dalam hari (default: 30)',
-              ar: 'المدة بالأيام (الافتراضي: 30)'
+              id: 'Durasi dalam hari (default: 30)'
             })
             .setRequired(false)
             .addChoices(
@@ -85,8 +81,7 @@ module.exports = {
               ru: 'Пользователь-бета-тестер (получит роль на Theredstonee Projects)',
               'pt-BR': 'Usuário que é o betatester (receberá cargo no Theredstonee Projects)',
               'es-ES': 'Usuario que es el betatester (recibirá rol en Theredstonee Projects)',
-              id: 'Pengguna yang merupakan betatester (akan menerima peran di Theredstonee Projects)',
-              ar: 'المستخدم الذي هو المختبر (سيحصل على دور في Theredstonee Projects)'
+              id: 'Pengguna yang merupakan betatester (akan menerima peran di Theredstonee Projects)'
             })
             .setRequired(false)
         )
@@ -102,8 +97,7 @@ module.exports = {
           ru: 'Удалить статус Betatester с сервера',
           'pt-BR': 'Remover status de Betatester de um servidor',
           'es-ES': 'Eliminar estado de Betatester de un servidor',
-          id: 'Hapus status Betatester dari server',
-          ar: 'إزالة حالة Betatester من خادم'
+          id: 'Hapus status Betatester dari server'
         })
         .addStringOption(option =>
           option
@@ -116,8 +110,7 @@ module.exports = {
               ru: 'Сервер (ID или имя)',
               'pt-BR': 'Servidor (ID da guilda ou nome)',
               'es-ES': 'Servidor (ID del servidor o nombre)',
-              id: 'Server (ID Guild atau nama)',
-              ar: 'الخادم (معرف الخادم أو الاسم)'
+              id: 'Server (ID Guild atau nama)'
             })
             .setRequired(true)
             .setAutocomplete(true)
@@ -134,8 +127,7 @@ module.exports = {
           ru: 'Список всех серверов со статусом Betatester',
           'pt-BR': 'Listar todos os servidores com status de Betatester',
           'es-ES': 'Listar todos los servidores con estado de Betatester',
-          id: 'Daftar semua server dengan status Betatester',
-          ar: 'قائمة بجميع الخوادم التي لديها حالة Betatester'
+          id: 'Daftar semua server dengan status Betatester'
         })
     ),
 
