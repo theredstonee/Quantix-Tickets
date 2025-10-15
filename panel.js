@@ -407,6 +407,30 @@ module.exports = (client)=>{
         cfg.notificationEmail = null;
       }
 
+      // Auto-Close System (Pro Feature)
+      cfg.autoCloseEnabled = req.body.autoCloseEnabled === 'on';
+      if(req.body.autoCloseDays){
+        const days = parseInt(req.body.autoCloseDays);
+        if(days >= 1 && days <= 365){
+          cfg.autoCloseDays = days;
+        } else {
+          cfg.autoCloseDays = 7; // Default
+        }
+      }
+
+      // Custom Bot-Avatar (Basic+ Feature)
+      if(req.body.customAvatarUrl){
+        const url = req.body.customAvatarUrl.trim();
+        // Einfache URL-Validierung
+        if(url.startsWith('http://') || url.startsWith('https://')){
+          cfg.customAvatarUrl = url;
+        } else {
+          cfg.customAvatarUrl = null;
+        }
+      } else {
+        cfg.customAvatarUrl = null;
+      }
+
       const labelInputs = [].concat(req.body.label||[]);
       const valueInputs = [].concat(req.body.value||[]);
       const emojiInputs = [].concat(req.body.emoji||[]);

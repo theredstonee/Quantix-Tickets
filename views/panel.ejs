@@ -633,6 +633,269 @@
         </div>
       </fieldset>
 
+      <!-- Premium Features -->
+      <fieldset style="border: 2px solid <%= isPremium ? '#667eea' : 'rgba(102, 126, 234, 0.3)' %>; <%= isPremium ? 'background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);' : '' %>">
+        <legend>
+          <i class="fas fa-gem"></i> 💎 Premium Features
+          <%= isPremium ? '| ' + premiumTierName : '' %>
+        </legend>
+
+        <%
+        // Feature-Definitionen mit Plänen
+        const features = [
+          { name: 'Ticket-Kategorien', icon: '📁', free: 3, basic: 7, pro: 999, current: true },
+          { name: 'Werbefrei', icon: '🚫', free: false, basic: true, pro: true },
+          { name: 'Custom Bot-Avatar', icon: '🎨', free: false, basic: true, pro: true },
+          { name: 'Ticket-Statistiken', icon: '📊', free: false, basic: true, pro: true },
+          { name: 'Priority Support', icon: '⚡', free: false, basic: true, pro: true },
+          { name: 'Auto-Close System', icon: '⏰', free: false, basic: false, pro: true },
+          { name: 'Email-Benachrichtigungen', icon: '📧', free: false, basic: false, pro: true, config: true }
+        ];
+        %>
+
+        <!-- Feature-Übersicht -->
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--fieldset-bg); border-radius: 8px;">
+          <strong style="font-size: 1.1rem;">📋 Feature-Übersicht</strong>
+          <table style="margin-top: 1rem; width: 100%; font-size: 0.9rem;">
+            <thead style="background: var(--thead-bg);">
+              <tr>
+                <th style="text-align: left; padding: 0.75rem;">Feature</th>
+                <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'none' ? 'rgba(0,184,148,0.1)' : 'transparent' %>;">
+                  Free
+                </th>
+                <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'basic' ? 'rgba(102,126,234,0.1)' : 'transparent' %>;">
+                  Basic
+                </th>
+                <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'pro' ? 'rgba(118,75,162,0.15)' : 'transparent' %>;">
+                  Pro
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <% features.forEach(feature => { %>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.75rem;">
+                  <%= feature.icon %> <%= feature.name %>
+                </td>
+                <td style="text-align: center; padding: 0.75rem;">
+                  <% if (typeof feature.free === 'number') { %>
+                    <span style="color: var(--accent-color); font-weight: bold;"><%= feature.free %></span>
+                  <% } else if (feature.free) { %>
+                    <span style="color: #00ff88;">✓</span>
+                  <% } else { %>
+                    <span style="opacity: 0.3;">—</span>
+                  <% } %>
+                </td>
+                <td style="text-align: center; padding: 0.75rem;">
+                  <% if (typeof feature.basic === 'number') { %>
+                    <span style="color: #667eea; font-weight: bold;"><%= feature.basic %></span>
+                  <% } else if (feature.basic) { %>
+                    <span style="color: #667eea;">✓</span>
+                  <% } else { %>
+                    <span style="opacity: 0.3;">—</span>
+                  <% } %>
+                </td>
+                <td style="text-align: center; padding: 0.75rem;">
+                  <% if (typeof feature.pro === 'number') { %>
+                    <span style="color: #764ba2; font-weight: bold;">♾️</span>
+                  <% } else if (feature.pro) { %>
+                    <span style="color: #764ba2;">✓</span>
+                  <% } else { %>
+                    <span style="opacity: 0.3;">—</span>
+                  <% } %>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <% if (!isPremium) { %>
+        <!-- Upgrade CTA für Free-User -->
+        <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 10px; text-align: center; margin-bottom: 1.5rem; border: 2px dashed rgba(102, 126, 234, 0.4);">
+          <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">✨</span>
+          <h3 style="margin: 0 0 0.5rem 0; color: #667eea;">Upgrade auf Premium</h3>
+          <p style="margin: 0 0 1rem 0; opacity: 0.8; font-size: 0.9rem;">
+            Schalte alle Features frei und unterstütze die Entwicklung
+          </p>
+          <a href="/premium" style="display: inline-block; padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); transition: all 0.2s;">
+            Jetzt upgraden →
+          </a>
+        </div>
+        <% } %>
+
+        <!-- Konfigurierbare Features -->
+        <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--fieldset-bg); border-radius: 8px; border: 2px solid rgba(102, 126, 234, 0.2);">
+          <strong style="font-size: 1.1rem; display: block; margin-bottom: 1rem;">⚙️ Konfigurierbare Features</strong>
+
+          <!-- Email-Benachrichtigungen (nur Pro) -->
+          <% if (premiumTier === 'pro' || guildId === '1291125037876904026') { %>
+          <div style="margin-bottom: 1.5rem;">
+            <label>
+              📧 Email-Benachrichtigungen
+              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
+              <input
+                type="email"
+                name="notificationEmail"
+                value="<%= cfg.notificationEmail || '' %>"
+                placeholder="tickets@example.com"
+                style="margin-top: 0.5rem;"
+              >
+              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
+                Bei jedem neuen Ticket wird eine Email an diese Adresse gesendet.<br>
+                ⚙️ SMTP muss in der .env konfiguriert sein (siehe Dokumentation).
+              </small>
+            </label>
+          </div>
+
+          <!-- Auto-Close System (nur Pro) -->
+          <div style="margin-bottom: 1.5rem;">
+            <label>
+              ⏰ Auto-Close System
+              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
+              <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
+                <input
+                  type="checkbox"
+                  name="autoCloseEnabled"
+                  id="autoCloseEnabled"
+                  <%= cfg.autoCloseEnabled ? 'checked' : '' %>
+                  style="width: auto; margin: 0;"
+                >
+                <label for="autoCloseEnabled" style="margin: 0; cursor: pointer;">
+                  Tickets automatisch schließen nach Inaktivität
+                </label>
+              </div>
+              <div style="margin-top: 0.75rem;">
+                <input
+                  type="number"
+                  name="autoCloseDays"
+                  value="<%= cfg.autoCloseDays || 7 %>"
+                  min="1"
+                  max="365"
+                  placeholder="7"
+                  style="width: 100px;"
+                  <%= !cfg.autoCloseEnabled ? 'disabled' : '' %>
+                >
+                <span style="margin-left: 0.5rem;">Tage</span>
+              </div>
+              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
+                Tickets ohne Aktivität werden automatisch geschlossen.
+              </small>
+            </label>
+          </div>
+
+          <!-- Custom Bot-Avatar (Basic+) -->
+          <div style="margin-bottom: 1.5rem;">
+            <label>
+              🎨 Custom Bot-Avatar URL
+              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">BASIC+</span>
+              <input
+                type="url"
+                name="customAvatarUrl"
+                value="<%= cfg.customAvatarUrl || '' %>"
+                placeholder="https://example.com/avatar.png"
+                style="margin-top: 0.5rem;"
+              >
+              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
+                Direkter Link zu einem Bild (wird als Bot-Avatar im Ticket-Embed angezeigt).<br>
+                Empfohlen: 512x512px, PNG/JPG
+              </small>
+            </label>
+          </div>
+
+          <% } else if (premiumTier === 'basic') { %>
+          <!-- Basic User: Nur Custom Avatar -->
+          <div style="margin-bottom: 1.5rem;">
+            <label>
+              🎨 Custom Bot-Avatar URL
+              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">BASIC+</span>
+              <input
+                type="url"
+                name="customAvatarUrl"
+                value="<%= cfg.customAvatarUrl || '' %>"
+                placeholder="https://example.com/avatar.png"
+                style="margin-top: 0.5rem;"
+              >
+              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
+                Direkter Link zu einem Bild (wird als Bot-Avatar im Ticket-Embed angezeigt).<br>
+                Empfohlen: 512x512px, PNG/JPG
+              </small>
+            </label>
+          </div>
+
+          <!-- Pro-Features Locked -->
+          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-top: 1rem;">
+            <strong>📧 Email-Benachrichtigungen</strong>
+            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
+            <br>
+            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
+              Erhalte Email-Benachrichtigungen bei neuen Tickets. Nur verfügbar mit Premium Pro.
+            </span>
+          </div>
+
+          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-top: 1rem;">
+            <strong>⏰ Auto-Close System</strong>
+            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
+            <br>
+            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
+              Tickets automatisch nach X Tagen schließen. Nur verfügbar mit Premium Pro.
+            </span>
+          </div>
+
+          <% } else { %>
+          <!-- Free User: Alle Features Locked -->
+          <div style="padding: 1rem; background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; border-radius: 6px; margin-bottom: 1rem;">
+            <strong>🎨 Custom Bot-Avatar</strong>
+            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">BASIC+</span>
+            <br>
+            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
+              Passe den Bot-Avatar im Ticket-Embed an. Verfügbar ab Premium Basic.
+            </span>
+          </div>
+
+          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-bottom: 1rem;">
+            <strong>📧 Email-Benachrichtigungen</strong>
+            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
+            <br>
+            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
+              Erhalte Email-Benachrichtigungen bei neuen Tickets. Nur verfügbar mit Premium Pro.
+            </span>
+          </div>
+
+          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px;">
+            <strong>⏰ Auto-Close System</strong>
+            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
+            <br>
+            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
+              Tickets automatisch nach X Tagen schließen. Nur verfügbar mit Premium Pro.
+            </span>
+          </div>
+          <% } %>
+        </div>
+
+        <!-- Kategorie-Limit Anzeige -->
+        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--fieldset-bg); border-radius: 8px; border-left: 4px solid var(--accent-color);">
+          <strong>📁 Ticket-Kategorien Limit</strong>
+          <br>
+          <span style="font-size: 1.2rem; color: var(--accent-color); font-weight: bold; margin-top: 0.5rem; display: block;">
+            <%= premiumTier === 'pro' || guildId === '1291125037876904026' ? '♾️ Unbegrenzt' : premiumTier === 'basic' ? '7 Kategorien' : '3 Kategorien' %>
+          </span>
+          <% if (premiumTier === 'none') { %>
+          <span style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
+            💡 Mit Premium Basic: 7 Kategorien | Mit Premium Pro: Unbegrenzt
+          </span>
+          <% } %>
+        </div>
+
+        <% if (isPremium) { %>
+        <p style="margin-top: 1rem; text-align: center;">
+          <a href="/premium" style="color: #667eea; text-decoration: none; font-weight: 600;">
+            Verwalte dein Premium-Abo →
+          </a>
+        </p>
+        <% } %>
+      </fieldset>
+
       <!-- GitHub Commit Logs (NEU) -->
       <fieldset>
         <legend><i class="fab fa-github"></i> GitHub Commit Logs</legend>
@@ -851,6 +1114,15 @@ document.addEventListener('click', function(event) {
     menu.classList.remove('show');
   }
 });
+
+// Auto-Close Checkbox Toggle
+const autoCloseCheckbox = document.getElementById('autoCloseEnabled');
+const autoCloseDaysInput = document.querySelector('input[name="autoCloseDays"]');
+if(autoCloseCheckbox && autoCloseDaysInput) {
+  autoCloseCheckbox.addEventListener('change', function() {
+    autoCloseDaysInput.disabled = !this.checked;
+  });
+}
 </script>
 </body>
 </html>
