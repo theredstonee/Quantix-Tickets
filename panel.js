@@ -609,6 +609,88 @@ module.exports = (client)=>{
     res.sendFile(file);
   });
 
+  router.get('/analytics', isAuth, async (req,res)=>{
+    try {
+      const guildId = req.session.selectedGuild;
+
+      // Prüfe ob Pro Feature
+      const premiumInfo = getPremiumInfo(guildId);
+      if (premiumInfo.tier !== 'pro' && guildId !== '1291125037876904026') {
+        return res.redirect('/premium?msg=analytics-requires-pro');
+      }
+
+      const tickets = loadTickets(guildId);
+      const guild = await client.guilds.fetch(guildId);
+
+      // Statistiken berechnen
+      const stats = {
+        total: tickets.length,
+        closed: tickets.filter(t => t.status === 'geschlossen').length,
+        open: tickets.filter(t => t.status === 'offen' || t.status !== 'geschlossen').length,
+        claimed: tickets.filter(t => t.claimer).length,
+        byTopic: {},
+        byPriority: { '0': 0, '1': 0, '2': 0 },
+        topClaimers: [],
+        last30Days: {
+          today: 0,
+          week: 0,
+          month: 0,
+          avgPerDay: 0
+        }
+      };
+
+      // Tickets nach Topic zählen
+      tickets.forEach(t => {
+        if (t.topic) {
+          stats.byTopic[t.topic] = (stats.byTopic[t.topic] || 0) + 1;
+        }
+      });
+
+      // Tickets nach Priorität zählen
+      tickets.forEach(t => {
+        const priority = t.priority || 0;
+        stats.byPriority[priority.toString()] = (stats.byPriority[priority.toString()] || 0) + 1;
+      });
+
+      // Top Claimer berechnen
+      const claimerCounts = {};
+      tickets.forEach(t => {
+        if (t.claimer) {
+          claimerCounts[t.claimer] = (claimerCounts[t.claimer] || 0) + 1;
+        }
+      });
+      stats.topClaimers = Object.entries(claimerCounts)
+        .map(([userId, count]) => ({ userId, count }))
+        .sort((a, b) => b.count - a.count);
+
+      // Letzte 30 Tage Statistiken
+      const now = Date.now();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      const today = new Date().setHours(0, 0, 0, 0);
+      const weekAgo = now - (7 * oneDayMs);
+      const monthAgo = now - (30 * oneDayMs);
+
+      tickets.forEach(t => {
+        if (t.timestamp >= today) stats.last30Days.today++;
+        if (t.timestamp >= weekAgo) stats.last30Days.week++;
+        if (t.timestamp >= monthAgo) stats.last30Days.month++;
+      });
+
+      stats.last30Days.avgPerDay = stats.last30Days.month > 0
+        ? Math.round(stats.last30Days.month / 30 * 10) / 10
+        : 0;
+
+      res.render('analytics', {
+        guildName: guild.name,
+        stats: stats,
+        guildId: guildId
+      });
+    } catch(e) {
+      console.error('Analytics Error:', e);
+      res.status(500).send('Fehler beim Laden der Analytics');
+    }
+  });
+
   router.post('/webhook/github', async (req, res) => {
     try {
       res.status(200).send('OK');

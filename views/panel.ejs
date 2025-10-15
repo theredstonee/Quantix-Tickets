@@ -493,6 +493,11 @@
     <a href="/tickets" class="secondary-btn">
       <i class="fas fa-history"></i> <%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : lang === 'he' ? 'היסטוריית כרטיסים' : lang === 'ja' ? 'チケット履歴' : lang === 'ru' ? 'История тикетов' : lang === 'pt' ? 'Histórico de Tickets' : lang === 'es' ? 'Historial de Tickets' : lang === 'id' ? 'Riwayat Tiket' : lang === 'zh' ? '工单历史' : lang === 'ar' ? 'سجل التذاكر' : 'Ticket-Verlauf' %>
     </a>
+    <% if (premiumTier === 'pro' || guildId === '1291125037876904026') { %>
+    <a href="/analytics" class="secondary-btn">
+      <i class="fas fa-chart-line"></i> <%= lang === 'de' ? 'Analytics' : lang === 'en' ? 'Analytics' : lang === 'he' ? 'אנליטיקה' : lang === 'ja' ? 'アナリティクス' : lang === 'ru' ? 'Аналитика' : lang === 'pt' ? 'Análise' : lang === 'es' ? 'Analítica' : lang === 'id' ? 'Analitik' : lang === 'zh' ? '分析' : lang === 'ar' ? 'تحليلات' : 'Analytics' %>
+    </a>
+    <% } %>
   </div>
 
   <!-- Premium Badge -->
