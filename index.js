@@ -39,6 +39,7 @@ const {
 const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
 const { VERSION, COPYRIGHT } = require('./version.config');
 const { initEmailService, sendTicketNotification, getGuildEmail } = require('./email-notifications');
+const { sendDMNotification } = require('./dm-notifications');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -1216,6 +1217,22 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     }
   } catch (emailErr) {
     console.error('Email notification error:', emailErr);
+    // Fehler wird ignoriert, Ticket-Erstellung wird nicht blockiert
+  }
+
+  // Discord DM-Benachrichtigungen senden (nur für Pro)
+  try {
+    const ticketInfo = {
+      id: nr,
+      topic: topic.label,
+      user: interaction.user.tag || interaction.user.username,
+      guildName: interaction.guild.name,
+      timestamp: Date.now(),
+      formData: formData || {}
+    };
+    await sendDMNotification(client, guildId, ticketInfo);
+  } catch (dmErr) {
+    console.error('DM notification error:', dmErr);
     // Fehler wird ignoriert, Ticket-Erstellung wird nicht blockiert
   }
 

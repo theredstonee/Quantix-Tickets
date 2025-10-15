@@ -431,6 +431,23 @@ module.exports = (client)=>{
         cfg.customAvatarUrl = null;
       }
 
+      // Discord DM-Benachrichtigungen (Pro Feature)
+      if(req.body.dmNotificationUsers){
+        const userIdsText = req.body.dmNotificationUsers.trim();
+        if(userIdsText){
+          // Parse User-IDs (eine pro Zeile)
+          const userIds = userIdsText
+            .split('\n')
+            .map(id => id.trim())
+            .filter(id => /^\d{17,20}$/.test(id)); // Discord User IDs sind 17-20 Zeichen lang
+          cfg.dmNotificationUsers = userIds;
+        } else {
+          cfg.dmNotificationUsers = [];
+        }
+      } else {
+        cfg.dmNotificationUsers = [];
+      }
+
       const labelInputs = [].concat(req.body.label||[]);
       const valueInputs = [].concat(req.body.value||[]);
       const emojiInputs = [].concat(req.body.emoji||[]);

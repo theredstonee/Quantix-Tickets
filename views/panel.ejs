@@ -649,7 +649,8 @@
           { name: 'Ticket-Statistiken', icon: '📊', free: false, basic: true, pro: true },
           { name: 'Priority Support', icon: '⚡', free: false, basic: true, pro: true },
           { name: 'Auto-Close System', icon: '⏰', free: false, basic: false, pro: true },
-          { name: 'Email-Benachrichtigungen', icon: '📧', free: false, basic: false, pro: true, config: true }
+          { name: 'Email-Benachrichtigungen', icon: '📧', free: false, basic: false, pro: true, config: true },
+          { name: 'Discord DM-Benachrichtigungen', icon: '🔔', free: false, basic: false, pro: true, config: true }
         ];
         %>
 
@@ -803,6 +804,24 @@
             </label>
           </div>
 
+          <!-- Discord DM-Benachrichtigungen (nur Pro) -->
+          <div style="margin-bottom: 1.5rem;">
+            <label>
+              🔔 Discord DM-Benachrichtigungen
+              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
+              <textarea
+                name="dmNotificationUsers"
+                rows="3"
+                placeholder="User-IDs (eine pro Zeile)"
+                style="margin-top: 0.5rem; font-family: monospace; font-size: 0.9rem;"
+              ><%= (cfg.dmNotificationUsers || []).join('\n') %></textarea>
+              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
+                Gib die Discord User-IDs der Team-Mitglieder ein, die per DM über neue Tickets benachrichtigt werden sollen.<br>
+                📝 Eine User-ID pro Zeile. Um eine User-ID zu erhalten: Rechtsklick auf User → "ID kopieren" (Developer Mode muss aktiviert sein)
+              </small>
+            </label>
+          </div>
+
           <% } else if (premiumTier === 'basic') { %>
           <!-- Basic User: Nur Custom Avatar -->
           <div style="margin-bottom: 1.5rem;">
@@ -842,6 +861,15 @@
             </span>
           </div>
 
+          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-top: 1rem;">
+            <strong>🔔 Discord DM-Benachrichtigungen</strong>
+            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
+            <br>
+            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
+              Team-Mitglieder erhalten Discord-DMs bei neuen Tickets. Nur verfügbar mit Premium Pro.
+            </span>
+          </div>
+
           <% } else { %>
           <!-- Free User: Alle Features Locked -->
           <div style="padding: 1rem; background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; border-radius: 6px; margin-bottom: 1rem;">
@@ -862,12 +890,21 @@
             </span>
           </div>
 
-          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px;">
+          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-bottom: 1rem;">
             <strong>⏰ Auto-Close System</strong>
             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
             <br>
             <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
               Tickets automatisch nach X Tagen schließen. Nur verfügbar mit Premium Pro.
+            </span>
+          </div>
+
+          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px;">
+            <strong>🔔 Discord DM-Benachrichtigungen</strong>
+            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
+            <br>
+            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
+              Team-Mitglieder erhalten Discord-DMs bei neuen Tickets. Nur verfügbar mit Premium Pro.
             </span>
           </div>
           <% } %>

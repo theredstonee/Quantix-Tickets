@@ -37,6 +37,7 @@ function getDefaultConfig() {
         prioritySupport: false,
         autoClose: false,
         emailNotifications: false,
+        dmNotifications: false,
         unlimitedCategories: false,
         maxCategories: 3
       }
@@ -57,6 +58,7 @@ const PREMIUM_TIERS = {
       prioritySupport: false,
       autoClose: false,
       emailNotifications: false,
+      dmNotifications: false,
       unlimitedCategories: false,
       maxCategories: 3
     }
@@ -72,6 +74,7 @@ const PREMIUM_TIERS = {
       prioritySupport: true,
       autoClose: false,
       emailNotifications: false,
+      dmNotifications: false,
       unlimitedCategories: false,
       maxCategories: 7
     }
@@ -87,6 +90,7 @@ const PREMIUM_TIERS = {
       prioritySupport: true,
       autoClose: true,
       emailNotifications: true,
+      dmNotifications: true,
       unlimitedCategories: true,
       maxCategories: 999
     }
