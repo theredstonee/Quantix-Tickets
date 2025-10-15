@@ -10,7 +10,15 @@ module.exports = {
     .setName('premium-role')
     .setDescription('Manage Premium Role on Theredstonee Projects (Owner Only)')
     .setDescriptionLocalizations({
-      de: 'Premium-Rolle auf Theredstonee Projects verwalten (Nur Owner)'
+      de: 'Premium-Rolle auf Theredstonee Projects verwalten (Nur Owner)',
+      'en-US': 'Manage Premium Role on Theredstonee Projects (Owner Only)',
+      he: 'נהל תפקיד Premium ב-Theredstonee Projects (בעלים בלבד)',
+      ja: 'Theredstonee ProjectsでPremiumロールを管理 (オーナー専用)',
+      ru: 'Управление Premium ролью на Theredstonee Projects (только владелец)',
+      'pt-BR': 'Gerenciar Cargo Premium no Theredstonee Projects (Apenas Proprietário)',
+      'es-ES': 'Administrar Rol Premium en Theredstonee Projects (Solo Propietario)',
+      id: 'Kelola Peran Premium di Theredstonee Projects (Hanya Pemilik)',
+      ar: 'إدارة دور Premium في Theredstonee Projects (المالك فقط)'
     })
     .setDMPermission(false)
     .addSubcommand(subcommand =>
@@ -18,14 +26,30 @@ module.exports = {
         .setName('add')
         .setDescription('Add Premium role to a user')
         .setDescriptionLocalizations({
-          de: 'Premium-Rolle einem User hinzufügen'
+          de: 'Premium-Rolle einem User hinzufügen',
+          'en-US': 'Add Premium role to a user',
+          he: 'הוסף תפקיד Premium למשתמש',
+          ja: 'ユーザーにPremiumロールを追加',
+          ru: 'Добавить Premium роль пользователю',
+          'pt-BR': 'Adicionar cargo Premium a um usuário',
+          'es-ES': 'Agregar rol Premium a un usuario',
+          id: 'Tambahkan peran Premium ke pengguna',
+          ar: 'إضافة دور Premium إلى مستخدم'
         })
         .addUserOption(option =>
           option
             .setName('user')
             .setDescription('User who should receive the Premium role')
             .setDescriptionLocalizations({
-              de: 'User der die Premium-Rolle erhalten soll'
+              de: 'User der die Premium-Rolle erhalten soll',
+              'en-US': 'User who should receive the Premium role',
+              he: 'משתמש שאמור לקבל את תפקיד Premium',
+              ja: 'Premiumロールを受け取るユーザー',
+              ru: 'Пользователь, который должен получить Premium роль',
+              'pt-BR': 'Usuário que deve receber o cargo Premium',
+              'es-ES': 'Usuario que debe recibir el rol Premium',
+              id: 'Pengguna yang harus menerima peran Premium',
+              ar: 'المستخدم الذي يجب أن يحصل على دور Premium'
             })
             .setRequired(true)
         )
@@ -35,14 +59,30 @@ module.exports = {
         .setName('remove')
         .setDescription('Remove Premium role from a user')
         .setDescriptionLocalizations({
-          de: 'Premium-Rolle von einem User entfernen'
+          de: 'Premium-Rolle von einem User entfernen',
+          'en-US': 'Remove Premium role from a user',
+          he: 'הסר תפקיד Premium ממשתמש',
+          ja: 'ユーザーからPremiumロールを削除',
+          ru: 'Удалить Premium роль у пользователя',
+          'pt-BR': 'Remover cargo Premium de um usuário',
+          'es-ES': 'Eliminar rol Premium de un usuario',
+          id: 'Hapus peran Premium dari pengguna',
+          ar: 'إزالة دور Premium من مستخدم'
         })
         .addUserOption(option =>
           option
             .setName('user')
             .setDescription('User who should lose the Premium role')
             .setDescriptionLocalizations({
-              de: 'User der die Premium-Rolle verlieren soll'
+              de: 'User der die Premium-Rolle verlieren soll',
+              'en-US': 'User who should lose the Premium role',
+              he: 'משתמש שצריך לאבד את תפקיד Premium',
+              ja: 'Premiumロールを失うユーザー',
+              ru: 'Пользователь, который должен потерять Premium роль',
+              'pt-BR': 'Usuário que deve perder o cargo Premium',
+              'es-ES': 'Usuario que debe perder el rol Premium',
+              id: 'Pengguna yang harus kehilangan peran Premium',
+              ar: 'المستخدم الذي يجب أن يفقد دور Premium'
             })
             .setRequired(true)
         )

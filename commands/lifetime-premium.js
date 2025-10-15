@@ -8,7 +8,15 @@ module.exports = {
     .setName('lifetime-premium')
     .setDescription('Manage Lifetime Premium (Owner Only)')
     .setDescriptionLocalizations({
-      de: 'Lifetime Premium verwalten (Nur Owner)'
+      de: 'Lifetime Premium verwalten (Nur Owner)',
+      'en-US': 'Manage Lifetime Premium (Owner Only)',
+      he: 'נהל פרימיום לכל החיים (בעלים בלבד)',
+      ja: 'ライフタイムプレミアムを管理 (オーナー専用)',
+      ru: 'Управление Lifetime Premium (только владелец)',
+      'pt-BR': 'Gerenciar Premium Vitalício (Apenas Proprietário)',
+      'es-ES': 'Administrar Premium de por Vida (Solo Propietario)',
+      id: 'Kelola Premium Seumur Hidup (Hanya Pemilik)',
+      ar: 'إدارة Premium مدى الحياة (المالك فقط)'
     })
     .setDMPermission(false)
     .addSubcommand(subcommand =>
@@ -16,14 +24,30 @@ module.exports = {
         .setName('add')
         .setDescription('Add Lifetime Premium to a server')
         .setDescriptionLocalizations({
-          de: 'Lifetime Premium zu einem Server hinzufügen'
+          de: 'Lifetime Premium zu einem Server hinzufügen',
+          'en-US': 'Add Lifetime Premium to a server',
+          he: 'הוסף פרימיום לכל החיים לשרת',
+          ja: 'サーバーにライフタイムプレミアムを追加',
+          ru: 'Добавить Lifetime Premium на сервер',
+          'pt-BR': 'Adicionar Premium Vitalício a um servidor',
+          'es-ES': 'Agregar Premium de por Vida a un servidor',
+          id: 'Tambahkan Premium Seumur Hidup ke server',
+          ar: 'إضافة Premium مدى الحياة إلى خادم'
         })
         .addStringOption(option =>
           option
             .setName('server')
             .setDescription('Server (Guild ID or name)')
             .setDescriptionLocalizations({
-              de: 'Server (Guild ID oder Name)'
+              de: 'Server (Guild ID oder Name)',
+              'en-US': 'Server (Guild ID or name)',
+              he: 'שרת (מזהה או שם)',
+              ja: 'サーバー（ギルドIDまたは名前）',
+              ru: 'Сервер (ID или имя)',
+              'pt-BR': 'Servidor (ID da guilda ou nome)',
+              'es-ES': 'Servidor (ID del servidor o nombre)',
+              id: 'Server (ID Guild atau nama)',
+              ar: 'الخادم (معرف الخادم أو الاسم)'
             })
             .setRequired(true)
             .setAutocomplete(true)
@@ -33,7 +57,15 @@ module.exports = {
             .setName('tier')
             .setDescription('Premium Tier')
             .setDescriptionLocalizations({
-              de: 'Premium Tier'
+              de: 'Premium Stufe',
+              'en-US': 'Premium Tier',
+              he: 'רמת פרימיום',
+              ja: 'プレミアム層',
+              ru: 'Уровень Premium',
+              'pt-BR': 'Nível Premium',
+              'es-ES': 'Nivel Premium',
+              id: 'Tingkat Premium',
+              ar: 'مستوى Premium'
             })
             .setRequired(true)
             .addChoices(
@@ -46,7 +78,15 @@ module.exports = {
             .setName('buyer')
             .setDescription('User who bought Premium (will receive role on Theredstonee Projects)')
             .setDescriptionLocalizations({
-              de: 'User der Premium gekauft hat (erhält Rolle auf Theredstonee Projects)'
+              de: 'User der Premium gekauft hat (erhält Rolle auf Theredstonee Projects)',
+              'en-US': 'User who bought Premium (will receive role on Theredstonee Projects)',
+              he: 'משתמש שקנה Premium (יקבל תפקיד בשרת Theredstonee Projects)',
+              ja: 'Premiumを購入したユーザー（Theredstonee Projectsでロールを受け取る）',
+              ru: 'Пользователь, купивший Premium (получит роль на Theredstonee Projects)',
+              'pt-BR': 'Usuário que comprou Premium (receberá cargo no Theredstonee Projects)',
+              'es-ES': 'Usuario que compró Premium (recibirá rol en Theredstonee Projects)',
+              id: 'Pengguna yang membeli Premium (akan menerima peran di Theredstonee Projects)',
+              ar: 'المستخدم الذي اشترى Premium (سيحصل على دور في Theredstonee Projects)'
             })
             .setRequired(false)
         )
@@ -56,14 +96,30 @@ module.exports = {
         .setName('remove')
         .setDescription('Remove Lifetime Premium from a server')
         .setDescriptionLocalizations({
-          de: 'Lifetime Premium von einem Server entfernen'
+          de: 'Lifetime Premium von einem Server entfernen',
+          'en-US': 'Remove Lifetime Premium from a server',
+          he: 'הסר פרימיום לכל החיים משרת',
+          ja: 'サーバーからライフタイムプレミアムを削除',
+          ru: 'Удалить Lifetime Premium с сервера',
+          'pt-BR': 'Remover Premium Vitalício de um servidor',
+          'es-ES': 'Eliminar Premium de por Vida de un servidor',
+          id: 'Hapus Premium Seumur Hidup dari server',
+          ar: 'إزالة Premium مدى الحياة من خادم'
         })
         .addStringOption(option =>
           option
             .setName('server')
             .setDescription('Server (Guild ID or name)')
             .setDescriptionLocalizations({
-              de: 'Server (Guild ID oder Name)'
+              de: 'Server (Guild ID oder Name)',
+              'en-US': 'Server (Guild ID or name)',
+              he: 'שרת (מזהה או שם)',
+              ja: 'サーバー（ギルドIDまたは名前）',
+              ru: 'Сервер (ID или имя)',
+              'pt-BR': 'Servidor (ID da guilda ou nome)',
+              'es-ES': 'Servidor (ID del servidor o nombre)',
+              id: 'Server (ID Guild atau nama)',
+              ar: 'الخادم (معرف الخادم أو الاسم)'
             })
             .setRequired(true)
             .setAutocomplete(true)
@@ -74,7 +130,15 @@ module.exports = {
         .setName('list')
         .setDescription('List all servers with Lifetime Premium')
         .setDescriptionLocalizations({
-          de: 'Alle Server mit Lifetime Premium auflisten'
+          de: 'Alle Server mit Lifetime Premium auflisten',
+          'en-US': 'List all servers with Lifetime Premium',
+          he: 'הצג את כל השרתים עם פרימיום לכל החיים',
+          ja: 'ライフタイムプレミアムを持つすべてのサーバーをリスト表示',
+          ru: 'Список всех серверов с Lifetime Premium',
+          'pt-BR': 'Listar todos os servidores com Premium Vitalício',
+          'es-ES': 'Listar todos los servidores con Premium de por Vida',
+          id: 'Daftar semua server dengan Premium Seumur Hidup',
+          ar: 'قائمة بجميع الخوادم التي لديها Premium مدى الحياة'
         })
     ),
 

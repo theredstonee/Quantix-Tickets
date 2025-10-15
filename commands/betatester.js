@@ -8,7 +8,15 @@ module.exports = {
     .setName('betatester')
     .setDescription('Manage Betatester Status (Owner Only)')
     .setDescriptionLocalizations({
-      de: 'Betatester-Status verwalten (Nur Owner)'
+      de: 'Betatester-Status verwalten (Nur Owner)',
+      'en-US': 'Manage Betatester Status (Owner Only)',
+      he: 'נהל סטטוס Betatester (בעלים בלבד)',
+      ja: 'Betatesterステータスを管理 (オーナー専用)',
+      ru: 'Управление статусом Betatester (только владелец)',
+      'pt-BR': 'Gerenciar Status de Betatester (Apenas Proprietário)',
+      'es-ES': 'Administrar Estado de Betatester (Solo Propietario)',
+      id: 'Kelola Status Betatester (Hanya Pemilik)',
+      ar: 'إدارة حالة Betatester (المالك فقط)'
     })
     .setDMPermission(false)
     .addSubcommand(subcommand =>
@@ -16,34 +24,58 @@ module.exports = {
         .setName('add')
         .setDescription('Add Betatester status to a server')
         .setDescriptionLocalizations({
-          de: 'Betatester-Status zu einem Server hinzufügen'
+          de: 'Betatester-Status zu einem Server hinzufügen',
+          'en-US': 'Add Betatester status to a server',
+          he: 'הוסף סטטוס Betatester לשרת',
+          ja: 'サーバーにBetatesterステータスを追加',
+          ru: 'Добавить статус Betatester на сервер',
+          'pt-BR': 'Adicionar status de Betatester a um servidor',
+          'es-ES': 'Agregar estado de Betatester a un servidor',
+          id: 'Tambahkan status Betatester ke server',
+          ar: 'إضافة حالة Betatester إلى خادم'
         })
         .addStringOption(option =>
           option
             .setName('server')
             .setDescription('Server (Guild ID or name)')
             .setDescriptionLocalizations({
-              de: 'Server (Guild ID oder Name)'
+              de: 'Server (Guild ID oder Name)',
+              'en-US': 'Server (Guild ID or name)',
+              he: 'שרת (מזהה או שם)',
+              ja: 'サーバー（ギルドIDまたは名前）',
+              ru: 'Сервер (ID или имя)',
+              'pt-BR': 'Servidor (ID da guilda ou nome)',
+              'es-ES': 'Servidor (ID del servidor o nombre)',
+              id: 'Server (ID Guild atau nama)',
+              ar: 'الخادم (معرف الخادم أو الاسم)'
             })
             .setRequired(true)
             .setAutocomplete(true)
         )
         .addIntegerOption(option =>
           option
-            .setName('zeitraum')
+            .setName('duration')
             .setDescription('Duration in days (default: 30)')
             .setDescriptionLocalizations({
-              de: 'Zeitraum in Tagen (Standard: 30)'
+              de: 'Zeitraum in Tagen (Standard: 30)',
+              'en-US': 'Duration in days (default: 30)',
+              he: 'משך בימים (ברירת מחדל: 30)',
+              ja: '期間（日数、デフォルト：30）',
+              ru: 'Длительность в днях (по умолчанию: 30)',
+              'pt-BR': 'Duração em dias (padrão: 30)',
+              'es-ES': 'Duración en días (predeterminado: 30)',
+              id: 'Durasi dalam hari (default: 30)',
+              ar: 'المدة بالأيام (الافتراضي: 30)'
             })
             .setRequired(false)
             .addChoices(
-              { name: '7 Tage', value: 7 },
-              { name: '14 Tage', value: 14 },
-              { name: '30 Tage (Standard)', value: 30 },
-              { name: '60 Tage', value: 60 },
-              { name: '90 Tage', value: 90 },
-              { name: '180 Tage (6 Monate)', value: 180 },
-              { name: '365 Tage (1 Jahr)', value: 365 }
+              { name: '7 Days / 7 Tage', value: 7 },
+              { name: '14 Days / 14 Tage', value: 14 },
+              { name: '30 Days / 30 Tage (Default)', value: 30 },
+              { name: '60 Days / 60 Tage', value: 60 },
+              { name: '90 Days / 90 Tage', value: 90 },
+              { name: '180 Days / 180 Tage (6 Months)', value: 180 },
+              { name: '365 Days / 365 Tage (1 Year)', value: 365 }
             )
         )
         .addUserOption(option =>
@@ -51,7 +83,15 @@ module.exports = {
             .setName('tester')
             .setDescription('User who is the betatester (will receive role on Theredstonee Projects)')
             .setDescriptionLocalizations({
-              de: 'User der Betatester ist (erhält Rolle auf Theredstonee Projects)'
+              de: 'User der Betatester ist (erhält Rolle auf Theredstonee Projects)',
+              'en-US': 'User who is the betatester (will receive role on Theredstonee Projects)',
+              he: 'משתמש שהוא ה-Betatester (יקבל תפקיד ב-Theredstonee Projects)',
+              ja: 'Betatesterであるユーザー（Theredstonee Projectsでロールを受け取る）',
+              ru: 'Пользователь-бета-тестер (получит роль на Theredstonee Projects)',
+              'pt-BR': 'Usuário que é o betatester (receberá cargo no Theredstonee Projects)',
+              'es-ES': 'Usuario que es el betatester (recibirá rol en Theredstonee Projects)',
+              id: 'Pengguna yang merupakan betatester (akan menerima peran di Theredstonee Projects)',
+              ar: 'المستخدم الذي هو المختبر (سيحصل على دور في Theredstonee Projects)'
             })
             .setRequired(false)
         )
@@ -61,14 +101,30 @@ module.exports = {
         .setName('remove')
         .setDescription('Remove Betatester status from a server')
         .setDescriptionLocalizations({
-          de: 'Betatester-Status von einem Server entfernen'
+          de: 'Betatester-Status von einem Server entfernen',
+          'en-US': 'Remove Betatester status from a server',
+          he: 'הסר סטטוס Betatester משרת',
+          ja: 'サーバーからBetatesterステータスを削除',
+          ru: 'Удалить статус Betatester с сервера',
+          'pt-BR': 'Remover status de Betatester de um servidor',
+          'es-ES': 'Eliminar estado de Betatester de un servidor',
+          id: 'Hapus status Betatester dari server',
+          ar: 'إزالة حالة Betatester من خادم'
         })
         .addStringOption(option =>
           option
             .setName('server')
             .setDescription('Server (Guild ID or name)')
             .setDescriptionLocalizations({
-              de: 'Server (Guild ID oder Name)'
+              de: 'Server (Guild ID oder Name)',
+              'en-US': 'Server (Guild ID or name)',
+              he: 'שרת (מזהה או שם)',
+              ja: 'サーバー（ギルドIDまたは名前）',
+              ru: 'Сервер (ID или имя)',
+              'pt-BR': 'Servidor (ID da guilda ou nome)',
+              'es-ES': 'Servidor (ID del servidor o nombre)',
+              id: 'Server (ID Guild atau nama)',
+              ar: 'الخادم (معرف الخادم أو الاسم)'
             })
             .setRequired(true)
             .setAutocomplete(true)
@@ -79,7 +135,15 @@ module.exports = {
         .setName('list')
         .setDescription('List all servers with Betatester status')
         .setDescriptionLocalizations({
-          de: 'Alle Server mit Betatester-Status auflisten'
+          de: 'Alle Server mit Betatester-Status auflisten',
+          'en-US': 'List all servers with Betatester status',
+          he: 'הצג את כל השרתים עם סטטוס Betatester',
+          ja: 'Betatesterステータスを持つすべてのサーバーをリスト表示',
+          ru: 'Список всех серверов со статусом Betatester',
+          'pt-BR': 'Listar todos os servidores com status de Betatester',
+          'es-ES': 'Listar todos los servidores con estado de Betatester',
+          id: 'Daftar semua server dengan status Betatester',
+          ar: 'قائمة بجميع الخوادم التي لديها حالة Betatester'
         })
     ),
 
@@ -126,7 +190,7 @@ module.exports = {
     try {
       if (subcommand === 'add') {
         const guildId = interaction.options.getString('server');
-        const days = interaction.options.getInteger('zeitraum') || 30; // Default: 30 Tage
+        const days = interaction.options.getInteger('duration') || 30; // Default: 30 Days
         const tester = interaction.options.getUser('tester');
 
         // Fetch guild info
