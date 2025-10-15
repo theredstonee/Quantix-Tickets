@@ -1,5 +1,39 @@
 # Changelog
 
+## [Beta 0.3.7] - 2025-10-15
+
+### Added
+- **Discord DM-Benachrichtigungen** (Pro Feature)
+  - Team-Mitglieder können per Discord DM über neue Tickets benachrichtigt werden
+  - Konfigurierbar über das Web-Panel (User-IDs Textarea)
+  - DM-Embed enthält Ticket-ID, Kategorie, Ersteller und Formular-Daten
+  - Automatische Fehlerbehandlung bei fehlgeschlagenen DMs
+  - Feature-Gate: Nur für Pro-Tier verfügbar
+  - Neue Datei: `dm-notifications.js` mit vollständiger Implementierung
+
+- **Analytics Dashboard** (Pro Feature)
+  - Umfassende Ticket-Statistiken mit Visualisierungen
+  - Übersichts-Cards: Gesamt-Tickets, Geschlossene, Offene, Geclaimte
+  - Bar-Chart für Tickets nach Kategorie/Thema
+  - Prioritäts-Verteilung (Grün/Orange/Rot)
+  - Top-Claimer Tabelle mit Ticket-Anzahl
+  - Zeitbasierte Statistiken: Heute, letzte 7 Tage, letzte 30 Tage, Durchschnitt pro Tag
+  - Neue Route: `/analytics` mit Pro-Feature-Check
+  - Neue Datei: `views/analytics.ejs` mit vollständigem Dashboard
+  - Navigation-Button im Panel (nur für Pro-User sichtbar)
+
+### Changed
+- **Discord Markdown Formatting**: Alle Discord-Nachrichten nutzen jetzt Discord's natives Markdown (`**text**`) statt HTML-Tags (`<strong>text</strong>`)
+  - Aktualisiert in allen 9 Sprachen: Deutsch, Englisch, Arabisch, Spanisch, Hebräisch, Portugiesisch, Russisch, Japanisch, Indonesisch
+  - Betrifft Priority-Änderungen, Sprach-Änderungen und Log-Nachrichten
+  - Bessere Darstellung in Discord-Clients
+
+### Fixed
+- **Navigation-Button**: "Zurück zum Dashboard" Button in `premium.ejs` verweist jetzt korrekt auf `/panel` statt `/dashboard`
+- **Premium Features**: `dmNotifications` Feature-Flag wurde zu allen drei Tier-Definitionen hinzugefügt
+
+---
+
 ## [Beta 0.3.6] - 2025-10-14
 
 ### Changed

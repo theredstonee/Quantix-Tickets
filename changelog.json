@@ -1,6 +1,75 @@
 {
-  "currentVersion": "Beta 0.3.6",
+  "currentVersion": "Beta 0.3.7",
   "versions": [
+    {
+      "version": "Beta 0.3.7",
+      "date": "2025-10-15",
+      "changes": {
+        "de": [
+          "🔔 Discord DM-Benachrichtigungen (Pro Feature)",
+          "📊 Analytics Dashboard mit Statistiken und Visualisierungen (Pro Feature)",
+          "✨ Discord Markdown Formatting in allen Nachrichten (**text** statt <strong>text</strong>)",
+          "🔗 Navigation-Button Fix in premium.ejs (/panel statt /dashboard)",
+          "📈 Umfassende Ticket-Statistiken: Stats, Charts, Top-Claimer, Zeit-basierte Analysen"
+        ],
+        "en": [
+          "🔔 Discord DM Notifications (Pro Feature)",
+          "📊 Analytics Dashboard with statistics and visualizations (Pro Feature)",
+          "✨ Discord Markdown Formatting in all messages (**text** instead of <strong>text</strong>)",
+          "🔗 Navigation button fix in premium.ejs (/panel instead of /dashboard)",
+          "📈 Comprehensive ticket statistics: Stats, Charts, Top Claimers, Time-based analytics"
+        ],
+        "he": [
+          "🔔 התראות DM של Discord (תכונת Pro)",
+          "📊 לוח אנליטיקה עם סטטיסטיקות וויזואליזציות (תכונת Pro)",
+          "✨ פורמט Markdown של Discord בכל ההודעות (**text** במקום <strong>text</strong>)",
+          "🔗 תיקון כפתור ניווט ב-premium.ejs (/panel במקום /dashboard)",
+          "📈 סטטיסטיקות כרטיסים מקיפות: נתונים, תרשימים, Top Claimers, ניתוח מבוסס זמן"
+        ],
+        "ja": [
+          "🔔 Discord DM通知 (Proフィーチャー)",
+          "📊 統計とビジュアライゼーションを備えたAnalyticsダッシュボード (Proフィーチャー)",
+          "✨ すべてのメッセージでDiscord Markdownフォーマット (**text** の代わりに <strong>text</strong>)",
+          "🔗 premium.ejsのナビゲーションボタン修正 (/panelの代わりに/dashboard)",
+          "📈 包括的なチケット統計: 統計、チャート、トップクレーマー、時間ベースの分析"
+        ],
+        "ru": [
+          "🔔 Уведомления Discord DM (Pro функция)",
+          "📊 Панель аналитики со статистикой и визуализацией (Pro функция)",
+          "✨ Форматирование Discord Markdown во всех сообщениях (**text** вместо <strong>text</strong>)",
+          "🔗 Исправление кнопки навигации в premium.ejs (/panel вместо /dashboard)",
+          "📈 Всесторонняя статистика тикетов: Статистика, Графики, Топ-клаймеры, Анализ по времени"
+        ],
+        "pt": [
+          "🔔 Notificações DM do Discord (Recurso Pro)",
+          "📊 Painel de Análise com estatísticas e visualizações (Recurso Pro)",
+          "✨ Formatação Discord Markdown em todas as mensagens (**text** em vez de <strong>text</strong>)",
+          "🔗 Correção do botão de navegação em premium.ejs (/panel em vez de /dashboard)",
+          "📈 Estatísticas abrangentes de tickets: Estatísticas, Gráficos, Top Claimers, Análises baseadas em tempo"
+        ],
+        "es": [
+          "🔔 Notificaciones DM de Discord (Función Pro)",
+          "📊 Panel de Análisis con estadísticas y visualizaciones (Función Pro)",
+          "✨ Formato Discord Markdown en todos los mensajes (**text** en lugar de <strong>text</strong>)",
+          "🔗 Corrección del botón de navegación en premium.ejs (/panel en lugar de /dashboard)",
+          "📈 Estadísticas completas de tickets: Estadísticas, Gráficos, Top Claimers, Análisis basado en tiempo"
+        ],
+        "id": [
+          "🔔 Notifikasi DM Discord (Fitur Pro)",
+          "📊 Dashboard Analitik dengan statistik dan visualisasi (Fitur Pro)",
+          "✨ Pemformatan Discord Markdown di semua pesan (**text** bukan <strong>text</strong>)",
+          "🔗 Perbaikan tombol navigasi di premium.ejs (/panel bukan /dashboard)",
+          "📈 Statistik tiket komprehensif: Statistik, Grafik, Top Claimers, Analitik berbasis waktu"
+        ],
+        "ar": [
+          "🔔 إشعارات Discord DM (ميزة Pro)",
+          "📊 لوحة التحليلات مع الإحصائيات والتصورات (ميزة Pro)",
+          "✨ تنسيق Discord Markdown في جميع الرسائل (**text** بدلاً من <strong>text</strong>)",
+          "🔗 إصلاح زر التنقل في premium.ejs (/panel بدلاً من /dashboard)",
+          "📈 إحصائيات تذاكر شاملة: إحصائيات، رسوم بيانية، أفضل المطالبين، تحليلات على أساس الوقت"
+        ]
+      }
+    },
     {
       "version": "Beta 0.3.6",
       "date": "2025-10-14",
