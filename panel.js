@@ -13,6 +13,7 @@ const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 const { VERSION, COPYRIGHT } = require('./version.config');
 const { handleAutoUpdate, showUpdateLog } = require('./auto-update');
+const { isPremium, hasFeature, getPremiumTier, getPremiumInfo, activatePremium, deactivatePremium, renewPremium, PREMIUM_TIERS } = require('./premium');
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
@@ -346,6 +347,8 @@ module.exports = (client)=>{
       console.error('Fehler beim Laden der Channels/Rollen:', err);
     }
 
+    const premiumInfo = getPremiumInfo(guildId);
+
     res.render('panel', {
       cfg,
       msg: req.query.msg||null,
@@ -353,7 +356,10 @@ module.exports = (client)=>{
       roles,
       version: VERSION,
       guildName,
-      guildId
+      guildId,
+      premiumTier: premiumInfo.tier,
+      premiumTierName: premiumInfo.tierName,
+      isPremium: premiumInfo.isActive
     });
   });
 
@@ -849,6 +855,229 @@ module.exports = (client)=>{
     } catch (err) {
       console.error('Status Page Error:', err);
       res.status(500).send('Status-Seite konnte nicht geladen werden.');
+    }
+  });
+
+  // Premium Routes
+  router.get('/premium', isAuth, (req, res) => {
+    const guildId = req.session.selectedGuild;
+    const premiumInfo = getPremiumInfo(guildId);
+
+    res.render('premium', {
+      lang: res.locals.lang || 'de',
+      guildId: guildId,
+      currentTier: premiumInfo.tier,
+      currentTierName: premiumInfo.tierName,
+      expiresAt: premiumInfo.expiresAt,
+      version: VERSION
+    });
+  });
+
+  router.post('/purchase-premium', isAuth, async (req, res) => {
+    const guildId = req.session.selectedGuild;
+    const tier = req.body.tier;
+
+    if (!['basic', 'pro'].includes(tier)) {
+      return res.status(400).send('Ungültiges Premium-Tier');
+    }
+
+    try {
+      // WICHTIG: Hier Stripe Integration einbauen
+      // Für jetzt: Nur Platzhalter
+
+      const stripeEnabled = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'your_stripe_secret_key_here';
+
+      if (!stripeEnabled) {
+        // Entwicklungsmodus: Direkt aktivieren (NUR ZU TESTZWECKEN!)
+        console.log(`⚠️ ENTWICKLUNGSMODUS: Premium ${tier} für Guild ${guildId} aktiviert ohne Payment`);
+        activatePremium(guildId, tier, 'dev_subscription_' + Date.now(), 'dev_customer_' + guildId);
+        await logEvent(guildId, `💎 Premium ${tier.toUpperCase()} wurde aktiviert (Entwicklungsmodus)`, req.user);
+        return res.redirect('/premium?msg=success');
+      }
+
+      // Produktions-Modus: Stripe Checkout
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+      const prices = {
+        basic: process.env.STRIPE_PRICE_BASIC || 'price_basic',
+        pro: process.env.STRIPE_PRICE_PRO || 'price_pro'
+      };
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price: prices[tier],
+          quantity: 1
+        }],
+        mode: 'subscription',
+        success_url: `${BASE.replace(/\/$/, '')}/premium-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${BASE.replace(/\/$/, '')}/premium?guild=${guildId}`,
+        client_reference_id: guildId,
+        metadata: {
+          tier: tier,
+          guildId: guildId
+        }
+      });
+
+      res.redirect(303, session.url);
+    } catch (err) {
+      console.error('Premium Purchase Error:', err);
+      res.status(500).send('Fehler beim Erstellen der Zahlung. Bitte kontaktiere den Support.');
+    }
+  });
+
+  router.get('/premium-success', isAuth, async (req, res) => {
+    const sessionId = req.query.session_id;
+
+    if (!sessionId) {
+      return res.redirect('/premium');
+    }
+
+    try {
+      const stripeEnabled = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'your_stripe_secret_key_here';
+
+      if (!stripeEnabled) {
+        // Entwicklungsmodus
+        return res.send(`
+          <html>
+            <head>
+              <title>Premium Aktiviert</title>
+              <style>
+                body { font-family: Arial; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                .container { text-align: center; background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; }
+                h1 { font-size: 3rem; margin-bottom: 20px; }
+                a { display: inline-block; margin-top: 20px; padding: 15px 30px; background: white; color: #667eea; text-decoration: none; border-radius: 10px; font-weight: bold; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>💎 Premium Aktiviert!</h1>
+                <p>Dein Premium-Plan wurde erfolgreich aktiviert (Entwicklungsmodus).</p>
+                <a href="/panel">Zum Dashboard</a>
+              </div>
+            </body>
+          </html>
+        `);
+      }
+
+      // Stripe Session abrufen
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      if (session.payment_status === 'paid') {
+        const guildId = session.client_reference_id;
+        const tier = session.metadata.tier;
+
+        activatePremium(guildId, tier, session.subscription, session.customer);
+        await logEvent(guildId, `💎 Premium ${tier.toUpperCase()} wurde aktiviert!`, req.user);
+
+        res.send(`
+          <html>
+            <head>
+              <title>Premium Aktiviert</title>
+              <style>
+                body { font-family: Arial; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                .container { text-align: center; background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; }
+                h1 { font-size: 3rem; margin-bottom: 20px; }
+                p { font-size: 1.2rem; }
+                a { display: inline-block; margin-top: 20px; padding: 15px 30px; background: white; color: #667eea; text-decoration: none; border-radius: 10px; font-weight: bold; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>💎 Zahlung erfolgreich!</h1>
+                <p>Dein Premium ${tier.toUpperCase()}-Plan wurde aktiviert.</p>
+                <p>Vielen Dank für deine Unterstützung!</p>
+                <a href="/panel">Zum Dashboard</a>
+              </div>
+            </body>
+          </html>
+        `);
+      } else {
+        res.redirect('/premium?msg=payment-pending');
+      }
+    } catch (err) {
+      console.error('Premium Success Error:', err);
+      res.status(500).send('Fehler beim Abrufen der Zahlungsinformationen.');
+    }
+  });
+
+  // Stripe Webhook (für automatische Verlängerungen & Kündigungen)
+  router.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+
+    try {
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+      if (!webhookSecret) {
+        console.error('⚠️ STRIPE_WEBHOOK_SECRET nicht gesetzt!');
+        return res.status(400).send('Webhook Secret fehlt');
+      }
+
+      const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+
+      console.log(`📡 Stripe Webhook erhalten: ${event.type}`);
+
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object;
+          const guildId = session.client_reference_id;
+          const tier = session.metadata.tier;
+
+          activatePremium(guildId, tier, session.subscription, session.customer);
+          console.log(`✅ Premium ${tier} aktiviert für Guild ${guildId}`);
+          break;
+        }
+
+        case 'invoice.payment_succeeded': {
+          const invoice = event.data.object;
+          const customerId = invoice.customer;
+
+          // Finde Guild anhand der Customer ID
+          const files = fs.readdirSync(CONFIG_DIR);
+          for (const file of files) {
+            if (!file.endsWith('.json') || file.includes('_tickets')) continue;
+            const guildId = file.replace('.json', '');
+            const cfg = readCfg(guildId);
+
+            if (cfg.premium?.customerId === customerId) {
+              renewPremium(guildId);
+              console.log(`✅ Premium verlängert für Guild ${guildId}`);
+              break;
+            }
+          }
+          break;
+        }
+
+        case 'customer.subscription.deleted': {
+          const subscription = event.data.object;
+          const customerId = subscription.customer;
+
+          // Finde Guild und deaktiviere Premium
+          const files = fs.readdirSync(CONFIG_DIR);
+          for (const file of files) {
+            if (!file.endsWith('.json') || file.includes('_tickets')) continue;
+            const guildId = file.replace('.json', '');
+            const cfg = readCfg(guildId);
+
+            if (cfg.premium?.customerId === customerId) {
+              deactivatePremium(guildId);
+              console.log(`❌ Premium deaktiviert für Guild ${guildId} (Subscription cancelled)`);
+              break;
+            }
+          }
+          break;
+        }
+
+        default:
+          console.log(`⏭️ Unhandled Stripe event type: ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (err) {
+      console.error('Stripe Webhook Error:', err);
+      res.status(400).send(`Webhook Error: ${err.message}`);
     }
   });
 

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'de' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premium - TRS Tickets Bot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 60px;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .current-plan {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 40px;
+      color: white;
+      text-align: center;
+    }
+
+    .current-plan h2 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .current-plan .badge {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      font-weight: bold;
+    }
+
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .pricing-card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-10px);
+    }
+
+    .pricing-card.popular {
+      border: 3px solid #667eea;
+      transform: scale(1.05);
+    }
+
+    .pricing-card.popular::before {
+      content: '⭐ BELIEBT';
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #667eea;
+      color: white;
+      padding: 5px 20px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .pricing-card.current {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .tier-name {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .tier-price {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .tier-price span {
+      font-size: 1.2rem;
+      color: #666;
+    }
+
+    .tier-description {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+
+    .features-list {
+      list-style: none;
+      margin-bottom: 30px;
+    }
+
+    .features-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .features-list li:last-child {
+      border-bottom: none;
+    }
+
+    .features-list li::before {
+      content: '✓';
+      display: inline-block;
+      width: 25px;
+      height: 25px;
+      background: #667eea;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 25px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .btn-purchase {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-purchase:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-purchase:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-back {
+      display: inline-block;
+      padding: 12px 30px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      margin-top: 20px;
+      transition: background 0.3s ease;
+    }
+
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .free-badge {
+      display: inline-block;
+      background: #4CAF50;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+
+    .current-badge {
+      display: inline-block;
+      background: #2196F3;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .pricing-card.popular {
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💎 Premium Upgrade</h1>
+      <p>Schalte exklusive Features frei und unterstütze die Entwicklung!</p>
+    </div>
+
+    <% if (currentTier !== 'none') { %>
+    <div class="current-plan">
+      <h2>Dein aktueller Plan</h2>
+      <div class="badge"><%= currentTierName %></div>
+      <% if (expiresAt) { %>
+        <p style="margin-top: 10px; font-size: 0.9rem;">
+          Verlängert sich automatisch am <%= new Date(expiresAt).toLocaleDateString('de-DE') %>
+        </p>
+      <% } %>
+    </div>
+    <% } %>
+
+    <div class="pricing-cards">
+      <!-- Free Tier -->
+      <div class="pricing-card <%= currentTier === 'none' ? 'current' : '' %>">
+        <div class="tier-name">Free</div>
+        <div class="tier-price">€0<span>/Monat</span></div>
+        <div class="tier-description">Für kleine Server zum Testen</div>
+
+        <ul class="features-list">
+          <li>3 Ticket-Kategorien</li>
+          <li>Basic Ticket-System</li>
+          <li>Multi-Server Support</li>
+          <li>Priority-Rollen System</li>
+          <li>Web-Dashboard</li>
+        </ul>
+
+        <% if (currentTier === 'none') { %>
+          <div class="current-badge">✓ Aktueller Plan</div>
+        <% } else { %>
+          <button class="btn-purchase" disabled>Aktueller Plan</button>
+        <% } %>
+      </div>
+
+      <!-- Basic Tier -->
+      <div class="pricing-card <%= currentTier === 'basic' ? 'current' : '' %>">
+        <div class="tier-name">Premium Basic</div>
+        <div class="tier-price">€2.99<span>/Monat</span></div>
+        <div class="tier-description">Perfekt für aktive Server</div>
+
+        <ul class="features-list">
+          <li><strong>Alles von Free +</strong></li>
+          <li>🚫 Werbefrei</li>
+          <li>🎨 Custom Bot-Avatar</li>
+          <li>📊 Ticket-Statistiken</li>
+          <li>⚡ Priority Support</li>
+          <li>5 Ticket-Kategorien</li>
+        </ul>
+
+        <% if (currentTier === 'basic') { %>
+          <div class="current-badge">✓ Aktueller Plan</div>
+        <% } else if (currentTier === 'pro') { %>
+          <button class="btn-purchase" disabled>Downgrade nicht möglich</button>
+        <% } else { %>
+          <form action="/purchase-premium" method="POST">
+            <input type="hidden" name="tier" value="basic">
+            <input type="hidden" name="guildId" value="<%= guildId %>">
+            <button type="submit" class="btn-purchase">Jetzt upgraden</button>
+          </form>
+        <% } %>
+      </div>
+
+      <!-- Pro Tier -->
+      <div class="pricing-card popular <%= currentTier === 'pro' ? 'current' : '' %>">
+        <div class="tier-name">Premium Pro</div>
+        <div class="tier-price">€4.99<span>/Monat</span></div>
+        <div class="tier-description">Für professionelle Teams</div>
+
+        <ul class="features-list">
+          <li><strong>Alles von Basic +</strong></li>
+          <li>⏰ Auto-Close nach X Tagen</li>
+          <li>📧 Email-Benachrichtigungen</li>
+          <li>♾️ Unbegrenzte Kategorien</li>
+          <li>🔔 Discord DM-Benachrichtigungen</li>
+          <li>📈 Erweiterte Analytics</li>
+        </ul>
+
+        <% if (currentTier === 'pro') { %>
+          <div class="current-badge">✓ Aktueller Plan</div>
+        <% } else { %>
+          <form action="/purchase-premium" method="POST">
+            <input type="hidden" name="tier" value="pro">
+            <input type="hidden" name="guildId" value="<%= guildId %>">
+            <button type="submit" class="btn-purchase">Jetzt upgraden</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="back-link">
+      <a href="/dashboard?guild=<%= guildId %>" class="btn-back">← Zurück zum Dashboard</a>
+    </div>
+  </div>
+
+  <script>
+    // Prevent double-submission
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = 'Weiterleitung zu Stripe...';
+      });
+    });
+  </script>
+</body>
+</html>

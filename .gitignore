@@ -20,3 +20,5 @@ logs/
 
 # PM2 Process Files
 .pm2/
+PREMIUM_FEATURES_IMPLEMENTATION.md
+PREMIUM_SETUP.md

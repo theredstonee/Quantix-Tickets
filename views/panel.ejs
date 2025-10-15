@@ -495,6 +495,35 @@
     </a>
   </div>
 
+  <!-- Premium Badge -->
+  <% if (isPremium) { %>
+  <div style="margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white; text-align: center; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+      <span style="font-size: 2.5rem;">💎</span>
+      <div style="text-align: left;">
+        <h3 style="margin: 0; font-size: 1.5rem; color: white;">Premium <%= premiumTierName %></h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">Vielen Dank für deine Unterstützung!</p>
+      </div>
+      <a href="/premium" style="margin-left: auto; padding: 0.75rem 1.5rem; background: white; color: #667eea; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.2s;">
+        Verwalten
+      </a>
+    </div>
+  </div>
+  <% } else { %>
+  <div style="margin: 2rem 0; padding: 1.5rem; background: rgba(102, 126, 234, 0.1); border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 15px; text-align: center;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+      <span style="font-size: 2rem;">✨</span>
+      <div style="text-align: left;">
+        <h3 style="margin: 0; font-size: 1.3rem;">Upgrade auf Premium</h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 0.85rem;">Werbefrei, Statistiken, Custom Avatar & mehr</p>
+      </div>
+      <a href="/premium" style="margin-left: auto; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.2s; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+        Jetzt upgraden
+      </a>
+    </div>
+  </div>
+  <% } %>
+
   <% if (msg==='saved')  { %><p class="good"><%= t.web.messages.saved %></p><% } %>
   <% if (msg==='sent')   { %><p class="good"><%= t.web.messages.sent %></p><% } %>
   <% if (msg==='edited') { %><p class="good"><%= t.web.messages.edited %></p><% } %>
