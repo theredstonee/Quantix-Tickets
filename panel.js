@@ -185,6 +185,45 @@ module.exports = (client)=>{
     next();
   }
 
+  // Middleware für Zugriff mit Admin ODER Team-Rolle
+  async function isAuthOrTeam(req,res,next){
+    if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
+
+    if(!req.session.selectedGuild) return res.redirect('/select-server');
+
+    const guildId = req.session.selectedGuild;
+    const entry = req.user.guilds?.find(g=>g.id===guildId);
+    if(!entry) return res.status(403).send('Du bist nicht auf diesem Server oder der Bot ist nicht auf dem Server.');
+
+    const ADMIN = 0x8n;
+    const isAdmin = (BigInt(entry.permissions) & ADMIN) === ADMIN;
+
+    // Admin hat immer Zugriff
+    if(isAdmin) {
+      return next();
+    }
+
+    // Prüfe ob User Team-Rolle hat
+    try {
+      const cfg = readCfg(guildId);
+      if(!cfg.teamRoleId) {
+        return res.status(403).send('Keine Berechtigung. Du brauchst Administrator-Rechte oder die Team-Rolle.');
+      }
+
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(req.user.id);
+
+      if(member.roles.cache.has(cfg.teamRoleId)) {
+        return next();
+      }
+
+      return res.status(403).send('Keine Berechtigung. Du brauchst Administrator-Rechte oder die Team-Rolle.');
+    } catch(err) {
+      console.error('Team Role Check Error:', err);
+      return res.status(403).send('Keine Berechtigung. Du brauchst Administrator-Rechte oder die Team-Rolle.');
+    }
+  }
+
   router.get('/', (req,res)=>{
     const lang = req.cookies.lang || 'de';
     const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
@@ -601,7 +640,7 @@ module.exports = (client)=>{
 
   router.get('/tickets/data', isAuth, (req,res)=>{ res.json(loadTickets(req.session.selectedGuild)); });
 
-  router.get('/transcript/:id', isAuth, (req,res)=>{
+  router.get('/transcript/:id', isAuthOrTeam, (req,res)=>{
     const id = req.params.id.replace(/[^0-9]/g,'');
     const guildId = req.session.selectedGuild;
     if(!id) return res.status(400).send('ID fehlt');
@@ -623,7 +662,7 @@ module.exports = (client)=>{
     return res.status(404).send('Transcript nicht gefunden');
   });
 
-  router.get('/analytics', isAuth, async (req,res)=>{
+  router.get('/analytics', isAuthOrTeam, async (req,res)=>{
     try {
       const guildId = req.session.selectedGuild;
 
