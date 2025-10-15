@@ -1,0 +1,250 @@
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { activateLifetimePremium, removeLifetimePremium, listLifetimePremiumServers } = require('../premium');
+
+const OWNER_ID = '1159182333316968530';
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('lifetime-premium')
+    .setDescription('Manage Lifetime Premium (Owner Only)')
+    .setDescriptionLocalizations({
+      de: 'Lifetime Premium verwalten (Nur Owner)'
+    })
+    .setDMPermission(false)
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('add')
+        .setDescription('Add Lifetime Premium to a server')
+        .setDescriptionLocalizations({
+          de: 'Lifetime Premium zu einem Server hinzufügen'
+        })
+        .addStringOption(option =>
+          option
+            .setName('server')
+            .setDescription('Server (Guild ID or name)')
+            .setDescriptionLocalizations({
+              de: 'Server (Guild ID oder Name)'
+            })
+            .setRequired(true)
+            .setAutocomplete(true)
+        )
+        .addStringOption(option =>
+          option
+            .setName('tier')
+            .setDescription('Premium Tier')
+            .setDescriptionLocalizations({
+              de: 'Premium Tier'
+            })
+            .setRequired(true)
+            .addChoices(
+              { name: '💎 Basic', value: 'basic' },
+              { name: '👑 Pro', value: 'pro' }
+            )
+        )
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('remove')
+        .setDescription('Remove Lifetime Premium from a server')
+        .setDescriptionLocalizations({
+          de: 'Lifetime Premium von einem Server entfernen'
+        })
+        .addStringOption(option =>
+          option
+            .setName('server')
+            .setDescription('Server (Guild ID or name)')
+            .setDescriptionLocalizations({
+              de: 'Server (Guild ID oder Name)'
+            })
+            .setRequired(true)
+            .setAutocomplete(true)
+        )
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('list')
+        .setDescription('List all servers with Lifetime Premium')
+        .setDescriptionLocalizations({
+          de: 'Alle Server mit Lifetime Premium auflisten'
+        })
+    ),
+
+  async autocomplete(interaction) {
+    // Owner-only check
+    if (interaction.user.id !== OWNER_ID) {
+      return interaction.respond([]);
+    }
+
+    try {
+      const focusedValue = interaction.options.getFocused().toLowerCase();
+      const guilds = await interaction.client.guilds.fetch();
+
+      const choices = guilds.map(guild => ({
+        name: `${guild.name} (${guild.id})`,
+        value: guild.id
+      }));
+
+      // Filter based on user input
+      const filtered = choices.filter(choice =>
+        choice.name.toLowerCase().includes(focusedValue) ||
+        choice.value.includes(focusedValue)
+      );
+
+      // Limit to 25 results (Discord API limit)
+      await interaction.respond(filtered.slice(0, 25));
+    } catch (err) {
+      console.error('Autocomplete Error:', err);
+      await interaction.respond([]);
+    }
+  },
+
+  async execute(interaction) {
+    // Owner-only check
+    if (interaction.user.id !== OWNER_ID) {
+      return interaction.reply({
+        content: '❌ Dieser Command kann nur vom Bot-Owner ausgeführt werden.',
+        ephemeral: true
+      });
+    }
+
+    const subcommand = interaction.options.getSubcommand();
+
+    try {
+      if (subcommand === 'add') {
+        const guildId = interaction.options.getString('server');
+        const tier = interaction.options.getString('tier');
+
+        // Fetch guild info
+        let guildName = guildId;
+        try {
+          const guild = await interaction.client.guilds.fetch(guildId);
+          guildName = guild.name;
+        } catch (err) {
+          return interaction.reply({
+            content: `❌ Server mit ID \`${guildId}\` nicht gefunden. Bot ist nicht auf diesem Server.`,
+            ephemeral: true
+          });
+        }
+
+        // Activate Lifetime Premium
+        const result = activateLifetimePremium(guildId, tier);
+
+        if (!result.success) {
+          return interaction.reply({
+            content: `❌ Fehler beim Aktivieren von Lifetime Premium für **${guildName}**.`,
+            ephemeral: true
+          });
+        }
+
+        const embed = new EmbedBuilder()
+          .setTitle('♾️ Lifetime Premium Aktiviert')
+          .setDescription(
+            `**Server:** ${guildName}\n` +
+            `**Guild ID:** \`${guildId}\`\n` +
+            `**Tier:** ${tier === 'pro' ? '👑 Pro' : '💎 Basic'}\n` +
+            `**Status:** ♾️ Lifetime (läuft nie ab)`
+          )
+          .setColor(tier === 'pro' ? 0x764ba2 : 0x667eea)
+          .setTimestamp()
+          .setFooter({ text: 'TRS Tickets Bot • Lifetime Premium' });
+
+        await interaction.reply({
+          embeds: [embed],
+          ephemeral: false
+        });
+
+        console.log(`♾️ Lifetime Premium ${tier} für Guild ${guildId} (${guildName}) aktiviert von ${interaction.user.tag}`);
+
+      } else if (subcommand === 'remove') {
+        const guildId = interaction.options.getString('server');
+
+        // Fetch guild info
+        let guildName = guildId;
+        try {
+          const guild = await interaction.client.guilds.fetch(guildId);
+          guildName = guild.name;
+        } catch (err) {
+          guildName = `Unknown (${guildId})`;
+        }
+
+        // Remove Lifetime Premium
+        const result = removeLifetimePremium(guildId);
+
+        if (!result.success) {
+          return interaction.reply({
+            content: `❌ ${result.message || 'Fehler beim Entfernen von Lifetime Premium'}`,
+            ephemeral: true
+          });
+        }
+
+        const embed = new EmbedBuilder()
+          .setTitle('🚫 Lifetime Premium Entfernt')
+          .setDescription(
+            `**Server:** ${guildName}\n` +
+            `**Guild ID:** \`${guildId}\`\n` +
+            `**Status:** Lifetime Premium wurde entfernt`
+          )
+          .setColor(0xff4444)
+          .setTimestamp()
+          .setFooter({ text: 'TRS Tickets Bot • Lifetime Premium' });
+
+        await interaction.reply({
+          embeds: [embed],
+          ephemeral: false
+        });
+
+        console.log(`🚫 Lifetime Premium für Guild ${guildId} (${guildName}) entfernt von ${interaction.user.tag}`);
+
+      } else if (subcommand === 'list') {
+        const lifetimeServers = listLifetimePremiumServers();
+
+        if (lifetimeServers.length === 0) {
+          return interaction.reply({
+            content: '📋 Keine Server mit Lifetime Premium gefunden.',
+            ephemeral: true
+          });
+        }
+
+        // Fetch guild names
+        const serverList = [];
+        for (const server of lifetimeServers) {
+          try {
+            const guild = await interaction.client.guilds.fetch(server.guildId);
+            serverList.push(
+              `**${guild.name}**\n` +
+              `├ ID: \`${server.guildId}\`\n` +
+              `└ Tier: ${server.tier === 'pro' ? '👑 Pro' : '💎 Basic'}`
+            );
+          } catch (err) {
+            serverList.push(
+              `**Unknown Server**\n` +
+              `├ ID: \`${server.guildId}\`\n` +
+              `└ Tier: ${server.tier === 'pro' ? '👑 Pro' : '💎 Basic'}`
+            );
+          }
+        }
+
+        const embed = new EmbedBuilder()
+          .setTitle('♾️ Lifetime Premium Server')
+          .setDescription(
+            `**Gesamt:** ${lifetimeServers.length} Server\n\n` +
+            serverList.join('\n\n')
+          )
+          .setColor(0x764ba2)
+          .setTimestamp()
+          .setFooter({ text: 'TRS Tickets Bot • Lifetime Premium' });
+
+        await interaction.reply({
+          embeds: [embed],
+          ephemeral: false
+        });
+      }
+    } catch (err) {
+      console.error('Lifetime Premium Command Error:', err);
+      await interaction.reply({
+        content: '❌ Ein Fehler ist aufgetreten. Siehe Console für Details.',
+        ephemeral: true
+      });
+    }
+  }
+};

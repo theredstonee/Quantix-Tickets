@@ -115,6 +115,11 @@ function isPremium(guildId, requiredTier = 'basic') {
     return false;
   }
 
+  // Lifetime Premium läuft nie ab
+  if (cfg.premium.lifetime === true) {
+    return true;
+  }
+
   // Prüfe ob abgelaufen
   if (cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) < new Date()) {
     return false;
@@ -145,6 +150,11 @@ function hasFeature(guildId, feature) {
     return PREMIUM_TIERS.none.features[feature] || false;
   }
 
+  // Lifetime Premium läuft nie ab
+  if (cfg.premium.lifetime === true) {
+    return cfg.premium.features?.[feature] || false;
+  }
+
   // Prüfe ob abgelaufen
   if (cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) < new Date()) {
     return PREMIUM_TIERS.none.features[feature] || false;
@@ -168,6 +178,11 @@ function getPremiumTier(guildId) {
 
   if (!cfg.premium || cfg.premium.tier === 'none') {
     return 'none';
+  }
+
+  // Lifetime Premium läuft nie ab
+  if (cfg.premium.lifetime === true) {
+    return cfg.premium.tier;
   }
 
   // Prüfe ob abgelaufen
@@ -200,13 +215,20 @@ function getPremiumInfo(guildId) {
   const tier = getPremiumTier(guildId);
   const cfg = readCfg(guildId);
 
+  // Check if Lifetime Premium
+  const isLifetime = cfg.premium?.lifetime === true;
+  const tierName = isLifetime
+    ? `${PREMIUM_TIERS[tier].name} (Lifetime)`
+    : PREMIUM_TIERS[tier].name;
+
   return {
     tier: tier,
-    tierName: PREMIUM_TIERS[tier].name,
+    tierName: tierName,
     price: PREMIUM_TIERS[tier].price,
     features: cfg.premium?.features || PREMIUM_TIERS[tier].features,
     expiresAt: cfg.premium?.expiresAt || null,
     isActive: tier !== 'none',
+    isLifetime: isLifetime,
     subscriptionId: cfg.premium?.subscriptionId || null
   };
 }
@@ -352,6 +374,98 @@ function cancelPremium(guildId) {
   };
 }
 
+/**
+ * Aktiviert Lifetime Premium für einen Server (Owner-only)
+ * @param {string} guildId - Discord Guild ID
+ * @param {string} tier - 'basic' oder 'pro'
+ * @returns {object}
+ */
+function activateLifetimePremium(guildId, tier) {
+  const cfg = readCfg(guildId);
+
+  cfg.premium = {
+    tier: tier,
+    expiresAt: null, // Null = Lifetime
+    subscriptionId: 'lifetime_' + guildId,
+    customerId: 'lifetime_customer_' + guildId,
+    lifetime: true,
+    features: { ...PREMIUM_TIERS[tier].features }
+  };
+
+  saveCfg(guildId, cfg);
+  console.log(`♾️ Lifetime Premium ${tier} aktiviert für Guild ${guildId}`);
+
+  return {
+    success: true,
+    tier: tier,
+    guildId: guildId
+  };
+}
+
+/**
+ * Entfernt Lifetime Premium von einem Server (Owner-only)
+ * @param {string} guildId - Discord Guild ID
+ * @returns {object}
+ */
+function removeLifetimePremium(guildId) {
+  const cfg = readCfg(guildId);
+
+  if (!cfg.premium || !cfg.premium.lifetime) {
+    return {
+      success: false,
+      message: 'Dieser Server hat kein Lifetime Premium'
+    };
+  }
+
+  cfg.premium = {
+    tier: 'none',
+    expiresAt: null,
+    subscriptionId: null,
+    customerId: null,
+    lifetime: false,
+    features: { ...PREMIUM_TIERS.none.features }
+  };
+
+  saveCfg(guildId, cfg);
+  console.log(`♾️ Lifetime Premium entfernt für Guild ${guildId}`);
+
+  return {
+    success: true,
+    guildId: guildId
+  };
+}
+
+/**
+ * Listet alle Server mit Lifetime Premium auf
+ * @returns {array}
+ */
+function listLifetimePremiumServers() {
+  const lifetimeServers = [];
+
+  if (!fs.existsSync(CONFIG_DIR)) {
+    return lifetimeServers;
+  }
+
+  const files = fs.readdirSync(CONFIG_DIR);
+
+  for (const file of files) {
+    if (!file.endsWith('.json') || file.includes('_tickets')) continue;
+
+    const guildId = file.replace('.json', '');
+    const cfg = readCfg(guildId);
+
+    if (cfg.premium && cfg.premium.lifetime === true) {
+      lifetimeServers.push({
+        guildId: guildId,
+        tier: cfg.premium.tier,
+        activatedAt: cfg.premium.activatedAt || 'Unknown'
+      });
+    }
+  }
+
+  return lifetimeServers;
+}
+
 module.exports = {
   PREMIUM_TIERS,
   isPremium,
@@ -364,6 +478,9 @@ module.exports = {
   getMaxCategories,
   downgradePremium,
   cancelPremium,
+  activateLifetimePremium,
+  removeLifetimePremium,
+  listLifetimePremiumServers,
   readCfg,
   saveCfg
 };
