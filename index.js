@@ -431,6 +431,7 @@ async function logEvent(guild, text){
 async function createTranscript(channel, ticket, opts = {}) {
   const { AttachmentBuilder } = require('discord.js');
   const resolveMentions = !!opts.resolveMentions;
+  const guildId = channel.guild?.id;
 
   let messages = [];
   let lastId;
@@ -767,8 +768,19 @@ async function createTranscript(channel, ticket, opts = {}) {
 </body>
 </html>`;
 
-  const tTxt  = path.join(__dirname, `transcript_${ticket.id}.txt`);
-  const tHtml = path.join(__dirname, `transcript_${ticket.id}.html`);
+  // Create transcripts directory structure: transcripts/[guildId]/
+  const transcriptsDir = path.join(__dirname, 'transcripts');
+  if (!fs.existsSync(transcriptsDir)) {
+    fs.mkdirSync(transcriptsDir, { recursive: true });
+  }
+
+  const guildTranscriptsDir = path.join(transcriptsDir, guildId || 'unknown');
+  if (!fs.existsSync(guildTranscriptsDir)) {
+    fs.mkdirSync(guildTranscriptsDir, { recursive: true });
+  }
+
+  const tTxt  = path.join(guildTranscriptsDir, `transcript_${ticket.id}.txt`);
+  const tHtml = path.join(guildTranscriptsDir, `transcript_${ticket.id}.html`);
   fs.writeFileSync(tTxt,  txt);
   fs.writeFileSync(tHtml, html);
 

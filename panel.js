@@ -603,10 +603,24 @@ module.exports = (client)=>{
 
   router.get('/transcript/:id', isAuth, (req,res)=>{
     const id = req.params.id.replace(/[^0-9]/g,'');
+    const guildId = req.session.selectedGuild;
     if(!id) return res.status(400).send('ID fehlt');
-    const file = path.join(__dirname, `transcript_${id}.html`);
-    if(!fs.existsSync(file)) return res.status(404).send('Transcript nicht gefunden');
-    res.sendFile(file);
+
+    // Check guild-specific transcript folder first
+    const transcriptsDir = path.join(__dirname, 'transcripts');
+    const guildTranscriptFile = path.join(transcriptsDir, guildId, `transcript_${id}.html`);
+
+    if(fs.existsSync(guildTranscriptFile)) {
+      return res.sendFile(guildTranscriptFile);
+    }
+
+    // Fallback: check legacy root directory for old transcripts
+    const legacyFile = path.join(__dirname, `transcript_${id}.html`);
+    if(fs.existsSync(legacyFile)) {
+      return res.sendFile(legacyFile);
+    }
+
+    return res.status(404).send('Transcript nicht gefunden');
   });
 
   router.get('/analytics', isAuth, async (req,res)=>{
