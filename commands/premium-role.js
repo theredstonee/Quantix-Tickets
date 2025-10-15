@@ -12,7 +12,6 @@ module.exports = {
     .setDescriptionLocalizations({
       de: 'Premium-Rolle auf Theredstonee Projects verwalten (Nur Owner)',
       'en-US': 'Manage Premium Role on Theredstonee Projects (Owner Only)',
-      he: 'נהל תפקיד Premium ב-Theredstonee Projects (בעלים בלבד)',
       ja: 'Theredstonee ProjectsでPremiumロールを管理 (オーナー専用)',
       ru: 'Управление Premium ролью на Theredstonee Projects (только владелец)',
       'pt-BR': 'Gerenciar Cargo Premium no Theredstonee Projects (Apenas Proprietário)',
@@ -28,8 +27,7 @@ module.exports = {
         .setDescriptionLocalizations({
           de: 'Premium-Rolle einem User hinzufügen',
           'en-US': 'Add Premium role to a user',
-          he: 'הוסף תפקיד Premium למשתמש',
-          ja: 'ユーザーにPremiumロールを追加',
+              ja: 'ユーザーにPremiumロールを追加',
           ru: 'Добавить Premium роль пользователю',
           'pt-BR': 'Adicionar cargo Premium a um usuário',
           'es-ES': 'Agregar rol Premium a un usuario',
@@ -43,8 +41,7 @@ module.exports = {
             .setDescriptionLocalizations({
               de: 'User der die Premium-Rolle erhalten soll',
               'en-US': 'User who should receive the Premium role',
-              he: 'משתמש שאמור לקבל את תפקיד Premium',
-              ja: 'Premiumロールを受け取るユーザー',
+                      ja: 'Premiumロールを受け取るユーザー',
               ru: 'Пользователь, который должен получить Premium роль',
               'pt-BR': 'Usuário que deve receber o cargo Premium',
               'es-ES': 'Usuario que debe recibir el rol Premium',
@@ -61,8 +58,7 @@ module.exports = {
         .setDescriptionLocalizations({
           de: 'Premium-Rolle von einem User entfernen',
           'en-US': 'Remove Premium role from a user',
-          he: 'הסר תפקיד Premium ממשתמש',
-          ja: 'ユーザーからPremiumロールを削除',
+              ja: 'ユーザーからPremiumロールを削除',
           ru: 'Удалить Premium роль у пользователя',
           'pt-BR': 'Remover cargo Premium de um usuário',
           'es-ES': 'Eliminar rol Premium de un usuario',
@@ -76,8 +72,7 @@ module.exports = {
             .setDescriptionLocalizations({
               de: 'User der die Premium-Rolle verlieren soll',
               'en-US': 'User who should lose the Premium role',
-              he: 'משתמש שצריך לאבד את תפקיד Premium',
-              ja: 'Premiumロールを失うユーザー',
+                      ja: 'Premiumロールを失うユーザー',
               ru: 'Пользователь, который должен потерять Premium роль',
               'pt-BR': 'Usuário que deve perder o cargo Premium',
               'es-ES': 'Usuario que debe perder el rol Premium',

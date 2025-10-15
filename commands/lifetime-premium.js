@@ -101,8 +101,7 @@ module.exports = {
             .setDescriptionLocalizations({
               de: 'Server (Guild ID oder Name)',
               'en-US': 'Server (Guild ID or name)',
-              he: 'שרת (מזהה או שם)',
-              ja: 'サーバー（ギルドIDまたは名前）',
+                      ja: 'サーバー（ギルドIDまたは名前）',
               ru: 'Сервер (ID или имя)',
               'pt-BR': 'Servidor (ID da guilda ou nome)',
               'es-ES': 'Servidor (ID del servidor o nombre)',

@@ -10,7 +10,6 @@ module.exports = {
     .setDescriptionLocalizations({
       de: 'Betatester-Status verwalten (Nur Owner)',
       'en-US': 'Manage Betatester Status (Owner Only)',
-      he: 'נהל סטטוס Betatester (בעלים בלבד)',
       ja: 'Betatesterステータスを管理 (オーナー専用)',
       ru: 'Управление статусом Betatester (только владелец)',
       'pt-BR': 'Gerenciar Status de Betatester (Apenas Proprietário)',
@@ -26,8 +25,7 @@ module.exports = {
         .setDescriptionLocalizations({
           de: 'Betatester-Status zu einem Server hinzufügen',
           'en-US': 'Add Betatester status to a server',
-          he: 'הוסף סטטוס Betatester לשרת',
-          ja: 'サーバーにBetatesterステータスを追加',
+              ja: 'サーバーにBetatesterステータスを追加',
           ru: 'Добавить статус Betatester на сервер',
           'pt-BR': 'Adicionar status de Betatester a um servidor',
           'es-ES': 'Agregar estado de Betatester a un servidor',
@@ -41,8 +39,7 @@ module.exports = {
             .setDescriptionLocalizations({
               de: 'Server (Guild ID oder Name)',
               'en-US': 'Server (Guild ID or name)',
-              he: 'שרת (מזהה או שם)',
-              ja: 'サーバー（ギルドIDまたは名前）',
+                      ja: 'サーバー（ギルドIDまたは名前）',
               ru: 'Сервер (ID или имя)',
               'pt-BR': 'Servidor (ID da guilda ou nome)',
               'es-ES': 'Servidor (ID del servidor o nombre)',
@@ -59,8 +56,7 @@ module.exports = {
             .setDescriptionLocalizations({
               de: 'Zeitraum in Tagen (Standard: 30)',
               'en-US': 'Duration in days (default: 30)',
-              he: 'משך בימים (ברירת מחדל: 30)',
-              ja: '期間（日数、デフォルト：30）',
+                      ja: '期間（日数、デフォルト：30）',
               ru: 'Длительность в днях (по умолчанию: 30)',
               'pt-BR': 'Duração em dias (padrão: 30)',
               'es-ES': 'Duración en días (predeterminado: 30)',
@@ -85,8 +81,7 @@ module.exports = {
             .setDescriptionLocalizations({
               de: 'User der Betatester ist (erhält Rolle auf Theredstonee Projects)',
               'en-US': 'User who is the betatester (will receive role on Theredstonee Projects)',
-              he: 'משתמש שהוא ה-Betatester (יקבל תפקיד ב-Theredstonee Projects)',
-              ja: 'Betatesterであるユーザー（Theredstonee Projectsでロールを受け取る）',
+                      ja: 'Betatesterであるユーザー（Theredstonee Projectsでロールを受け取る）',
               ru: 'Пользователь-бета-тестер (получит роль на Theredstonee Projects)',
               'pt-BR': 'Usuário que é o betatester (receberá cargo no Theredstonee Projects)',
               'es-ES': 'Usuario que es el betatester (recibirá rol en Theredstonee Projects)',
@@ -103,8 +98,7 @@ module.exports = {
         .setDescriptionLocalizations({
           de: 'Betatester-Status von einem Server entfernen',
           'en-US': 'Remove Betatester status from a server',
-          he: 'הסר סטטוס Betatester משרת',
-          ja: 'サーバーからBetatesterステータスを削除',
+              ja: 'サーバーからBetatesterステータスを削除',
           ru: 'Удалить статус Betatester с сервера',
           'pt-BR': 'Remover status de Betatester de um servidor',
           'es-ES': 'Eliminar estado de Betatester de un servidor',
@@ -118,8 +112,7 @@ module.exports = {
             .setDescriptionLocalizations({
               de: 'Server (Guild ID oder Name)',
               'en-US': 'Server (Guild ID or name)',
-              he: 'שרת (מזהה או שם)',
-              ja: 'サーバー（ギルドIDまたは名前）',
+                      ja: 'サーバー（ギルドIDまたは名前）',
               ru: 'Сервер (ID или имя)',
               'pt-BR': 'Servidor (ID da guilda ou nome)',
               'es-ES': 'Servidor (ID del servidor o nombre)',
@@ -137,8 +130,7 @@ module.exports = {
         .setDescriptionLocalizations({
           de: 'Alle Server mit Betatester-Status auflisten',
           'en-US': 'List all servers with Betatester status',
-          he: 'הצג את כל השרתים עם סטטוס Betatester',
-          ja: 'Betatesterステータスを持つすべてのサーバーをリスト表示',
+              ja: 'Betatesterステータスを持つすべてのサーバーをリスト表示',
           ru: 'Список всех серверов со статусом Betatester',
           'pt-BR': 'Listar todos os servidores com status de Betatester',
           'es-ES': 'Listar todos los servidores con estado de Betatester',
