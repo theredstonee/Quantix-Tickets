@@ -29,7 +29,7 @@
     "ticket_closed": "✅ Ticket has been closed.",
     "ticket_claimed": "{user} has claimed the ticket.",
     "ticket_unclaimed": "{user} has unclaimed the ticket.",
-    "priority_changed": "🔔 Priority has been changed to <strong>{priority}</strong>.",
+    "priority_changed": "🔔 Priority has been changed to **{priority}**.",
     "user_added_success": "✅ {user} has been added to the ticket.",
     "close_requested": "🔔 {user} has requested to close the ticket.",
     "only_team": "❌ Only team members can perform this action.",
@@ -46,14 +46,14 @@
     "dashboard_description": "Open the admin panel"
   },
   "language": {
-    "changed": "✅ Language has been set to <strong>English</strong>.",
+    "changed": "✅ Language has been set to **English**.",
     "select": "Select your language:",
     "german": "Deutsch",
     "english": "English",
     "hebrew": "עברית",
     "command_description": "Change server language",
     "only_admin": "❌ Only administrators can change the server language.",
-    "updated": "✅ Server language has been set to <strong>{language}</strong>."
+    "updated": "✅ Server language has been set to **{language}**."
   },
   "web": {
     "title": "TRS Ticket Bot - Admin Panel",
@@ -128,10 +128,10 @@
     "user_added": "➕ User {user} added to Ticket #{id}",
     "close_requested": "❓ Close-Request Ticket #{id} by {user}",
     "priority_changed": "⚙️ Ticket #{id} Priority {direction}: {priority}",
-    "config_updated": "⚙️ <strong>Configuration updated</strong> via panel",
-    "panel_sent": "📤 <strong>Panel message sent</strong> in {channel}",
-    "panel_edited": "✏️ <strong>Panel message updated</strong> in {channel}",
-    "language_changed": "🌐 <strong>Server language changed</strong> to {language}"
+    "config_updated": "⚙️ **Configuration updated** via panel",
+    "panel_sent": "📤 **Panel message sent** in {channel}",
+    "panel_edited": "✏️ **Panel message updated** in {channel}",
+    "language_changed": "🌐 **Server language changed** to {language}"
   },
   "tos": {
     "title": "Terms of Service & Privacy Policy",

@@ -29,7 +29,7 @@
     "ticket_closed": "✅ Ticket cerrado.",
     "ticket_claimed": "{user} ha asignado el ticket.",
     "ticket_unclaimed": "{user} ha liberado el ticket.",
-    "priority_changed": "🔔 Prioridad cambiada a <strong>{priority}</strong>.",
+    "priority_changed": "🔔 Prioridad cambiada a **{priority}**.",
     "user_added_success": "✅ {user} añadido al ticket.",
     "close_requested": "🔔 {user} ha solicitado cerrar el ticket.",
     "only_team": "❌ Solo los miembros del equipo pueden realizar esta acción.",
@@ -46,7 +46,7 @@
     "dashboard_description": "Abrir panel de administración"
   },
   "language": {
-    "changed": "✅ Idioma cambiado a <strong>Español</strong>.",
+    "changed": "✅ Idioma cambiado a **Español**.",
     "select": "Selecciona tu idioma:",
     "german": "Deutsch",
     "english": "English",
@@ -58,7 +58,7 @@
     "indonesian": "Bahasa Indonesia",
     "command_description": "Cambiar idioma del servidor",
     "only_admin": "❌ Solo los administradores pueden cambiar el idioma del servidor.",
-    "updated": "✅ Idioma del servidor cambiado a <strong>{language}</strong>."
+    "updated": "✅ Idioma del servidor cambiado a **{language}**."
   },
   "web": {
     "title": "TRS Ticket Bot - Panel de Administración",
@@ -133,10 +133,10 @@
     "user_added": "➕ Usuario {user} añadido al ticket #{id}",
     "close_requested": "❓ Cierre del ticket #{id} solicitado por {user}",
     "priority_changed": "⚙️ Ticket #{id} prioridad {direction}: {priority}",
-    "config_updated": "⚙️ <strong>Configuración actualizada</strong> desde el panel",
-    "panel_sent": "📤 <strong>Mensaje del panel enviado</strong> en {channel}",
-    "panel_edited": "✏️ <strong>Mensaje del panel actualizado</strong> en {channel}",
-    "language_changed": "🌐 <strong>Idioma del servidor cambiado</strong> a {language}"
+    "config_updated": "⚙️ **Configuración actualizada** desde el panel",
+    "panel_sent": "📤 **Mensaje del panel enviado** en {channel}",
+    "panel_edited": "✏️ **Mensaje del panel actualizado** en {channel}",
+    "language_changed": "🌐 **Idioma del servidor cambiado** a {language}"
   },
   "tos": {
     "title": "Términos de Uso y Privacidad",

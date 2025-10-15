@@ -29,7 +29,7 @@
     "ticket_closed": "✅ Ticket wurde geschlossen.",
     "ticket_claimed": "{user} hat das Ticket übernommen.",
     "ticket_unclaimed": "{user} hat das Ticket freigegeben.",
-    "priority_changed": "🔔 Priorität wurde auf <strong>{priority}</strong> geändert.",
+    "priority_changed": "🔔 Priorität wurde auf **{priority}** geändert.",
     "user_added_success": "✅ {user} wurde zum Ticket hinzugefügt.",
     "close_requested": "🔔 {user} hat das Schließen des Tickets angefordert.",
     "only_team": "❌ Nur Team-Mitglieder können diese Aktion ausführen.",
@@ -46,14 +46,14 @@
     "dashboard_description": "Öffne das Admin-Panel"
   },
   "language": {
-    "changed": "✅ Sprache wurde auf <strong>Deutsch</strong> gesetzt.",
+    "changed": "✅ Sprache wurde auf **Deutsch** gesetzt.",
     "select": "Wähle deine Sprache:",
     "german": "Deutsch",
     "english": "English",
     "hebrew": "עברית",
     "command_description": "Ändere die Server-Sprache",
     "only_admin": "❌ Nur Administratoren können die Server-Sprache ändern.",
-    "updated": "✅ Server-Sprache wurde auf <strong>{language}</strong> gesetzt."
+    "updated": "✅ Server-Sprache wurde auf **{language}** gesetzt."
   },
   "web": {
     "title": "TRS Ticket Bot - Admin Panel",
@@ -128,10 +128,10 @@
     "user_added": "➕ User {user} zu Ticket #{id} hinzugefügt",
     "close_requested": "❓ Close-Request Ticket #{id} von {user}",
     "priority_changed": "⚙️ Ticket #{id} Priorität {direction}: {priority}",
-    "config_updated": "⚙️ <strong>Konfiguration aktualisiert</strong> über das Panel",
-    "panel_sent": "📤 <strong>Panel-Nachricht gesendet</strong> in {channel}",
-    "panel_edited": "✏️ <strong>Panel-Nachricht aktualisiert</strong> in {channel}",
-    "language_changed": "🌐 <strong>Server-Sprache geändert</strong> auf {language}"
+    "config_updated": "⚙️ **Konfiguration aktualisiert** über das Panel",
+    "panel_sent": "📤 **Panel-Nachricht gesendet** in {channel}",
+    "panel_edited": "✏️ **Panel-Nachricht aktualisiert** in {channel}",
+    "language_changed": "🌐 **Server-Sprache geändert** auf {language}"
   },
   "tos": {
     "title": "Nutzungsbedingungen & Datenschutz",

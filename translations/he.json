@@ -29,7 +29,7 @@
     "ticket_closed": "✅ הכרטיס נסגר.",
     "ticket_claimed": "{user} תפס את הכרטיס.",
     "ticket_unclaimed": "{user} שיחרר את הכרטיס.",
-    "priority_changed": "🔔 העדיפות שונתה ל-<strong>{priority}</strong>.",
+    "priority_changed": "🔔 העדיפות שונתה ל-**{priority}**.",
     "user_added_success": "✅ {user} נוסף לכרטיס.",
     "close_requested": "🔔 {user} ביקש לסגור את הכרטיס.",
     "only_team": "❌ רק חברי צוות יכולים לבצע פעולה זו.",
@@ -46,14 +46,14 @@
     "dashboard_description": "פתח את פאנל הניהול"
   },
   "language": {
-    "changed": "✅ השפה הוגדרה ל<strong>עברית</strong>.",
+    "changed": "✅ השפה הוגדרה ל**עברית**.",
     "select": "בחר שפה:",
     "german": "גרמנית",
     "english": "אנגלית",
     "hebrew": "עברית",
     "command_description": "שנה את השפה של השרת",
     "only_admin": "❌ רק מנהלים יכולים לשנות את שפת השרת.",
-    "updated": "✅ שפת השרת עודכנה ל-<strong>{language}</strong>."
+    "updated": "✅ שפת השרת עודכנה ל-**{language}**."
   },
   "web": {
     "title": "TRS Ticket Bot - פאנל ניהול",
@@ -128,10 +128,10 @@
     "user_added": "➕ משתמש {user} נוסף לכרטיס #{id}",
     "close_requested": "❓ בקשת סגירה לכרטיס #{id} על ידי {user}",
     "priority_changed": "⚙️ כרטיס #{id} עדיפות {direction}: {priority}",
-    "config_updated": "⚙️ <strong>תצורה עודכנה</strong> דרך הפאנל",
-    "panel_sent": "📤 <strong>הודעת פאנל נשלחה</strong> ב-{channel}",
-    "panel_edited": "✏️ <strong>הודעת פאנל עודכנה</strong> ב-{channel}",
-    "language_changed": "🌐 <strong>שפת השרת שונתה</strong> ל-{language}"
+    "config_updated": "⚙️ **תצורה עודכנה** דרך הפאנל",
+    "panel_sent": "📤 **הודעת פאנל נשלחה** ב-{channel}",
+    "panel_edited": "✏️ **הודעת פאנל עודכנה** ב-{channel}",
+    "language_changed": "🌐 **שפת השרת שונתה** ל-{language}"
   },
   "tos": {
     "title": "תנאי שימוש ומדיניות פרטיות",

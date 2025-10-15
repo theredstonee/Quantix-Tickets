@@ -29,7 +29,7 @@
     "ticket_closed": "✅ Ticket foi fechado.",
     "ticket_claimed": "{user} assumiu o ticket.",
     "ticket_unclaimed": "{user} liberou o ticket.",
-    "priority_changed": "🔔 Prioridade alterada para <strong>{priority}</strong>.",
+    "priority_changed": "🔔 Prioridade alterada para **{priority}**.",
     "user_added_success": "✅ {user} foi adicionado ao ticket.",
     "close_requested": "🔔 {user} solicitou o fechamento do ticket.",
     "only_team": "❌ Apenas membros da equipe podem executar esta ação.",
@@ -46,7 +46,7 @@
     "dashboard_description": "Abrir painel de administração"
   },
   "language": {
-    "changed": "✅ Idioma alterado para <strong>Português</strong>.",
+    "changed": "✅ Idioma alterado para **Português**.",
     "select": "Selecione seu idioma:",
     "german": "Deutsch",
     "english": "English",
@@ -56,7 +56,7 @@
     "portuguese": "Português",
     "command_description": "Alterar idioma do servidor",
     "only_admin": "❌ Apenas administradores podem alterar o idioma do servidor.",
-    "updated": "✅ Idioma do servidor foi alterado para <strong>{language}</strong>."
+    "updated": "✅ Idioma do servidor foi alterado para **{language}**."
   },
   "web": {
     "title": "TRS Ticket Bot - Painel de Administração",
@@ -131,10 +131,10 @@
     "user_added": "➕ Usuário {user} adicionado ao ticket #{id}",
     "close_requested": "❓ Fechamento do ticket #{id} solicitado por {user}",
     "priority_changed": "⚙️ Ticket #{id} prioridade {direction}: {priority}",
-    "config_updated": "⚙️ <strong>Configuração atualizada</strong> através do painel",
-    "panel_sent": "📤 <strong>Mensagem do painel enviada</strong> em {channel}",
-    "panel_edited": "✏️ <strong>Mensagem do painel atualizada</strong> em {channel}",
-    "language_changed": "🌐 <strong>Idioma do servidor alterado</strong> para {language}"
+    "config_updated": "⚙️ **Configuração atualizada** através do painel",
+    "panel_sent": "📤 **Mensagem do painel enviada** em {channel}",
+    "panel_edited": "✏️ **Mensagem do painel atualizada** em {channel}",
+    "language_changed": "🌐 **Idioma do servidor alterado** para {language}"
   },
   "tos": {
     "title": "Termos de Uso e Privacidade",
