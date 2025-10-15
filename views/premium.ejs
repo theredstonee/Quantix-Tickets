@@ -253,6 +253,22 @@
           Verlängert sich automatisch am <%= new Date(expiresAt).toLocaleDateString('de-DE') %>
         </p>
       <% } %>
+
+      <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <% if (currentTier === 'pro') { %>
+          <form action="/downgrade-premium" method="POST" style="margin: 0;">
+            <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); width: auto; padding: 12px 30px; font-size: 1rem;" onclick="return confirm('Möchtest du wirklich von Pro zu Basic downgraden? Du verlierst Zugriff auf Pro-Features.');">
+              ⬇️ Zu Basic downgraden
+            </button>
+          </form>
+        <% } %>
+
+        <form action="/cancel-premium" method="POST" style="margin: 0;">
+          <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); width: auto; padding: 12px 30px; font-size: 1rem;" onclick="return confirm('Möchtest du dein Premium-Abo wirklich kündigen? Du verlierst alle Premium-Features.');">
+            🚫 Premium kündigen
+          </button>
+        </form>
+      </div>
     </div>
     <% } %>
 
@@ -290,13 +306,17 @@
           <li>🎨 Custom Bot-Avatar</li>
           <li>📊 Ticket-Statistiken</li>
           <li>⚡ Priority Support</li>
-          <li>5 Ticket-Kategorien</li>
+          <li>7 Ticket-Kategorien</li>
         </ul>
 
         <% if (currentTier === 'basic') { %>
           <div class="current-badge">✓ Aktueller Plan</div>
         <% } else if (currentTier === 'pro') { %>
-          <button class="btn-purchase" disabled>Downgrade nicht möglich</button>
+          <form action="/downgrade-premium" method="POST">
+            <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);" onclick="return confirm('Möchtest du wirklich von Pro zu Basic downgraden?');">
+              ⬇️ Zu Basic downgraden
+            </button>
+          </form>
         <% } else { %>
           <form action="/purchase-premium" method="POST">
             <input type="hidden" name="tier" value="basic">

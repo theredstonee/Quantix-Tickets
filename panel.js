@@ -13,7 +13,7 @@ const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 const { VERSION, COPYRIGHT } = require('./version.config');
 const { handleAutoUpdate, showUpdateLog } = require('./auto-update');
-const { isPremium, hasFeature, getPremiumTier, getPremiumInfo, activatePremium, deactivatePremium, renewPremium, PREMIUM_TIERS } = require('./premium');
+const { isPremium, hasFeature, getPremiumTier, getPremiumInfo, activatePremium, deactivatePremium, renewPremium, downgradePremium, cancelPremium, PREMIUM_TIERS } = require('./premium');
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
@@ -392,6 +392,19 @@ module.exports = (client)=>{
         cfg.githubWebhookChannelId = req.body.githubWebhookChannelId.trim();
       } else {
         cfg.githubWebhookChannelId = null;
+      }
+
+      // Email-Benachrichtigungen (Pro Feature)
+      if(req.body.notificationEmail){
+        const email = req.body.notificationEmail.trim();
+        // Einfache Email-Validierung
+        if(email.includes('@') && email.includes('.')){
+          cfg.notificationEmail = email;
+        } else {
+          cfg.notificationEmail = null;
+        }
+      } else {
+        cfg.notificationEmail = null;
       }
 
       const labelInputs = [].concat(req.body.label||[]);
@@ -999,6 +1012,92 @@ module.exports = (client)=>{
     } catch (err) {
       console.error('Premium Success Error:', err);
       res.status(500).send('Fehler beim Abrufen der Zahlungsinformationen.');
+    }
+  });
+
+  // Premium Kündigen
+  router.post('/cancel-premium', isAuth, async (req, res) => {
+    const guildId = req.session.selectedGuild;
+
+    try {
+      const result = cancelPremium(guildId);
+
+      if (!result.success) {
+        return res.redirect('/premium?msg=no-active-premium');
+      }
+
+      // Stripe Subscription kündigen
+      const stripeEnabled = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'your_stripe_secret_key_here';
+
+      if (stripeEnabled && result.subscriptionId) {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+        try {
+          await stripe.subscriptions.cancel(result.subscriptionId);
+          console.log(`🚫 Stripe Subscription ${result.subscriptionId} gekündigt für Guild ${guildId}`);
+        } catch (stripeErr) {
+          console.error('Stripe Cancellation Error:', stripeErr);
+          // Premium wurde bereits lokal gekündigt, auch wenn Stripe-Call fehlschlägt
+        }
+      }
+
+      await logEvent(guildId, '🚫 Premium wurde gekündigt', req.user);
+
+      res.redirect('/premium?msg=cancelled');
+    } catch (err) {
+      console.error('Cancel Premium Error:', err);
+      res.status(500).send('Fehler beim Kündigen. Bitte kontaktiere den Support.');
+    }
+  });
+
+  // Premium Downgrade (Pro → Basic)
+  router.post('/downgrade-premium', isAuth, async (req, res) => {
+    const guildId = req.session.selectedGuild;
+
+    try {
+      const premiumInfo = getPremiumInfo(guildId);
+
+      if (premiumInfo.tier !== 'pro') {
+        return res.redirect('/premium?msg=not-pro');
+      }
+
+      const success = downgradePremium(guildId);
+
+      if (!success) {
+        return res.redirect('/premium?msg=downgrade-failed');
+      }
+
+      // Stripe Subscription auf Basic umstellen
+      const stripeEnabled = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'your_stripe_secret_key_here';
+
+      if (stripeEnabled && premiumInfo.subscriptionId) {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const basicPriceId = process.env.STRIPE_PRICE_BASIC || 'price_basic';
+
+        try {
+          const subscription = await stripe.subscriptions.retrieve(premiumInfo.subscriptionId);
+
+          await stripe.subscriptions.update(premiumInfo.subscriptionId, {
+            items: [{
+              id: subscription.items.data[0].id,
+              price: basicPriceId
+            }],
+            proration_behavior: 'create_prorations'
+          });
+
+          console.log(`⬇️ Stripe Subscription ${premiumInfo.subscriptionId} downgraded zu Basic für Guild ${guildId}`);
+        } catch (stripeErr) {
+          console.error('Stripe Downgrade Error:', stripeErr);
+          // Premium wurde bereits lokal downgraded, auch wenn Stripe-Call fehlschlägt
+        }
+      }
+
+      await logEvent(guildId, '⬇️ Premium wurde von Pro zu Basic downgraded', req.user);
+
+      res.redirect('/premium?msg=downgraded');
+    } catch (err) {
+      console.error('Downgrade Premium Error:', err);
+      res.status(500).send('Fehler beim Downgrade. Bitte kontaktiere den Support.');
     }
   });
 

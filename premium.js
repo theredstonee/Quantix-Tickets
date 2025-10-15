@@ -73,7 +73,7 @@ const PREMIUM_TIERS = {
       autoClose: false,
       emailNotifications: false,
       unlimitedCategories: false,
-      maxCategories: 5
+      maxCategories: 7
     }
   },
   pro: {
@@ -100,6 +100,11 @@ const PREMIUM_TIERS = {
  * @returns {boolean}
  */
 function isPremium(guildId, requiredTier = 'basic') {
+  // Special case: Developer/Owner Server hat immer Premium Pro
+  if (guildId === '1291125037876904026') {
+    return true;
+  }
+
   const cfg = readCfg(guildId);
 
   if (!cfg.premium || cfg.premium.tier === 'none') {
@@ -125,6 +130,11 @@ function isPremium(guildId, requiredTier = 'basic') {
  * @returns {boolean}
  */
 function hasFeature(guildId, feature) {
+  // Special case: Developer/Owner Server hat alle Pro-Features
+  if (guildId === '1291125037876904026') {
+    return PREMIUM_TIERS.pro.features[feature] || false;
+  }
+
   const cfg = readCfg(guildId);
 
   if (!cfg.premium || cfg.premium.tier === 'none') {
@@ -145,6 +155,11 @@ function hasFeature(guildId, feature) {
  * @returns {string} 'none', 'basic' oder 'pro'
  */
 function getPremiumTier(guildId) {
+  // Special case: Developer/Owner Server hat immer Pro
+  if (guildId === '1291125037876904026') {
+    return 'pro';
+  }
+
   const cfg = readCfg(guildId);
 
   if (!cfg.premium || cfg.premium.tier === 'none') {
@@ -165,6 +180,19 @@ function getPremiumTier(guildId) {
  * @returns {object}
  */
 function getPremiumInfo(guildId) {
+  // Special case: Developer/Owner Server hat volle Pro-Infos
+  if (guildId === '1291125037876904026') {
+    return {
+      tier: 'pro',
+      tierName: 'Premium Pro (Lifetime)',
+      price: PREMIUM_TIERS.pro.price,
+      features: PREMIUM_TIERS.pro.features,
+      expiresAt: null, // Läuft nie ab
+      isActive: true,
+      subscriptionId: 'lifetime_owner_server'
+    };
+  }
+
   const tier = getPremiumTier(guildId);
   const cfg = readCfg(guildId);
 
@@ -172,7 +200,7 @@ function getPremiumInfo(guildId) {
     tier: tier,
     tierName: PREMIUM_TIERS[tier].name,
     price: PREMIUM_TIERS[tier].price,
-    features: cfg.premium?.features || PREMIUM_TIERS.none.features,
+    features: cfg.premium?.features || PREMIUM_TIERS[tier].features,
     expiresAt: cfg.premium?.expiresAt || null,
     isActive: tier !== 'none',
     subscriptionId: cfg.premium?.subscriptionId || null
@@ -252,10 +280,72 @@ function renewPremium(guildId) {
  * @returns {number}
  */
 function getMaxCategories(guildId) {
+  // Special case: Developer/Owner Server hat immer unbegrenzte Kategorien
+  if (guildId === '1291125037876904026') {
+    return 999;
+  }
+
   const cfg = readCfg(guildId);
   const tier = getPremiumTier(guildId);
 
   return cfg.premium?.features?.maxCategories || PREMIUM_TIERS[tier].features.maxCategories;
+}
+
+/**
+ * Downgrade von Pro zu Basic
+ * @param {string} guildId - Discord Guild ID
+ * @returns {boolean}
+ */
+function downgradePremium(guildId) {
+  const cfg = readCfg(guildId);
+
+  if (!cfg.premium || cfg.premium.tier !== 'pro') {
+    console.log(`⚠️ Downgrade nicht möglich: Guild ${guildId} hat kein Pro`);
+    return false;
+  }
+
+  // Behalte Subscription ID und Customer ID für Billing
+  cfg.premium.tier = 'basic';
+  cfg.premium.features = { ...PREMIUM_TIERS.basic.features };
+
+  saveCfg(guildId, cfg);
+  console.log(`⬇️ Premium downgraded zu Basic für Guild ${guildId}`);
+
+  return true;
+}
+
+/**
+ * Kündigt Premium (für manuelle Kündigung)
+ * @param {string} guildId - Discord Guild ID
+ * @returns {object} Subscription Info für Stripe-Kündigung
+ */
+function cancelPremium(guildId) {
+  const cfg = readCfg(guildId);
+
+  if (!cfg.premium || cfg.premium.tier === 'none') {
+    return { success: false, message: 'Kein aktives Premium' };
+  }
+
+  const subscriptionId = cfg.premium.subscriptionId;
+  const customerId = cfg.premium.customerId;
+
+  // Setze auf Free
+  cfg.premium = {
+    tier: 'none',
+    expiresAt: null,
+    subscriptionId: null,
+    customerId: null,
+    features: { ...PREMIUM_TIERS.none.features }
+  };
+
+  saveCfg(guildId, cfg);
+  console.log(`🚫 Premium gekündigt für Guild ${guildId}`);
+
+  return {
+    success: true,
+    subscriptionId: subscriptionId,
+    customerId: customerId
+  };
 }
 
 module.exports = {
@@ -268,6 +358,8 @@ module.exports = {
   deactivatePremium,
   renewPremium,
   getMaxCategories,
+  downgradePremium,
+  cancelPremium,
   readCfg,
   saveCfg
 };

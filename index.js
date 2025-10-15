@@ -38,6 +38,7 @@ const {
 } = require('discord.js');
 const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
 const { VERSION, COPYRIGHT } = require('./version.config');
+const { initEmailService, sendTicketNotification, getGuildEmail } = require('./email-notifications');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -342,6 +343,7 @@ async function cleanupOldServerData(){
 client.once('ready', async () => {
   await deployCommands();
   await cleanupOldServerData();
+  initEmailService(); // Email-Benachrichtigungen initialisieren
   console.log(`🤖 ${client.user.tag} bereit`);
 });
 
@@ -1198,6 +1200,24 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   log.push({ id:nr, channelId:ch.id, userId:interaction.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), formData, addedUsers:[] });
   safeWrite(ticketsPath, log);
   logEvent(interaction.guild, t(guildId, 'logs.ticket_created', { id: nr, user: `<@${interaction.user.id}>`, topic: topic.label }));
+
+  // Email-Benachrichtigung senden (nur für Pro)
+  try {
+    const emailAddress = getGuildEmail(guildId);
+    if (emailAddress) {
+      const ticketInfo = {
+        id: nr,
+        topic: topic.label,
+        user: interaction.user.tag || interaction.user.username,
+        timestamp: Date.now(),
+        formData: formData || {}
+      };
+      await sendTicketNotification(guildId, ticketInfo, emailAddress);
+    }
+  } catch (emailErr) {
+    console.error('Email notification error:', emailErr);
+    // Fehler wird ignoriert, Ticket-Erstellung wird nicht blockiert
+  }
 
   try {
     if(cfg.panelMessageId && cfg.panelChannelId){
