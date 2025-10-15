@@ -627,9 +627,9 @@ module.exports = (client)=>{
     try {
       const guildId = req.session.selectedGuild;
 
-      // Prüfe ob Pro Feature
+      // Prüfe ob Pro Feature (Beta hat auch Zugriff)
       const premiumInfo = getPremiumInfo(guildId);
-      if (premiumInfo.tier !== 'pro' && guildId !== '1291125037876904026') {
+      if (premiumInfo.tier !== 'pro' && premiumInfo.tier !== 'beta' && guildId !== '1291125037876904026') {
         return res.redirect('/premium?msg=analytics-requires-pro');
       }
 
