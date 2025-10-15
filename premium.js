@@ -94,6 +94,22 @@ const PREMIUM_TIERS = {
       unlimitedCategories: true,
       maxCategories: 999
     }
+  },
+  beta: {
+    name: 'Betatester',
+    price: 0,
+    priceId: null,
+    features: {
+      noAds: true,
+      customAvatar: true,
+      statistics: true,
+      prioritySupport: true,
+      autoClose: true,
+      emailNotifications: true,
+      dmNotifications: true,
+      unlimitedCategories: true,
+      maxCategories: 999
+    }
   }
 };
 
@@ -118,6 +134,15 @@ function isPremium(guildId, requiredTier = 'basic') {
   // Lifetime Premium läuft nie ab
   if (cfg.premium.lifetime === true) {
     return true;
+  }
+
+  // Betatester haben Pro-Level Access
+  if (cfg.premium.tier === 'beta') {
+    // Prüfe ob abgelaufen
+    if (cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) < new Date()) {
+      return false;
+    }
+    return true; // Beta = Pro-Level
   }
 
   // Prüfe ob abgelaufen
@@ -155,6 +180,15 @@ function hasFeature(guildId, feature) {
     return cfg.premium.features?.[feature] || false;
   }
 
+  // Betatester haben Pro-Features
+  if (cfg.premium.tier === 'beta') {
+    // Prüfe ob abgelaufen
+    if (cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) < new Date()) {
+      return PREMIUM_TIERS.none.features[feature] || false;
+    }
+    return PREMIUM_TIERS.beta.features[feature] || false;
+  }
+
   // Prüfe ob abgelaufen
   if (cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) < new Date()) {
     return PREMIUM_TIERS.none.features[feature] || false;
@@ -166,7 +200,7 @@ function hasFeature(guildId, feature) {
 /**
  * Gibt das Premium-Tier eines Servers zurück
  * @param {string} guildId - Discord Guild ID
- * @returns {string} 'none', 'basic' oder 'pro'
+ * @returns {string} 'none', 'basic', 'pro' oder 'beta'
  */
 function getPremiumTier(guildId) {
   // Special case: Developer/Owner Server hat immer Pro
@@ -315,6 +349,11 @@ function getMaxCategories(guildId) {
 
   const cfg = readCfg(guildId);
   const tier = getPremiumTier(guildId);
+
+  // Betatester haben unbegrenzte Kategorien
+  if (tier === 'beta') {
+    return 999;
+  }
 
   return cfg.premium?.features?.maxCategories || PREMIUM_TIERS[tier].features.maxCategories;
 }
@@ -517,6 +556,105 @@ async function assignPremiumRole(client, buyerId) {
   }
 }
 
+/**
+ * Aktiviert Betatester-Status für einen Server (Owner-only)
+ * @param {string} guildId - Discord Guild ID
+ * @param {number} days - Anzahl Tage (z.B. 30, 60, 90)
+ * @param {string} testerId - Discord User ID des Betatester (optional)
+ * @returns {object}
+ */
+function activateBetatester(guildId, days, testerId = null) {
+  const cfg = readCfg(guildId);
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + days);
+
+  cfg.premium = {
+    tier: 'beta',
+    expiresAt: expiresAt.toISOString(),
+    subscriptionId: 'betatester_' + guildId,
+    customerId: 'betatester_customer_' + guildId,
+    testerId: testerId,
+    betatester: true,
+    features: { ...PREMIUM_TIERS.beta.features }
+  };
+
+  saveCfg(guildId, cfg);
+  console.log(`🧪 Betatester aktiviert für Guild ${guildId} bis ${expiresAt.toLocaleDateString()}`);
+
+  return {
+    success: true,
+    tier: 'beta',
+    guildId: guildId,
+    testerId: testerId,
+    expiresAt: expiresAt.toISOString()
+  };
+}
+
+/**
+ * Deaktiviert Betatester-Status von einem Server (Owner-only)
+ * @param {string} guildId - Discord Guild ID
+ * @returns {object}
+ */
+function deactivateBetatester(guildId) {
+  const cfg = readCfg(guildId);
+
+  if (!cfg.premium || cfg.premium.tier !== 'beta') {
+    return {
+      success: false,
+      message: 'Dieser Server ist kein Betatester'
+    };
+  }
+
+  cfg.premium = {
+    tier: 'none',
+    expiresAt: null,
+    subscriptionId: null,
+    customerId: null,
+    betatester: false,
+    features: { ...PREMIUM_TIERS.none.features }
+  };
+
+  saveCfg(guildId, cfg);
+  console.log(`🧪 Betatester deaktiviert für Guild ${guildId}`);
+
+  return {
+    success: true,
+    guildId: guildId
+  };
+}
+
+/**
+ * Listet alle Betatester-Server auf
+ * @returns {array}
+ */
+function listBetatesterServers() {
+  const betatesterServers = [];
+
+  if (!fs.existsSync(CONFIG_DIR)) {
+    return betatesterServers;
+  }
+
+  const files = fs.readdirSync(CONFIG_DIR);
+
+  for (const file of files) {
+    if (!file.endsWith('.json') || file.includes('_tickets')) continue;
+
+    const guildId = file.replace('.json', '');
+    const cfg = readCfg(guildId);
+
+    if (cfg.premium && cfg.premium.tier === 'beta') {
+      betatesterServers.push({
+        guildId: guildId,
+        testerId: cfg.premium.testerId,
+        expiresAt: cfg.premium.expiresAt
+      });
+    }
+  }
+
+  return betatesterServers;
+}
+
 module.exports = {
   PREMIUM_TIERS,
   isPremium,
@@ -533,6 +671,9 @@ module.exports = {
   removeLifetimePremium,
   listLifetimePremiumServers,
   assignPremiumRole,
+  activateBetatester,
+  deactivateBetatester,
+  listBetatesterServers,
   readCfg,
   saveCfg
 };
