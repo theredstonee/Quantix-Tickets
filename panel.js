@@ -659,9 +659,21 @@ module.exports = (client)=>{
           claimerCounts[t.claimer] = (claimerCounts[t.claimer] || 0) + 1;
         }
       });
-      stats.topClaimers = Object.entries(claimerCounts)
-        .map(([userId, count]) => ({ userId, count }))
-        .sort((a, b) => b.count - a.count);
+
+      // User IDs zu Benutzernamen auflösen
+      const topClaimersWithNames = [];
+      for (const [userId, count] of Object.entries(claimerCounts)) {
+        let username = userId; // Fallback auf User ID
+        try {
+          const member = await guild.members.fetch(userId);
+          username = member.user.username || member.user.tag || userId;
+        } catch (err) {
+          console.log(`Konnte User ${userId} nicht fetchen`);
+        }
+        topClaimersWithNames.push({ userId, username, count });
+      }
+
+      stats.topClaimers = topClaimersWithNames.sort((a, b) => b.count - a.count);
 
       // Letzte 30 Tage Statistiken
       const now = Date.now();

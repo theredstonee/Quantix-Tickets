@@ -383,7 +383,7 @@
                   #<%= index + 1 %>
                 <% } %>
               </td>
-              <td><%= claimer.userId %></td>
+              <td><%= claimer.username || claimer.userId %></td>
               <td><strong><%= claimer.count %></strong></td>
               <td><span class="badge badge-success"><%= percentage %>%</span></td>
             </tr>
