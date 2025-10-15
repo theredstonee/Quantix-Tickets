@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { activateLifetimePremium, removeLifetimePremium, listLifetimePremiumServers } = require('../premium');
+const { activateLifetimePremium, removeLifetimePremium, listLifetimePremiumServers, assignPremiumRole } = require('../premium');
 
 const OWNER_ID = '1159182333316968530';
 
@@ -40,6 +40,15 @@ module.exports = {
               { name: '💎 Basic', value: 'basic' },
               { name: '👑 Pro', value: 'pro' }
             )
+        )
+        .addUserOption(option =>
+          option
+            .setName('buyer')
+            .setDescription('User who bought Premium (will receive role on Theredstonee Projects)')
+            .setDescriptionLocalizations({
+              de: 'User der Premium gekauft hat (erhält Rolle auf Theredstonee Projects)'
+            })
+            .setRequired(false)
         )
     )
     .addSubcommand(subcommand =>
@@ -113,12 +122,15 @@ module.exports = {
       if (subcommand === 'add') {
         const guildId = interaction.options.getString('server');
         const tier = interaction.options.getString('tier');
+        const buyer = interaction.options.getUser('buyer');
 
         // Fetch guild info
         let guildName = guildId;
+        let guildOwner = null;
         try {
           const guild = await interaction.client.guilds.fetch(guildId);
           guildName = guild.name;
+          guildOwner = await guild.fetchOwner();
         } catch (err) {
           return interaction.reply({
             content: `❌ Server mit ID \`${guildId}\` nicht gefunden. Bot ist nicht auf diesem Server.`,
@@ -126,8 +138,11 @@ module.exports = {
           });
         }
 
+        // Determine buyer ID (falls nicht angegeben, Server-Owner)
+        const buyerId = buyer ? buyer.id : guildOwner.id;
+
         // Activate Lifetime Premium
-        const result = activateLifetimePremium(guildId, tier);
+        const result = activateLifetimePremium(guildId, tier, buyerId);
 
         if (!result.success) {
           return interaction.reply({
@@ -136,13 +151,29 @@ module.exports = {
           });
         }
 
+        // Assign Premium Role on Theredstonee Projects
+        const roleResult = await assignPremiumRole(interaction.client, buyerId);
+
+        let roleStatus = '';
+        if (roleResult.success) {
+          if (roleResult.alreadyHad) {
+            roleStatus = '\n✅ User hatte bereits die Premium-Rolle';
+          } else {
+            roleStatus = '\n✅ Premium-Rolle auf Theredstonee Projects vergeben';
+          }
+        } else {
+          roleStatus = `\n⚠️ Rolle konnte nicht vergeben werden: ${roleResult.error}`;
+        }
+
         const embed = new EmbedBuilder()
           .setTitle('♾️ Lifetime Premium Aktiviert')
           .setDescription(
             `**Server:** ${guildName}\n` +
             `**Guild ID:** \`${guildId}\`\n` +
             `**Tier:** ${tier === 'pro' ? '👑 Pro' : '💎 Basic'}\n` +
-            `**Status:** ♾️ Lifetime (läuft nie ab)`
+            `**Käufer:** ${buyer ? buyer.tag : guildOwner.user.tag}\n` +
+            `**Status:** ♾️ Lifetime (läuft nie ab)` +
+            roleStatus
           )
           .setColor(tier === 'pro' ? 0x764ba2 : 0x667eea)
           .setTimestamp()

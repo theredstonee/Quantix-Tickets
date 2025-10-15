@@ -239,8 +239,9 @@ function getPremiumInfo(guildId) {
  * @param {string} tier - 'basic' oder 'pro'
  * @param {string} subscriptionId - Stripe Subscription ID
  * @param {string} customerId - Stripe Customer ID
+ * @param {string} buyerId - Discord User ID des Käufers (optional)
  */
-function activatePremium(guildId, tier, subscriptionId, customerId) {
+function activatePremium(guildId, tier, subscriptionId, customerId, buyerId = null) {
   const cfg = readCfg(guildId);
 
   const expiresAt = new Date();
@@ -251,6 +252,7 @@ function activatePremium(guildId, tier, subscriptionId, customerId) {
     expiresAt: expiresAt.toISOString(),
     subscriptionId: subscriptionId,
     customerId: customerId,
+    buyerId: buyerId,
     features: { ...PREMIUM_TIERS[tier].features }
   };
 
@@ -378,9 +380,10 @@ function cancelPremium(guildId) {
  * Aktiviert Lifetime Premium für einen Server (Owner-only)
  * @param {string} guildId - Discord Guild ID
  * @param {string} tier - 'basic' oder 'pro'
+ * @param {string} buyerId - Discord User ID des Käufers (optional)
  * @returns {object}
  */
-function activateLifetimePremium(guildId, tier) {
+function activateLifetimePremium(guildId, tier, buyerId = null) {
   const cfg = readCfg(guildId);
 
   cfg.premium = {
@@ -389,6 +392,7 @@ function activateLifetimePremium(guildId, tier) {
     subscriptionId: 'lifetime_' + guildId,
     customerId: 'lifetime_customer_' + guildId,
     lifetime: true,
+    buyerId: buyerId,
     features: { ...PREMIUM_TIERS[tier].features }
   };
 
@@ -398,7 +402,8 @@ function activateLifetimePremium(guildId, tier) {
   return {
     success: true,
     tier: tier,
-    guildId: guildId
+    guildId: guildId,
+    buyerId: buyerId
   };
 }
 
@@ -466,6 +471,52 @@ function listLifetimePremiumServers() {
   return lifetimeServers;
 }
 
+/**
+ * Vergibt Premium-Rolle auf dem Theredstonee Projects Server
+ * @param {Client} client - Discord.js Client
+ * @param {string} buyerId - User ID des Käufers
+ * @returns {Promise<object>} Success/Error object
+ */
+async function assignPremiumRole(client, buyerId) {
+  const THEREDSTONEE_GUILD_ID = '1291125037876904026';
+  const PREMIUM_ROLE_ID = '1428069033269268551';
+
+  try {
+    // Fetch Theredstonee Projects Server
+    const guild = await client.guilds.fetch(THEREDSTONEE_GUILD_ID);
+
+    // Fetch Member
+    const member = await guild.members.fetch(buyerId);
+
+    // Check if member already has role
+    if (member.roles.cache.has(PREMIUM_ROLE_ID)) {
+      console.log(`✅ User ${buyerId} hat bereits die Premium-Rolle`);
+      return {
+        success: true,
+        alreadyHad: true,
+        message: 'User hatte bereits die Premium-Rolle'
+      };
+    }
+
+    // Assign Role
+    await member.roles.add(PREMIUM_ROLE_ID);
+    console.log(`✅ Premium-Rolle vergeben an ${member.user.tag} (${buyerId})`);
+
+    return {
+      success: true,
+      alreadyHad: false,
+      message: `Premium-Rolle erfolgreich vergeben an ${member.user.tag}`
+    };
+
+  } catch (err) {
+    console.error(`❌ Fehler beim Vergeben der Premium-Rolle an ${buyerId}:`, err.message);
+    return {
+      success: false,
+      error: err.message
+    };
+  }
+}
+
 module.exports = {
   PREMIUM_TIERS,
   isPremium,
@@ -481,6 +532,7 @@ module.exports = {
   activateLifetimePremium,
   removeLifetimePremium,
   listLifetimePremiumServers,
+  assignPremiumRole,
   readCfg,
   saveCfg
 };
