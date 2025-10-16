@@ -105,8 +105,7 @@ module.exports = {
               ru: 'Сервер (ID или имя)',
               'pt-BR': 'Servidor (ID da guilda ou nome)',
               'es-ES': 'Servidor (ID del servidor o nombre)',
-              id: 'Server (ID Guild atau nama)',
-              ar: 'الخادم (معرف الخادم أو الاسم)'
+              id: 'Server (ID Guild atau nama)'
             })
             .setRequired(true)
             .setAutocomplete(true)

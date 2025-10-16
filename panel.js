@@ -645,22 +645,8 @@ module.exports = (client)=>{
   });
 
   router.get('/logout', (req, res) => {
-    const wasAuthenticated = req.isAuthenticated && req.isAuthenticated();
-
-    // Passport logout
-    if (req.logout) {
-      req.logout((err) => {
-        if (err) console.error('Logout error:', err);
-      });
-    }
-
-    // Session zerstören
-    req.session.destroy((err) => {
-      if (err) console.error('Session destroy error:', err);
-    });
-
-    // Schöne Abmelde-Seite anzeigen
-    res.send(`
+    // Logout-Seite HTML Template
+    const logoutPage = `
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -848,7 +834,43 @@ module.exports = (client)=>{
   </script>
 </body>
 </html>
-    `);
+    `;
+
+    // Schritt 1: Passport logout (falls vorhanden)
+    if (req.logout) {
+      req.logout((logoutErr) => {
+        if (logoutErr) {
+          console.error('Logout error:', logoutErr);
+        }
+
+        // Schritt 2: Session zerstören (nach Passport logout)
+        if (req.session) {
+          req.session.destroy((destroyErr) => {
+            if (destroyErr) {
+              console.error('Session destroy error:', destroyErr);
+            }
+            // Schritt 3: Response senden (nach Session destroy)
+            res.send(logoutPage);
+          });
+        } else {
+          // Keine Session vorhanden, direkt Response senden
+          res.send(logoutPage);
+        }
+      });
+    } else {
+      // Kein Passport logout, nur Session zerstören
+      if (req.session) {
+        req.session.destroy((destroyErr) => {
+          if (destroyErr) {
+            console.error('Session destroy error:', destroyErr);
+          }
+          res.send(logoutPage);
+        });
+      } else {
+        // Weder Passport noch Session, direkt Response
+        res.send(logoutPage);
+      }
+    }
   });
 
   router.get('/set-user-language/:lang', (req, res) => {
