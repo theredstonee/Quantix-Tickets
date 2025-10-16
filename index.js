@@ -1259,7 +1259,7 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       if(i.customId==='unclaim'){
-        if(!isClaimer && !isTeam) return i.reply({ephemeral:true,content:'Nur der Claimer kann unclaimen'});
+        if(!isClaimer) return i.reply({ephemeral:true,content:'Nur der Claimer kann unclaimen'});
 
         try {
           const permissions = [
@@ -1271,6 +1271,29 @@ client.on(Events.InteractionCreate, async i => {
             ticket.addedUsers.forEach(uid => {
               permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
             });
+          }
+
+          // Team-Rolle wiederherstellen
+          const TEAM_ROLE_UNCLAIM = getTeamRole(guildId);
+          if(TEAM_ROLE_UNCLAIM && TEAM_ROLE_UNCLAIM.trim()){
+            try {
+              await i.guild.roles.fetch(TEAM_ROLE_UNCLAIM);
+              permissions.push({ id: TEAM_ROLE_UNCLAIM, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+            } catch {}
+          }
+
+          // Priority-Rollen wiederherstellen (mit Schreibrechten)
+          const currentPriority = ticket.priority || 0;
+          const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, currentPriority);
+          for(const roleId of hierarchicalRoles){
+            if(roleId && roleId.trim() && roleId !== TEAM_ROLE_UNCLAIM){
+              try {
+                await i.guild.roles.fetch(roleId);
+                permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+              } catch {
+                console.error('Priority-Rolle nicht gefunden:', roleId);
+              }
+            }
           }
 
           await i.channel.permissionOverwrites.set(permissions);
@@ -1346,6 +1369,24 @@ client.on(Events.InteractionCreate, async i => {
               ticket.addedUsers.forEach(uid => {
                 permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
               });
+            }
+
+            // Priority-Rollen: Sehen aber nicht schreiben
+            const currentPriority = ticket.priority || 0;
+            const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, currentPriority);
+            for(const roleId of hierarchicalRoles){
+              if(roleId && roleId.trim()){
+                try {
+                  await i.guild.roles.fetch(roleId);
+                  permissions.push({
+                    id: roleId,
+                    allow: [PermissionsBitField.Flags.ViewChannel],
+                    deny: [PermissionsBitField.Flags.SendMessages]
+                  });
+                } catch {
+                  console.error('Priority-Rolle nicht gefunden:', roleId);
+                }
+              }
             }
 
             await i.channel.permissionOverwrites.set(permissions);
@@ -1593,7 +1634,12 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
     }
 
     const TEAM_ROLE = getTeamRole(guildId);
-    if(TEAM_ROLE && TEAM_ROLE.trim()){
+
+    // Bei geclaimten Tickets: Team-Rolle NICHT hinzufügen, Priority-Rollen nur lesen
+    // Bei nicht geclaimten Tickets: Team-Rolle + Priority-Rollen voller Zugriff
+    const isClaimed = !!ticket.claimer;
+
+    if(!isClaimed && TEAM_ROLE && TEAM_ROLE.trim()){
       try {
         await interaction.guild.roles.fetch(TEAM_ROLE);
         permissions.push({ id: TEAM_ROLE, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
@@ -1604,7 +1650,17 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
       if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
         try {
           await interaction.guild.roles.fetch(roleId);
-          permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+          if(isClaimed){
+            // Geclaimed: Nur lesen, nicht schreiben
+            permissions.push({
+              id: roleId,
+              allow: [PermissionsBitField.Flags.ViewChannel],
+              deny: [PermissionsBitField.Flags.SendMessages]
+            });
+          } else {
+            // Nicht geclaimed: Vollen Zugriff
+            permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+          }
         } catch {
           console.error('Priority-Rolle nicht gefunden:', roleId);
         }
