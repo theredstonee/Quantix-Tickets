@@ -25,6 +25,9 @@
       --accent-color: #00b894;
       --accent-hover: #00a077;
       --card-bg: #f8f9fa;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --shadow-color: rgba(0, 0, 0, 0.1);
     }
 
     [data-theme="dark"] {
@@ -34,6 +37,9 @@
       --accent-color: #00ff88;
       --accent-hover: #00dd77;
       --card-bg: #0f1510;
+      --glass-bg: rgba(15, 21, 16, 0.7);
+      --glass-border: rgba(0, 255, 136, 0.3);
+      --shadow-color: rgba(0, 255, 136, 0.2);
     }
 
     [data-theme="dark"] body {
@@ -48,6 +54,26 @@
     [data-theme="dark"] code {
       background: #0a1a0f;
       color: var(--accent-color);
+    }
+
+    /* Animated Background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.03;
+      animation: bgMove 20s linear infinite;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
     }
 
     html, body {
