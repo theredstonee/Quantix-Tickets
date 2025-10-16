@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.0.0] - 2025-10-16
+
+### 🎉 First Stable Release
+
+Dies ist der erste stabile Release des TRS Tickets Bot mit vollständig modernisiertem Design und allen Core-Features.
+
+**Alle Features von Release 0.1.0 sind enthalten:**
+- Modernes Glassmorphism-Design auf allen Seiten
+- Animierter Dot-Pattern-Hintergrund
+- 10 komplett überarbeitete Seiten
+- Bot Invite Link mit Mehrsprachen-Support
+- Vollständige SEO-Optimierung
+- CSS-Variablen System für konsistentes Theming
+- Theme-Persistenz über localStorage und Cookies
+
+**System Features:**
+- Multi-Server Discord Ticket System
+- Web Dashboard mit Discord OAuth2
+- 9 Sprachen Support (DE, EN, HE, JA, RU, PT, ES, ID, AR)
+- Priority-Rollen System (3-Tier Hierarchical)
+- Premium System (Free, Basic, Pro, Betatester)
+- Analytics Dashboard (Pro Feature)
+- Email & DM Notifications (Pro Features)
+- Transcript System (TXT & HTML)
+- GitHub Webhook Integration
+- Auto-Update System
+
+---
+
 ## [Release 0.1.0] - 2025-10-16
 
 ### 🎨 Major Design Overhaul
