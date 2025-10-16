@@ -1,5 +1,27 @@
 # Changelog
 
+## [Beta 0.3.8] - 2025-10-16
+
+### Added
+- **Discord Embeds in Transcripts**
+  - Discord Embeds werden jetzt vollständig in Ticket-Transcripts angezeigt
+  - HTML-Transcripts zeigen Embeds mit Discord-ähnlichem Styling
+  - TXT-Transcripts enthalten Embed-Inhalte als formatierten Text
+  - Unterstützt: Titel, Beschreibung, Felder, Footer und Embed-Farben
+  - Mention-Resolution funktioniert auch in Embed-Inhalten
+  - XSS-Protection durch HTML-Entity-Encoding
+
+- **Support Discord Server Link**
+  - Neuer Button für den Support Discord Server (https://dc.theredstonee.de/) auf der Homepage
+  - Support-Link auch im Admin Panel verfügbar
+  - Mehrsprachige Beschriftung in allen 9 unterstützten Sprachen
+  - Öffnet in neuem Tab mit `target="_blank"` und `rel="noopener noreferrer"`
+
+### Changed
+- **Transcript System**: Erweiterte CSS-Styles für Embed-Darstellung mit Discord-artiger Optik
+
+---
+
 ## [Beta 0.3.7] - 2025-10-15
 
 ### Added

@@ -1,6 +1,84 @@
 {
-  "currentVersion": "Beta 0.3.7",
+  "currentVersion": "Beta 0.3.8",
   "versions": [
+    {
+      "version": "Beta 0.3.8",
+      "date": "2025-10-16",
+      "changes": {
+        "de": [
+          "📝 Discord Embeds werden jetzt vollständig in Ticket-Transcripts angezeigt",
+          "🎨 HTML-Transcripts mit Discord-ähnlichem Embed-Styling",
+          "📄 TXT-Transcripts enthalten Embed-Inhalte als formatierten Text",
+          "🔗 Support Discord Server Link auf Homepage und Admin Panel hinzugefügt",
+          "🌐 Mehrsprachiger Support-Button in allen 9 Sprachen",
+          "🛡️ XSS-Protection für Embed-Inhalte durch HTML-Entity-Encoding"
+        ],
+        "en": [
+          "📝 Discord Embeds are now fully displayed in ticket transcripts",
+          "🎨 HTML transcripts with Discord-like embed styling",
+          "📄 TXT transcripts contain embed content as formatted text",
+          "🔗 Support Discord Server link added to homepage and admin panel",
+          "🌐 Multilingual support button in all 9 languages",
+          "🛡️ XSS protection for embed content through HTML entity encoding"
+        ],
+        "he": [
+          "📝 Embeds של Discord מוצגים כעת במלואם בתמלילי כרטיסים",
+          "🎨 תמלילי HTML עם סגנון embed דמוי Discord",
+          "📄 תמלילי TXT מכילים תוכן embed כטקסט מעוצב",
+          "🔗 קישור לשרת התמיכה Discord נוסף לדף הבית ולפאנל הניהול",
+          "🌐 כפתור תמיכה רב-לשוני בכל 9 השפות",
+          "🛡️ הגנת XSS לתוכן embed באמצעות קידוד ישויות HTML"
+        ],
+        "ja": [
+          "📝 Discord埋め込みがチケットトランスクリプトに完全表示されるようになりました",
+          "🎨 Discordライクな埋め込みスタイルのHTMLトランスクリプト",
+          "📄 TXTトランスクリプトにフォーマットされたテキストとして埋め込みコンテンツが含まれます",
+          "🔗 ホームページと管理パネルにサポートDiscordサーバーリンクを追加",
+          "🌐 全9言語対応のサポートボタン",
+          "🛡️ HTMLエンティティエンコーディングによる埋め込みコンテンツのXSS保護"
+        ],
+        "ru": [
+          "📝 Discord встраивания теперь полностью отображаются в транскриптах тикетов",
+          "🎨 HTML-транскрипты со стилизацией встраиваний в стиле Discord",
+          "📄 TXT-транскрипты содержат содержимое встраиваний как форматированный текст",
+          "🔗 Ссылка на Discord сервер поддержки добавлена на главную страницу и панель администратора",
+          "🌐 Многоязычная кнопка поддержки на всех 9 языках",
+          "🛡️ XSS-защита для содержимого встраиваний через кодирование HTML-сущностей"
+        ],
+        "pt": [
+          "📝 Embeds do Discord agora são totalmente exibidos em transcrições de tickets",
+          "🎨 Transcrições HTML com estilo de embed semelhante ao Discord",
+          "📄 Transcrições TXT contêm conteúdo de embed como texto formatado",
+          "🔗 Link do servidor de suporte Discord adicionado à página inicial e painel de administração",
+          "🌐 Botão de suporte multilíngue em todos os 9 idiomas",
+          "🛡️ Proteção XSS para conteúdo de embed através de codificação de entidades HTML"
+        ],
+        "es": [
+          "📝 Los embeds de Discord ahora se muestran completamente en transcripciones de tickets",
+          "🎨 Transcripciones HTML con estilo de embed similar a Discord",
+          "📄 Las transcripciones TXT contienen contenido de embed como texto formateado",
+          "🔗 Enlace del servidor de soporte Discord agregado a la página de inicio y panel de administración",
+          "🌐 Botón de soporte multilingüe en los 9 idiomas",
+          "🛡️ Protección XSS para contenido de embed mediante codificación de entidades HTML"
+        ],
+        "id": [
+          "📝 Embed Discord sekarang ditampilkan sepenuhnya dalam transkrip tiket",
+          "🎨 Transkrip HTML dengan gaya embed mirip Discord",
+          "📄 Transkrip TXT berisi konten embed sebagai teks terformat",
+          "🔗 Link server dukungan Discord ditambahkan ke beranda dan panel admin",
+          "🌐 Tombol dukungan multibahasa dalam semua 9 bahasa",
+          "🛡️ Perlindungan XSS untuk konten embed melalui encoding entitas HTML"
+        ],
+        "ar": [
+          "📝 تُعرض الآن تضمينات Discord بالكامل في نصوص التذاكر",
+          "🎨 نصوص HTML مع تصميم تضمين يشبه Discord",
+          "📄 تحتوي نصوص TXT على محتوى التضمين كنص منسق",
+          "🔗 تمت إضافة رابط خادم دعم Discord إلى الصفحة الرئيسية ولوحة الإدارة",
+          "🌐 زر دعم متعدد اللغات بجميع اللغات التسع",
+          "🛡️ حماية XSS لمحتوى التضمين من خلال ترميز كيانات HTML"
+        ]
+      }
+    },
     {
       "version": "Beta 0.3.7",
       "date": "2025-10-15",

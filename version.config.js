@@ -1,6 +1,6 @@
 module.exports = {
-  VERSION: 'Beta 0.3.7',
-  RELEASE_DATE: '2025-10-15',
+  VERSION: 'Beta 0.3.8',
+  RELEASE_DATE: '2025-10-16',
   AUTHOR: 'Theredstonee',
   REPOSITORY: 'https://github.com/Theredstonee/TRS-Tickets-Bot',
   SUPPORT_SERVER: 'https://discord.gg/theredstonee',

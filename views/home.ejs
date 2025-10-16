@@ -583,7 +583,7 @@
         ar: 'نظام تذاكر احترافي لـ Discord'
       };
     %><%= heroTexts[lang] || heroTexts.de %></p>
-    <div class="version-badge">Beta 0.3.7</div>
+    <div class="version-badge">Beta 0.3.8</div>
 
     <% if (isAuthenticated && user) { %>
       <div class="user-info">
@@ -656,6 +656,26 @@
         </a>
       </div>
     <% } %>
+
+    <!-- Support Discord Server Button -->
+    <div class="button-container" style="margin-top: 1rem;">
+      <a href="https://dc.theredstonee.de/" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+        <i class="fab fa-discord"></i> <%
+          const supportTexts = {
+            de: 'Discord Support Server',
+            en: 'Discord Support Server',
+            he: 'שרת תמיכה Discord',
+            ja: 'Discordサポートサーバー',
+            ru: 'Discord сервер поддержки',
+            pt: 'Servidor de Suporte Discord',
+            es: 'Servidor de Soporte Discord',
+            id: 'Server Dukungan Discord',
+            zh: 'Discord 支持服务器',
+            ar: 'خادم دعم Discord'
+          };
+        %><%= supportTexts[lang] || supportTexts.de %>
+      </a>
+    </div>
   </div>
 
   <div class="content-wrapper">
