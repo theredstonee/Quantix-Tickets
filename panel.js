@@ -437,6 +437,106 @@ module.exports = (client)=>{
     passport.authenticate('discord',(err,user)=>{
       if(err){
         console.error('OAuth Fehler:', err);
+
+        // Check for rate limit error
+        if(err.code === 'invalid_request' || (err.message && err.message.includes('rate limit'))) {
+          return res.status(429).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rate Limit - Zu viele Anfragen</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 600px;
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    p { font-size: 1.1rem; line-height: 1.6; margin: 1rem 0; }
+    .countdown {
+      font-size: 3rem;
+      font-weight: bold;
+      margin: 2rem 0;
+      color: #fff;
+    }
+    a {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: white;
+      color: #ff6b6b;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    a:hover { transform: scale(1.05); }
+    .warning {
+      background: rgba(255,255,255,0.2);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏳ Discord OAuth Rate Limit</h1>
+    <p><strong>Zu viele Login-Versuche!</strong></p>
+    <p>Du hast Discord's Rate Limit erreicht durch zu viele Anmeldeversuche in kurzer Zeit.</p>
+
+    <div class="countdown" id="countdown">5:00</div>
+
+    <div class="warning">
+      <strong>⚠️ Wichtig:</strong><br>
+      Bitte warte 5-10 Minuten, bevor du dich erneut anmeldest.<br>
+      Weitere Versuche können die Wartezeit verlängern!
+    </div>
+
+    <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 2rem;">
+      Dieser Schutz ist von Discord, nicht vom Bot.
+    </p>
+
+    <a href="/">← Zurück zur Startseite</a>
+  </div>
+
+  <script>
+    let seconds = 300; // 5 minutes
+    const countdownEl = document.getElementById('countdown');
+
+    setInterval(() => {
+      if (seconds > 0) {
+        seconds--;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        countdownEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+      } else {
+        countdownEl.textContent = 'Bereit!';
+        countdownEl.style.color = '#00ff88';
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
+          `);
+        }
+
         if(err.oauthError) return res.status(429).send(`
 <!DOCTYPE html>
 <html lang="de">
@@ -992,13 +1092,91 @@ module.exports = (client)=>{
       premiumTier: premiumInfo.tier,
       premiumTierName: premiumInfo.tierName,
       isPremium: premiumInfo.isActive,
-      isAdmin: req.isAdmin // Flag ob User Admin ist oder nur Team-Mitglied
+      isAdmin: req.isAdmin, // Flag ob User Admin ist oder nur Team-Mitglied
+      t: res.locals.t, // Translation object
+      lang: res.locals.lang // Language code
     });
   });
 
   router.post('/panel', isAuth, async (req,res)=>{
+    // Check if user is admin (not just team member)
+    const guildId = req.session.selectedGuild;
+    const entry = req.user.guilds?.find(g=>g.id===guildId);
+    const ADMIN = 0x8n;
+    const isAdmin = entry && (BigInt(entry.permissions) & ADMIN) === ADMIN;
+
+    if (!isAdmin) {
+      return res.status(403).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keine Berechtigung</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 600px;
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    p { font-size: 1.1rem; line-height: 1.6; margin: 1rem 0; }
+    .icon { font-size: 5rem; margin-bottom: 1rem; }
+    a {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: white;
+      color: #f39c12;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    a:hover { transform: scale(1.05); }
+    .info-box {
+      background: rgba(255,255,255,0.2);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">👁️</div>
+    <h1>Nur-Lese-Modus</h1>
+    <p><strong>Du hast keine Berechtigung, Einstellungen zu ändern!</strong></p>
+    <p>Du bist als <strong>Team-Mitglied</strong> angemeldet und kannst nur Einstellungen ansehen.</p>
+
+    <div class="info-box">
+      <strong>💡 Hinweis:</strong><br>
+      Nur Server-Administratoren können Einstellungen bearbeiten.<br>
+      Wenn du Änderungen vornehmen musst, kontaktiere einen Administrator.
+    </div>
+
+    <a href="/panel">← Zurück zum Panel</a>
+  </div>
+</body>
+</html>
+      `);
+    }
+
     try {
-      const guildId = req.session.selectedGuild;
       const cfg = readCfg(guildId);
 
       cfg.guildId = guildId;
@@ -1142,8 +1320,84 @@ module.exports = (client)=>{
   });
 
   router.post('/panel/send', isAuth, async (req,res)=>{
+    // Check if user is admin (not just team member)
+    const guildId = req.session.selectedGuild;
+    const entry = req.user.guilds?.find(g=>g.id===guildId);
+    const ADMIN = 0x8n;
+    const isAdmin = entry && (BigInt(entry.permissions) & ADMIN) === ADMIN;
+
+    if (!isAdmin) {
+      return res.status(403).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keine Berechtigung</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 600px;
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    p { font-size: 1.1rem; line-height: 1.6; margin: 1rem 0; }
+    .icon { font-size: 5rem; margin-bottom: 1rem; }
+    a {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: white;
+      color: #f39c12;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    a:hover { transform: scale(1.05); }
+    .info-box {
+      background: rgba(255,255,255,0.2);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">👁️</div>
+    <h1>Nur-Lese-Modus</h1>
+    <p><strong>Du hast keine Berechtigung, das Panel zu senden!</strong></p>
+    <p>Du bist als <strong>Team-Mitglied</strong> angemeldet und kannst keine Aktionen ausführen.</p>
+
+    <div class="info-box">
+      <strong>💡 Hinweis:</strong><br>
+      Nur Server-Administratoren können das Panel senden oder bearbeiten.<br>
+      Wenn du dies tun musst, kontaktiere einen Administrator.
+    </div>
+
+    <a href="/panel">← Zurück zum Panel</a>
+  </div>
+</body>
+</html>
+      `);
+    }
+
     try {
-      const guildId = req.session.selectedGuild;
       const cfg = readCfg(guildId);
       cfg.panelChannelId = req.body.channelId;
       const guild   = await client.guilds.fetch(guildId);
@@ -1161,7 +1415,83 @@ module.exports = (client)=>{
   });
 
   router.post('/panel/edit', isAuth, async (req,res)=>{
+    // Check if user is admin (not just team member)
     const guildId = req.session.selectedGuild;
+    const entry = req.user.guilds?.find(g=>g.id===guildId);
+    const ADMIN = 0x8n;
+    const isAdmin = entry && (BigInt(entry.permissions) & ADMIN) === ADMIN;
+
+    if (!isAdmin) {
+      return res.status(403).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keine Berechtigung</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 600px;
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    p { font-size: 1.1rem; line-height: 1.6; margin: 1rem 0; }
+    .icon { font-size: 5rem; margin-bottom: 1rem; }
+    a {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: white;
+      color: #f39c12;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    a:hover { transform: scale(1.05); }
+    .info-box {
+      background: rgba(255,255,255,0.2);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">👁️</div>
+    <h1>Nur-Lese-Modus</h1>
+    <p><strong>Du hast keine Berechtigung, das Panel zu bearbeiten!</strong></p>
+    <p>Du bist als <strong>Team-Mitglied</strong> angemeldet und kannst keine Aktionen ausführen.</p>
+
+    <div class="info-box">
+      <strong>💡 Hinweis:</strong><br>
+      Nur Server-Administratoren können das Panel senden oder bearbeiten.<br>
+      Wenn du dies tun musst, kontaktiere einen Administrator.
+    </div>
+
+    <a href="/panel">← Zurück zum Panel</a>
+  </div>
+</body>
+</html>
+      `);
+    }
+
     const cfg = readCfg(guildId);
     if(!cfg.panelChannelId || !cfg.panelMessageId) return res.redirect('/panel?msg=nopanel');
     try {

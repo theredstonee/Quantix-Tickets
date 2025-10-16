@@ -429,6 +429,41 @@
       document.documentElement.setAttribute('data-theme', savedTheme);
       document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     })();
+
+    // Loading animation for Home button
+    const homeLink = document.querySelector('a[href="/"]');
+    if (homeLink) {
+      homeLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = loadingOverlay.querySelector('.loading-text');
+        const loadingSubtext = loadingOverlay.querySelector('.loading-subtext');
+
+        const lang = '<%= lang || "de" %>';
+        const texts = {
+          de: { text: 'Zur Startseite...', subtext: 'Bitte warten' },
+          en: { text: 'Going to home...', subtext: 'Please wait' },
+          he: { text: 'חזרה לדף הבית...', subtext: 'אנא המתן' },
+          ja: { text: 'ホームに移動中...', subtext: 'お待ちください' },
+          ru: { text: 'Переход на главную...', subtext: 'Пожалуйста, подождите' },
+          pt: { text: 'Indo para início...', subtext: 'Por favor, aguarde' },
+          es: { text: 'Yendo al inicio...', subtext: 'Por favor, espere' },
+          id: { text: 'Ke beranda...', subtext: 'Mohon tunggu' },
+          ar: { text: 'الذهاب إلى الرئيسية...', subtext: 'يرجى الانتظار' }
+        };
+
+        const t = texts[lang] || texts.de;
+        loadingText.textContent = t.text;
+        loadingSubtext.textContent = t.subtext;
+        loadingOverlay.classList.add('show');
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
+      });
+    }
   </script>
 </body>
 </html>
