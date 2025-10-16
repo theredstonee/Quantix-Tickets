@@ -560,7 +560,7 @@
     <a href="/tickets" class="secondary-btn">
       <i class="fas fa-history"></i> <%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : lang === 'he' ? 'היסטוריית כרטיסים' : lang === 'ja' ? 'チケット履歴' : lang === 'ru' ? 'История тикетов' : lang === 'pt' ? 'Histórico de Tickets' : lang === 'es' ? 'Historial de Tickets' : lang === 'id' ? 'Riwayat Tiket' : lang === 'zh' ? '工单历史' : lang === 'ar' ? 'سجل التذاكر' : 'Ticket-Verlauf' %>
     </a>
-    <% if (premiumTier === 'pro' || guildId === '1291125037876904026') { %>
+    <% if (premiumTier === 'pro' || premiumTier === 'beta' || guildId === '1291125037876904026') { %>
     <a href="/analytics" class="secondary-btn">
       <i class="fas fa-chart-line"></i> <%= lang === 'de' ? 'Analytics' : lang === 'en' ? 'Analytics' : lang === 'he' ? 'אנליטיקה' : lang === 'ja' ? 'アナリティクス' : lang === 'ru' ? 'Аналитика' : lang === 'pt' ? 'Análise' : lang === 'es' ? 'Analítica' : lang === 'id' ? 'Analitik' : lang === 'zh' ? '分析' : lang === 'ar' ? 'تحليلات' : 'Analytics' %>
     </a>
@@ -756,7 +756,7 @@
                 <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'basic' ? 'rgba(102,126,234,0.1)' : 'transparent' %>;">
                   <%= t.premium.tier_basic %>
                 </th>
-                <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'pro' ? 'rgba(118,75,162,0.15)' : 'transparent' %>;">
+                <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'pro' || premiumTier === 'beta' ? 'rgba(118,75,162,0.15)' : 'transparent' %>;">
                   <%= t.premium.tier_pro %>
                 </th>
               </tr>
@@ -819,7 +819,7 @@
           <strong style="font-size: 1.1rem; display: block; margin-bottom: 1rem;">⚙️ Konfigurierbare Features</strong>
 
           <!-- Email-Benachrichtigungen (nur Pro) -->
-          <% if (premiumTier === 'pro' || guildId === '1291125037876904026') { %>
+          <% if (premiumTier === 'pro' || premiumTier === 'beta' || guildId === '1291125037876904026') { %>
           <div style="margin-bottom: 1.5rem;">
             <label>
               <%= t.premium.email_notifications_label %>
@@ -1000,7 +1000,7 @@
           <strong><%= t.premium.category_limit_title %></strong>
           <br>
           <span style="font-size: 1.2rem; color: var(--accent-color); font-weight: bold; margin-top: 0.5rem; display: block;">
-            <%= premiumTier === 'pro' || guildId === '1291125037876904026' ? t.premium.category_limit_unlimited : premiumTier === 'basic' ? '7 ' + t.premium.feature_ticket_categories : '3 ' + t.premium.feature_ticket_categories %>
+            <%= premiumTier === 'pro' || premiumTier === 'beta' || guildId === '1291125037876904026' ? t.premium.category_limit_unlimited : premiumTier === 'basic' ? '7 ' + t.premium.feature_ticket_categories : '3 ' + t.premium.feature_ticket_categories %>
           </span>
           <% if (premiumTier === 'none') { %>
           <span style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
