@@ -341,11 +341,77 @@ async function cleanupOldServerData(){
   }
 }
 
+function startPremiumExpiryChecker(){
+  const THEREDSTONEE_GUILD_ID = '1291125037876904026';
+  const PREMIUM_ROLE_ID = '1428069033269268551';
+
+  const checkPremiumExpiry = async () => {
+    try {
+      const now = new Date();
+      const configFiles = fs.readdirSync(CONFIG_DIR).filter(f => f.endsWith('.json') && !f.includes('_tickets') && !f.includes('_counter'));
+
+      for(const file of configFiles){
+        const guildId = file.replace('.json', '');
+        const cfg = readCfg(guildId);
+
+        // Prüfe ob Premium existiert und abgelaufen ist
+        if(!cfg.premium || !cfg.premium.expiresAt) continue;
+
+        const expiresAt = new Date(cfg.premium.expiresAt);
+        if(expiresAt > now) continue; // Noch nicht abgelaufen
+
+        // Premium ist abgelaufen
+        const tier = cfg.premium.tier;
+        const buyerId = cfg.premium.buyerId;
+
+        if(!buyerId) continue; // Keine Buyer ID vorhanden
+
+        console.log(`⏰ Premium abgelaufen für Guild ${guildId} (Tier: ${tier}, Buyer: ${buyerId})`);
+
+        // Entferne Premium-Rolle von Theredstonee Projects Server
+        try {
+          const guild = await client.guilds.fetch(THEREDSTONEE_GUILD_ID);
+          const member = await guild.members.fetch(buyerId).catch(() => null);
+
+          if(member && member.roles.cache.has(PREMIUM_ROLE_ID)){
+            await member.roles.remove(PREMIUM_ROLE_ID);
+            console.log(`🚫 Premium-Rolle entfernt für User ${buyerId} (Guild: ${guildId})`);
+          }
+        } catch(err){
+          console.error(`❌ Fehler beim Entfernen der Premium-Rolle für ${buyerId}:`, err.message);
+        }
+
+        // Setze Premium auf "none"
+        cfg.premium = {
+          tier: 'none',
+          expiresAt: null,
+          buyerId: null,
+          lifetime: false
+        };
+        writeCfg(guildId, cfg);
+        console.log(`✅ Premium-Status auf "none" gesetzt für Guild ${guildId}`);
+      }
+    } catch(err){
+      console.error('❌ Fehler beim Premium Expiry Check:', err);
+    }
+  };
+
+  // Initiale Prüfung beim Start
+  console.log('🔍 Premium Expiry Checker gestartet (läuft jede Minute)');
+  checkPremiumExpiry();
+
+  // Prüfung jede Minute
+  setInterval(checkPremiumExpiry, 60 * 1000);
+}
+
 client.once('ready', async () => {
   await deployCommands();
   await cleanupOldServerData();
   initEmailService(); // Email-Benachrichtigungen initialisieren
   console.log(`🤖 ${client.user.tag} bereit`);
+
+  // Premium Expiry Checker - läuft jede Minute
+  startPremiumExpiryChecker();
 });
 
 client.on(Events.GuildCreate, async (guild) => {
