@@ -1,17 +1,27 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { t } = require('../translations');
 
+const ALLOWED_USER = '1159182333316968530';
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('restart')
-    .setDescription('Restart the bot')
+    .setDescription('Restart the bot (Owner only)')
     .setDescriptionLocalizations({
-      de: 'Bot neu starten'
+      de: 'Bot neu starten (Nur Owner)'
     })
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDMPermission(false),
 
   async execute(interaction) {
+    // Owner-only check
+    if (interaction.user.id !== ALLOWED_USER) {
+      return interaction.reply({
+        content: '❌ Only the bot owner can use this command.',
+        ephemeral: true
+      });
+    }
+
     const guildId = interaction.guild?.id;
 
     const embed = new EmbedBuilder()
