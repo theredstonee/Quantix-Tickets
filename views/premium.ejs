@@ -293,6 +293,77 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Billing Period Toggle */
+    .billing-toggle {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .billing-toggle h3 {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+    }
+
+    .toggle-buttons {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50px;
+      padding: 5px;
+      gap: 5px;
+    }
+
+    .toggle-btn {
+      padding: 12px 30px;
+      border: none;
+      background: transparent;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-btn.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .toggle-btn:not(.active):hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .savings-badge {
+      display: inline-block;
+      background: #00ff88;
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+
+    .price-period {
+      font-size: 1rem;
+      color: #999;
+      font-weight: normal;
+    }
+
+    @media (max-width: 768px) {
+      .toggle-buttons {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .toggle-btn {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -339,6 +410,19 @@
     </div>
     <% } %>
 
+    <!-- Billing Period Toggle -->
+    <div class="billing-toggle">
+      <h3>Abrechnungszeitraum wählen</h3>
+      <div class="toggle-buttons">
+        <button type="button" class="toggle-btn active" id="toggle-monthly" onclick="toggleBillingPeriod('monthly')">
+          Monatlich
+        </button>
+        <button type="button" class="toggle-btn" id="toggle-yearly" onclick="toggleBillingPeriod('yearly')">
+          Jährlich <span class="savings-badge">Spare bis zu 17%</span>
+        </button>
+      </div>
+    </div>
+
     <div class="pricing-cards">
       <!-- Free Tier -->
       <div class="pricing-card <%= currentTier === 'none' ? 'current' : '' %>">
@@ -364,7 +448,11 @@
       <!-- Basic Tier -->
       <div class="pricing-card <%= currentTier === 'basic' ? 'current' : '' %>">
         <div class="tier-name">Premium Basic</div>
-        <div class="tier-price">€2.99<span>/Monat</span></div>
+        <div class="tier-price">
+          <span class="price-monthly">€2.99</span>
+          <span class="price-yearly" style="display: none;">€29.99</span>
+          <span class="price-period">/Monat</span>
+        </div>
         <div class="tier-description">Perfekt für aktive Server</div>
 
         <ul class="features-list">
@@ -385,9 +473,10 @@
             </button>
           </form>
         <% } else { %>
-          <form action="/purchase-premium" method="POST">
+          <form action="/purchase-premium" method="POST" class="premium-form">
             <input type="hidden" name="tier" value="basic">
             <input type="hidden" name="guildId" value="<%= guildId %>">
+            <input type="hidden" name="billingPeriod" value="monthly" class="billing-period-input">
             <button type="submit" class="btn-purchase">Jetzt upgraden</button>
           </form>
         <% } %>
@@ -396,7 +485,11 @@
       <!-- Pro Tier -->
       <div class="pricing-card popular <%= currentTier === 'pro' ? 'current' : '' %>">
         <div class="tier-name">Premium Pro</div>
-        <div class="tier-price">€4.99<span>/Monat</span></div>
+        <div class="tier-price">
+          <span class="price-monthly">€4.99</span>
+          <span class="price-yearly" style="display: none;">€49.99</span>
+          <span class="price-period">/Monat</span>
+        </div>
         <div class="tier-description">Für professionelle Teams</div>
 
         <ul class="features-list">
@@ -411,9 +504,10 @@
         <% if (currentTier === 'pro') { %>
           <div class="current-badge">✓ Aktueller Plan</div>
         <% } else { %>
-          <form action="/purchase-premium" method="POST">
+          <form action="/purchase-premium" method="POST" class="premium-form">
             <input type="hidden" name="tier" value="pro">
             <input type="hidden" name="guildId" value="<%= guildId %>">
+            <input type="hidden" name="billingPeriod" value="monthly" class="billing-period-input">
             <button type="submit" class="btn-purchase">Jetzt upgraden</button>
           </form>
         <% } %>
@@ -426,6 +520,38 @@
   </div>
 
   <script>
+    // Global billing period state
+    let currentBillingPeriod = 'monthly';
+
+    // Toggle billing period function
+    function toggleBillingPeriod(period) {
+      currentBillingPeriod = period;
+
+      // Update toggle button states
+      document.getElementById('toggle-monthly').classList.toggle('active', period === 'monthly');
+      document.getElementById('toggle-yearly').classList.toggle('active', period === 'yearly');
+
+      // Update all price displays
+      document.querySelectorAll('.price-monthly').forEach(el => {
+        el.style.display = period === 'monthly' ? 'inline' : 'none';
+      });
+      document.querySelectorAll('.price-yearly').forEach(el => {
+        el.style.display = period === 'yearly' ? 'inline' : 'none';
+      });
+
+      // Update price period text
+      document.querySelectorAll('.price-period').forEach(el => {
+        el.textContent = period === 'monthly' ? '/Monat' : '/Jahr';
+      });
+
+      // Update all hidden billing period inputs in forms
+      document.querySelectorAll('.billing-period-input').forEach(input => {
+        input.value = period;
+      });
+
+      console.log(`Billing period changed to: ${period}`);
+    }
+
     // Loading Overlay Functions
     function showLoading(text) {
       const overlay = document.getElementById('loadingOverlay');

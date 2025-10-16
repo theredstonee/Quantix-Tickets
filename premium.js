@@ -274,12 +274,17 @@ function getPremiumInfo(guildId) {
  * @param {string} subscriptionId - Stripe Subscription ID
  * @param {string} customerId - Stripe Customer ID
  * @param {string} buyerId - Discord User ID des Käufers (optional)
+ * @param {string} billingPeriod - 'monthly' oder 'yearly' (optional, default: 'monthly')
  */
-function activatePremium(guildId, tier, subscriptionId, customerId, buyerId = null) {
+function activatePremium(guildId, tier, subscriptionId, customerId, buyerId = null, billingPeriod = 'monthly') {
   const cfg = readCfg(guildId);
 
   const expiresAt = new Date();
-  expiresAt.setMonth(expiresAt.getMonth() + 1); // 30 Tage
+  if (billingPeriod === 'yearly') {
+    expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 12 Monate
+  } else {
+    expiresAt.setMonth(expiresAt.getMonth() + 1); // 1 Monat
+  }
 
   cfg.premium = {
     tier: tier,
@@ -287,11 +292,12 @@ function activatePremium(guildId, tier, subscriptionId, customerId, buyerId = nu
     subscriptionId: subscriptionId,
     customerId: customerId,
     buyerId: buyerId,
+    billingPeriod: billingPeriod,
     features: { ...PREMIUM_TIERS[tier].features }
   };
 
   saveCfg(guildId, cfg);
-  console.log(`✅ Premium ${tier} aktiviert für Guild ${guildId} bis ${expiresAt.toLocaleDateString()}`);
+  console.log(`✅ Premium ${tier} (${billingPeriod}) aktiviert für Guild ${guildId} bis ${expiresAt.toLocaleDateString()}`);
 
   return cfg.premium;
 }
@@ -326,13 +332,19 @@ function renewPremium(guildId) {
     return false;
   }
 
+  const billingPeriod = cfg.premium.billingPeriod || 'monthly';
   const expiresAt = new Date(cfg.premium.expiresAt || new Date());
-  expiresAt.setMonth(expiresAt.getMonth() + 1); // Verlängere um 1 Monat
+
+  if (billingPeriod === 'yearly') {
+    expiresAt.setFullYear(expiresAt.getFullYear() + 1); // Verlängere um 12 Monate
+  } else {
+    expiresAt.setMonth(expiresAt.getMonth() + 1); // Verlängere um 1 Monat
+  }
 
   cfg.premium.expiresAt = expiresAt.toISOString();
   saveCfg(guildId, cfg);
 
-  console.log(`🔄 Premium verlängert für Guild ${guildId} bis ${expiresAt.toLocaleDateString()}`);
+  console.log(`🔄 Premium (${billingPeriod}) verlängert für Guild ${guildId} bis ${expiresAt.toLocaleDateString()}`);
   return true;
 }
 

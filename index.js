@@ -1252,8 +1252,7 @@ client.on(Events.InteractionCreate, async i => {
       const isClaimer = ticket.claimer === i.user.id;
 
       if(i.customId==='request_close'){
-        const mentionTeam = TEAM_ROLE ? `<@&${TEAM_ROLE}>` : '@Team';
-        await i.channel.send({ content:`❓ Schließungsanfrage von <@${i.user.id}> ${mentionTeam}`, components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel(t(guildId, 'buttons.close')).setStyle(ButtonStyle.Danger) ) ] });
+        await i.channel.send({ content:`❓ Schließungsanfrage von <@${i.user.id}>`, components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel(t(guildId, 'buttons.close')).setStyle(ButtonStyle.Danger) ) ] });
         logEvent(i.guild, t(guildId, 'logs.close_requested', { id: ticket.id, user: `<@${i.user.id}>` }));
         return i.reply({ephemeral:true,content:'Anfrage gesendet'});
       }
@@ -1444,9 +1443,7 @@ client.on(Events.InteractionCreate, async i => {
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
         await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`});
 
-        const TEAM_ROLE_ADD = getTeamRole(guildId);
-        const mentionTeam = TEAM_ROLE_ADD ? `<@&${TEAM_ROLE_ADD}>` : '';
-        await i.channel.send(`➕ <@${id}> ${t(guildId, 'messages.user_added_success', { user: `<@${id}>` }).replace('✅', '')} ${mentionTeam}`);
+        await i.channel.send(`➕ <@${id}> ${t(guildId, 'messages.user_added_success', { user: `<@${id}>` }).replace('✅', '')}`);
 
         logEvent(i.guild, t(guildId, 'logs.user_added', { user: `<@${id}>`, id: ticket.id }));
       } catch(err) {
@@ -1523,8 +1520,6 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
 
   const mentions = [];
-  if (TEAM_ROLE) mentions.push(`<@&${TEAM_ROLE}>`);
-
   const greenRoles = getPriorityRoles(guildId, 0);
   for(const roleId of greenRoles){
     if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
@@ -1683,7 +1678,6 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
 
   const mentions = [];
   const TEAM_ROLE = getTeamRole(guildId);
-  if (TEAM_ROLE) mentions.push(`<@&${TEAM_ROLE}>`);
 
   const currentPriorityRoles = getPriorityRoles(guildId, ticket.priority || 0);
   for(const roleId of currentPriorityRoles){

@@ -2002,9 +2002,14 @@ module.exports = (client)=>{
   router.post('/purchase-premium', isAuth, async (req, res) => {
     const guildId = req.session.selectedGuild;
     const tier = req.body.tier;
+    const billingPeriod = req.body.billingPeriod || 'monthly';
 
     if (!['basic', 'pro'].includes(tier)) {
       return res.status(400).send('Ungültiges Premium-Tier');
+    }
+
+    if (!['monthly', 'yearly'].includes(billingPeriod)) {
+      return res.status(400).send('Ungültiger Abrechnungszeitraum');
     }
 
     try {
@@ -2015,24 +2020,34 @@ module.exports = (client)=>{
 
       if (!stripeEnabled) {
         // Entwicklungsmodus: Direkt aktivieren (NUR ZU TESTZWECKEN!)
-        console.log(`⚠️ ENTWICKLUNGSMODUS: Premium ${tier} für Guild ${guildId} aktiviert ohne Payment`);
-        activatePremium(guildId, tier, 'dev_subscription_' + Date.now(), 'dev_customer_' + guildId);
-        await logEvent(guildId, `💎 Premium ${tier.toUpperCase()} wurde aktiviert (Entwicklungsmodus)`, req.user);
+        console.log(`⚠️ ENTWICKLUNGSMODUS: Premium ${tier} (${billingPeriod}) für Guild ${guildId} aktiviert ohne Payment`);
+        activatePremium(guildId, tier, 'dev_subscription_' + Date.now(), 'dev_customer_' + guildId, null, billingPeriod);
+        await logEvent(guildId, `💎 Premium ${tier.toUpperCase()} (${billingPeriod === 'yearly' ? 'Jährlich' : 'Monatlich'}) wurde aktiviert (Entwicklungsmodus)`, req.user);
         return res.redirect('/premium?msg=success');
       }
 
       // Produktions-Modus: Stripe Checkout
       const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+      // Price IDs basierend auf Tier und Billing Period
       const prices = {
-        basic: process.env.STRIPE_PRICE_BASIC || 'price_basic',
-        pro: process.env.STRIPE_PRICE_PRO || 'price_pro'
+        basic_monthly: process.env.STRIPE_PRICE_BASIC || 'price_basic',
+        basic_yearly: process.env.STRIPE_PRICE_BASIC_YEARLY || 'price_basic_yearly',
+        pro_monthly: process.env.STRIPE_PRICE_PRO || 'price_pro',
+        pro_yearly: process.env.STRIPE_PRICE_PRO_YEARLY || 'price_pro_yearly'
       };
+
+      const priceKey = `${tier}_${billingPeriod}`;
+      const selectedPrice = prices[priceKey];
+
+      if (!selectedPrice) {
+        return res.status(400).send('Ungültige Preis-Konfiguration');
+      }
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [{
-          price: prices[tier],
+          price: selectedPrice,
           quantity: 1
         }],
         mode: 'subscription',
@@ -2041,7 +2056,8 @@ module.exports = (client)=>{
         client_reference_id: guildId,
         metadata: {
           tier: tier,
-          guildId: guildId
+          guildId: guildId,
+          billingPeriod: billingPeriod
         }
       });
 
@@ -2093,9 +2109,10 @@ module.exports = (client)=>{
       if (session.payment_status === 'paid') {
         const guildId = session.client_reference_id;
         const tier = session.metadata.tier;
+        const billingPeriod = session.metadata.billingPeriod || 'monthly';
 
-        activatePremium(guildId, tier, session.subscription, session.customer);
-        await logEvent(guildId, `💎 Premium ${tier.toUpperCase()} wurde aktiviert!`, req.user);
+        activatePremium(guildId, tier, session.subscription, session.customer, req.user.id, billingPeriod);
+        await logEvent(guildId, `💎 Premium ${tier.toUpperCase()} (${billingPeriod === 'yearly' ? 'Jährlich' : 'Monatlich'}) wurde aktiviert!`, req.user);
 
         res.send(`
           <html>
@@ -2236,9 +2253,10 @@ module.exports = (client)=>{
           const session = event.data.object;
           const guildId = session.client_reference_id;
           const tier = session.metadata.tier;
+          const billingPeriod = session.metadata.billingPeriod || 'monthly';
 
-          activatePremium(guildId, tier, session.subscription, session.customer);
-          console.log(`✅ Premium ${tier} aktiviert für Guild ${guildId}`);
+          activatePremium(guildId, tier, session.subscription, session.customer, null, billingPeriod);
+          console.log(`✅ Premium ${tier} (${billingPeriod}) aktiviert für Guild ${guildId}`);
           break;
         }
 
