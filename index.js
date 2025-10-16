@@ -663,6 +663,19 @@ async function createTranscript(channel, ticket, opts = {}) {
     if (m.attachments.size) {
       m.attachments.forEach(a => lines.push(`  [Anhang] ${a.name} -> ${a.url}`));
     }
+    if (m.embeds.length) {
+      m.embeds.forEach(embed => {
+        lines.push(`  [Embed]`);
+        if(embed.title) lines.push(`    Titel: ${embed.title}`);
+        if(embed.description) lines.push(`    Beschreibung: ${mentionToName(embed.description).replace(/\n/g, '\\n')}`);
+        if(embed.fields && embed.fields.length > 0){
+          embed.fields.forEach(field => {
+            lines.push(`    ${field.name}: ${mentionToName(field.value).replace(/\n/g, '\\n')}`);
+          });
+        }
+        if(embed.footer && embed.footer.text) lines.push(`    Footer: ${embed.footer.text}`);
+      });
+    }
   }
   const txt = lines.join('\n');
 
@@ -826,6 +839,58 @@ async function createTranscript(channel, ticket, opts = {}) {
     .attachment-icon {
       font-size: 1.2rem;
     }
+    .embed {
+      margin-top: 0.5rem;
+      background: #2f3136;
+      border-left: 4px solid #5865F2;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      max-width: 500px;
+    }
+    .embed-author {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .embed-title {
+      color: #00b0f4;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .embed-description {
+      color: #dcddde;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+    .embed-fields {
+      display: grid;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .embed-field {
+      font-size: 0.875rem;
+    }
+    .embed-field-name {
+      color: #fff;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .embed-field-value {
+      color: #dcddde;
+    }
+    .embed-footer {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: #b9bbbe;
+    }
     .footer {
       background: #2f3136;
       padding: 1.5rem 2.5rem;
@@ -927,6 +992,54 @@ async function createTranscript(channel, ticket, opts = {}) {
               </a>`).join('')}</div>`
           : '';
 
+        const embeds = m.embeds.length
+          ? m.embeds.map(embed => {
+              const embedColor = embed.color ? `#${embed.color.toString(16).padStart(6, '0')}` : '#5865F2';
+              let embedHTML = `<div class="embed" style="border-left-color: ${embedColor};">`;
+
+              if(embed.author && embed.author.name){
+                embedHTML += `<div class="embed-author">${embed.author.name}</div>`;
+              }
+
+              if(embed.title){
+                const embedTitle = embed.title.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                embedHTML += `<div class="embed-title">${embedTitle}</div>`;
+              }
+
+              if(embed.description){
+                const embedDesc = mentionToName(embed.description)
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/\n/g, '<br>');
+                embedHTML += `<div class="embed-description">${embedDesc}</div>`;
+              }
+
+              if(embed.fields && embed.fields.length > 0){
+                embedHTML += `<div class="embed-fields">`;
+                embed.fields.forEach(field => {
+                  const fieldName = field.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                  const fieldValue = mentionToName(field.value)
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\n/g, '<br>');
+                  embedHTML += `<div class="embed-field">
+                    <div class="embed-field-name">${fieldName}</div>
+                    <div class="embed-field-value">${fieldValue}</div>
+                  </div>`;
+                });
+                embedHTML += `</div>`;
+              }
+
+              if(embed.footer && embed.footer.text){
+                const footerText = embed.footer.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                embedHTML += `<div class="embed-footer">${footerText}</div>`;
+              }
+
+              embedHTML += `</div>`;
+              return embedHTML;
+            }).join('')
+          : '';
+
         return `<div class="message">
           <div class="avatar">${authorInitial}</div>
           <div class="message-content">
@@ -936,6 +1049,7 @@ async function createTranscript(channel, ticket, opts = {}) {
             </div>
             <div class="message-text">${text || '<em style="color: #72767d;">Keine Nachricht</em>'}</div>
             ${attachments}
+            ${embeds}
           </div>
         </div>`;
       }).join('')}
@@ -1550,12 +1664,17 @@ client.on(Events.MessageCreate, async (message) => {
     const isAdded = ticket.addedUsers && ticket.addedUsers.includes(authorId);
 
     if(!isCreator && !isClaimer && !isAdded){
+      const messageContent = message.content || '[Keine Nachricht]';
+      const messageAuthor = message.author.tag || message.author.username;
+
       await message.delete().catch(()=>{});
 
       try {
         await message.author.send(`❌ Du hast keine Berechtigung in Ticket #${ticket.id} zu schreiben. Dieses Ticket wurde geclaimed und ist nur für Ersteller, Claimer und hinzugefügte Nutzer zugänglich.`);
       } catch {
       }
+
+      await logEvent(message.guild, `🚫 Nachricht gelöscht in Ticket #${ticket.id}\n**Nutzer:** ${messageAuthor} (<@${authorId}>)\n**Nachricht:** ${messageContent.substring(0, 200)}`);
     }
   } catch(err) {
     console.error('Fehler beim Message-Delete-Check:', err);
