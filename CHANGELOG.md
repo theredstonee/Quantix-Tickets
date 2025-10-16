@@ -1,5 +1,51 @@
 # Changelog
 
+## [Release 0.1.0] - 2025-10-16
+
+### 🎨 Major Design Overhaul
+- **Modern Glassmorphism Design** auf allen Seiten implementiert
+  - Backdrop-filter Blur-Effekte auf allen Cards und Boxen
+  - Semi-transparente Hintergründe für modernes Aussehen
+  - Einheitliches Design-System mit CSS-Variablen
+  - Smooth Hover-Effekte mit Transform und Shadow-Animationen
+
+- **Animierter Dot-Pattern-Hintergrund**
+  - 20s Endlos-Animation auf allen Seiten
+  - Radial-Gradient Pattern für subtile Bewegung
+  - Theme-bewusst (Light/Dark Mode kompatibel)
+
+- **Komplett überarbeitete Seiten:**
+  - Homepage (home.ejs) - Vollständige Landing Page mit SEO
+  - Admin Panel (panel.ejs) - Glassmorphism auf allen Fieldsets
+  - Analytics Dashboard (analytics.ejs) - Moderne Stat-Cards
+  - Premium Page (premium.ejs) - Elegante Pricing Cards
+  - Tickets Overview (tickets.ejs) - Glassmorphism Ticket-Cards
+  - Server Selection (select-server.ejs) - Moderne Server-Karten
+  - Ticket Detail (ticketDetail.ejs) - Animierter Hintergrund
+  - Privacy Policy (privacy-policy.ejs) - Glassmorphism Info-Boxen
+  - Terms of Service (terms-of-service.ejs) - Glassmorphism Info-Boxen
+  - Imprint (imprint.ejs) - Glassmorphism Info-Boxen
+
+### ✨ New Features
+- **Bot Invite Link** hinzugefügt
+  - Sichtbar auf Homepage für angemeldete und nicht-angemeldete Nutzer
+  - Direkter Link zu https://trstickets.theredstonee.de/install
+  - Mehrsprachige Unterstützung in allen 9 Sprachen
+
+### 🔧 Improvements
+- **CSS-Variablen System** für konsistentes Theming
+- **Responsive Design** auf allen modernisierten Seiten
+- **Verbesserte User Experience** durch flüssige Animationen
+- **Theme-Persistenz** über localStorage und Cookies
+
+### 🎯 SEO & Performance
+- Meta Tags vollständig implementiert
+- Open Graph Tags für Social Media
+- Structured Data (JSON-LD) für bessere Indexierung
+- Optimierte Load-Times durch Preconnect
+
+---
+
 ## [Beta 0.3.9] - 2025-10-16
 
 ### Fixed

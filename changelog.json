@@ -1,6 +1,120 @@
 {
-  "currentVersion": "Beta 0.3.9",
+  "currentVersion": "Release 0.1.0",
   "versions": [
+    {
+      "version": "Release 0.1.0",
+      "date": "2025-10-16",
+      "changes": {
+        "de": [
+          "🎨 Modernes Glassmorphism-Design auf allen Seiten implementiert",
+          "✨ Animierter Dot-Pattern-Hintergrund mit 20s Endlos-Animation",
+          "📱 Komplett überarbeitete Seiten: Home, Panel, Analytics, Premium, Tickets, Privacy, ToS, Imprint",
+          "🔗 Bot Invite Link hinzugefügt mit mehrsprachiger Unterstützung",
+          "💎 Backdrop-filter Blur-Effekte auf allen Cards und Boxen",
+          "🎭 Smooth Hover-Effekte mit Transform und Shadow-Animationen",
+          "🌈 CSS-Variablen System für konsistentes Theming",
+          "📊 SEO-Optimierungen: Meta Tags, Open Graph, Structured Data",
+          "⚡ Verbesserte Performance durch Preconnect und optimierte Load-Times",
+          "🌙 Theme-Persistenz über localStorage und Cookies"
+        ],
+        "en": [
+          "🎨 Modern glassmorphism design implemented on all pages",
+          "✨ Animated dot-pattern background with 20s infinite animation",
+          "📱 Completely redesigned pages: Home, Panel, Analytics, Premium, Tickets, Privacy, ToS, Imprint",
+          "🔗 Bot invite link added with multilingual support",
+          "💎 Backdrop-filter blur effects on all cards and boxes",
+          "🎭 Smooth hover effects with transform and shadow animations",
+          "🌈 CSS variables system for consistent theming",
+          "📊 SEO optimizations: Meta tags, Open Graph, Structured Data",
+          "⚡ Improved performance through preconnect and optimized load times",
+          "🌙 Theme persistence via localStorage and cookies"
+        ],
+        "he": [
+          "🎨 עיצוב Glassmorphism מודרני מיושם בכל הדפים",
+          "✨ רקע מונפש עם תבנית נקודות ואנימציית 20 שניות אינסופית",
+          "📱 דפים שעוצבו מחדש לחלוטין: דף הבית, פאנל, אנליטיקה, פרימיום, כרטיסים, פרטיות, תנאי שימוש",
+          "🔗 קישור הזמנת בוט נוסף עם תמיכה רב-לשונית",
+          "💎 אפקטי טשטוש Backdrop-filter על כל הכרטיסים והקופסאות",
+          "🎭 אפקטי Hover חלקים עם אנימציות Transform ו-Shadow",
+          "🌈 מערכת משתני CSS לעיצוב עקבי",
+          "📊 אופטימיזציות SEO: תגי Meta, Open Graph, נתונים מובנים",
+          "⚡ ביצועים משופרים באמצעות Preconnect וזמני טעינה אופטימליים",
+          "🌙 שמירת ערכת נושא דרך localStorage ו-Cookies"
+        ],
+        "ja": [
+          "🎨 全ページにモダンなグラスモーフィズムデザインを実装",
+          "✨ 20秒の無限アニメーションを伴うドットパターン背景をアニメーション化",
+          "📱 完全に再設計されたページ: ホーム、パネル、分析、プレミアム、チケット、プライバシー、利用規約",
+          "🔗 多言語サポート付きBotの招待リンクを追加",
+          "💎 すべてのカードとボックスにBackdrop-filterぼかしエフェクト",
+          "🎭 TransformとShadowアニメーションによるスムーズなホバーエフェクト",
+          "🌈 一貫したテーマのためのCSS変数システム",
+          "📊 SEO最適化: メタタグ、Open Graph、構造化データ",
+          "⚡ PreconnectとLoad-Timesの最適化によるパフォーマンス向上",
+          "🌙 localStorageとCookiesによるテーマの永続性"
+        ],
+        "ru": [
+          "🎨 Современный дизайн Glassmorphism внедрен на всех страницах",
+          "✨ Анимированный фон с точечным узором и бесконечной анимацией 20 секунд",
+          "📱 Полностью переработанные страницы: Главная, Панель, Аналитика, Премиум, Тикеты, Конфиденциальность, Условия",
+          "🔗 Добавлена ссылка для приглашения бота с многоязычной поддержкой",
+          "💎 Эффекты размытия Backdrop-filter на всех картах и блоках",
+          "🎭 Плавные эффекты наведения с анимацией Transform и Shadow",
+          "🌈 Система переменных CSS для последовательного оформления",
+          "📊 SEO-оптимизации: Мета-теги, Open Graph, Структурированные данные",
+          "⚡ Улучшенная производительность через Preconnect и оптимизированное время загрузки",
+          "🌙 Сохранение темы через localStorage и Cookies"
+        ],
+        "pt": [
+          "🎨 Design moderno de glassmorphism implementado em todas as páginas",
+          "✨ Fundo animado com padrão de pontos e animação infinita de 20s",
+          "📱 Páginas completamente redesenhadas: Home, Painel, Análise, Premium, Tickets, Privacidade, Termos",
+          "🔗 Link de convite do bot adicionado com suporte multilíngue",
+          "💎 Efeitos de desfoque Backdrop-filter em todos os cards e caixas",
+          "🎭 Efeitos de hover suaves com animações Transform e Shadow",
+          "🌈 Sistema de variáveis CSS para temas consistentes",
+          "📊 Otimizações SEO: Tags Meta, Open Graph, Dados Estruturados",
+          "⚡ Desempenho melhorado através de Preconnect e tempos de carregamento otimizados",
+          "🌙 Persistência de tema via localStorage e Cookies"
+        ],
+        "es": [
+          "🎨 Diseño moderno de glassmorphism implementado en todas las páginas",
+          "✨ Fondo animado con patrón de puntos y animación infinita de 20s",
+          "📱 Páginas completamente rediseñadas: Inicio, Panel, Análisis, Premium, Tickets, Privacidad, Términos",
+          "🔗 Enlace de invitación del bot añadido con soporte multilingüe",
+          "💎 Efectos de desenfoque Backdrop-filter en todas las tarjetas y cajas",
+          "🎭 Efectos de hover suaves con animaciones Transform y Shadow",
+          "🌈 Sistema de variables CSS para temas consistentes",
+          "📊 Optimizaciones SEO: Etiquetas Meta, Open Graph, Datos Estructurados",
+          "⚡ Rendimiento mejorado a través de Preconnect y tiempos de carga optimizados",
+          "🌙 Persistencia de tema a través de localStorage y Cookies"
+        ],
+        "id": [
+          "🎨 Desain glassmorphism modern diimplementasikan di semua halaman",
+          "✨ Latar belakang animasi dengan pola titik dan animasi tak terbatas 20 detik",
+          "📱 Halaman yang sepenuhnya dirancang ulang: Beranda, Panel, Analitik, Premium, Tiket, Privasi, Ketentuan",
+          "🔗 Link undangan bot ditambahkan dengan dukungan multibahasa",
+          "💎 Efek blur Backdrop-filter pada semua kartu dan kotak",
+          "🎭 Efek hover yang halus dengan animasi Transform dan Shadow",
+          "🌈 Sistem variabel CSS untuk tema yang konsisten",
+          "📊 Optimasi SEO: Tag Meta, Open Graph, Data Terstruktur",
+          "⚡ Kinerja yang ditingkatkan melalui Preconnect dan waktu muat yang dioptimalkan",
+          "🌙 Persistensi tema melalui localStorage dan Cookies"
+        ],
+        "ar": [
+          "🎨 تصميم Glassmorphism حديث تم تنفيذه على جميع الصفحات",
+          "✨ خلفية متحركة بنمط نقاط مع رسوم متحركة لا نهائية لمدة 20 ثانية",
+          "📱 صفحات معاد تصميمها بالكامل: الرئيسية، اللوحة، التحليلات، بريميوم، التذاكر، الخصوصية، الشروط",
+          "🔗 تمت إضافة رابط دعوة البوت مع دعم متعدد اللغات",
+          "💎 تأثيرات Backdrop-filter blur على جميع البطاقات والصناديق",
+          "🎭 تأثيرات Hover سلسة مع رسوم متحركة Transform و Shadow",
+          "🌈 نظام متغيرات CSS للحصول على سمات متسقة",
+          "📊 تحسينات SEO: علامات Meta، Open Graph، البيانات المنظمة",
+          "⚡ تحسين الأداء من خلال Preconnect وأوقات تحميل محسنة",
+          "🌙 استمرارية السمة عبر localStorage و Cookies"
+        ]
+      }
+    },
     {
       "version": "Beta 0.3.9",
       "date": "2025-10-16",
