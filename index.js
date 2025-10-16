@@ -1548,14 +1548,12 @@ client.on(Events.MessageCreate, async (message) => {
     const isCreator = ticket.userId === authorId;
     const isClaimer = ticket.claimer === authorId;
     const isAdded = ticket.addedUsers && ticket.addedUsers.includes(authorId);
-    const TEAM_ROLE = getTeamRole(guildId);
-    const isTeam = TEAM_ROLE ? message.member?.roles?.cache?.has(TEAM_ROLE) : false;
 
-    if(!isCreator && !isClaimer && !isAdded && !isTeam){
+    if(!isCreator && !isClaimer && !isAdded){
       await message.delete().catch(()=>{});
 
       try {
-        await message.author.send(`❌ Du hast keine Berechtigung in Ticket #${ticket.id} zu schreiben. Dieses Ticket wurde geclaimed und ist nur für Ersteller, Claimer, hinzugefügte Nutzer und Team-Mitglieder zugänglich.`);
+        await message.author.send(`❌ Du hast keine Berechtigung in Ticket #${ticket.id} zu schreiben. Dieses Ticket wurde geclaimed und ist nur für Ersteller, Claimer und hinzugefügte Nutzer zugänglich.`);
       } catch {
       }
     }
