@@ -573,11 +573,11 @@
     <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
       <span style="font-size: 2.5rem;">💎</span>
       <div style="text-align: left;">
-        <h3 style="margin: 0; font-size: 1.5rem; color: white;">Premium <%= premiumTierName %></h3>
-        <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">Vielen Dank für deine Unterstützung!</p>
+        <h3 style="margin: 0; font-size: 1.5rem; color: white;"><%= t.premium.badge_active.replace('{tier}', premiumTierName) %></h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;"><%= t.premium.badge_thank_you %></p>
       </div>
       <a href="/premium" style="margin-left: auto; padding: 0.75rem 1.5rem; background: white; color: #667eea; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.2s;">
-        Verwalten
+        <%= t.premium.badge_manage %>
       </a>
     </div>
   </div>
@@ -586,11 +586,11 @@
     <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
       <span style="font-size: 2rem;">✨</span>
       <div style="text-align: left;">
-        <h3 style="margin: 0; font-size: 1.3rem;">Upgrade auf Premium</h3>
-        <p style="margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 0.85rem;">Werbefrei, Statistiken, Custom Avatar & mehr</p>
+        <h3 style="margin: 0; font-size: 1.3rem;"><%= t.premium.badge_upgrade %></h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 0.85rem;"><%= t.premium.badge_upgrade_desc %></p>
       </div>
       <a href="/premium" style="margin-left: auto; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.2s; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
-        Jetzt upgraden
+        <%= t.premium.badge_upgrade_btn %>
       </a>
     </div>
   </div>
@@ -715,32 +715,32 @@
         <%
         // Feature-Definitionen mit Plänen
         const features = [
-          { name: 'Ticket-Kategorien', icon: '📁', free: 3, basic: 7, pro: 999, current: true },
-          { name: 'Werbefrei', icon: '🚫', free: false, basic: true, pro: true },
-          { name: 'Custom Bot-Avatar', icon: '🎨', free: false, basic: true, pro: true },
-          { name: 'Ticket-Statistiken', icon: '📊', free: false, basic: true, pro: true },
-          { name: 'Priority Support', icon: '⚡', free: false, basic: true, pro: true },
-          { name: 'Auto-Close System', icon: '⏰', free: false, basic: false, pro: true },
-          { name: 'Email-Benachrichtigungen', icon: '📧', free: false, basic: false, pro: true, config: true },
-          { name: 'Discord DM-Benachrichtigungen', icon: '🔔', free: false, basic: false, pro: true, config: true }
+          { name: t.premium.feature_ticket_categories, icon: '📁', free: 3, basic: 7, pro: 999, current: true },
+          { name: t.premium.feature_no_ads, icon: '🚫', free: false, basic: true, pro: true },
+          { name: t.premium.feature_custom_avatar, icon: '🎨', free: false, basic: true, pro: true },
+          { name: t.premium.feature_statistics, icon: '📊', free: false, basic: true, pro: true },
+          { name: t.premium.feature_priority_support, icon: '⚡', free: false, basic: true, pro: true },
+          { name: t.premium.feature_auto_close, icon: '⏰', free: false, basic: false, pro: true },
+          { name: t.premium.feature_email_notifications, icon: '📧', free: false, basic: false, pro: true, config: true },
+          { name: t.premium.feature_dm_notifications, icon: '🔔', free: false, basic: false, pro: true, config: true }
         ];
         %>
 
         <!-- Feature-Übersicht -->
         <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--fieldset-bg); border-radius: 8px;">
-          <strong style="font-size: 1.1rem;">📋 Feature-Übersicht</strong>
+          <strong style="font-size: 1.1rem;"><%= t.premium.feature_overview %></strong>
           <table style="margin-top: 1rem; width: 100%; font-size: 0.9rem;">
             <thead style="background: var(--thead-bg);">
               <tr>
                 <th style="text-align: left; padding: 0.75rem;">Feature</th>
                 <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'none' ? 'rgba(0,184,148,0.1)' : 'transparent' %>;">
-                  Free
+                  <%= t.premium.tier_free %>
                 </th>
                 <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'basic' ? 'rgba(102,126,234,0.1)' : 'transparent' %>;">
-                  Basic
+                  <%= t.premium.tier_basic %>
                 </th>
                 <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'pro' ? 'rgba(118,75,162,0.15)' : 'transparent' %>;">
-                  Pro
+                  <%= t.premium.tier_pro %>
                 </th>
               </tr>
             </thead>
@@ -787,12 +787,12 @@
         <!-- Upgrade CTA für Free-User -->
         <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 10px; text-align: center; margin-bottom: 1.5rem; border: 2px dashed rgba(102, 126, 234, 0.4);">
           <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">✨</span>
-          <h3 style="margin: 0 0 0.5rem 0; color: #667eea;">Upgrade auf Premium</h3>
+          <h3 style="margin: 0 0 0.5rem 0; color: #667eea;"><%= t.premium.upgrade_cta_title %></h3>
           <p style="margin: 0 0 1rem 0; opacity: 0.8; font-size: 0.9rem;">
-            Schalte alle Features frei und unterstütze die Entwicklung
+            <%= t.premium.upgrade_cta_description %>
           </p>
           <a href="/premium" style="display: inline-block; padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); transition: all 0.2s;">
-            Jetzt upgraden →
+            <%= t.premium.upgrade_cta_button %>
           </a>
         </div>
         <% } %>
@@ -805,18 +805,17 @@
           <% if (premiumTier === 'pro' || guildId === '1291125037876904026') { %>
           <div style="margin-bottom: 1.5rem;">
             <label>
-              📧 Email-Benachrichtigungen
+              <%= t.premium.email_notifications_label %>
               <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
               <input
                 type="email"
                 name="notificationEmail"
                 value="<%= cfg.notificationEmail || '' %>"
-                placeholder="tickets@example.com"
+                placeholder="<%= t.premium.email_notifications_placeholder %>"
                 style="margin-top: 0.5rem;"
               >
               <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                Bei jedem neuen Ticket wird eine Email an diese Adresse gesendet.<br>
-                ⚙️ SMTP muss in der .env konfiguriert sein (siehe Dokumentation).
+                <%= t.premium.email_notifications_description %>
               </small>
             </label>
           </div>
@@ -824,7 +823,7 @@
           <!-- Auto-Close System (nur Pro) -->
           <div style="margin-bottom: 1.5rem;">
             <label>
-              ⏰ Auto-Close System
+              <%= t.premium.auto_close_label %>
               <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
               <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
                 <input
@@ -835,7 +834,7 @@
                   style="width: auto; margin: 0;"
                 >
                 <label for="autoCloseEnabled" style="margin: 0; cursor: pointer;">
-                  Tickets automatisch schließen nach Inaktivität
+                  <%= t.premium.auto_close_enable %>
                 </label>
               </div>
               <div style="margin-top: 0.75rem;">
@@ -849,10 +848,10 @@
                   style="width: 100px;"
                   <%= !cfg.autoCloseEnabled ? 'disabled' : '' %>
                 >
-                <span style="margin-left: 0.5rem;">Tage</span>
+                <span style="margin-left: 0.5rem;"><%= t.premium.auto_close_days %></span>
               </div>
               <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                Tickets ohne Aktivität werden automatisch geschlossen.
+                <%= t.premium.auto_close_description %>
               </small>
             </label>
           </div>
@@ -860,18 +859,17 @@
           <!-- Custom Bot-Avatar (Basic+) -->
           <div style="margin-bottom: 1.5rem;">
             <label>
-              🎨 Custom Bot-Avatar URL
+              <%= t.premium.custom_avatar_label %>
               <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">BASIC+</span>
               <input
                 type="url"
                 name="customAvatarUrl"
                 value="<%= cfg.customAvatarUrl || '' %>"
-                placeholder="https://example.com/avatar.png"
+                placeholder="<%= t.premium.custom_avatar_placeholder %>"
                 style="margin-top: 0.5rem;"
               >
               <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                Direkter Link zu einem Bild (wird als Bot-Avatar im Ticket-Embed angezeigt).<br>
-                Empfohlen: 512x512px, PNG/JPG
+                <%= t.premium.custom_avatar_description %>
               </small>
             </label>
           </div>
@@ -879,17 +877,16 @@
           <!-- Discord DM-Benachrichtigungen (nur Pro) -->
           <div style="margin-bottom: 1.5rem;">
             <label>
-              🔔 Discord DM-Benachrichtigungen
+              <%= t.premium.dm_notifications_label %>
               <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
               <textarea
                 name="dmNotificationUsers"
                 rows="3"
-                placeholder="User-IDs (eine pro Zeile)"
+                placeholder="<%= t.premium.dm_notifications_placeholder %>"
                 style="margin-top: 0.5rem; font-family: monospace; font-size: 0.9rem;"
               ><%= (cfg.dmNotificationUsers || []).join('\n') %></textarea>
               <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                Gib die Discord User-IDs der Team-Mitglieder ein, die per DM über neue Tickets benachrichtigt werden sollen.<br>
-                📝 Eine User-ID pro Zeile. Um eine User-ID zu erhalten: Rechtsklick auf User → "ID kopieren" (Developer Mode muss aktiviert sein)
+                <%= t.premium.dm_notifications_description %>
               </small>
             </label>
           </div>
@@ -898,85 +895,84 @@
           <!-- Basic User: Nur Custom Avatar -->
           <div style="margin-bottom: 1.5rem;">
             <label>
-              🎨 Custom Bot-Avatar URL
+              <%= t.premium.custom_avatar_label %>
               <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">BASIC+</span>
               <input
                 type="url"
                 name="customAvatarUrl"
                 value="<%= cfg.customAvatarUrl || '' %>"
-                placeholder="https://example.com/avatar.png"
+                placeholder="<%= t.premium.custom_avatar_placeholder %>"
                 style="margin-top: 0.5rem;"
               >
               <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                Direkter Link zu einem Bild (wird als Bot-Avatar im Ticket-Embed angezeigt).<br>
-                Empfohlen: 512x512px, PNG/JPG
+                <%= t.premium.custom_avatar_description %>
               </small>
             </label>
           </div>
 
           <!-- Pro-Features Locked -->
           <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-top: 1rem;">
-            <strong>📧 Email-Benachrichtigungen</strong>
+            <strong><%= t.premium.email_notifications_label %></strong>
             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
             <br>
             <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              Erhalte Email-Benachrichtigungen bei neuen Tickets. Nur verfügbar mit Premium Pro.
+              <%= t.premium.feature_locked_pro %>
             </span>
           </div>
 
           <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-top: 1rem;">
-            <strong>⏰ Auto-Close System</strong>
+            <strong><%= t.premium.auto_close_label %></strong>
             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
             <br>
             <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              Tickets automatisch nach X Tagen schließen. Nur verfügbar mit Premium Pro.
+              <%= t.premium.feature_locked_pro %>
             </span>
           </div>
 
           <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-top: 1rem;">
-            <strong>🔔 Discord DM-Benachrichtigungen</strong>
+            <strong><%= t.premium.dm_notifications_label %></strong>
             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
             <br>
             <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              Team-Mitglieder erhalten Discord-DMs bei neuen Tickets. Nur verfügbar mit Premium Pro.
+              <%= t.premium.feature_locked_pro %>
             </span>
           </div>
 
           <% } else { %>
           <!-- Free User: Alle Features Locked -->
           <div style="padding: 1rem; background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; border-radius: 6px; margin-bottom: 1rem;">
-            <strong>🎨 Custom Bot-Avatar</strong>
+            <strong><%= t.premium.custom_avatar_label %></strong>
             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">BASIC+</span>
             <br>
             <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              Passe den Bot-Avatar im Ticket-Embed an. Verfügbar ab Premium Basic.
+              <%= t.premium.feature_locked_basic %>
             </span>
           </div>
 
           <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-bottom: 1rem;">
-            <strong>📧 Email-Benachrichtigungen</strong>
+            <strong><%= t.premium.email_notifications_label %></strong>
             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
             <br>
             <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              Erhalte Email-Benachrichtigungen bei neuen Tickets. Nur verfügbar mit Premium Pro.
+              <%= t.premium.feature_locked_pro %>
             </span>
           </div>
 
           <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-bottom: 1rem;">
-            <strong>⏰ Auto-Close System</strong>
+            <strong><%= t.premium.auto_close_label %></strong>
             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
             <br>
             <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              Tickets automatisch nach X Tagen schließen. Nur verfügbar mit Premium Pro.
+              <%= t.premium.feature_locked_pro %>
             </span>
           </div>
 
           <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px;">
-            <strong>🔔 Discord DM-Benachrichtigungen</strong>
+            <strong><%= t.premium.dm_notifications_label %></strong>
             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
             <br>
             <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              Team-Mitglieder erhalten Discord-DMs bei neuen Tickets. Nur verfügbar mit Premium Pro.
+              <%= t.premium.feature_locked_pro %>
             </span>
           </div>
           <% } %>
@@ -984,14 +980,14 @@
 
         <!-- Kategorie-Limit Anzeige -->
         <div style="margin-top: 1.5rem; padding: 1rem; background: var(--fieldset-bg); border-radius: 8px; border-left: 4px solid var(--accent-color);">
-          <strong>📁 Ticket-Kategorien Limit</strong>
+          <strong><%= t.premium.category_limit_title %></strong>
           <br>
           <span style="font-size: 1.2rem; color: var(--accent-color); font-weight: bold; margin-top: 0.5rem; display: block;">
-            <%= premiumTier === 'pro' || guildId === '1291125037876904026' ? '♾️ Unbegrenzt' : premiumTier === 'basic' ? '7 Kategorien' : '3 Kategorien' %>
+            <%= premiumTier === 'pro' || guildId === '1291125037876904026' ? t.premium.category_limit_unlimited : premiumTier === 'basic' ? '7 ' + t.premium.feature_ticket_categories : '3 ' + t.premium.feature_ticket_categories %>
           </span>
           <% if (premiumTier === 'none') { %>
           <span style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-            💡 Mit Premium Basic: 7 Kategorien | Mit Premium Pro: Unbegrenzt
+            <%= t.premium.category_limit_hint %>
           </span>
           <% } %>
         </div>
@@ -999,7 +995,7 @@
         <% if (isPremium) { %>
         <p style="margin-top: 1rem; text-align: center;">
           <a href="/premium" style="color: #667eea; text-decoration: none; font-weight: 600;">
-            Verwalte dein Premium-Abo →
+            <%= t.premium.manage_subscription %>
           </a>
         </p>
         <% } %>
@@ -1230,6 +1226,120 @@ const autoCloseDaysInput = document.querySelector('input[name="autoCloseDays"]')
 if(autoCloseCheckbox && autoCloseDaysInput) {
   autoCloseCheckbox.addEventListener('change', function() {
     autoCloseDaysInput.disabled = !this.checked;
+  });
+}
+
+// Loading Animations
+function showLoading(text, subtext) {
+  const overlay = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
+  const loadingSubtext = overlay.querySelector('.loading-subtext');
+
+  loadingText.textContent = text;
+  if (subtext) {
+    loadingSubtext.textContent = subtext;
+  }
+  overlay.classList.add('show');
+}
+
+// Show loading on main form submit (Save button)
+document.getElementById('panelForm').addEventListener('submit', function(e) {
+  const lang = '<%= lang %>';
+  const texts = {
+    de: { text: 'Wird gespeichert...', subtext: 'Bitte warten' },
+    en: { text: 'Saving...', subtext: 'Please wait' },
+    he: { text: 'שומר...', subtext: 'אנא המתן' },
+    ja: { text: '保存中...', subtext: 'お待ちください' },
+    ru: { text: 'Сохранение...', subtext: 'Пожалуйста, подождите' },
+    pt: { text: 'Salvando...', subtext: 'Por favor, aguarde' },
+    es: { text: 'Guardando...', subtext: 'Por favor, espere' },
+    id: { text: 'Menyimpan...', subtext: 'Mohon tunggu' },
+    ar: { text: 'جاري الحفظ...', subtext: 'يرجى الانتظار' }
+  };
+
+  const t = texts[lang] || texts.de;
+  showLoading(t.text, t.subtext);
+});
+
+// Show loading on Send Panel button
+document.querySelector('form[action="/panel/send"]').addEventListener('submit', function(e) {
+  const lang = '<%= lang %>';
+  const texts = {
+    de: { text: 'Panel wird gesendet...', subtext: 'Bitte warten' },
+    en: { text: 'Sending panel...', subtext: 'Please wait' },
+    he: { text: 'שולח פאנל...', subtext: 'אנא המתן' },
+    ja: { text: 'パネルを送信中...', subtext: 'お待ちください' },
+    ru: { text: 'Отправка панели...', subtext: 'Пожалуйста, подождите' },
+    pt: { text: 'Enviando painel...', subtext: 'Por favor, aguarde' },
+    es: { text: 'Enviando panel...', subtext: 'Por favor, espere' },
+    id: { text: 'Mengirim panel...', subtext: 'Mohon tunggu' },
+    ar: { text: 'إرسال اللوحة...', subtext: 'يرجى الانتظار' }
+  };
+
+  const t = texts[lang] || texts.de;
+  showLoading(t.text, t.subtext);
+});
+
+// Show loading on Edit Panel button
+document.querySelector('form[action="/panel/edit"]').addEventListener('submit', function(e) {
+  const lang = '<%= lang %>';
+  const texts = {
+    de: { text: 'Panel wird bearbeitet...', subtext: 'Bitte warten' },
+    en: { text: 'Editing panel...', subtext: 'Please wait' },
+    he: { text: 'עורך פאנל...', subtext: 'אנא המתן' },
+    ja: { text: 'パネルを編集中...', subtext: 'お待ちください' },
+    ru: { text: 'Редактирование панели...', subtext: 'Пожалуйста, подождите' },
+    pt: { text: 'Editando painel...', subtext: 'Por favor, aguarde' },
+    es: { text: 'Editando panel...', subtext: 'Por favor, espere' },
+    id: { text: 'Mengedit panel...', subtext: 'Mohon tunggu' },
+    ar: { text: 'تحرير اللوحة...', subtext: 'يرجى الانتظار' }
+  };
+
+  const t = texts[lang] || texts.de;
+  showLoading(t.text, t.subtext);
+});
+
+// Show loading on Analytics link click
+const analyticsLink = document.querySelector('a[href="/analytics"]');
+if (analyticsLink) {
+  analyticsLink.addEventListener('click', function(e) {
+    const lang = '<%= lang %>';
+    const texts = {
+      de: { text: 'Analytics wird geladen...', subtext: 'Bitte warten' },
+      en: { text: 'Loading analytics...', subtext: 'Please wait' },
+      he: { text: 'טוען נתונים...', subtext: 'אנא המתן' },
+      ja: { text: '分析を読み込み中...', subtext: 'お待ちください' },
+      ru: { text: 'Загрузка аналитики...', subtext: 'Пожалуйста, подождите' },
+      pt: { text: 'Carregando análise...', subtext: 'Por favor, aguarde' },
+      es: { text: 'Cargando analítica...', subtext: 'Por favor, espere' },
+      id: { text: 'Memuat analitik...', subtext: 'Mohon tunggu' },
+      ar: { text: 'تحميل التحليلات...', subtext: 'يرجى الانتظار' }
+    };
+
+    const t = texts[lang] || texts.de;
+    showLoading(t.text, t.subtext);
+  });
+}
+
+// Show loading on server switch
+const serverSwitchLink = document.querySelector('a[href="/select-server"]');
+if (serverSwitchLink) {
+  serverSwitchLink.addEventListener('click', function(e) {
+    const lang = '<%= lang %>';
+    const texts = {
+      de: { text: 'Server wird gewechselt...', subtext: 'Bitte warten' },
+      en: { text: 'Switching server...', subtext: 'Please wait' },
+      he: { text: 'מחליף שרת...', subtext: 'אנא המתן' },
+      ja: { text: 'サーバーを切り替え中...', subtext: 'お待ちください' },
+      ru: { text: 'Переключение сервера...', subtext: 'Пожалуйста, подождите' },
+      pt: { text: 'Trocando servidor...', subtext: 'Por favor, aguarde' },
+      es: { text: 'Cambiando servidor...', subtext: 'Por favor, espere' },
+      id: { text: 'Mengganti server...', subtext: 'Mohon tunggu' },
+      ar: { text: 'تبديل الخادم...', subtext: 'يرجى الانتظار' }
+    };
+
+    const t = texts[lang] || texts.de;
+    showLoading(t.text, t.subtext);
   });
 }
 </script>

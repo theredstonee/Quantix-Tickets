@@ -481,9 +481,76 @@
       margin-right: 0.3rem;
       font-size: 0.9rem;
     }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .loading-overlay.show {
+      display: flex;
+    }
+
+    .loading-content {
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      padding: 3rem;
+      border-radius: 20px;
+      border: 1px solid rgba(0,255,136,0.2);
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(0,255,136,0.1);
+      border-top: 6px solid var(--accent-color);
+      border-radius: 50%;
+      animation: loadingSpin 1s linear infinite;
+      margin: 0 auto 2rem;
+    }
+
+    .loading-text {
+      font-size: 1.3rem;
+      color: var(--accent-color);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .loading-subtext {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      color: var(--text-color);
+    }
+
+    @keyframes loadingSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text" id="loadingText">Wird geladen...</div>
+      <div class="loading-subtext">Bitte warten</div>
+    </div>
+  </div>
+
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
     <i id="themeIcon" class="fas fa-moon"></i>
   </button>
@@ -896,6 +963,78 @@
       // Sync to both storage types
       localStorage.setItem('theme', savedTheme);
       setCookie('theme', savedTheme);
+    }
+
+    // Loading animation function
+    function showLoading(text) {
+      const overlay = document.getElementById('loadingOverlay');
+      const loadingText = document.getElementById('loadingText');
+
+      loadingText.textContent = text;
+      overlay.classList.add('show');
+    }
+
+    // Add loading animation to login button
+    const loginBtn = document.querySelector('a[href="/login"]');
+    if (loginBtn) {
+      loginBtn.addEventListener('click', function(e) {
+        const lang = '<%= lang %>';
+        const texts = {
+          de: 'Anmeldung läuft...',
+          en: 'Logging in...',
+          he: 'מתחבר...',
+          ja: 'ログイン中...',
+          ru: 'Вход...',
+          pt: 'Entrando...',
+          es: 'Iniciando sesión...',
+          id: 'Masuk...',
+          ar: 'جاري تسجيل الدخول...'
+        };
+
+        showLoading(texts[lang] || texts.de);
+      });
+    }
+
+    // Add loading animation to admin panel button
+    const adminBtn = document.querySelector('a[href="/select-server"]');
+    if (adminBtn) {
+      adminBtn.addEventListener('click', function(e) {
+        const lang = '<%= lang %>';
+        const texts = {
+          de: 'Serverliste wird geladen...',
+          en: 'Loading server list...',
+          he: 'טוען רשימת שרתים...',
+          ja: 'サーバーリストを読み込み中...',
+          ru: 'Загрузка списка серверов...',
+          pt: 'Carregando lista de servidores...',
+          es: 'Cargando lista de servidores...',
+          id: 'Memuat daftar server...',
+          ar: 'تحميل قائمة الخوادم...'
+        };
+
+        showLoading(texts[lang] || texts.de);
+      });
+    }
+
+    // Add loading animation to logout button
+    const logoutBtn = document.querySelector('a[href="/logout"]');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function(e) {
+        const lang = '<%= lang %>';
+        const texts = {
+          de: 'Abmeldung läuft...',
+          en: 'Logging out...',
+          he: 'מתנתק...',
+          ja: 'ログアウト中...',
+          ru: 'Выход...',
+          pt: 'Saindo...',
+          es: 'Cerrando sesión...',
+          id: 'Keluar...',
+          ar: 'جاري تسجيل الخروج...'
+        };
+
+        showLoading(texts[lang] || texts.de);
+      });
     }
   </script>
 </body>

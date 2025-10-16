@@ -2,6 +2,10 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { activateLifetimePremium, removeLifetimePremium, listLifetimePremiumServers, assignPremiumRole } = require('../premium');
 
 const OWNER_ID = '1159182333316968530';
+const ALLOWED_USERS = [
+  '1159182333316968530',
+  '928901974106202113'
+];
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -127,8 +131,8 @@ module.exports = {
     ),
 
   async autocomplete(interaction) {
-    // Owner-only check
-    if (interaction.user.id !== OWNER_ID) {
+    // Check if user is allowed
+    if (!ALLOWED_USERS.includes(interaction.user.id)) {
       return interaction.respond([]);
     }
 
@@ -156,10 +160,10 @@ module.exports = {
   },
 
   async execute(interaction) {
-    // Owner-only check
-    if (interaction.user.id !== OWNER_ID) {
+    // Check if user is allowed
+    if (!ALLOWED_USERS.includes(interaction.user.id)) {
       return interaction.reply({
-        content: '❌ Dieser Command kann nur vom Bot-Owner ausgeführt werden.',
+        content: '❌ Dieser Command kann nur vom Bot-Owner oder autorisierten Usern ausgeführt werden.',
         ephemeral: true
       });
     }
