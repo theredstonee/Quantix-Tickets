@@ -1,6 +1,66 @@
 {
-  "currentVersion": "Beta 0.3.8",
+  "currentVersion": "Beta 0.3.9",
   "versions": [
+    {
+      "version": "Beta 0.3.9",
+      "date": "2025-10-16",
+      "changes": {
+        "de": [
+          "🔧 Broadcast-Command filtert jetzt _counter.json und _tickets.json Dateien aus",
+          "✅ Verhindert 'Guild not found' Fehler bei Counter- und Tickets-Dateien",
+          "📊 Nur echte Guild-Configs werden für Broadcasts verwendet",
+          "⚡ Reduziert Failed-Count und vermeidet unnötige Guild-Fetch-Versuche"
+        ],
+        "en": [
+          "🔧 Broadcast command now filters out _counter.json and _tickets.json files",
+          "✅ Prevents 'Guild not found' errors for counter and tickets files",
+          "📊 Only real guild configs are used for broadcasts",
+          "⚡ Reduces failed count and avoids unnecessary guild fetch attempts"
+        ],
+        "he": [
+          "🔧 פקודת Broadcast מסננת כעת קבצי _counter.json ו-_tickets.json",
+          "✅ מונע שגיאות 'Guild not found' עבור קבצי מונה וכרטיסים",
+          "📊 רק הגדרות שרת אמיתיות משמשות לשידורים",
+          "⚡ מפחית ספירת כשלונות ונמנע מניסיונות fetch מיותרים"
+        ],
+        "ja": [
+          "🔧 Broadcastコマンドが_counter.jsonと_tickets.jsonファイルをフィルタリング",
+          "✅ カウンターとチケットファイルの「Guild not found」エラーを防止",
+          "📊 実際のギルド設定のみがブロードキャストに使用されます",
+          "⚡ 失敗カウントを削減し、不要なギルドフェッチを回避"
+        ],
+        "ru": [
+          "🔧 Команда Broadcast теперь фильтрует файлы _counter.json и _tickets.json",
+          "✅ Предотвращает ошибки 'Guild not found' для файлов счетчиков и тикетов",
+          "📊 Только реальные конфигурации гильдий используются для рассылок",
+          "⚡ Уменьшает количество неудач и избегает ненужных попыток получения гильдий"
+        ],
+        "pt": [
+          "🔧 Comando Broadcast agora filtra arquivos _counter.json e _tickets.json",
+          "✅ Previne erros 'Guild not found' para arquivos de contador e tickets",
+          "📊 Apenas configurações reais de servidores são usadas para broadcasts",
+          "⚡ Reduz contagem de falhas e evita tentativas desnecessárias de busca de servidor"
+        ],
+        "es": [
+          "🔧 Comando Broadcast ahora filtra archivos _counter.json y _tickets.json",
+          "✅ Previene errores 'Guild not found' para archivos de contador y tickets",
+          "📊 Solo configuraciones reales de servidores se usan para broadcasts",
+          "⚡ Reduce el conteo de fallos y evita intentos innecesarios de búsqueda de servidor"
+        ],
+        "id": [
+          "🔧 Perintah Broadcast sekarang memfilter file _counter.json dan _tickets.json",
+          "✅ Mencegah kesalahan 'Guild not found' untuk file counter dan tiket",
+          "📊 Hanya konfigurasi guild asli yang digunakan untuk broadcast",
+          "⚡ Mengurangi jumlah kegagalan dan menghindari percobaan fetch guild yang tidak perlu"
+        ],
+        "ar": [
+          "🔧 أمر Broadcast يقوم الآن بتصفية ملفات _counter.json و _tickets.json",
+          "✅ يمنع أخطاء 'Guild not found' لملفات العداد والتذاكر",
+          "📊 تُستخدم فقط إعدادات الخادم الحقيقية للبث",
+          "⚡ يقلل عدد الإخفاقات ويتجنب محاولات جلب الخادم غير الضرورية"
+        ]
+      }
+    },
     {
       "version": "Beta 0.3.8",
       "date": "2025-10-16",

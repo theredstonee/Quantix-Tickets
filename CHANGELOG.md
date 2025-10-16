@@ -1,5 +1,16 @@
 # Changelog
 
+## [Beta 0.3.9] - 2025-10-16
+
+### Fixed
+- **Broadcast-Command Filter**
+  - Broadcast-Command filtert jetzt `_counter.json` und `_tickets.json` Dateien korrekt aus
+  - Verhindert Fehler "Guild not found" bei Counter- und Tickets-Dateien
+  - Nur echte Guild-Config-Dateien werden für Broadcasts verwendet
+  - Reduziert Failed-Count und vermeidet unnötige Guild-Fetch-Versuche
+
+---
+
 ## [Beta 0.3.8] - 2025-10-16
 
 ### Added

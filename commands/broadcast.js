@@ -53,12 +53,15 @@ module.exports = {
     let guildConfigs = [];
     try {
       const files = fs.readdirSync(CONFIG_DIR);
-      guildConfigs = files.filter(f => f.endsWith('.json')).map(f => {
-        const guildId = f.replace('.json', '');
-        const configPath = path.join(CONFIG_DIR, f);
-        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        return { guildId, config };
-      });
+      // Filter out _counter.json and _tickets.json files - only load actual guild configs
+      guildConfigs = files
+        .filter(f => f.endsWith('.json') && !f.includes('_counter') && !f.includes('_tickets'))
+        .map(f => {
+          const guildId = f.replace('.json', '');
+          const configPath = path.join(CONFIG_DIR, f);
+          const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+          return { guildId, config };
+        });
     } catch (err) {
       console.error('Error reading configs:', err);
       return interaction.editReply('❌ Error reading server configurations.');
