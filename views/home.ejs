@@ -318,7 +318,7 @@
       background: var(--card-bg);
       padding: 2.5rem;
       border-radius: 0.75rem;
-      border-left: 5px solid var(--accent-color);
+      border-left: 8px solid var(--accent-color);
       transition: all 0.3s;
     }
 
@@ -635,6 +635,22 @@
             };
           %><%= logoutTexts[lang] || logoutTexts.de %>
         </a>
+        <a href="https://dc.theredstonee.de/" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+          <i class="fab fa-discord"></i> <%
+            const supportTexts = {
+              de: 'Discord Support Server',
+              en: 'Discord Support Server',
+              he: 'שרת תמיכה Discord',
+              ja: 'Discordサポートサーバー',
+              ru: 'Discord сервер поддержки',
+              pt: 'Servidor de Suporte Discord',
+              es: 'Servidor de Soporte Discord',
+              id: 'Server Dukungan Discord',
+              zh: 'Discord 支持服务器',
+              ar: 'خادم دعم Discord'
+            };
+          %><%= supportTexts[lang] || supportTexts.de %>
+        </a>
       </div>
     <% } else { %>
       <div class="button-container">
@@ -654,28 +670,24 @@
             };
           %><%= loginTexts[lang] || loginTexts.de %>
         </a>
+        <a href="https://dc.theredstonee.de/" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+          <i class="fab fa-discord"></i> <%
+            const supportTexts = {
+              de: 'Discord Support Server',
+              en: 'Discord Support Server',
+              he: 'שרת תמיכה Discord',
+              ja: 'Discordサポートサーバー',
+              ru: 'Discord сервер поддержки',
+              pt: 'Servidor de Suporte Discord',
+              es: 'Servidor de Soporte Discord',
+              id: 'Server Dukungan Discord',
+              zh: 'Discord 支持服务器',
+              ar: 'خادم دعم Discord'
+            };
+          %><%= supportTexts[lang] || supportTexts.de %>
+        </a>
       </div>
     <% } %>
-
-    <!-- Support Discord Server Button -->
-    <div class="button-container" style="margin-top: 1rem;">
-      <a href="https://dc.theredstonee.de/" target="_blank" rel="noopener noreferrer" class="btn-secondary">
-        <i class="fab fa-discord"></i> <%
-          const supportTexts = {
-            de: 'Discord Support Server',
-            en: 'Discord Support Server',
-            he: 'שרת תמיכה Discord',
-            ja: 'Discordサポートサーバー',
-            ru: 'Discord сервер поддержки',
-            pt: 'Servidor de Suporte Discord',
-            es: 'Servidor de Soporte Discord',
-            id: 'Server Dukungan Discord',
-            zh: 'Discord 支持服务器',
-            ar: 'خادم دعم Discord'
-          };
-        %><%= supportTexts[lang] || supportTexts.de %>
-      </a>
-    </div>
   </div>
 
   <div class="content-wrapper">
