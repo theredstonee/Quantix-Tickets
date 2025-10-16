@@ -269,20 +269,50 @@ module.exports = (client)=>{
       const botGuildIds = new Set(botGuilds.map(g => g.id));
 
       const ADMIN = 0x8n;
-      const availableServers = (req.user.guilds || [])
+
+      // Sammle Server mit Admin-Rechten
+      const adminServers = (req.user.guilds || [])
         .filter(g => {
           const hasBot = botGuildIds.has(g.id);
           const isAdmin = (BigInt(g.permissions) & ADMIN) === ADMIN;
           return hasBot && isAdmin;
-        })
-        .map(g => ({
-          id: g.id,
-          name: g.name,
-          icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null
-        }));
+        });
+
+      // Sammle Server mit Team-Rolle (aber ohne Admin)
+      const teamServers = [];
+      for (const guildData of (req.user.guilds || [])) {
+        const hasBot = botGuildIds.has(guildData.id);
+        const isAdmin = (BigInt(guildData.permissions) & ADMIN) === ADMIN;
+
+        // Skip wenn bereits Admin oder Bot nicht auf dem Server
+        if (!hasBot || isAdmin) continue;
+
+        try {
+          const cfg = readCfg(guildData.id);
+          if (!cfg.teamRoleId) continue;
+
+          const guild = await client.guilds.fetch(guildData.id);
+          const member = await guild.members.fetch(req.user.id).catch(() => null);
+
+          if (member && member.roles.cache.has(cfg.teamRoleId)) {
+            teamServers.push(guildData);
+          }
+        } catch (err) {
+          console.error(`Error checking team role for guild ${guildData.id}:`, err);
+        }
+      }
+
+      // Kombiniere beide Listen
+      const allServers = [...adminServers, ...teamServers];
+
+      const availableServers = allServers.map(g => ({
+        id: g.id,
+        name: g.name,
+        icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null
+      }));
 
       if(availableServers.length === 0){
-        return res.send('<h1>Keine Server verfügbar</h1><p>Du bist auf keinem Server Administrator wo der Bot ist.</p><p><a href="/logout">Logout</a></p>');
+        return res.send('<h1>Keine Server verfügbar</h1><p>Du bist auf keinem Server Administrator oder Team-Mitglied, wo der Bot ist.</p><p><a href="/logout">Logout</a></p>');
       }
 
       res.render('select-server', {
@@ -297,7 +327,7 @@ module.exports = (client)=>{
     }
   });
 
-  router.post('/select-server', (req,res)=>{
+  router.post('/select-server', async (req,res)=>{
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
     const guildId = req.body.guildId;
@@ -305,12 +335,38 @@ module.exports = (client)=>{
 
     const ADMIN = 0x8n;
     const entry = req.user.guilds?.find(g=>g.id===guildId);
-    if(!entry || !(BigInt(entry.permissions) & ADMIN)){
-      return res.status(403).send('Keine Administrator-Rechte auf diesem Server.');
+    if(!entry) {
+      return res.status(403).send('Du bist nicht auf diesem Server.');
     }
 
-    req.session.selectedGuild = guildId;
-    res.redirect('/panel');
+    const isAdmin = (BigInt(entry.permissions) & ADMIN) === ADMIN;
+
+    // Wenn Admin, direkt erlauben
+    if(isAdmin) {
+      req.session.selectedGuild = guildId;
+      return res.redirect('/panel');
+    }
+
+    // Prüfe ob Team-Mitglied
+    try {
+      const cfg = readCfg(guildId);
+      if(!cfg.teamRoleId) {
+        return res.status(403).send('Keine Administrator-Rechte oder Team-Rolle auf diesem Server.');
+      }
+
+      const guild = await client.guilds.fetch(guildId);
+      const member = await guild.members.fetch(req.user.id).catch(() => null);
+
+      if(member && member.roles.cache.has(cfg.teamRoleId)) {
+        req.session.selectedGuild = guildId;
+        return res.redirect('/panel');
+      }
+
+      return res.status(403).send('Keine Administrator-Rechte oder Team-Rolle auf diesem Server.');
+    } catch(err) {
+      console.error('Team Role Check Error:', err);
+      return res.status(403).send('Keine Administrator-Rechte oder Team-Rolle auf diesem Server.');
+    }
   });
 
   router.get('/login', (req,res,next)=>{
