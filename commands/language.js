@@ -11,8 +11,8 @@ module.exports = {
       ru: 'Установить язык сервера',
       'pt-BR': 'Definir idioma do servidor',
       'es-ES': 'Establecer el idioma del servidor',
-      id: 'Atur bahasa server',
-      ar: 'تعيين لغة الخادم'
+      id: 'Atur bahasa server'
+      // Note: 'ar' and 'he' are not supported by Discord
     })
     .addStringOption(option =>
       option.setName('language')
@@ -24,8 +24,8 @@ module.exports = {
           ru: 'Выбрать язык',
           'pt-BR': 'Selecionar idioma',
           'es-ES': 'Elegir el idioma',
-          id: 'Pilih bahasa',
-          ar: 'اختر اللغة'
+          id: 'Pilih bahasa'
+          // Note: 'ar' and 'he' are not supported by Discord
         })
         .setRequired(true)
         .addChoices(
