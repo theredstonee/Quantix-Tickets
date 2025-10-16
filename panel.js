@@ -644,7 +644,212 @@ module.exports = (client)=>{
     })(req,res,next);
   });
 
-  router.get('/logout',(req,res)=>{ req.logout?.(()=>{}); req.session.destroy(()=>res.redirect('/')); });
+  router.get('/logout', (req, res) => {
+    const wasAuthenticated = req.isAuthenticated && req.isAuthenticated();
+
+    // Passport logout
+    if (req.logout) {
+      req.logout((err) => {
+        if (err) console.error('Logout error:', err);
+      });
+    }
+
+    // Session zerstören
+    req.session.destroy((err) => {
+      if (err) console.error('Session destroy error:', err);
+    });
+
+    // Schöne Abmelde-Seite anzeigen
+    res.send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abgemeldet - TRS Tickets</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      padding: 4rem 3rem;
+      border-radius: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      border: 1px solid rgba(0,255,136,0.2);
+      max-width: 500px;
+      width: 90%;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .logout-icon {
+      font-size: 5rem;
+      margin-bottom: 1.5rem;
+      animation: slideDown 0.6s ease-out;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #00ff88;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    p {
+      font-size: 1.1rem;
+      opacity: 0.8;
+      margin-bottom: 2rem;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .checkmark {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 4px solid #00ff88;
+      margin: 0 auto 2rem;
+      position: relative;
+      animation: scaleIn 0.5s ease-out;
+    }
+
+    .checkmark::after {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 25px;
+      width: 15px;
+      height: 30px;
+      border: solid #00ff88;
+      border-width: 0 4px 4px 0;
+      transform: rotate(45deg);
+      animation: checkmark 0.5s 0.3s ease-out forwards;
+      opacity: 0;
+    }
+
+    .redirect-text {
+      font-size: 0.9rem;
+      opacity: 0.6;
+      margin-top: 1rem;
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(0,255,136,0.2);
+      border-radius: 2px;
+      margin-top: 2rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #00ff88;
+      width: 0%;
+      animation: progress 2s linear forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes checkmark {
+      from {
+        opacity: 0;
+        transform: rotate(45deg) scale(0);
+      }
+      to {
+        opacity: 1;
+        transform: rotate(45deg) scale(1);
+      }
+    }
+
+    @keyframes progress {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 3rem 2rem;
+      }
+
+      h1 { font-size: 1.5rem; }
+      p { font-size: 1rem; }
+      .logout-icon { font-size: 4rem; }
+      .checkmark {
+        width: 60px;
+        height: 60px;
+      }
+      .checkmark::after {
+        top: 15px;
+        left: 20px;
+        width: 12px;
+        height: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logout-icon">👋</div>
+    <div class="checkmark"></div>
+    <h1>Erfolgreich abgemeldet!</h1>
+    <p>Du wurdest sicher abgemeldet. Bis bald!</p>
+    <p class="redirect-text">Du wirst zur Startseite weitergeleitet...</p>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 2000);
+  </script>
+</body>
+</html>
+    `);
+  });
 
   router.get('/set-user-language/:lang', (req, res) => {
     const lang = ['de', 'en', 'he', 'ja', 'ru', 'pt', 'es', 'id', 'zh', 'ar'].includes(req.params.lang) ? req.params.lang : 'de';
