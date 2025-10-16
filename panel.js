@@ -312,10 +312,64 @@ module.exports = (client)=>{
   });
 
   router.get('/login', (req,res,next)=>{
-    if(req.isAuthenticated && req.isAuthenticated()) return res.redirect('/panel');
+    if(req.isAuthenticated && req.isAuthenticated()){
+      // Check if user already has a selected server
+      if(req.session.selectedGuild){
+        return res.redirect('/panel');
+      }
+      return res.redirect('/select-server');
+    }
     const now = Date.now();
     if(now - (req.session.lastLoginAttempt||0) < 4000){
-      return res.status(429).send('Zu viele Login-Versuche – bitte 4s warten. <a href="/">Zurück</a>');
+      return res.status(429).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitte warten...</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    a {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: white;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    a:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏳ Bitte warten...</h1>
+    <p>Zu viele Login-Versuche. Bitte kurz warten.</p>
+    <a href="/">← Zurück zur Startseite</a>
+  </div>
+</body>
+</html>
+      `);
     }
     req.session.lastLoginAttempt = now;
     next();
@@ -325,13 +379,267 @@ module.exports = (client)=>{
     passport.authenticate('discord',(err,user)=>{
       if(err){
         console.error('OAuth Fehler:', err);
-        if(err.oauthError) return res.status(429).send('<h2>Rate Limit</h2><p>Bitte kurz warten.</p><p><a href="/login">Login</a></p>');
-        return res.status(500).send('OAuth Fehler.');
+        if(err.oauthError) return res.status(429).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rate Limit</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    a {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: white;
+      color: #ff6b6b;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    a:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏳ Rate Limit</h1>
+    <p>Bitte kurz warten und erneut versuchen.</p>
+    <a href="/">← Zurück zur Startseite</a>
+  </div>
+</body>
+</html>
+        `);
+        return res.status(500).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OAuth Fehler</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    a {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: white;
+      color: #ff6b6b;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    a:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>❌ OAuth Fehler</h1>
+    <p>Es gab ein Problem bei der Anmeldung.</p>
+    <a href="/">← Zurück zur Startseite</a>
+  </div>
+</body>
+</html>
+        `);
       }
       if(!user) return res.redirect('/login');
       req.logIn(user,(e)=>{
-        if(e){ console.error('Session Fehler:', e); return res.status(500).send('Session Fehler.'); }
-        res.redirect('/panel');
+        if(e){ console.error('Session Fehler:', e); return res.status(500).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session Fehler</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    a {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: white;
+      color: #ff6b6b;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    a:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>❌ Session Fehler</h1>
+    <p>Es gab ein Problem beim Erstellen der Session.</p>
+    <a href="/">← Zurück zur Startseite</a>
+  </div>
+</body>
+</html>
+        `); }
+
+        // Show loading animation and redirect
+        res.send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Erfolgreich angemeldet</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      padding: 4rem 3rem;
+      border-radius: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      border: 1px solid rgba(0,255,136,0.2);
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .success-icon {
+      font-size: 5rem;
+      margin-bottom: 1.5rem;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #00ff88;
+    }
+
+    p {
+      font-size: 1.1rem;
+      opacity: 0.8;
+      margin-bottom: 2rem;
+    }
+
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(0,255,136,0.1);
+      border-top: 5px solid #00ff88;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 2rem auto;
+    }
+
+    .redirect-text {
+      font-size: 0.9rem;
+      opacity: 0.6;
+      margin-top: 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 3rem 2rem;
+      }
+
+      h1 { font-size: 1.5rem; }
+      p { font-size: 1rem; }
+      .success-icon { font-size: 4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="success-icon">✅</div>
+    <h1>Erfolgreich angemeldet!</h1>
+    <p>Willkommen zurück! Du wirst weitergeleitet...</p>
+    <div class="loader"></div>
+    <p class="redirect-text">Automatische Weiterleitung in wenigen Sekunden</p>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      window.location.href = '/select-server';
+    }, 1500);
+  </script>
+</body>
+</html>
+        `);
       });
     })(req,res,next);
   });

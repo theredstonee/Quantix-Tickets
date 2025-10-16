@@ -109,6 +109,121 @@
       margin: 0;
     }
 
+    /* Card View Styles */
+    .view-toggle {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .view-btn {
+      padding: 0.6rem 1.2rem;
+      background: var(--chip-bg);
+      border: 2px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      color: var(--text-color);
+    }
+
+    .view-btn.active {
+      background: var(--accent-color);
+      color: #000;
+      font-weight: 600;
+    }
+
+    .ticket-cards {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .ticket-cards.active {
+      display: grid;
+    }
+
+    .ticket-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .ticket-card:hover {
+      border-color: var(--accent-color);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0,255,136,0.2);
+    }
+
+    .ticket-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .ticket-card-id {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+
+    .ticket-card-priority {
+      font-size: 2rem;
+    }
+
+    .ticket-card-topic {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-color);
+    }
+
+    .ticket-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .ticket-card-status {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .ticket-card-status.offen {
+      background: #2bd94a;
+      color: #000;
+    }
+
+    .ticket-card-status.geschlossen {
+      background: #d92b2b;
+      color: #fff;
+    }
+
+    table.hide {
+      display: none;
+    }
+
+    [data-theme="dark"] .ticket-card {
+      background: var(--chip-bg);
+      border-color: var(--border-color);
+    }
+
+    [data-theme="dark"] .ticket-card:hover {
+      border-color: var(--accent-color);
+      box-shadow: 0 8px 16px rgba(0,255,136,0.3);
+    }
+
     /* Mobile Responsive */
     @media (max-width: 768px) {
       body {
@@ -189,6 +304,24 @@
 
       label.inline {
         font-size: 0.7rem !important;
+      }
+
+      .view-toggle {
+        width: 100%;
+      }
+
+      .view-btn {
+        flex: 1;
+        text-align: center;
+      }
+
+      .ticket-cards {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .ticket-card {
+        padding: 1.2rem;
       }
     }
 
@@ -391,6 +524,13 @@
     <div id="refreshBar"><button id="refreshBtn">🔄 Aktualisieren</button><span id="lastUpdate" style="font-size:.7rem;opacity:.75">Letztes Update: –</span></div>
   </section>
 
+  <!-- View Toggle -->
+  <div class="view-toggle">
+    <button class="view-btn active" data-view="table"><i class="fas fa-table"></i> Tabelle</button>
+    <button class="view-btn" data-view="cards"><i class="fas fa-th-large"></i> Karten</button>
+  </div>
+
+  <!-- Table View -->
   <table id="ticketsTable">
     <thead>
       <tr>
@@ -408,6 +548,9 @@
     </thead>
     <tbody></tbody>
   </table>
+
+  <!-- Card View -->
+  <div class="ticket-cards" id="ticketCards"></div>
 
   <footer>
     <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten • Version <%= version %></p>
@@ -471,6 +614,7 @@
   }
 
   function render(list){
+    // Render table view
     tbody.innerHTML = list.map(t=>{
       const pr = t.priority||0;
       const userName = displayName(t.userId);
@@ -493,6 +637,29 @@
         <td><a href="https://discord.com/channels/${GUILD_ID}/${t.channelId}" target="_blank" title="Channel öffnen">🔗</a></td>
         <td><a class="trans-link" href="/transcript/${t.id}" target="_blank" title="Transcript öffnen">📄</a></td>
       </tr>`;
+    }).join('');
+
+    // Render card view
+    const cardsContainer = document.getElementById('ticketCards');
+    cardsContainer.innerHTML = list.map(t=>{
+      const pr = t.priority||0;
+      const userName = displayName(t.userId);
+      const claimerName = displayName(t.claimer);
+      return `
+        <div class="ticket-card" onclick="window.open('/transcript/${t.id}', '_blank')">
+          <div class="ticket-card-header">
+            <div class="ticket-card-id">#${t.id}</div>
+            <div class="ticket-card-priority">${dots[pr]}</div>
+          </div>
+          <div class="ticket-card-topic">${t.topic||'Kein Thema'}</div>
+          <div class="ticket-card-info">
+            <div><strong>Status:</strong> <span class="ticket-card-status ${t.status}">${t.status}</span></div>
+            <div><strong>User:</strong> ${userName}</div>
+            ${t.claimer ? `<div><strong>Claimer:</strong> ${claimerName}</div>` : ''}
+            <div><strong>Erstellt:</strong> ${fmt(t.timestamp)}</div>
+          </div>
+        </div>
+      `;
     }).join('');
   }
 
@@ -537,6 +704,36 @@
   }
 
   apply();
+
+  // View Toggle
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+
+      // Toggle active class
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Toggle view
+      if(view === 'cards') {
+        document.getElementById('ticketsTable').classList.add('hide');
+        document.getElementById('ticketCards').classList.add('active');
+        localStorage.setItem('trs-tickets-view', 'cards');
+      } else {
+        document.getElementById('ticketsTable').classList.remove('hide');
+        document.getElementById('ticketCards').classList.remove('active');
+        localStorage.setItem('trs-tickets-view', 'table');
+      }
+    });
+  });
+
+  // Load saved view preference
+  (function() {
+    const savedView = localStorage.getItem('trs-tickets-view') || 'table';
+    if(savedView === 'cards') {
+      document.querySelector('.view-btn[data-view="cards"]').click();
+    }
+  })();
 
   // Theme Toggle
   function toggleTheme() {
