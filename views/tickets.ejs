@@ -532,6 +532,59 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Navigation Loading Overlay */
+    .nav-loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100000;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .nav-loading-overlay.show {
+      display: flex;
+    }
+
+    .nav-loader-content {
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      padding: 3rem;
+      border-radius: 20px;
+      border: 1px solid rgba(0,255,136,0.2);
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .nav-loader-spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(0,255,136,0.1);
+      border-top: 6px solid var(--accent-color);
+      border-radius: 50%;
+      animation: loaderSpin 1s linear infinite;
+      margin: 0 auto 2rem;
+    }
+
+    .nav-loader-text {
+      font-size: 1.3rem;
+      color: var(--accent-color);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-loader-subtext {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      color: var(--text-color);
+    }
   </style>
 </head>
 <body>
@@ -541,6 +594,15 @@
       <div class="loader-spinner"></div>
       <div class="loader-text">Lade Tickets...</div>
       <div class="loader-subtext">Bitte warten</div>
+    </div>
+  </div>
+
+  <!-- Navigation Loading Overlay -->
+  <div class="nav-loading-overlay" id="navLoadingOverlay">
+    <div class="nav-loader-content">
+      <div class="nav-loader-spinner"></div>
+      <div class="nav-loader-text" id="navLoadingText">Wird geladen...</div>
+      <div class="nav-loader-subtext">Bitte warten</div>
     </div>
   </div>
 
@@ -823,6 +885,60 @@
       document.getElementById('pageLoader').classList.add('hide');
     }, 300);
   });
+
+  // Navigation Loading Animations
+  function showNavLoading(text) {
+    const overlay = document.getElementById('navLoadingOverlay');
+    const loadingText = document.getElementById('navLoadingText');
+
+    loadingText.textContent = text;
+    overlay.classList.add('show');
+  }
+
+  // Add loading to "Zurück zum Panel" button
+  const panelBtn = document.querySelector('a[href="/panel"]');
+  if (panelBtn) {
+    panelBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const href = this.getAttribute('href');
+
+      showNavLoading('Zurück zum Panel...');
+
+      setTimeout(() => {
+        window.location.href = href;
+      }, 100);
+    });
+  }
+
+  // Add loading to "Zur Startseite" button
+  const homeBtn = document.querySelector('a[href="/"]');
+  if (homeBtn) {
+    homeBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const href = this.getAttribute('href');
+
+      showNavLoading('Zur Startseite...');
+
+      setTimeout(() => {
+        window.location.href = href;
+      }, 100);
+    });
+  }
+
+  // Add loading to "Server wechseln" button
+  const serverBtn = document.querySelector('a[href="/select-server"]');
+  if (serverBtn) {
+    serverBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const href = this.getAttribute('href');
+
+      showNavLoading('Server wird gewechselt...');
+
+      setTimeout(() => {
+        window.location.href = href;
+      }, 100);
+    });
+  }
 </script>
 </body>
 </html>

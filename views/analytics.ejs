@@ -512,11 +512,18 @@
     const backBtn = document.querySelector('.back-btn');
     if (backBtn) {
       backBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
         const overlay = document.getElementById('loadingOverlay');
         const loadingText = document.getElementById('loadingText');
 
         loadingText.textContent = 'Zurück zum Panel...';
         overlay.classList.add('show');
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
       });
     }
   </script>

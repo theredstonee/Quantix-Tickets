@@ -460,7 +460,14 @@
     const backBtn = document.querySelector('.btn-back');
     if (backBtn) {
       backBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
         showLoading('Zurück zum Panel...');
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
       });
     }
   </script>

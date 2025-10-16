@@ -414,9 +414,121 @@ client.once('ready', async () => {
   startPremiumExpiryChecker();
 });
 
+async function sendWelcomeMessage(guild) {
+  try {
+    // Find a suitable channel to send the welcome message
+    // Priority: 1. "general" channel, 2. first text channel where bot can send messages
+    let targetChannel = null;
+
+    // Try to find a channel named "general", "allgemein", or similar
+    const generalNames = ['general', 'allgemein', 'chat', 'main', 'lobby'];
+    for (const name of generalNames) {
+      const channel = guild.channels.cache.find(ch =>
+        ch.type === ChannelType.GuildText &&
+        ch.name.toLowerCase().includes(name) &&
+        ch.permissionsFor(guild.members.me).has([
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.SendMessages
+        ])
+      );
+      if (channel) {
+        targetChannel = channel;
+        break;
+      }
+    }
+
+    // If no "general" channel found, get the first available text channel
+    if (!targetChannel) {
+      targetChannel = guild.channels.cache.find(ch =>
+        ch.type === ChannelType.GuildText &&
+        ch.permissionsFor(guild.members.me).has([
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.SendMessages
+        ])
+      );
+    }
+
+    if (!targetChannel) {
+      console.log(`⚠️ No suitable channel found in ${guild.name} to send welcome message`);
+      return;
+    }
+
+    // Detect server language (default: German, fallback: English if server is not German)
+    const guildLanguage = getGuildLanguage(guild.id);
+    const isGerman = guildLanguage === 'de' || guild.preferredLocale?.startsWith('de');
+
+    const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://trstickets.theredstonee.de').replace(/\/+$/, '');
+
+    // Create welcome embed
+    const welcomeEmbed = new EmbedBuilder()
+      .setTitle(isGerman ? '🎫 Willkommen bei TRS Tickets!' : '🎫 Welcome to TRS Tickets!')
+      .setDescription(
+        isGerman
+          ? `Vielen Dank, dass du TRS Tickets zu deinem Server hinzugefügt hast!\n\n` +
+            `**Was ist TRS Tickets?**\n` +
+            `Ein professionelles Ticket-System für Discord mit Web-Dashboard, Multi-Server-Support und 9 Sprachen.\n\n` +
+            `**🚀 Schnellstart:**\n` +
+            `1️⃣ Öffne das **[Dashboard](${dashboardUrl})** und melde dich mit Discord an\n` +
+            `2️⃣ Wähle deinen Server aus\n` +
+            `3️⃣ Konfiguriere deine Ticket-Kategorien und Team-Rollen\n` +
+            `4️⃣ Sende das Ticket-Panel in einen Channel mit \`/panel/send\`\n\n` +
+            `**✨ Features:**\n` +
+            `• 🌍 **Multi-Language:** 9 Sprachen (DE, EN, HE, JA, RU, PT, ES, ID, AR)\n` +
+            `• 🎨 **Anpassbar:** Custom Embeds, Formulare und Design\n` +
+            `• 📊 **Analytics:** Detaillierte Ticket-Statistiken\n` +
+            `• 🎯 **Priority System:** 3 Prioritätsstufen mit hierarchischen Rollen\n` +
+            `• 📝 **Transcripts:** HTML & TXT Transcripts für alle Tickets\n` +
+            `• 💎 **Premium:** Erweiterte Features wie Auto-Close, Email-Benachrichtigungen\n\n` +
+            `**📖 Hilfe benötigt?**\n` +
+            `Besuche das [Dashboard](${dashboardUrl}) für die vollständige Konfiguration!`
+          : `Thank you for adding TRS Tickets to your server!\n\n` +
+            `**What is TRS Tickets?**\n` +
+            `A professional ticket system for Discord with web dashboard, multi-server support and 9 languages.\n\n` +
+            `**🚀 Quick Start:**\n` +
+            `1️⃣ Open the **[Dashboard](${dashboardUrl})** and login with Discord\n` +
+            `2️⃣ Select your server\n` +
+            `3️⃣ Configure your ticket categories and team roles\n` +
+            `4️⃣ Send the ticket panel to a channel with \`/panel/send\`\n\n` +
+            `**✨ Features:**\n` +
+            `• 🌍 **Multi-Language:** 9 languages (DE, EN, HE, JA, RU, PT, ES, ID, AR)\n` +
+            `• 🎨 **Customizable:** Custom embeds, forms and design\n` +
+            `• 📊 **Analytics:** Detailed ticket statistics\n` +
+            `• 🎯 **Priority System:** 3 priority levels with hierarchical roles\n` +
+            `• 📝 **Transcripts:** HTML & TXT transcripts for all tickets\n` +
+            `• 💎 **Premium:** Advanced features like auto-close, email notifications\n\n` +
+            `**📖 Need help?**\n` +
+            `Visit the [Dashboard](${dashboardUrl}) for full configuration!`
+      )
+      .setColor(0x00ff88)
+      .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
+      .setFooter({ text: COPYRIGHT })
+      .setTimestamp();
+
+    // Create button row with dashboard link
+    const buttonRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setURL(dashboardUrl)
+        .setStyle(ButtonStyle.Link)
+        .setLabel(isGerman ? '🚀 Zum Dashboard' : '🚀 Open Dashboard')
+        .setEmoji('🎫')
+    );
+
+    await targetChannel.send({
+      embeds: [welcomeEmbed],
+      components: [buttonRow]
+    });
+
+    console.log(`✅ Welcome message sent to ${guild.name} in channel #${targetChannel.name}`);
+  } catch (err) {
+    console.error(`❌ Error sending welcome message to ${guild.name}:`, err);
+  }
+}
+
 client.on(Events.GuildCreate, async (guild) => {
   console.log(`🆕 Bot joined new guild: ${guild.name} (${guild.id})`);
+
   try {
+    // Deploy commands
     loadCommands();
     const rest = new REST({ version: '10' }).setToken(TOKEN);
     const commands = Array.from(commandsCollection.values()).map(cmd => cmd.data.toJSON());
@@ -428,6 +540,9 @@ client.on(Events.GuildCreate, async (guild) => {
   } catch (err) {
     console.error(`❌ Error deploying commands to ${guild.name}:`, err);
   }
+
+  // Send welcome message with setup instructions
+  await sendWelcomeMessage(guild);
 });
 
 function buildTicketEmbed(cfg, i, topic, nr){

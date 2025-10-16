@@ -1303,6 +1303,9 @@ document.querySelector('form[action="/panel/edit"]').addEventListener('submit', 
 const analyticsLink = document.querySelector('a[href="/analytics"]');
 if (analyticsLink) {
   analyticsLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    const href = this.getAttribute('href');
+
     const lang = '<%= lang %>';
     const texts = {
       de: { text: 'Analytics wird geladen...', subtext: 'Bitte warten' },
@@ -1318,6 +1321,10 @@ if (analyticsLink) {
 
     const t = texts[lang] || texts.de;
     showLoading(t.text, t.subtext);
+
+    setTimeout(() => {
+      window.location.href = href;
+    }, 100);
   });
 }
 
@@ -1325,6 +1332,9 @@ if (analyticsLink) {
 const serverSwitchLink = document.querySelector('a[href="/select-server"]');
 if (serverSwitchLink) {
   serverSwitchLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    const href = this.getAttribute('href');
+
     const lang = '<%= lang %>';
     const texts = {
       de: { text: 'Server wird gewechselt...', subtext: 'Bitte warten' },
@@ -1340,6 +1350,68 @@ if (serverSwitchLink) {
 
     const t = texts[lang] || texts.de;
     showLoading(t.text, t.subtext);
+
+    setTimeout(() => {
+      window.location.href = href;
+    }, 100);
+  });
+}
+
+// Show loading on Home link click
+const homeLink = document.querySelector('a[href="/"]');
+if (homeLink) {
+  homeLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    const href = this.getAttribute('href');
+
+    const lang = '<%= lang %>';
+    const texts = {
+      de: { text: 'Zur Startseite...', subtext: 'Bitte warten' },
+      en: { text: 'Going to home...', subtext: 'Please wait' },
+      he: { text: 'חזרה לדף הבית...', subtext: 'אנא המתן' },
+      ja: { text: 'ホームに移動中...', subtext: 'お待ちください' },
+      ru: { text: 'Переход на главную...', subtext: 'Пожалуйста, подождите' },
+      pt: { text: 'Indo para início...', subtext: 'Por favor, aguarde' },
+      es: { text: 'Yendo al inicio...', subtext: 'Por favor, espere' },
+      id: { text: 'Ke beranda...', subtext: 'Mohon tunggu' },
+      ar: { text: 'الذهاب إلى الرئيسية...', subtext: 'يرجى الانتظار' }
+    };
+
+    const t = texts[lang] || texts.de;
+    showLoading(t.text, t.subtext);
+
+    setTimeout(() => {
+      window.location.href = href;
+    }, 100);
+  });
+}
+
+// Show loading on Ticket History link click
+const ticketsLink = document.querySelector('a[href="/tickets"]');
+if (ticketsLink) {
+  ticketsLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    const href = this.getAttribute('href');
+
+    const lang = '<%= lang %>';
+    const texts = {
+      de: { text: 'Ticket-Verlauf wird geladen...', subtext: 'Bitte warten' },
+      en: { text: 'Loading ticket history...', subtext: 'Please wait' },
+      he: { text: 'טוען היסטוריה...', subtext: 'אנא המתן' },
+      ja: { text: '履歴を読み込み中...', subtext: 'お待ちください' },
+      ru: { text: 'Загрузка истории...', subtext: 'Пожалуйста, подождите' },
+      pt: { text: 'Carregando histórico...', subtext: 'Por favor, aguarde' },
+      es: { text: 'Cargando historial...', subtext: 'Por favor, espere' },
+      id: { text: 'Memuat riwayat...', subtext: 'Mohon tunggu' },
+      ar: { text: 'تحميل السجل...', subtext: 'يرجى الانتظار' }
+    };
+
+    const t = texts[lang] || texts.de;
+    showLoading(t.text, t.subtext);
+
+    setTimeout(() => {
+      window.location.href = href;
+    }, 100);
   });
 }
 </script>

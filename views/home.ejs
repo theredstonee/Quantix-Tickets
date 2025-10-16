@@ -978,6 +978,9 @@
     const loginBtn = document.querySelector('a[href="/login"]');
     if (loginBtn) {
       loginBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
         const lang = '<%= lang %>';
         const texts = {
           de: 'Anmeldung läuft...',
@@ -992,6 +995,10 @@
         };
 
         showLoading(texts[lang] || texts.de);
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
       });
     }
 
@@ -999,6 +1006,9 @@
     const adminBtn = document.querySelector('a[href="/select-server"]');
     if (adminBtn) {
       adminBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
         const lang = '<%= lang %>';
         const texts = {
           de: 'Serverliste wird geladen...',
@@ -1013,6 +1023,10 @@
         };
 
         showLoading(texts[lang] || texts.de);
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
       });
     }
 
@@ -1020,6 +1034,9 @@
     const logoutBtn = document.querySelector('a[href="/logout"]');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
         const lang = '<%= lang %>';
         const texts = {
           de: 'Abmeldung läuft...',
@@ -1034,6 +1051,10 @@
         };
 
         showLoading(texts[lang] || texts.de);
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
       });
     }
   </script>
