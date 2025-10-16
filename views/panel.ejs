@@ -567,6 +567,23 @@
     <% } %>
   </div>
 
+  <!-- Read-Only Mode Notice for Team Members -->
+  <% if (typeof isAdmin !== 'undefined' && !isAdmin) { %>
+  <div style="margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border-radius: 15px; color: white; text-align: center; box-shadow: 0 4px 20px rgba(243, 156, 18, 0.4);">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+      <span style="font-size: 2.5rem;">👁️</span>
+      <div style="text-align: left;">
+        <h3 style="margin: 0; font-size: 1.5rem; color: white;">
+          <%= lang === 'de' ? 'Nur-Lese-Modus' : lang === 'en' ? 'Read-Only Mode' : lang === 'he' ? 'מצב קריאה בלבד' : lang === 'ja' ? '読み取り専用モード' : lang === 'ru' ? 'Режим только для чтения' : lang === 'pt' ? 'Modo Somente Leitura' : lang === 'es' ? 'Modo Solo Lectura' : lang === 'id' ? 'Mode Hanya Baca' : lang === 'ar' ? 'وضع القراءة فقط' : 'Nur-Lese-Modus' %>
+        </h3>
+        <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">
+          <%= lang === 'de' ? 'Du kannst als Team-Mitglied alle Einstellungen sehen, aber keine Änderungen vornehmen. Nur Administratoren können Einstellungen bearbeiten.' : lang === 'en' ? 'As a team member, you can view all settings but cannot make changes. Only administrators can edit settings.' : lang === 'he' ? 'כחבר צוות, אתה יכול לראות את כל ההגדרות אך לא לבצע שינויים. רק מנהלים יכולים לערוך הגדרות.' : lang === 'ja' ? 'チームメンバーとして、すべての設定を表示できますが、変更はできません。管理者のみが設定を編集できます。' : lang === 'ru' ? 'Как член команды, вы можете просматривать все настройки, но не можете вносить изменения. Только администраторы могут редактировать настройки.' : lang === 'pt' ? 'Como membro da equipe, você pode ver todas as configurações, mas não pode fazer alterações. Apenas administradores podem editar configurações.' : lang === 'es' ? 'Como miembro del equipo, puedes ver todas las configuraciones pero no puedes hacer cambios. Solo los administradores pueden editar configuraciones.' : lang === 'id' ? 'Sebagai anggota tim, Anda dapat melihat semua pengaturan tetapi tidak dapat melakukan perubahan. Hanya administrator yang dapat mengedit pengaturan.' : lang === 'ar' ? 'كعضو في الفريق، يمكنك عرض جميع الإعدادات ولكن لا يمكنك إجراء تغييرات. يمكن للمسؤولين فقط تحرير الإعدادات.' : 'Du kannst als Team-Mitglied alle Einstellungen sehen, aber keine Änderungen vornehmen. Nur Administratoren können Einstellungen bearbeiten.' %>
+        </p>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
   <!-- Premium Badge -->
   <% if (isPremium) { %>
   <div style="margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white; text-align: center; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);">
@@ -1148,9 +1165,12 @@
       </fieldset>
 
     </div>
+    <% if (typeof isAdmin === 'undefined' || isAdmin) { %>
     <button type="submit">💾 <%= t.web.save %></button>
+    <% } %>
   </form>
 
+  <% if (typeof isAdmin === 'undefined' || isAdmin) { %>
   <hr>
   <h2><%= t.web.panel_actions %></h2>
   <div class="actions">
@@ -1170,6 +1190,7 @@
     </form>
     <a href="/tickets" role="button" class="secondary"><i class="fas fa-history"></i> <%= t.web.ticket_history %></a>
   </div>
+  <% } %>
 
   <footer>
     <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten • Version <%= version %></p>
@@ -1414,6 +1435,37 @@ if (ticketsLink) {
     }, 100);
   });
 }
+
+// Disable all form elements for non-admin users (team members in read-only mode)
+<% if (typeof isAdmin !== 'undefined' && !isAdmin) { %>
+(function() {
+  // Disable all inputs, textareas, and selects in the main form
+  const mainForm = document.getElementById('panelForm');
+  if (mainForm) {
+    const formElements = mainForm.querySelectorAll('input:not([readonly]), textarea, select');
+    formElements.forEach(element => {
+      element.disabled = true;
+      element.style.cursor = 'not-allowed';
+      element.style.opacity = '0.6';
+    });
+
+    // Disable all buttons (add/delete buttons)
+    const buttons = mainForm.querySelectorAll('button:not([type="submit"])');
+    buttons.forEach(button => {
+      button.disabled = true;
+      button.style.cursor = 'not-allowed';
+      button.style.opacity = '0.5';
+    });
+
+    // Prevent form submission
+    mainForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('<%= lang === "de" ? "Du hast keine Berechtigung, Einstellungen zu ändern." : lang === "en" ? "You do not have permission to change settings." : lang === "he" ? "אין לך הרשאה לשנות הגדרות." : lang === "ja" ? "設定を変更する権限がありません。" : lang === "ru" ? "У вас нет разрешения на изменение настроек." : lang === "pt" ? "Você não tem permissão para alterar as configurações." : lang === "es" ? "No tienes permiso para cambiar la configuración." : lang === "id" ? "Anda tidak memiliki izin untuk mengubah pengaturan." : lang === "ar" ? "ليس لديك إذن لتغيير الإعدادات." : "Du hast keine Berechtigung, Einstellungen zu ändern." %>');
+      return false;
+    });
+  }
+})();
+<% } %>
 </script>
 </body>
 </html>

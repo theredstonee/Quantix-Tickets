@@ -200,6 +200,7 @@ module.exports = (client)=>{
 
     // Admin hat immer Zugriff
     if(isAdmin) {
+      req.isAdmin = true; // Flag für Templates
       return next();
     }
 
@@ -214,6 +215,7 @@ module.exports = (client)=>{
       const member = await guild.members.fetch(req.user.id);
 
       if(member.roles.cache.has(cfg.teamRoleId)) {
+        req.isAdmin = false; // Team-Mitglied, kein Admin
         return next();
       }
 
@@ -895,7 +897,7 @@ module.exports = (client)=>{
     res.redirect(req.get('referer') || '/panel');
   });
 
-  router.get('/panel', isAuth, async (req,res)=>{
+  router.get('/panel', isAuthOrTeam, async (req,res)=>{
     const guildId = req.session.selectedGuild;
     const cfg = readCfg(guildId);
 
@@ -933,7 +935,8 @@ module.exports = (client)=>{
       guildId,
       premiumTier: premiumInfo.tier,
       premiumTierName: premiumInfo.tierName,
-      isPremium: premiumInfo.isActive
+      isPremium: premiumInfo.isActive,
+      isAdmin: req.isAdmin // Flag ob User Admin ist oder nur Team-Mitglied
     });
   });
 
@@ -1157,7 +1160,7 @@ module.exports = (client)=>{
     return map;
   }
 
-  router.get('/tickets', isAuth, async (req,res)=>{
+  router.get('/tickets', isAuthOrTeam, async (req,res)=>{
     try {
       const guildId = req.session.selectedGuild;
       const cfg = readCfg(guildId);
@@ -1168,7 +1171,8 @@ module.exports = (client)=>{
         tickets: JSON.stringify(tickets),
         memberMap: JSON.stringify(memberMap),
         guildId: guildId,
-        version: VERSION
+        version: VERSION,
+        isAdmin: req.isAdmin // Flag ob User Admin ist oder nur Team-Mitglied
       });
     } catch(e){ console.error(e); res.status(500).send('Fehler beim Laden'); }
   });
