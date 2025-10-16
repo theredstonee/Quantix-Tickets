@@ -23,7 +23,7 @@
       --border-color: #e5e8ec;
       --accent-color: #00b894;
       --accent-hover: #00a077;
-      --fieldset-bg: #f8f9fa;
+      --fieldset-bg: rgba(248, 249, 250, 0.9);
       --thead-bg: #f2f4f8;
       --input-bg: #fff;
       --code-bg: #f0f0f0;
@@ -31,6 +31,9 @@
       --success-border: #2bb780;
       --error-bg: #f8d7da;
       --error-border: #c33;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --shadow-color: rgba(0, 0, 0, 0.1);
     }
 
     [data-theme="dark"] {
@@ -39,7 +42,7 @@
       --border-color: #1a3a2a;
       --accent-color: #00ff88;
       --accent-hover: #00dd77;
-      --fieldset-bg: #0f1510;
+      --fieldset-bg: rgba(15, 21, 16, 0.9);
       --thead-bg: #0f1f15;
       --input-bg: #0f1510;
       --code-bg: #0a1a0f;
@@ -47,6 +50,9 @@
       --success-border: #00ff88;
       --error-bg: #2a0a0a;
       --error-border: #ff4444;
+      --glass-bg: rgba(15, 21, 16, 0.7);
+      --glass-border: rgba(0, 255, 136, 0.3);
+      --shadow-color: rgba(0, 255, 136, 0.2);
     }
 
     [data-theme="dark"] body {
@@ -99,6 +105,26 @@
 
     [data-theme="dark"] button:not(.del-btn):not(.theme-toggle):hover {
       background-color: var(--accent-hover);
+    }
+
+    /* Animated Background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.03;
+      animation: bgMove 20s linear infinite;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
     }
 
     html, body {
@@ -206,7 +232,21 @@
     th,td { padding:.6rem .8rem; }
     table input, table select { width:100%; }
     .grid { display:flex; flex-wrap:wrap; gap:2rem; }
-    fieldset { flex:1 1 800px; min-width:740px; padding:2rem; }
+    fieldset {
+      flex:1 1 800px;
+      min-width:740px;
+      padding:2rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      box-shadow: 0 8px 32px var(--shadow-color);
+      transition: all 0.3s ease;
+    }
+    fieldset:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px var(--shadow-color);
+    }
     textarea { width:100%; font-family: monospace; resize:vertical; }
     .bad { border:1px solid var(--error-border); padding:1rem 1.5rem; border-radius:6px; background: var(--error-bg); margin:1rem 0; }
     .good { border:1px solid var(--success-border); padding:1rem 1.5rem; border-radius:6px; background: var(--success-bg); margin:1rem 0; }

@@ -25,9 +25,33 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       padding: 40px 20px;
+      position: relative;
+    }
+
+    /* Animated Background Pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.3;
+      animation: bgMove 20s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
     }
 
     .container {
+      position: relative;
+      z-index: 1;
       max-width: 1200px;
       margin: 0 auto;
     }
