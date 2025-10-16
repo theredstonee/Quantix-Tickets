@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="<%= lang %>" data-theme="light" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SLMX16ZJ6Y"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-SLMX16ZJ6Y');
+  </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : lang === 'he' ? 'מידע משפטי' : lang === 'ja' ? '法的通知' : lang === 'ru' ? 'Юридическая информация' : lang === 'pt' ? 'Aviso Legal' : lang === 'es' ? 'Aviso Legal' : lang === 'id' ? 'Pemberitahuan Hukum' : lang === 'zh' ? '法律声明' : lang === 'ar' ? 'إشعار قانوني' : 'Impressum' %> - TRS Tickets</title>
