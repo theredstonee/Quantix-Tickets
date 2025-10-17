@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="<%= lang %>" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback - TRS Tickets</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #1a1a1a;
+      --accent-color: #00b894;
+      --accent-hover: #00a077;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --glass-bg: rgba(15, 21, 16, 0.7);
+      --glass-border: rgba(0, 255, 136, 0.3);
+      --shadow-color: rgba(0, 255, 136, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.03;
+      animation: bgMove 20s linear infinite;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .header {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--glass-border);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 16px var(--shadow-color);
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+    }
+
+    .nav-links a:hover {
+      background: var(--glass-bg);
+      color: var(--accent-color);
+    }
+
+    .theme-toggle {
+      background: transparent;
+      border: 2px solid var(--glass-border);
+      color: var(--text-color);
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .theme-toggle:hover {
+      background: var(--glass-bg);
+      border-color: var(--accent-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+
+    .hero-icon {
+      font-size: 4rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--accent-color);
+      font-weight: 700;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 1.1rem;
+      opacity: 0.8;
+      margin-bottom: 3rem;
+      line-height: 1.6;
+    }
+
+    .feedback-form {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      box-shadow: 0 8px 32px var(--shadow-color);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.05);
+      border: 2px solid var(--glass-border);
+      border-radius: 0.5rem;
+      color: var(--text-color);
+      font-family: inherit;
+      transition: all 0.3s;
+    }
+
+    [data-theme="dark"] input,
+    [data-theme="dark"] select,
+    [data-theme="dark"] textarea {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      background: var(--accent-color);
+      color: #000;
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-submit:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px var(--shadow-color);
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 0.75rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-weight: 500;
+    }
+
+    .alert-success {
+      background: rgba(0, 184, 148, 0.1);
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .alert-error {
+      background: rgba(231, 76, 60, 0.1);
+      border: 2px solid #e74c3c;
+      color: #e74c3c;
+    }
+
+    @media (max-width: 768px) {
+      .header-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .nav-links {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      h1 { font-size: 2rem; }
+
+      .feedback-form {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-container">
+      <a href="/" class="logo">
+        <i class="fas fa-ticket-alt"></i>
+        TRS Tickets
+      </a>
+      <nav class="nav-links">
+        <a href="/">
+          <i class="fas fa-home"></i> Home
+        </a>
+        <% if (isAuthenticated && user) { %>
+          <a href="/panel">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+        <% } else { %>
+          <a href="/login">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </a>
+        <% } %>
+        <button class="theme-toggle" onclick="toggleTheme()">
+          <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="hero-icon">
+      <i class="fas fa-comments"></i>
+    </div>
+    <h1><%
+      const titles = {
+        de: 'Feedback',
+        en: 'Feedback',
+        he: 'משוב',
+        ja: 'フィードバック',
+        ru: 'Обратная связь',
+        pt: 'Feedback',
+        es: 'Comentarios',
+        id: 'Umpan Balik',
+        ar: 'تعليق'
+      };
+    %><%= titles[lang] || titles.de %></h1>
+    <p class="subtitle"><%
+      const subtitles = {
+        de: 'Deine Meinung ist uns wichtig! Teile uns mit, was wir verbessern können.',
+        en: 'Your opinion matters! Tell us what we can improve.',
+        he: 'דעתך חשובה! ספר לנו מה נוכל לשפר.',
+        ja: 'あなたの意見は重要です！改善できることを教えてください。',
+        ru: 'Ваше мнение важно! Расскажите нам, что мы можем улучшить.',
+        pt: 'Sua opinião importa! Diga-nos o que podemos melhorar.',
+        es: '¡Tu opinión importa! Dinos qué podemos mejorar.',
+        id: 'Pendapat Anda penting! Beritahu kami apa yang dapat kami tingkatkan.',
+        ar: 'رأيك مهم! أخبرنا بما يمكننا تحسينه.'
+      };
+    %><%= subtitles[lang] || subtitles.de %></p>
+
+    <% if (success) { %>
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
+        <div>
+          <strong><%
+            const successTitle = {
+              de: 'Vielen Dank!',
+              en: 'Thank you!',
+              he: 'תודה רבה!',
+              ja: 'ありがとうございます！',
+              ru: 'Спасибо!',
+              pt: 'Obrigado!',
+              es: '¡Gracias!',
+              id: 'Terima kasih!',
+              ar: 'شكرًا لك!'
+            };
+          %><%= successTitle[lang] || successTitle.de %></strong><br>
+          <%
+            const successMsg = {
+              de: 'Dein Feedback wurde erfolgreich übermittelt.',
+              en: 'Your feedback has been successfully submitted.',
+              he: 'המשוב שלך נשלח בהצלחה.',
+              ja: 'フィードバックが正常に送信されました。',
+              ru: 'Ваш отзыв был успешно отправлен.',
+              pt: 'Seu feedback foi enviado com sucesso.',
+              es: 'Tu comentario ha sido enviado exitosamente.',
+              id: 'Umpan balik Anda telah berhasil dikirim.',
+              ar: 'تم إرسال تعليقك بنجاch.'
+            };
+          %><%= successMsg[lang] || successMsg.de %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle" style="font-size: 1.5rem;"></i>
+        <div>
+          <strong><%
+            const errorTitle = {
+              de: 'Fehler!',
+              en: 'Error!',
+              he: 'שגיאה!',
+              ja: 'エラー！',
+              ru: 'Ошибка!',
+              pt: 'Erro!',
+              es: '¡Error!',
+              id: 'Kesalahan!',
+              ar: 'خطأ!'
+            };
+          %><%= errorTitle[lang] || errorTitle.de %></strong><br>
+          <%
+            const errorMsg = {
+              de: 'Bitte fülle alle Felder aus.',
+              en: 'Please fill in all fields.',
+              he: 'אנא מלא את כל השדות.',
+              ja: 'すべてのフィールドに入力してください。',
+              ru: 'Пожалуйста, заполните все поля.',
+              pt: 'Por favor, preencha todos os campos.',
+              es: 'Por favor, completa todos los campos.',
+              id: 'Silakan isi semua kolom.',
+              ar: 'يرجى ملء جميع الحقول.'
+            };
+          %><%= errorMsg[lang] || errorMsg.de %>
+        </div>
+      </div>
+    <% } %>
+
+    <form class="feedback-form" method="POST" action="/feedback">
+      <div class="form-group">
+        <label><%
+          const nameLabel = {
+            de: 'Name',
+            en: 'Name',
+            he: 'שם',
+            ja: '名前',
+            ru: 'Имя',
+            pt: 'Nome',
+            es: 'Nombre',
+            id: 'Nama',
+            ar: 'الاسم'
+          };
+        %><%= nameLabel[lang] || nameLabel.de %> *</label>
+        <input type="text" name="name" required placeholder="<%= isAuthenticated && user ? user.username : '' %>">
+      </div>
+
+      <div class="form-group">
+        <label><%
+          const emailLabel = {
+            de: 'E-Mail',
+            en: 'Email',
+            he: 'דוא"ל',
+            ja: 'メール',
+            ru: 'Электронная почта',
+            pt: 'E-mail',
+            es: 'Correo electrónico',
+            id: 'Email',
+            ar: 'البريد الإلكتروني'
+          };
+        %><%= emailLabel[lang] || emailLabel.de %> *</label>
+        <input type="email" name="email" required>
+      </div>
+
+      <div class="form-group">
+        <label><%
+          const typeLabel = {
+            de: 'Typ',
+            en: 'Type',
+            he: 'סוג',
+            ja: 'タイプ',
+            ru: 'Тип',
+            pt: 'Tipo',
+            es: 'Tipo',
+            id: 'Jenis',
+            ar: 'النوع'
+          };
+        %><%= typeLabel[lang] || typeLabel.de %> *</label>
+        <select name="type" required>
+          <option value=""><%
+            const selectOption = {
+              de: '-- Bitte wählen --',
+              en: '-- Please select --',
+              he: '-- אנא בחר --',
+              ja: '-- 選択してください --',
+              ru: '-- Пожалуйста, выберите --',
+              pt: '-- Por favor, selecione --',
+              es: '-- Por favor, selecciona --',
+              id: '-- Silakan pilih --',
+              ar: '-- يرجى الاختيار --'
+            };
+          %><%= selectOption[lang] || selectOption.de %></option>
+          <option value="bug">🐛 <%
+            const bugOption = {
+              de: 'Bug-Bericht',
+              en: 'Bug Report',
+              he: 'דיווח על באג',
+              ja: 'バグレポート',
+              ru: 'Отчет об ошибке',
+              pt: 'Relatório de Bug',
+              es: 'Reporte de Error',
+              id: 'Laporan Bug',
+              ar: 'تقرير خطأ'
+            };
+          %><%= bugOption[lang] || bugOption.de %></option>
+          <option value="feature">✨ <%
+            const featureOption = {
+              de: 'Feature-Wunsch',
+              en: 'Feature Request',
+              he: 'בקשת תכונה',
+              ja: '機能リクエスト',
+              ru: 'Запрос функции',
+              pt: 'Solicitação de Recurso',
+              es: 'Solicitud de Función',
+              id: 'Permintaan Fitur',
+              ar: 'طلب ميزة'
+            };
+          %><%= featureOption[lang] || featureOption.de %></option>
+          <option value="improvement">🚀 <%
+            const improvementOption = {
+              de: 'Verbesserungsvorschlag',
+              en: 'Improvement Suggestion',
+              he: 'הצעת שיפור',
+              ja: '改善提案',
+              ru: 'Предложение по улучшению',
+              pt: 'Sugestão de Melhoria',
+              es: 'Sugerencia de Mejora',
+              id: 'Saran Perbaikan',
+              ar: 'اقتراح تحسين'
+            };
+          %><%= improvementOption[lang] || improvementOption.de %></option>
+          <option value="other">💬 <%
+            const otherOption = {
+              de: 'Sonstiges',
+              en: 'Other',
+              he: 'אחר',
+              ja: 'その他',
+              ru: 'Другое',
+              pt: 'Outro',
+              es: 'Otro',
+              id: 'Lainnya',
+              ar: 'آخر'
+            };
+          %><%= otherOption[lang] || otherOption.de %></option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label><%
+          const messageLabel = {
+            de: 'Nachricht',
+            en: 'Message',
+            he: 'הודעה',
+            ja: 'メッセージ',
+            ru: 'Сообщение',
+            pt: 'Mensagem',
+            es: 'Mensaje',
+            id: 'Pesan',
+            ar: 'رسالة'
+          };
+        %><%= messageLabel[lang] || messageLabel.de %> *</label>
+        <textarea name="message" required placeholder="<%
+          const messagePlaceholder = {
+            de: 'Beschreibe dein Anliegen so detailliert wie möglich...',
+            en: 'Describe your concern in as much detail as possible...',
+            he: 'תאר את הנושא שלך בפירוט רב ככל האפשר...',
+            ja: 'できるだけ詳しくお知らせください...',
+            ru: 'Опишите вашу проблему как можно подробнее...',
+            pt: 'Descreva sua preocupação com o máximo de detalhes possível...',
+            es: 'Describe tu inquietud con el mayor detalle posible...',
+            id: 'Jelaskan masalah Anda sedetail mungkin...',
+            ar: 'صف مشكلتك بأكبر قدر ممكن من التفاصيل...'
+          };
+        %><%= messagePlaceholder[lang] || messagePlaceholder.de %>"></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit">
+        <i class="fas fa-paper-plane"></i>
+        <%
+          const submitButton = {
+            de: 'Feedback senden',
+            en: 'Send Feedback',
+            he: 'שלח משוב',
+            ja: 'フィードバックを送信',
+            ru: 'Отправить отзыв',
+            pt: 'Enviar Feedback',
+            es: 'Enviar Comentarios',
+            id: 'Kirim Umpan Balik',
+            ar: 'إرسال التعليقات'
+          };
+        %><%= submitButton[lang] || submitButton.de %>
+      </button>
+    </form>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById('theme-icon');
+      icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+  </script>
+</body>
+</html>

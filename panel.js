@@ -356,6 +356,65 @@ module.exports = (client)=>{
     });
   });
 
+  router.get('/feedback', (req, res) => {
+    const lang = req.cookies.lang || 'de';
+    const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
+
+    res.render('feedback', {
+      t: getTranslations(lang),
+      lang: lang,
+      user: isAuthenticated ? req.user : null,
+      isAuthenticated: isAuthenticated,
+      success: req.query.success === 'true',
+      error: req.query.error === 'true'
+    });
+  });
+
+  router.post('/feedback', async (req, res) => {
+    try {
+      const { name, email, type, message } = req.body;
+
+      // Validation
+      if (!name || !email || !type || !message) {
+        return res.redirect('/feedback?error=true');
+      }
+
+      const feedback = {
+        id: Date.now().toString(),
+        name: name.trim(),
+        email: email.trim(),
+        type: type,
+        message: message.trim(),
+        userId: req.isAuthenticated && req.isAuthenticated() ? req.user.id : null,
+        username: req.isAuthenticated && req.isAuthenticated() ? req.user.username : null,
+        timestamp: new Date().toISOString(),
+        ip: req.ip || req.connection.remoteAddress
+      };
+
+      // Save to JSON file
+      const feedbackFile = './feedback.json';
+      let feedbacks = [];
+
+      try {
+        if (fs.existsSync(feedbackFile)) {
+          feedbacks = JSON.parse(fs.readFileSync(feedbackFile, 'utf8'));
+        }
+      } catch(err) {
+        console.error('Error reading feedback file:', err);
+      }
+
+      feedbacks.push(feedback);
+      fs.writeFileSync(feedbackFile, JSON.stringify(feedbacks, null, 2));
+
+      console.log('📬 New Feedback received:', feedback);
+
+      res.redirect('/feedback?success=true');
+    } catch(err) {
+      console.error('Feedback submission error:', err);
+      res.redirect('/feedback?error=true');
+    }
+  });
+
   router.get('/imprint', (req, res) => {
     const lang = req.cookies.lang || 'de';
     res.render('imprint', {

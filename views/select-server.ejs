@@ -558,6 +558,15 @@
       box-shadow: 0 4px 12px rgba(0,255,136,0.4);
     }
 
+    .owner-dashboard-btn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .owner-dashboard-btn.loading i {
+      animation: spin 1s linear infinite;
+    }
+
     @media (max-width: 768px) {
       .nav-buttons {
         flex-direction: column;
@@ -582,7 +591,7 @@
       <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : lang === 'zh' ? '返回首页' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Zur Startseite' %>
     </a>
     <% if (user && (user.id === '928901974106202113' || user.id === '1159182333316968530')) { %>
-      <a href="/owner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+      <a href="/owner" id="ownerDashboardBtn" class="owner-dashboard-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
         <i class="fas fa-crown"></i> <%= lang === 'de' ? 'Owner Dashboard' : lang === 'en' ? 'Owner Dashboard' : lang === 'he' ? 'לוח בקרת הבעלים' : lang === 'ja' ? 'オーナーダッシュボード' : lang === 'ru' ? 'Панель владельца' : lang === 'pt' ? 'Painel do Proprietário' : lang === 'es' ? 'Panel del Propietario' : lang === 'id' ? 'Panel Pemilik' : lang === 'zh' ? '所有者仪表板' : lang === 'ar' ? 'لوحة المالك' : 'Owner Dashboard' %>
       </a>
     <% } %>
@@ -876,6 +885,19 @@
         setTimeout(() => {
           window.location.href = href;
         }, 100);
+      });
+    }
+
+    // Owner Dashboard Button Loading Animation
+    const ownerDashboardBtn = document.getElementById('ownerDashboardBtn');
+    if (ownerDashboardBtn) {
+      ownerDashboardBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        this.classList.add('loading');
+        setTimeout(() => {
+          window.location.href = href;
+        }, 300);
       });
     }
   </script>

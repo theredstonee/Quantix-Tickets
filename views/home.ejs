@@ -296,6 +296,20 @@
       box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
     }
 
+    .btn-dashboard.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .btn-dashboard.loading i {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     /* Hero Section */
     .hero {
       min-height: 100vh;
@@ -1023,15 +1037,13 @@
             <img src="/images/flags/ar.svg" alt="AR" loading="lazy">
           </a>
         </div>
-        <% if (isAuthenticated && user) { %>
-          <a href="/panel" class="btn-dashboard">
-            <i class="fas fa-tachometer-alt"></i>
-            <span>Dashboard</span>
-          </a>
-        <% } %>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
           <i id="themeIcon" class="fas fa-moon"></i>
         </button>
+        <a href="/panel" class="btn-dashboard" id="dashboardBtn">
+          <i class="fas fa-tachometer-alt"></i>
+          <span>Dashboard</span>
+        </a>
       </div>
     </div>
   </header>
@@ -2288,6 +2300,19 @@
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+    // Dashboard Button Loading Animation
+    const dashboardBtn = document.getElementById('dashboardBtn');
+    if (dashboardBtn) {
+      dashboardBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        this.classList.add('loading');
+        setTimeout(() => {
+          window.location.href = href;
+        }, 300);
+      });
+    }
 
     // Stats Counter Animation
     function animateCounter(el) {
