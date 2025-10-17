@@ -993,7 +993,7 @@
       }
     })();
 
-    // Accelerating Spinner Animation
+    // Accelerating Spinner Animation (No Maximum)
     (function() {
       let secondsElapsed = 0;
 
@@ -1016,6 +1016,105 @@
 
       // Run every second
       setInterval(accelerateSpinners, 1000);
+    })();
+
+    // DVD Logo Bounce Animation for Settings Button
+    (function() {
+      const settingsBtn = document.getElementById('settingsBtn');
+      if (!settingsBtn) return;
+
+      let x = 0;
+      let y = 0;
+      let dx = 2; // Horizontal speed
+      let dy = 2; // Vertical speed
+      let animationId = null;
+
+      const colors = [
+        '#00ff88', '#ff0088', '#ffff00', '#00ffff',
+        '#ff8800', '#8800ff', '#00ff00', '#ff0000'
+      ];
+      let colorIndex = 0;
+
+      function startDVDBounce() {
+        if (animationId) return; // Already running
+
+        // Get initial position
+        const rect = settingsBtn.getBoundingClientRect();
+        x = rect.left;
+        y = rect.top;
+
+        // Remove fixed positioning
+        settingsBtn.style.position = 'fixed';
+        settingsBtn.style.top = y + 'px';
+        settingsBtn.style.left = x + 'px';
+
+        function animate() {
+          const btnWidth = settingsBtn.offsetWidth;
+          const btnHeight = settingsBtn.offsetHeight;
+          const maxX = window.innerWidth - btnWidth;
+          const maxY = window.innerHeight - btnHeight;
+
+          // Update position
+          x += dx;
+          y += dy;
+
+          // Bounce off edges and change color
+          if (x <= 0 || x >= maxX) {
+            dx = -dx;
+            x = x <= 0 ? 0 : maxX;
+            colorIndex = (colorIndex + 1) % colors.length;
+            settingsBtn.style.background = colors[colorIndex];
+          }
+
+          if (y <= 0 || y >= maxY) {
+            dy = -dy;
+            y = y <= 0 ? 0 : maxY;
+            colorIndex = (colorIndex + 1) % colors.length;
+            settingsBtn.style.background = colors[colorIndex];
+          }
+
+          // Apply new position
+          settingsBtn.style.left = x + 'px';
+          settingsBtn.style.top = y + 'px';
+
+          animationId = requestAnimationFrame(animate);
+        }
+
+        animate();
+      }
+
+      function stopDVDBounce() {
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+
+        // Reset position and color
+        settingsBtn.style.position = 'fixed';
+        settingsBtn.style.top = '1.5rem';
+        settingsBtn.style.left = '';
+        settingsBtn.style.right = '5rem';
+        settingsBtn.style.background = 'var(--accent-color)';
+      }
+
+      // Override toggleSpin to include DVD bounce
+      const originalToggleSpin = window.toggleSpin;
+      window.toggleSpin = function() {
+        originalToggleSpin();
+
+        const isSpinning = document.body.classList.contains('spinning');
+        if (isSpinning) {
+          startDVDBounce();
+        } else {
+          stopDVDBounce();
+        }
+      };
+
+      // Check if spinning is already active on page load
+      const spinEnabled = sessionStorage.getItem('trs-spin-enabled');
+      if (spinEnabled === 'true') {
+        setTimeout(startDVDBounce, 100);
+      }
     })();
   </script>
 </body>
