@@ -824,6 +824,15 @@
       font-size: 1.5rem;
       color: white;
       font-weight: 700;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .testimonial-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
     }
 
     .testimonial-info h4 {
@@ -1998,7 +2007,13 @@
         </div>
         <p class="testimonial-text">"<%= feedback.message %>"</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar"><%= feedback.name.charAt(0).toUpperCase() %></div>
+          <div class="testimonial-avatar">
+            <% if (feedback.avatar) { %>
+              <img src="<%= feedback.avatar %>" alt="<%= feedback.name %>" onerror="this.style.display='none'; this.parentElement.innerHTML='<%= feedback.name.charAt(0).toUpperCase() %>';">
+            <% } else { %>
+              <%= feedback.name.charAt(0).toUpperCase() %>
+            <% } %>
+          </div>
           <div class="testimonial-info">
             <h4><%= feedback.name %></h4>
             <p><%= new Date(feedback.timestamp).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-US' : lang + '-' + lang.toUpperCase(), { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
