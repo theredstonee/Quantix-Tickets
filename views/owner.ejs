@@ -327,6 +327,114 @@
       border-color: var(--accent-color);
     }
 
+    /* Custom Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      z-index: 9999;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px var(--shadow-color);
+      animation: slideUp 0.3s ease;
+      position: relative;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-icon {
+      font-size: 4rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #e74c3c;
+    }
+
+    .modal-title {
+      font-size: 1.8rem;
+      color: var(--accent-color);
+      margin-bottom: 1rem;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .modal-message {
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-btn-confirm {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .modal-btn-confirm:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(231, 76, 60, 0.3);
+    }
+
+    .modal-btn-cancel {
+      background: transparent;
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .modal-btn-cancel:hover {
+      background: var(--accent-color);
+      color: #000;
+      transform: translateY(-2px);
+    }
+
     @media (max-width: 768px) {
       body {
         padding: 1rem;
@@ -515,8 +623,8 @@
               </td>
               <td><%= new Date(feedback.timestamp).toLocaleDateString('de-DE') %></td>
               <td>
-                <form method="POST" action="/owner/delete-feedback/<%= feedback.id %>" style="display: inline;" onsubmit="return confirm('Feedback wirklich löschen?')">
-                  <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e74c3c;">
+                <form method="POST" action="/owner/delete-feedback/<%= feedback.id %>" id="delete-form-<%= feedback.id %>" style="display: inline;">
+                  <button type="button" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e74c3c;" onclick="showDeleteModal('<%= feedback.id %>', '<%= feedback.name %>')">
                     <i class="fas fa-trash"></i> Löschen
                   </button>
                 </form>
@@ -540,7 +648,32 @@
     </div>
   </div>
 
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h3 class="modal-title">Feedback löschen?</h3>
+      <p class="modal-message">
+        Möchtest du das Feedback von <strong id="feedbackName"></strong> wirklich löschen?
+        <br><br>
+        <span style="opacity: 0.7; font-size: 0.95rem;">Diese Aktion kann nicht rückgängig gemacht werden.</span>
+      </p>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">
+          <i class="fas fa-times"></i> Abbrechen
+        </button>
+        <button class="modal-btn modal-btn-confirm" onclick="confirmDelete()">
+          <i class="fas fa-trash"></i> Löschen
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    let currentDeleteFormId = null;
+
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
         alert('Server ID kopiert: ' + text);
@@ -562,6 +695,38 @@
           row.style.display = 'none';
         }
       });
+    });
+
+    // Modal Functions
+    function showDeleteModal(feedbackId, feedbackName) {
+      currentDeleteFormId = 'delete-form-' + feedbackId;
+      document.getElementById('feedbackName').textContent = feedbackName;
+      document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('active');
+      currentDeleteFormId = null;
+    }
+
+    function confirmDelete() {
+      if (currentDeleteFormId) {
+        document.getElementById(currentDeleteFormId).submit();
+      }
+    }
+
+    // Close modal on overlay click
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeDeleteModal();
+      }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeDeleteModal();
+      }
     });
   </script>
 </body>
