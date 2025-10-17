@@ -376,11 +376,16 @@ module.exports = (client)=>{
     const lang = req.cookies.lang || 'de';
     const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
 
+    // Feedback requires authentication
+    if (!isAuthenticated) {
+      return res.redirect('/login?redirect=/feedback');
+    }
+
     res.render('feedback', {
       t: getTranslations(lang),
       lang: lang,
-      user: isAuthenticated ? req.user : null,
-      isAuthenticated: isAuthenticated,
+      user: req.user,
+      isAuthenticated: true,
       success: req.query.success === 'true',
       error: req.query.error === 'true'
     });
@@ -388,6 +393,13 @@ module.exports = (client)=>{
 
   router.post('/feedback', async (req, res) => {
     try {
+      const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
+
+      // Feedback requires authentication
+      if (!isAuthenticated) {
+        return res.redirect('/login?redirect=/feedback');
+      }
+
       const { name, email, type, message, rating } = req.body;
 
       // Validation (email is now optional)
@@ -400,7 +412,6 @@ module.exports = (client)=>{
         return res.redirect('/feedback?error=true');
       }
 
-      const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
       const feedback = {
         id: Date.now().toString(),
         name: name.trim(),
@@ -408,9 +419,9 @@ module.exports = (client)=>{
         type: type,
         rating: ratingNum,
         message: message.trim(),
-        userId: isAuthenticated ? req.user.id : null,
-        username: isAuthenticated ? req.user.username : null,
-        avatar: isAuthenticated && req.user.avatar ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png` : null,
+        userId: req.user.id,
+        username: req.user.username,
+        avatar: req.user.avatar ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png` : null,
         timestamp: new Date().toISOString(),
         ip: req.ip || req.connection.remoteAddress
       };
