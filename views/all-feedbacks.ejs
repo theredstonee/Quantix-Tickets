@@ -428,10 +428,7 @@
             <div class="feedback-avatar"><%= feedback.name.charAt(0).toUpperCase() %></div>
             <div class="feedback-info">
               <h4><%= feedback.name %></h4>
-              <p><%= feedback.email %></p>
-              <div class="feedback-meta">
-                <span><i class="fas fa-clock"></i> <%= new Date(feedback.timestamp).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-US' : lang + '-' + lang.toUpperCase(), { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
-              </div>
+              <p><i class="fas fa-clock"></i> <%= new Date(feedback.timestamp).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-US' : lang + '-' + lang.toUpperCase(), { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
             </div>
           </div>
         </div>

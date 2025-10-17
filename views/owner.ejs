@@ -474,6 +474,65 @@
       </table>
     </div>
 
+    <!-- Feedbacks Section -->
+    <div class="section">
+      <h2 class="section-title">
+        <i class="fas fa-comments"></i>
+        Feedbacks (<%= feedbacks.length %>)
+      </h2>
+
+      <% if (feedbacks && feedbacks.length > 0) { %>
+        <table class="guilds-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Typ</th>
+              <th>Bewertung</th>
+              <th>Nachricht</th>
+              <th>Datum</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% feedbacks.forEach(feedback => { %>
+            <tr>
+              <td><strong><%= feedback.name %></strong></td>
+              <td>
+                <%
+                  const typeIcons = { bug: '🐛', feature: '✨', improvement: '🚀', other: '💬' };
+                  const typeLabels = { bug: 'Bug', feature: 'Feature', improvement: 'Verbesserung', other: 'Sonstiges' };
+                %>
+                <%= typeIcons[feedback.type] || '💬' %> <%= typeLabels[feedback.type] || 'Sonstiges' %>
+              </td>
+              <td>
+                <% const rating = feedback.rating || 5; %>
+                <% for (let i = 1; i <= 5; i++) { %>
+                  <i class="<%= i <= rating ? 'fas' : 'far' %> fa-star" style="color: #f1c40f;"></i>
+                <% } %>
+              </td>
+              <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <%= feedback.message.substring(0, 100) %><%= feedback.message.length > 100 ? '...' : '' %>
+              </td>
+              <td><%= new Date(feedback.timestamp).toLocaleDateString('de-DE') %></td>
+              <td>
+                <form method="POST" action="/owner/delete-feedback/<%= feedback.id %>" style="display: inline;" onsubmit="return confirm('Feedback wirklich löschen?')">
+                  <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e74c3c;">
+                    <i class="fas fa-trash"></i> Löschen
+                  </button>
+                </form>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <div style="text-align: center; padding: 2rem; opacity: 0.6;">
+          <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+          <p>Noch keine Feedbacks vorhanden</p>
+        </div>
+      <% } %>
+    </div>
+
     <div style="text-align: center; margin-top: 3rem;">
       <a href="/" class="btn btn-secondary">
         <i class="fas fa-home"></i> Zurück zur Startseite

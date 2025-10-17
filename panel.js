@@ -2584,6 +2584,18 @@ module.exports = (client)=>{
         beta: guildsData.filter(g => g.premium === 'beta').length
       };
 
+      // Load feedbacks
+      let feedbacks = [];
+      try {
+        const feedbackFile = './feedback.json';
+        if (fs.existsSync(feedbackFile)) {
+          feedbacks = JSON.parse(fs.readFileSync(feedbackFile, 'utf8'));
+          feedbacks = feedbacks.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+      } catch(err) {
+        console.error('Error loading feedbacks for owner:', err);
+      }
+
       res.render('owner', {
         user: req.user,
         guilds: guildsData,
@@ -2591,11 +2603,41 @@ module.exports = (client)=>{
         totalTickets: totalTickets,
         premiumStats: premiumStats,
         botUptime: formatUptime(client.uptime),
-        version: VERSION
+        version: VERSION,
+        feedbacks: feedbacks
       });
     } catch(err) {
       console.error('Owner Panel Error:', err);
       res.status(500).send('Fehler beim Laden des Owner Panels');
+    }
+  });
+
+  // Delete Feedback (Owner Only)
+  router.post('/owner/delete-feedback/:id', isOwner, async (req, res) => {
+    try {
+      const feedbackId = req.params.id;
+      const feedbackFile = './feedback.json';
+
+      if (!fs.existsSync(feedbackFile)) {
+        return res.redirect('/owner?error=not-found');
+      }
+
+      let feedbacks = JSON.parse(fs.readFileSync(feedbackFile, 'utf8'));
+      const initialLength = feedbacks.length;
+
+      feedbacks = feedbacks.filter(f => f.id !== feedbackId);
+
+      if (feedbacks.length === initialLength) {
+        return res.redirect('/owner?error=not-found');
+      }
+
+      fs.writeFileSync(feedbackFile, JSON.stringify(feedbacks, null, 2));
+      console.log(`🗑️ Owner deleted feedback: ${feedbackId}`);
+
+      res.redirect('/owner?success=deleted');
+    } catch(err) {
+      console.error('Delete feedback error:', err);
+      res.redirect('/owner?error=delete-failed');
     }
   });
 
