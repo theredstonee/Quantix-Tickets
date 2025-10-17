@@ -664,11 +664,32 @@
           <tbody>
             <% feedbacks.forEach(feedback => { %>
             <tr>
-              <td><strong><%= feedback.name %></strong></td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <% if (feedback.avatar) { %>
+                    <img src="<%= feedback.avatar %>" alt="<%= feedback.name %>"
+                         style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent-color);"
+                         onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                  <% } else { %>
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--accent-color); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem;">
+                      <%= feedback.name.charAt(0).toUpperCase() %>
+                    </div>
+                  <% } %>
+                  <div>
+                    <div style="font-weight: 600;"><%= feedback.name %></div>
+                    <% if (feedback.userId) { %>
+                      <div style="font-size: 0.75rem; opacity: 0.7; display: flex; align-items: center; gap: 0.3rem;">
+                        <i class="fab fa-discord" style="color: #5865F2;"></i>
+                        Discord
+                      </div>
+                    <% } %>
+                  </div>
+                </div>
+              </td>
               <td>
                 <%
-                  const typeIcons = { bug: '🐛', feature: '✨', improvement: '🚀', other: '💬' };
-                  const typeLabels = { bug: 'Bug', feature: 'Feature', improvement: 'Verbesserung', other: 'Sonstiges' };
+                  const typeIcons = { bug: '🐛', feature: '✨', improvement: '🚀', general: '📝', other: '💬' };
+                  const typeLabels = { bug: 'Bug', feature: 'Feature', improvement: 'Verbesserung', general: 'Allgemein', other: 'Sonstiges' };
                 %>
                 <%= typeIcons[feedback.type] || '💬' %> <%= typeLabels[feedback.type] || 'Sonstiges' %>
               </td>

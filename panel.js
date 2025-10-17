@@ -390,8 +390,8 @@ module.exports = (client)=>{
     try {
       const { name, email, type, message, rating } = req.body;
 
-      // Validation
-      if (!name || !email || !type || !message || !rating) {
+      // Validation (email is now optional)
+      if (!name || !type || !message || !rating) {
         return res.redirect('/feedback?error=true');
       }
 
@@ -400,15 +400,17 @@ module.exports = (client)=>{
         return res.redirect('/feedback?error=true');
       }
 
+      const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
       const feedback = {
         id: Date.now().toString(),
         name: name.trim(),
-        email: email.trim(),
+        email: email ? email.trim() : '',
         type: type,
         rating: ratingNum,
         message: message.trim(),
-        userId: req.isAuthenticated && req.isAuthenticated() ? req.user.id : null,
-        username: req.isAuthenticated && req.isAuthenticated() ? req.user.username : null,
+        userId: isAuthenticated ? req.user.id : null,
+        username: isAuthenticated ? req.user.username : null,
+        avatar: isAuthenticated && req.user.avatar ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png` : null,
         timestamp: new Date().toISOString(),
         ip: req.ip || req.connection.remoteAddress
       };

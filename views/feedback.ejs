@@ -201,6 +201,12 @@
       box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
     }
 
+    input[readonly] {
+      background: rgba(0, 184, 148, 0.05);
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
     textarea {
       min-height: 150px;
       resize: vertical;
@@ -479,6 +485,37 @@
       </div>
     <% } %>
 
+    <% if (isAuthenticated && user) { %>
+      <div class="form-group" style="background: rgba(0, 184, 148, 0.05); padding: 1.5rem; border-radius: 0.75rem; border: 2px solid var(--glass-border); margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png"
+               alt="Avatar"
+               style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--accent-color);"
+               onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+          <div>
+            <div style="font-weight: 600; font-size: 1.1rem; color: var(--accent-color);">
+              <%= user.username %>
+            </div>
+            <div style="font-size: 0.85rem; opacity: 0.7;">
+              <%
+                const discordAccountText = {
+                  de: 'Mit Discord-Account verknüpft',
+                  en: 'Linked with Discord account',
+                  he: 'מקושר לחשבון Discord',
+                  ja: 'Discordアカウントと連携済み',
+                  ru: 'Связано с аккаунтом Discord',
+                  pt: 'Vinculado à conta do Discord',
+                  es: 'Vinculado a la cuenta de Discord',
+                  id: 'Terhubung dengan akun Discord',
+                  ar: 'مرتبط بحساب Discord'
+                };
+              %><%= discordAccountText[lang] || discordAccountText.de %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
     <form class="feedback-form" method="POST" action="/feedback">
       <div class="form-group">
         <label><%
@@ -494,24 +531,36 @@
             ar: 'الاسم'
           };
         %><%= nameLabel[lang] || nameLabel.de %> *</label>
-        <input type="text" name="name" required placeholder="<%= isAuthenticated && user ? user.username : '' %>">
+        <input type="text" name="name" required value="<%= isAuthenticated && user ? user.username : '' %>" <%= isAuthenticated && user ? 'readonly' : '' %>>
       </div>
 
       <div class="form-group">
         <label><%
           const emailLabel = {
-            de: 'E-Mail',
-            en: 'Email',
-            he: 'דוא"ל',
-            ja: 'メール',
-            ru: 'Электронная почта',
-            pt: 'E-mail',
-            es: 'Correo electrónico',
-            id: 'Email',
-            ar: 'البريد الإلكتروني'
+            de: 'E-Mail (Optional)',
+            en: 'Email (Optional)',
+            he: 'דוא"ל (אופציונלי)',
+            ja: 'メール（任意）',
+            ru: 'Email (Необязательно)',
+            pt: 'E-mail (Opcional)',
+            es: 'Correo electrónico (Opcional)',
+            id: 'Email (Opsional)',
+            ar: 'البريد الإلكتروني (اختياري)'
           };
-        %><%= emailLabel[lang] || emailLabel.de %> *</label>
-        <input type="email" name="email" required>
+        %><%= emailLabel[lang] || emailLabel.de %></label>
+        <input type="email" name="email" placeholder="<%
+          const emailPlaceholder = {
+            de: 'Optional - für Rückmeldung',
+            en: 'Optional - for follow-up',
+            he: 'אופציונלי - למעקב',
+            ja: 'オプション - フォローアップ用',
+            ru: 'Необязательно - для обратной связи',
+            pt: 'Opcional - para acompanhamento',
+            es: 'Opcional - para seguimiento',
+            id: 'Opsional - untuk tindak lanjut',
+            ar: 'اختياري - للمتابعة'
+          };
+        %><%= emailPlaceholder[lang] || emailPlaceholder.de %>">
       </div>
 
       <div class="form-group">
@@ -746,21 +795,42 @@
 
     // Form validation
     document.querySelector('.feedback-form').addEventListener('submit', function(e) {
-      if (!ratingInput.value || ratingInput.value === '0') {
+      const nameInput = this.querySelector('input[name="name"]');
+      const typeInput = this.querySelector('select[name="type"]');
+      const messageInput = this.querySelector('textarea[name="message"]');
+
+      if (!nameInput.value.trim() || !typeInput.value || !messageInput.value.trim() || !ratingInput.value || ratingInput.value === '0') {
         e.preventDefault();
-        alert('<%
-          const alertMsg = {
-            de: "Bitte gib eine Bewertung ab!",
-            en: "Please select a rating!",
-            he: "אנא בחר דירוג!",
-            ja: "評価を選択してください！",
-            ru: "Пожалуйста, выберите рейтинг!",
-            pt: "Por favor, selecione uma avaliação!",
-            es: "¡Por favor, selecciona una calificación!",
-            id: "Silakan pilih penilaian!",
-            ar: "الرجاء اختيار تقييم!"
-          };
-        %><%= alertMsg[lang] || alertMsg.de %>');
+
+        if (!ratingInput.value || ratingInput.value === '0') {
+          alert('<%
+            const alertMsg = {
+              de: "Bitte gib eine Bewertung ab!",
+              en: "Please select a rating!",
+              he: "אנא בחר דירוג!",
+              ja: "評価を選択してください！",
+              ru: "Пожалуйста, выберите рейтинг!",
+              pt: "Por favor, selecione uma avaliação!",
+              es: "¡Por favor, selecciona una calificación!",
+              id: "Silakan pilih penilaian!",
+              ar: "الرجاء اختيار تقييم!"
+            };
+          %><%= alertMsg[lang] || alertMsg.de %>');
+        } else {
+          alert('<%
+            const requiredMsg = {
+              de: "Bitte fülle alle Pflichtfelder aus!",
+              en: "Please fill in all required fields!",
+              he: "אנא מלא את כל השדות הנדרשים!",
+              ja: "すべての必須フィールドに入力してください！",
+              ru: "Пожалуйста, заполните все обязательные поля!",
+              pt: "Por favor, preencha todos os campos obrigatórios!",
+              es: "¡Por favor, completa todos los campos obligatorios!",
+              id: "Silakan isi semua kolom yang wajib!",
+              ar: "يرجى ملء جميع الحقول المطلوبة!"
+            };
+          %><%= requiredMsg[lang] || requiredMsg.de %>');
+        }
       }
     });
 

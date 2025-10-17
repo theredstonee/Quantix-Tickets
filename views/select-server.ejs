@@ -967,7 +967,7 @@
       });
     }
 
-    // Spin Toggle Funktion (ohne Cookie-Speicherung)
+    // Spin Toggle Funktion (mit sessionStorage)
     function toggleSpin() {
       const body = document.body;
       const settingsBtn = document.getElementById('settingsBtn');
@@ -976,11 +976,22 @@
       if (isSpinning) {
         body.classList.remove('spinning');
         settingsBtn.classList.remove('active');
+        sessionStorage.setItem('trs-spin-enabled', 'false');
       } else {
         body.classList.add('spinning');
         settingsBtn.classList.add('active');
+        sessionStorage.setItem('trs-spin-enabled', 'true');
       }
     }
+
+    // Spin-Zustand beim Laden wiederherstellen
+    (function() {
+      const spinEnabled = sessionStorage.getItem('trs-spin-enabled');
+      if (spinEnabled === 'true') {
+        document.body.classList.add('spinning');
+        document.getElementById('settingsBtn').classList.add('active');
+      }
+    })();
   </script>
 </body>
 </html>

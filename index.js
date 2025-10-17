@@ -857,6 +857,21 @@ async function createTranscript(channel, ticket, opts = {}) {
       font-size: 1.1rem;
       flex-shrink: 0;
       box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+      object-fit: cover;
+    }
+    .avatar-fallback {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00ff88, #00b894);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
     }
     .message-content {
       flex: 1;
@@ -1044,6 +1059,8 @@ async function createTranscript(channel, ticket, opts = {}) {
       ${messages.map(m => {
         const author = m.author ? (m.author.tag || m.author.username || m.author.id) : 'Unbekannt';
         const authorInitial = author.charAt(0).toUpperCase();
+        const authorId = m.author?.id;
+        const authorAvatar = m.author?.avatar;
         const time = new Date(m.createdTimestamp).toLocaleString('de-DE', {
           day: '2-digit',
           month: '2-digit',
@@ -1055,6 +1072,16 @@ async function createTranscript(channel, ticket, opts = {}) {
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
           .replace(/\n/g, '<br>');
+
+        // Avatar HTML erstellen
+        let avatarHTML = '';
+        if(authorId && authorAvatar){
+          const avatarUrl = `https://cdn.discordapp.com/avatars/${authorId}/${authorAvatar}.png?size=128`;
+          avatarHTML = `<img src="${avatarUrl}" alt="${author}" class="avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="avatar-fallback" style="display: none;">${authorInitial}</div>`;
+        } else {
+          avatarHTML = `<div class="avatar-fallback">${authorInitial}</div>`;
+        }
 
         const attachments = m.attachments.size
           ? `<div class="attachments">${[...m.attachments.values()]
@@ -1113,7 +1140,7 @@ async function createTranscript(channel, ticket, opts = {}) {
           : '';
 
         return `<div class="message">
-          <div class="avatar">${authorInitial}</div>
+          ${avatarHTML}
           <div class="message-content">
             <div class="message-header">
               <span class="author">${author}</span>
