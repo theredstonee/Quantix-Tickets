@@ -496,15 +496,18 @@ module.exports = (client)=>{
 
       const ADMIN = 0x8n;
 
-      // Sammle Server mit Admin-Rechten
+      // Sammle ALLE Server mit Admin-Rechten (auch ohne Bot)
       const adminServers = (req.user.guilds || [])
         .filter(g => {
-          const hasBot = botGuildIds.has(g.id);
           const isAdmin = (BigInt(g.permissions) & ADMIN) === ADMIN;
-          return hasBot && isAdmin;
-        });
+          return isAdmin;
+        })
+        .map(g => ({
+          ...g,
+          hasBot: botGuildIds.has(g.id)
+        }));
 
-      // Sammle Server mit Team-Rolle (aber ohne Admin)
+      // Sammle Server mit Team-Rolle (aber ohne Admin, nur mit Bot)
       const teamServers = [];
       for (const guildData of (req.user.guilds || [])) {
         const hasBot = botGuildIds.has(guildData.id);
@@ -521,7 +524,10 @@ module.exports = (client)=>{
           const member = await guild.members.fetch(req.user.id).catch(() => null);
 
           if (member && member.roles.cache.has(cfg.teamRoleId)) {
-            teamServers.push(guildData);
+            teamServers.push({
+              ...guildData,
+              hasBot: true
+            });
           }
         } catch (err) {
           console.error(`Error checking team role for guild ${guildData.id}:`, err);
@@ -534,7 +540,8 @@ module.exports = (client)=>{
       const availableServers = allServers.map(g => ({
         id: g.id,
         name: g.name,
-        icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null
+        icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null,
+        hasBot: g.hasBot || false
       }));
 
       // Bot Invite Link
@@ -547,6 +554,7 @@ module.exports = (client)=>{
         currentGuild: req.session.selectedGuild || null,
         user: req.user,
         inviteUrl: inviteUrl,
+        installUrl: 'https://trstickets.theredstonee.de/install',
         t: res.locals.t
       });
     } catch(err){

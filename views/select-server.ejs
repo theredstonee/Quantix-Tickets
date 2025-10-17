@@ -240,6 +240,16 @@
       background: var(--glass-bg);
       box-shadow: 0 12px 40px var(--shadow-color);
     }
+    .server-card.no-bot {
+      opacity: 0.4;
+      filter: grayscale(100%);
+      cursor: pointer;
+    }
+    .server-card.no-bot:hover {
+      opacity: 0.6;
+      border-color: #ff4444;
+      transform: translateY(-2px);
+    }
     .server-card input[type="radio"] { position: absolute; opacity: 0; }
     .server-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
     .server-icon { width: 48px; height: 48px; border-radius: 50%; background: #e5e8ec; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
@@ -669,8 +679,8 @@
     <form method="POST" action="/select-server" id="serverForm">
       <div class="server-grid">
         <% servers.forEach(server => { %>
-          <label class="server-card <%= currentGuild === server.id ? 'selected' : '' %>">
-            <input type="radio" name="guildId" value="<%= server.id %>" <%= currentGuild === server.id ? 'checked' : '' %> required>
+          <label class="server-card <%= currentGuild === server.id ? 'selected' : '' %> <%= !server.hasBot ? 'no-bot' : '' %>" data-has-bot="<%= server.hasBot ? 'true' : 'false' %>" data-server-id="<%= server.id %>">
+            <input type="radio" name="guildId" value="<%= server.id %>" <%= currentGuild === server.id ? 'checked' : '' %> <%= !server.hasBot ? 'disabled' : '' %> required>
             <div class="server-header">
               <div class="server-icon">
                 <% if (server.icon) { %>
@@ -684,6 +694,9 @@
                   <%= server.name %>
                   <% if (currentGuild === server.id) { %>
                     <span class="current-badge"><%= t.web.current %></span>
+                  <% } %>
+                  <% if (!server.hasBot) { %>
+                    <span class="current-badge" style="background: #ff4444; color: #fff;">Bot fehlt</span>
                   <% } %>
                 </div>
                 <div class="server-id"><%= server.id %></div>
@@ -890,7 +903,14 @@
   <script>
     // Auto-submit on card click
     document.querySelectorAll('.server-card').forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        // Skip if this is a server without bot
+        if (card.classList.contains('no-bot')) {
+          e.preventDefault();
+          window.location.href = '<%= installUrl %>';
+          return;
+        }
+
         document.querySelectorAll('.server-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
 
