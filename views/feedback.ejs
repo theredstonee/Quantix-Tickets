@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feedback - TRS Tickets</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="shortcut icon" href="/images/favicon.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
@@ -119,6 +124,41 @@
     .theme-toggle:hover {
       background: var(--glass-bg);
       border-color: var(--accent-color);
+    }
+
+    /* Settings Toggle (Spin Feature) */
+    .settings-toggle {
+      background: transparent;
+      border: 2px solid var(--glass-border);
+      color: var(--text-color);
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .settings-toggle.active {
+      animation: spinButton 2s linear infinite;
+    }
+
+    .settings-toggle:hover {
+      background: var(--glass-bg);
+      border-color: var(--accent-color);
+    }
+
+    @keyframes spinButton {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes spinPage {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    body.spinning {
+      animation: spinPage 3s linear infinite;
     }
 
     .container {
@@ -318,6 +358,9 @@
             <i class="fas fa-sign-in-alt"></i> Login
           </a>
         <% } %>
+        <button class="settings-toggle" onclick="toggleSpin()" id="settingsBtn">
+          <i class="fas fa-cog"></i>
+        </button>
         <button class="theme-toggle" onclick="toggleTheme()">
           <i class="fas fa-moon" id="theme-icon"></i>
         </button>
@@ -697,6 +740,51 @@
         %><%= alertMsg[lang] || alertMsg.de %>');
       }
     });
+
+    // Cookie Functions for Spinning Feature
+    function setCookie(name, value, days) {
+      const expires = new Date();
+      expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+    }
+
+    function getCookie(name) {
+      const nameEQ = name + '=';
+      const ca = document.cookie.split(';');
+      for(let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+      }
+      return null;
+    }
+
+    // Spin Toggle Function
+    function toggleSpin() {
+      const body = document.body;
+      const settingsBtn = document.getElementById('settingsBtn');
+      const isSpinning = body.classList.contains('spinning');
+
+      if (isSpinning) {
+        body.classList.remove('spinning');
+        settingsBtn.classList.remove('active');
+        setCookie('trs-spinning', 'false', 365);
+      } else {
+        body.classList.add('spinning');
+        settingsBtn.classList.add('active');
+        setCookie('trs-spinning', 'true', 365);
+      }
+    }
+
+    // Restore spin status on page load
+    (function() {
+      const spinningState = getCookie('trs-spinning');
+      if (spinningState === 'true') {
+        document.body.classList.add('spinning');
+        const settingsBtn = document.getElementById('settingsBtn');
+        if (settingsBtn) settingsBtn.classList.add('active');
+      }
+    })();
   </script>
 </body>
 </html>
