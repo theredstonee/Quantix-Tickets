@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bot Owner Panel - TRS Tickets</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --border-color: #1a3a2a;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --glass-bg: rgba(15, 21, 16, 0.7);
+      --glass-border: rgba(0, 255, 136, 0.3);
+      --shadow-color: rgba(0, 255, 136, 0.2);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      padding: 2rem;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.03;
+      animation: bgMove 20s linear infinite;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      padding: 1rem 1.5rem;
+      border-radius: 1rem;
+      border: 2px solid var(--glass-border);
+    }
+
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-color);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .stat-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px var(--shadow-color);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px var(--shadow-color);
+      border-color: var(--accent-color);
+    }
+
+    .stat-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+
+    .stat-value {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 1rem;
+      opacity: 0.7;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px var(--shadow-color);
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .premium-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .premium-card {
+      background: rgba(0, 255, 136, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .premium-count {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .premium-label {
+      opacity: 0.8;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+    }
+
+    .guilds-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+    }
+
+    .guilds-table thead {
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    .guilds-table th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--glass-border);
+    }
+
+    .guilds-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .guilds-table tr:hover {
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .guild-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .guild-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid var(--glass-border);
+      object-fit: cover;
+    }
+
+    .guild-icon-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #000;
+      font-size: 1.2rem;
+    }
+
+    .guild-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .guild-id {
+      font-size: 0.85rem;
+      opacity: 0.6;
+      font-family: 'Courier New', monospace;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-none {
+      background: rgba(128, 128, 128, 0.2);
+      color: #999;
+    }
+
+    .badge-basic {
+      background: rgba(52, 152, 219, 0.2);
+      color: #3498db;
+    }
+
+    .badge-pro {
+      background: rgba(155, 89, 182, 0.2);
+      color: #9b59b6;
+    }
+
+    .badge-beta {
+      background: rgba(241, 196, 15, 0.2);
+      color: #f1c40f;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: var(--accent-color);
+      color: #000;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    .search-box {
+      margin-bottom: 1.5rem;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 1rem;
+      background: rgba(0, 255, 136, 0.05);
+      border: 2px solid var(--glass-border);
+      border-radius: 0.75rem;
+      color: var(--text-color);
+      font-size: 1rem;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .guilds-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>
+        <i class="fas fa-crown"></i>
+        Bot Owner Panel
+      </h1>
+      <div class="user-info">
+        <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" alt="Avatar" class="user-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+        <div>
+          <div style="font-weight: 600;"><%= user.username %></div>
+          <div style="font-size: 0.85rem; opacity: 0.7;">Bot Owner</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🌐</div>
+        <div class="stat-value"><%= totalGuilds %></div>
+        <div class="stat-label">Gesamt Server</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🎫</div>
+        <div class="stat-value"><%= totalTickets %></div>
+        <div class="stat-label">Gesamt Tickets</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-value"><%= botUptime %></div>
+        <div class="stat-label">Bot Uptime</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🚀</div>
+        <div class="stat-value"><%= version %></div>
+        <div class="stat-label">Version</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">
+        <i class="fas fa-gem"></i>
+        Premium Statistiken
+      </h2>
+      <div class="premium-grid">
+        <div class="premium-card">
+          <div class="premium-count"><%= premiumStats.none %></div>
+          <div class="premium-label">Free</div>
+        </div>
+        <div class="premium-card">
+          <div class="premium-count"><%= premiumStats.basic %></div>
+          <div class="premium-label">Basic</div>
+        </div>
+        <div class="premium-card">
+          <div class="premium-count"><%= premiumStats.pro %></div>
+          <div class="premium-label">Pro</div>
+        </div>
+        <div class="premium-card">
+          <div class="premium-count"><%= premiumStats.beta %></div>
+          <div class="premium-label">Betatester</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">
+        <i class="fas fa-server"></i>
+        Alle Server (<%= totalGuilds %>)
+      </h2>
+
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Server suchen (Name oder ID)...">
+      </div>
+
+      <table class="guilds-table">
+        <thead>
+          <tr>
+            <th>Server</th>
+            <th>Mitglieder</th>
+            <th>Tickets</th>
+            <th>Premium</th>
+            <th>Sprache</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="guildsTable">
+          <% guilds.forEach(guild => { %>
+          <tr>
+            <td>
+              <div class="guild-info">
+                <% if (guild.icon) { %>
+                  <img src="<%= guild.icon %>" alt="<%= guild.name %>" class="guild-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                  <div class="guild-icon-placeholder" style="display: none;"><%= guild.name[0] %></div>
+                <% } else { %>
+                  <div class="guild-icon-placeholder"><%= guild.name[0] %></div>
+                <% } %>
+                <div>
+                  <div class="guild-name"><%= guild.name %></div>
+                  <div class="guild-id"><%= guild.id %></div>
+                </div>
+              </div>
+            </td>
+            <td><strong><%= guild.memberCount.toLocaleString() %></strong></td>
+            <td><strong style="color: var(--accent-color);"><%= guild.tickets %></strong></td>
+            <td>
+              <span class="badge badge-<%= guild.premium %>"><%= guild.premium %></span>
+              <% if (guild.premiumExpires) { %>
+                <div style="font-size: 0.75rem; opacity: 0.6; margin-top: 0.25rem;">
+                  Läuft ab: <%= new Date(guild.premiumExpires).toLocaleDateString('de-DE') %>
+                </div>
+              <% } %>
+            </td>
+            <td><%= guild.language.toUpperCase() %></td>
+            <td>
+              <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="copyToClipboard('<%= guild.id %>')">
+                <i class="fas fa-copy"></i> ID
+              </button>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 3rem;">
+      <a href="/" class="btn btn-secondary">
+        <i class="fas fa-home"></i> Zurück zur Startseite
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Server ID kopiert: ' + text);
+      });
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    const guildsTable = document.getElementById('guildsTable');
+    const rows = Array.from(guildsTable.getElementsByTagName('tr'));
+
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

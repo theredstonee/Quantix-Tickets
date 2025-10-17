@@ -185,6 +185,69 @@ module.exports = (client)=>{
     next();
   }
 
+  function isOwner(req,res,next){
+    if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
+
+    const OWNER_IDS = ['928901974106202113', '1159182333316968530'];
+    const userId = req.user.id;
+
+    if(!OWNER_IDS.includes(userId)) {
+      return res.status(403).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zugriff verweigert</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .error-box {
+      background: rgba(255,255,255,0.95);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+      max-width: 500px;
+    }
+    h1 { color: #e74c3c; margin: 0 0 1rem 0; font-size: 3rem; }
+    p { color: #555; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; }
+    .btn {
+      display: inline-block;
+      padding: 12px 30px;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .btn:hover { background: #764ba2; transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+  <div class="error-box">
+    <h1>🚫</h1>
+    <h2>Zugriff verweigert</h2>
+    <p>Du hast keine Berechtigung für das Bot Owner Panel.</p>
+    <a href="/" class="btn">Zurück zur Startseite</a>
+  </div>
+</body>
+</html>
+      `);
+    }
+
+    next();
+  }
+
   // Middleware für Zugriff mit Admin ODER Team-Rolle
   async function isAuthOrTeam(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
@@ -2331,6 +2394,84 @@ module.exports = (client)=>{
     } catch (err) {
       console.error('Stripe Webhook Error:', err);
       res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  });
+
+  router.get('/owner', isOwner, async (req, res) => {
+    try {
+      const allGuilds = await client.guilds.fetch();
+      const configFiles = fs.readdirSync('./configs').filter(f =>
+        f.endsWith('.json') && !f.includes('_tickets') && !f.includes('_counter')
+      );
+
+      const guildsData = [];
+      let totalTickets = 0;
+
+      for (const file of configFiles) {
+        try {
+          const guildId = file.replace('.json', '');
+          const cfg = JSON.parse(fs.readFileSync(`./configs/${file}`, 'utf8'));
+
+          let guildInfo = null;
+          try {
+            const guild = await client.guilds.fetch(guildId);
+            guildInfo = {
+              id: guild.id,
+              name: guild.name,
+              memberCount: guild.memberCount,
+              icon: guild.iconURL({ size: 128 })
+            };
+          } catch(err) {
+            guildInfo = {
+              id: guildId,
+              name: 'Unbekannt (Bot nicht auf Server)',
+              memberCount: 0,
+              icon: null
+            };
+          }
+
+          let ticketCount = 0;
+          try {
+            const tickets = JSON.parse(fs.readFileSync(`./configs/${guildId}_tickets.json`, 'utf8'));
+            ticketCount = tickets.length || 0;
+            totalTickets += ticketCount;
+          } catch(err) {}
+
+          const premiumInfo = getPremiumInfo(guildId);
+
+          guildsData.push({
+            ...guildInfo,
+            tickets: ticketCount,
+            premium: premiumInfo.tier,
+            premiumExpires: premiumInfo.expiresAt,
+            language: cfg.language || 'de'
+          });
+        } catch(err) {
+          console.error('Error loading guild data:', err);
+        }
+      }
+
+      guildsData.sort((a, b) => b.tickets - a.tickets);
+
+      const premiumStats = {
+        none: guildsData.filter(g => g.premium === 'none').length,
+        basic: guildsData.filter(g => g.premium === 'basic').length,
+        pro: guildsData.filter(g => g.premium === 'pro').length,
+        beta: guildsData.filter(g => g.premium === 'beta').length
+      };
+
+      res.render('owner', {
+        user: req.user,
+        guilds: guildsData,
+        totalGuilds: guildsData.length,
+        totalTickets: totalTickets,
+        premiumStats: premiumStats,
+        botUptime: formatUptime(client.uptime),
+        version: VERSION
+      });
+    } catch(err) {
+      console.error('Owner Panel Error:', err);
+      res.status(500).send('Fehler beim Laden des Owner Panels');
     }
   });
 
