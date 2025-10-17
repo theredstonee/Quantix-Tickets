@@ -625,6 +625,139 @@
       opacity: 0.7;
       color: var(--text-color);
     }
+
+    /* Transcript Modal */
+    .transcript-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(5px);
+      z-index: 100001;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .transcript-modal.show {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .transcript-modal-content {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      width: 95%;
+      max-width: 1400px;
+      height: 90vh;
+      box-shadow: 0 20px 60px var(--shadow-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .transcript-modal-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 2px solid var(--glass-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--chip-bg);
+    }
+
+    .transcript-modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .transcript-modal-close {
+      background: transparent;
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .transcript-modal-close:hover {
+      background: var(--accent-color);
+      color: #000;
+      transform: rotate(90deg);
+    }
+
+    .transcript-modal-body {
+      flex: 1;
+      overflow: hidden;
+      padding: 0;
+      position: relative;
+    }
+
+    .transcript-modal-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+
+    .transcript-modal-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .transcript-modal-spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(0, 255, 136, 0.1);
+      border-top: 6px solid var(--accent-color);
+      border-radius: 50%;
+      animation: loaderSpin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    .transcript-modal-loading-text {
+      font-size: 1.2rem;
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .transcript-modal-content {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+      }
+
+      .transcript-modal-header {
+        padding: 1rem;
+      }
+
+      .transcript-modal-title {
+        font-size: 1.2rem;
+      }
+
+      .transcript-modal-close {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.2rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -724,6 +857,28 @@
     <p style="margin-top: 0.3rem;">Letztes Update: <span id="footerUpdate">–</span></p>
   </footer>
 
+  <!-- Transcript Live View Modal -->
+  <div class="transcript-modal" id="transcriptModal">
+    <div class="transcript-modal-content">
+      <div class="transcript-modal-header">
+        <div class="transcript-modal-title">
+          <i class="fas fa-file-alt"></i>
+          <span id="transcriptTitle">Ticket Transcript</span>
+        </div>
+        <button class="transcript-modal-close" onclick="closeTranscriptModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="transcript-modal-body">
+        <div class="transcript-modal-loading" id="transcriptLoading">
+          <div class="transcript-modal-spinner"></div>
+          <div class="transcript-modal-loading-text">Transcript wird geladen...</div>
+        </div>
+        <iframe id="transcriptIframe" class="transcript-modal-iframe" style="display: none;"></iframe>
+      </div>
+    </div>
+  </div>
+
 <script>
   // Erwartet: server setzt window.__TICKETS, window.__MEMBERS und window.GUILD_ID
 </script>
@@ -802,7 +957,7 @@
         <td class="nowrap">${fmt(t.timestamp)}</td>
         <td>${hasFormData? `<span class="details-btn" onclick="toggleFormData(${t.id})">📋</span>${formDataHtml}`:''}</td>
         <td><a href="https://discord.com/channels/${GUILD_ID}/${t.channelId}" target="_blank" title="Channel öffnen">🔗</a></td>
-        <td><a class="trans-link" href="/transcript/${t.id}" target="_blank" title="Transcript öffnen">📄</a></td>
+        <td><a class="trans-link" href="javascript:void(0)" onclick="openTranscriptModal(${t.id})" title="Transcript Live anzeigen">📄</a></td>
       </tr>`;
     }).join('');
 
@@ -813,7 +968,7 @@
       const userName = displayName(t.userId);
       const claimerName = displayName(t.claimer);
       return `
-        <div class="ticket-card" onclick="window.open('/transcript/${t.id}', '_blank')">
+        <div class="ticket-card" onclick="openTranscriptModal(${t.id})">
           <div class="ticket-card-header">
             <div class="ticket-card-id">#${t.id}</div>
             <div class="ticket-card-priority">${dots[pr]}</div>
@@ -979,6 +1134,62 @@
       }, 100);
     });
   }
+
+  // Transcript Modal Functions
+  function openTranscriptModal(ticketId) {
+    const modal = document.getElementById('transcriptModal');
+    const iframe = document.getElementById('transcriptIframe');
+    const loading = document.getElementById('transcriptLoading');
+    const title = document.getElementById('transcriptTitle');
+
+    // Set title
+    title.textContent = `Ticket #${ticketId} Transcript`;
+
+    // Show modal
+    modal.classList.add('show');
+
+    // Show loading, hide iframe
+    loading.style.display = 'block';
+    iframe.style.display = 'none';
+
+    // Load transcript
+    iframe.src = `/transcript/${ticketId}`;
+
+    // Hide loading when iframe loads
+    iframe.onload = function() {
+      loading.style.display = 'none';
+      iframe.style.display = 'block';
+    };
+  }
+
+  function closeTranscriptModal() {
+    const modal = document.getElementById('transcriptModal');
+    const iframe = document.getElementById('transcriptIframe');
+
+    modal.classList.remove('show');
+
+    // Clear iframe after animation
+    setTimeout(() => {
+      iframe.src = '';
+    }, 300);
+  }
+
+  // Close modal on overlay click
+  document.getElementById('transcriptModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeTranscriptModal();
+    }
+  });
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('transcriptModal');
+      if (modal.classList.contains('show')) {
+        closeTranscriptModal();
+      }
+    }
+  });
 </script>
 </body>
 </html>

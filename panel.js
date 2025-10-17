@@ -2641,6 +2641,106 @@ module.exports = (client)=>{
     }
   });
 
+  // Delete server data route (Owner only) - Initiates 24h deletion process
+  router.post('/owner/delete-server-data/:guildId', isOwner, async (req, res) => {
+    try {
+      const guildId = req.params.guildId;
+      const guild = await client.guilds.fetch(guildId).catch(() => null);
+
+      if (!guild) {
+        return res.redirect('/owner?error=guild-not-found');
+      }
+
+      console.log(`⚠️ Owner initiated deletion for guild: ${guildId}`);
+
+      // Load pending deletions
+      const pendingFile = './pending-deletions.json';
+      let pending = [];
+      if (fs.existsSync(pendingFile)) {
+        pending = JSON.parse(fs.readFileSync(pendingFile, 'utf8'));
+      }
+
+      // Check if already pending
+      if (pending.find(p => p.guildId === guildId)) {
+        return res.redirect('/owner?error=already-pending');
+      }
+
+      // Get log channel or first available text channel
+      const cfg = readCfg(guildId);
+      let targetChannel = null;
+
+      if (cfg.logChannelId) {
+        targetChannel = await guild.channels.fetch(cfg.logChannelId).catch(() => null);
+      }
+
+      if (!targetChannel) {
+        // Find first text channel
+        const channels = await guild.channels.fetch();
+        targetChannel = channels.find(ch => ch.type === 0 && ch.permissionsFor(guild.members.me).has('SendMessages'));
+      }
+
+      if (!targetChannel) {
+        return res.redirect('/owner?error=no-channel-available');
+      }
+
+      // Create deletion entry
+      const deletion = {
+        guildId: guildId,
+        guildName: guild.name,
+        initiatedAt: Date.now(),
+        executesAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+        channelId: targetChannel.id,
+        messageId: null
+      };
+
+      // Send warning message with @everyone ping and cancel button
+      const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+      const embed = new EmbedBuilder()
+        .setTitle('⚠️ DATEN-LÖSCHUNG GEPLANT')
+        .setDescription(
+          `Der Bot-Owner hat eine vollständige Daten-Löschung für diesen Server initiiert.\n\n` +
+          `**Was wird gelöscht:**\n` +
+          `• Alle Konfigurationsdateien\n` +
+          `• Alle Tickets und deren Daten\n` +
+          `• Alle Ticket-Transkripte\n` +
+          `• Der Bot wird den Server verlassen\n\n` +
+          `**Zeitpunkt:** <t:${Math.floor(deletion.executesAt / 1000)}:R>\n\n` +
+          `**Um die Löschung abzubrechen, klicke auf den Button unten!**`
+        )
+        .setColor(0xe74c3c)
+        .setFooter({ text: 'Diese Aktion wurde vom Bot-Owner initiiert' })
+        .setTimestamp();
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`cancel-deletion-${guildId}`)
+          .setLabel('Löschung abbrechen')
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji('🛑')
+      );
+
+      const message = await targetChannel.send({
+        content: '@everyone',
+        embeds: [embed],
+        components: [row]
+      });
+
+      deletion.messageId = message.id;
+
+      // Save pending deletion
+      pending.push(deletion);
+      fs.writeFileSync(pendingFile, JSON.stringify(pending, null, 2));
+
+      console.log(`✅ Deletion scheduled for ${guildId} - Executes at: ${new Date(deletion.executesAt).toISOString()}`);
+
+      res.redirect('/owner?success=deletion-scheduled');
+    } catch(err) {
+      console.error('Schedule deletion error:', err);
+      res.redirect('/owner?error=schedule-failed');
+    }
+  });
+
   return router;
 };
 

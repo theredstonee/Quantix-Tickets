@@ -572,9 +572,14 @@
             </td>
             <td><%= guild.language.toUpperCase() %></td>
             <td>
-              <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="copyToClipboard('<%= guild.id %>')">
-                <i class="fas fa-copy"></i> ID
-              </button>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="copyToClipboard('<%= guild.id %>')">
+                  <i class="fas fa-copy"></i> ID
+                </button>
+                <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e74c3c;" onclick="showServerDeleteModal('<%= guild.id %>', '<%= guild.name %>')">
+                  <i class="fas fa-trash"></i> Daten löschen
+                </button>
+              </div>
             </td>
           </tr>
           <% }); %>
@@ -648,7 +653,7 @@
     </div>
   </div>
 
-  <!-- Delete Confirmation Modal -->
+  <!-- Delete Feedback Confirmation Modal -->
   <div class="modal-overlay" id="deleteModal">
     <div class="modal-content">
       <div class="modal-icon">
@@ -671,8 +676,40 @@
     </div>
   </div>
 
+  <!-- Delete Server Data Confirmation Modal -->
+  <div class="modal-overlay" id="serverDeleteModal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h3 class="modal-title">Server-Daten löschen?</h3>
+      <p class="modal-message">
+        Möchtest du alle Daten von <strong id="serverName"></strong> wirklich löschen?
+        <br><br>
+        <span style="opacity: 0.7; font-size: 0.95rem;">
+          Dies wird folgende Daten unwiderruflich löschen:
+          <br>• Konfigurationsdateien
+          <br>• Alle Tickets
+          <br>• Ticket-Counter
+          <br>• Alle Transkripte
+          <br><br>
+          <strong style="color: #e74c3c;">Diese Aktion kann NICHT rückgängig gemacht werden!</strong>
+        </span>
+      </p>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeServerDeleteModal()">
+          <i class="fas fa-times"></i> Abbrechen
+        </button>
+        <button class="modal-btn modal-btn-confirm" onclick="confirmServerDelete()">
+          <i class="fas fa-trash"></i> Endgültig löschen
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let currentDeleteFormId = null;
+    let currentServerId = null;
 
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
@@ -697,7 +734,7 @@
       });
     });
 
-    // Modal Functions
+    // Feedback Delete Modal Functions
     function showDeleteModal(feedbackId, feedbackName) {
       currentDeleteFormId = 'delete-form-' + feedbackId;
       document.getElementById('feedbackName').textContent = feedbackName;
@@ -715,17 +752,47 @@
       }
     }
 
-    // Close modal on overlay click
+    // Server Delete Modal Functions
+    function showServerDeleteModal(serverId, serverName) {
+      currentServerId = serverId;
+      document.getElementById('serverName').textContent = serverName;
+      document.getElementById('serverDeleteModal').classList.add('active');
+    }
+
+    function closeServerDeleteModal() {
+      document.getElementById('serverDeleteModal').classList.remove('active');
+      currentServerId = null;
+    }
+
+    function confirmServerDelete() {
+      if (currentServerId) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/owner/delete-server-data/' + currentServerId;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Close modals on overlay click
     document.getElementById('deleteModal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeDeleteModal();
       }
     });
 
-    // Close modal on Escape key
+    document.getElementById('serverDeleteModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeServerDeleteModal();
+      }
+    });
+
+    // Close modals on Escape key
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         closeDeleteModal();
+        closeServerDeleteModal();
       }
     });
   </script>

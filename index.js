@@ -404,6 +404,75 @@ function startPremiumExpiryChecker(){
   setInterval(checkPremiumExpiry, 60 * 1000);
 }
 
+// Pending Deletions Checker
+function startPendingDeletionsChecker() {
+  const checkPendingDeletions = async () => {
+    try {
+      const pendingFile = './pending-deletions.json';
+      if (!fs.existsSync(pendingFile)) return;
+
+      let pending = JSON.parse(fs.readFileSync(pendingFile, 'utf8'));
+      const now = Date.now();
+      const toExecute = pending.filter(p => p.executesAt <= now);
+
+      for (const deletion of toExecute) {
+        await executeDeletion(deletion);
+        // Remove from pending list
+        pending = pending.filter(p => p.guildId !== deletion.guildId);
+      }
+
+      if (toExecute.length > 0) {
+        fs.writeFileSync(pendingFile, JSON.stringify(pending, null, 2));
+      }
+    } catch (err) {
+      console.error('❌ Fehler beim Pending Deletions Check:', err);
+    }
+  };
+
+  // Initial check
+  console.log('🗑️ Pending Deletions Checker gestartet (läuft jede Minute)');
+  checkPendingDeletions();
+
+  // Check every minute
+  setInterval(checkPendingDeletions, 60 * 1000);
+}
+
+async function executeDeletion(deletion) {
+  try {
+    console.log(`🗑️ Executing deletion for guild: ${deletion.guildId}`);
+
+    // Delete all files
+    const configFile = `./configs/${deletion.guildId}.json`;
+    if (fs.existsSync(configFile)) fs.unlinkSync(configFile);
+
+    const ticketsFile = `./configs/${deletion.guildId}_tickets.json`;
+    if (fs.existsSync(ticketsFile)) fs.unlinkSync(ticketsFile);
+
+    const counterFile = `./configs/${deletion.guildId}_counter.json`;
+    if (fs.existsSync(counterFile)) fs.unlinkSync(counterFile);
+
+    const transcriptsDir = `./transcripts/${deletion.guildId}`;
+    if (fs.existsSync(transcriptsDir)) {
+      const files = fs.readdirSync(transcriptsDir);
+      for (const file of files) {
+        fs.unlinkSync(`${transcriptsDir}/${file}`);
+      }
+      fs.rmdirSync(transcriptsDir);
+    }
+
+    console.log(`✅ Deleted all data for ${deletion.guildId}`);
+
+    // Leave the guild
+    const guild = await client.guilds.fetch(deletion.guildId).catch(() => null);
+    if (guild) {
+      await guild.leave();
+      console.log(`👋 Bot left guild: ${guild.name} (${deletion.guildId})`);
+    }
+  } catch (err) {
+    console.error(`❌ Error executing deletion for ${deletion.guildId}:`, err);
+  }
+}
+
 client.once('ready', async () => {
   await deployCommands();
   await cleanupOldServerData();
@@ -412,6 +481,9 @@ client.once('ready', async () => {
 
   // Premium Expiry Checker - läuft jede Minute
   startPremiumExpiryChecker();
+
+  // Pending Deletions Checker - läuft jede Minute
+  startPendingDeletionsChecker();
 });
 
 async function sendWelcomeMessage(guild) {
@@ -1239,6 +1311,53 @@ client.on(Events.InteractionCreate, async i => {
         await i.update({ embeds: [embed], components: [row] });
 
         await logEvent(i.guild, `⚙️ GitHub Commit Logs ${newStatus ? 'enabled' : 'disabled'} by <@${i.user.id}>`);
+        return;
+      }
+
+      if(i.customId.startsWith('cancel-deletion-')){
+        const guildId = i.customId.split('-')[2];
+        if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+
+        try {
+          const pendingFile = './pending-deletions.json';
+          if(!fs.existsSync(pendingFile)){
+            return i.reply({ephemeral:true,content:'❌ Keine ausstehenden Löschungen gefunden'});
+          }
+
+          let pending = JSON.parse(fs.readFileSync(pendingFile, 'utf8'));
+          const deletion = pending.find(p => p.guildId === guildId);
+
+          if(!deletion){
+            return i.reply({ephemeral:true,content:'❌ Keine ausstehende Löschung für diesen Server gefunden'});
+          }
+
+          pending = pending.filter(p => p.guildId !== guildId);
+          fs.writeFileSync(pendingFile, JSON.stringify(pending, null, 2));
+
+          const embed = new EmbedBuilder()
+            .setTitle('✅ LÖSCHUNG ABGEBROCHEN')
+            .setDescription(
+              `Die geplante Daten-Löschung wurde erfolgreich abgebrochen.\n\n` +
+              `**Alle Daten bleiben erhalten:**\n` +
+              `• Konfigurationsdateien\n` +
+              `• Tickets und deren Daten\n` +
+              `• Ticket-Transkripte\n\n` +
+              `Der Bot bleibt auf diesem Server.\n\n` +
+              `**Abgebrochen von:** <@${i.user.id}>`
+            )
+            .setColor(0x00ff88)
+            .setFooter({ text: COPYRIGHT })
+            .setTimestamp();
+
+          await i.update({ content: '@everyone', embeds: [embed], components: [] });
+
+          console.log(`✅ Deletion cancelled for ${guildId} by user ${i.user.id}`);
+
+          await logEvent(i.guild, `✅ Geplante Daten-Löschung abgebrochen von <@${i.user.id}>`);
+        } catch(err){
+          console.error('Error cancelling deletion:', err);
+          return i.reply({ephemeral:true,content:'❌ Fehler beim Abbrechen der Löschung'});
+        }
         return;
       }
 

@@ -526,6 +526,19 @@
               ar: 'اقتراح تحسين'
             };
           %><%= improvementOption[lang] || improvementOption.de %></option>
+          <option value="general">📝 <%
+            const generalOption = {
+              de: 'Allgemeines Feedback',
+              en: 'General Feedback',
+              he: 'משוב כללי',
+              ja: '一般的なフィードバック',
+              ru: 'Общий отзыв',
+              pt: 'Feedback Geral',
+              es: 'Comentario General',
+              id: 'Umpan Balik Umum',
+              ar: 'تعليق عام'
+            };
+          %><%= generalOption[lang] || generalOption.de %></option>
           <option value="other">💬 <%
             const otherOption = {
               de: 'Sonstiges',
