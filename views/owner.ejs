@@ -440,49 +440,54 @@
       transform: translateY(-2px);
     }
 
-    /* Settings Toggle (Spin Feature) */
-    .settings-toggle {
+    /* Loading Overlay */
+    #loadingOverlay {
       position: fixed;
-      top: 1.5rem;
-      right: 1.5rem;
-      background: var(--accent-color);
-      color: #000;
-      border: 0;
-      width: 3rem;
-      height: 3rem;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1.5rem;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s;
-      box-shadow: 0 4px 16px var(--shadow-color);
-      z-index: 1000;
+      z-index: 99999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
     }
 
-    .settings-toggle.active {
-      animation: spinButton 2s linear infinite;
+    #loadingOverlay.show {
+      opacity: 1;
+      visibility: visible;
     }
 
-    .settings-toggle:hover {
-      transform: scale(1.1);
-      background: var(--accent-hover);
-      box-shadow: 0 6px 24px var(--shadow-color);
+    .loading-content {
+      text-align: center;
+      color: var(--accent-color);
     }
 
-    @keyframes spinButton {
+    .loading-spinner {
+      font-size: 3rem;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
 
-    @keyframes spinPage {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .loading-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
     }
 
-    body.spinning {
-      animation: spinPage 3s linear infinite;
+    .loading-subtext {
+      font-size: 1rem;
+      opacity: 0.7;
     }
 
     @media (max-width: 768px) {
@@ -506,10 +511,6 @@
   </style>
 </head>
 <body>
-  <button class="settings-toggle" onclick="toggleSpin()" title="Einstellungen" id="settingsBtn">
-    <i class="fas fa-cog"></i>
-  </button>
-
   <div class="container">
     <div class="header">
       <h1>
@@ -707,6 +708,17 @@
     </div>
   </div>
 
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="loading-content">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner"></i>
+      </div>
+      <div class="loading-text" id="loadingText">Lädt...</div>
+      <div class="loading-subtext">Bitte warten</div>
+    </div>
+  </div>
+
   <!-- Delete Feedback Confirmation Modal -->
   <div class="modal-overlay" id="deleteModal">
     <div class="modal-content">
@@ -850,50 +862,31 @@
       }
     });
 
-    // Cookie Functions for Spinning Feature
-    function setCookie(name, value, days) {
-      const expires = new Date();
-      expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-      document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+    // Loading Animations
+    function showLoading(text, subtext) {
+      const overlay = document.getElementById('loadingOverlay');
+      const loadingText = document.getElementById('loadingText');
+      const loadingSubtext = overlay.querySelector('.loading-subtext');
+
+      loadingText.textContent = text;
+      if (subtext) {
+        loadingSubtext.textContent = subtext;
+      }
+      overlay.classList.add('show');
     }
 
-    function getCookie(name) {
-      const nameEQ = name + '=';
-      const ca = document.cookie.split(';');
-      for(let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-      }
-      return null;
+    // Add loading animation to home link
+    const homeLink = document.querySelector('a[href="/"]');
+    if (homeLink) {
+      homeLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        showLoading('Zurück zur Startseite...', 'Bitte warten');
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
+      });
     }
-
-    // Spin Toggle Function
-    function toggleSpin() {
-      const body = document.body;
-      const settingsBtn = document.getElementById('settingsBtn');
-      const isSpinning = body.classList.contains('spinning');
-
-      if (isSpinning) {
-        body.classList.remove('spinning');
-        settingsBtn.classList.remove('active');
-        setCookie('trs-spinning', 'false', 365);
-      } else {
-        body.classList.add('spinning');
-        settingsBtn.classList.add('active');
-        setCookie('trs-spinning', 'true', 365);
-      }
-    }
-
-    // Restore spin status on page load
-    (function() {
-      const spinningState = getCookie('trs-spinning');
-      if (spinningState === 'true') {
-        document.body.classList.add('spinning');
-        const settingsBtn = document.getElementById('settingsBtn');
-        if (settingsBtn) settingsBtn.classList.add('active');
-      }
-    })();
   </script>
 </body>
 </html>

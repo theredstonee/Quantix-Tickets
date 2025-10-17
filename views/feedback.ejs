@@ -126,41 +126,6 @@
       border-color: var(--accent-color);
     }
 
-    /* Settings Toggle (Spin Feature) */
-    .settings-toggle {
-      background: transparent;
-      border: 2px solid var(--glass-border);
-      color: var(--text-color);
-      cursor: pointer;
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-      transition: all 0.3s;
-    }
-
-    .settings-toggle.active {
-      animation: spinButton 2s linear infinite;
-    }
-
-    .settings-toggle:hover {
-      background: var(--glass-bg);
-      border-color: var(--accent-color);
-    }
-
-    @keyframes spinButton {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes spinPage {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    body.spinning {
-      animation: spinPage 3s linear infinite;
-    }
-
     .container {
       max-width: 800px;
       margin: 0 auto;
@@ -319,6 +284,56 @@
       50% { transform: scale(1.2); }
     }
 
+    /* Loading Overlay */
+    #loadingOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    #loadingOverlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loading-content {
+      text-align: center;
+      color: var(--accent-color);
+    }
+
+    .loading-spinner {
+      font-size: 3rem;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .loading-subtext {
+      font-size: 1rem;
+      opacity: 0.7;
+    }
+
     @media (max-width: 768px) {
       .header-container {
         flex-direction: column;
@@ -358,9 +373,6 @@
             <i class="fas fa-sign-in-alt"></i> Login
           </a>
         <% } %>
-        <button class="settings-toggle" onclick="toggleSpin()" id="settingsBtn">
-          <i class="fas fa-cog"></i>
-        </button>
         <button class="theme-toggle" onclick="toggleTheme()">
           <i class="fas fa-moon" id="theme-icon"></i>
         </button>
@@ -670,6 +682,17 @@
     </form>
   </div>
 
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="loading-content">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner"></i>
+      </div>
+      <div class="loading-text" id="loadingText">Lädt...</div>
+      <div class="loading-subtext">Bitte warten</div>
+    </div>
+  </div>
+
   <script>
     function toggleTheme() {
       const html = document.documentElement;
@@ -741,50 +764,96 @@
       }
     });
 
-    // Cookie Functions for Spinning Feature
-    function setCookie(name, value, days) {
-      const expires = new Date();
-      expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-      document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+    // Loading Animations
+    function showLoading(text, subtext) {
+      const overlay = document.getElementById('loadingOverlay');
+      const loadingText = document.getElementById('loadingText');
+      const loadingSubtext = overlay.querySelector('.loading-subtext');
+
+      loadingText.textContent = text;
+      if (subtext) {
+        loadingSubtext.textContent = subtext;
+      }
+      overlay.classList.add('show');
     }
 
-    function getCookie(name) {
-      const nameEQ = name + '=';
-      const ca = document.cookie.split(';');
-      for(let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-      }
-      return null;
+    // Add loading animations to navigation links
+    const lang = '<%= lang %>';
+
+    // Home link
+    const homeLink = document.querySelector('a[href="/"]');
+    if (homeLink) {
+      homeLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        const texts = {
+          de: { text: 'Zurück zur Startseite...', subtext: 'Bitte warten' },
+          en: { text: 'Back to homepage...', subtext: 'Please wait' },
+          he: { text: 'חזרה לדף הבית...', subtext: 'אנא המתן' },
+          ja: { text: 'ホームページに戻る...', subtext: 'お待ちください' },
+          ru: { text: 'Возврат на главную...', subtext: 'Пожалуйста, подождите' },
+          pt: { text: 'Voltar à página inicial...', subtext: 'Aguarde' },
+          es: { text: 'Volver a la página de inicio...', subtext: 'Espere' },
+          id: { text: 'Kembali ke beranda...', subtext: 'Mohon tunggu' },
+          ar: { text: 'العودة إلى الصفحة الرئيسية...', subtext: 'يرجى الانتظار' }
+        };
+        const t = texts[lang] || texts.de;
+        showLoading(t.text, t.subtext);
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
+      });
     }
 
-    // Spin Toggle Function
-    function toggleSpin() {
-      const body = document.body;
-      const settingsBtn = document.getElementById('settingsBtn');
-      const isSpinning = body.classList.contains('spinning');
-
-      if (isSpinning) {
-        body.classList.remove('spinning');
-        settingsBtn.classList.remove('active');
-        setCookie('trs-spinning', 'false', 365);
-      } else {
-        body.classList.add('spinning');
-        settingsBtn.classList.add('active');
-        setCookie('trs-spinning', 'true', 365);
-      }
+    // Dashboard/Panel link
+    const panelLink = document.querySelector('a[href="/panel"]');
+    if (panelLink) {
+      panelLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        const texts = {
+          de: { text: 'Dashboard wird geladen...', subtext: 'Bitte warten' },
+          en: { text: 'Loading dashboard...', subtext: 'Please wait' },
+          he: { text: 'טוען לוח בקרה...', subtext: 'אנא המתן' },
+          ja: { text: 'ダッシュボードを読み込んでいます...', subtext: 'お待ちください' },
+          ru: { text: 'Загрузка панели...', subtext: 'Пожалуйста, подождите' },
+          pt: { text: 'Carregando painel...', subtext: 'Aguarde' },
+          es: { text: 'Cargando panel...', subtext: 'Espere' },
+          id: { text: 'Memuat panel...', subtext: 'Mohon tunggu' },
+          ar: { text: 'تحميل لوحة التحكم...', subtext: 'يرجى الانتظار' }
+        };
+        const t = texts[lang] || texts.de;
+        showLoading(t.text, t.subtext);
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
+      });
     }
 
-    // Restore spin status on page load
-    (function() {
-      const spinningState = getCookie('trs-spinning');
-      if (spinningState === 'true') {
-        document.body.classList.add('spinning');
-        const settingsBtn = document.getElementById('settingsBtn');
-        if (settingsBtn) settingsBtn.classList.add('active');
-      }
-    })();
+    // Login link
+    const loginLink = document.querySelector('a[href="/login"]');
+    if (loginLink) {
+      loginLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        const texts = {
+          de: { text: 'Weiterleitung zum Login...', subtext: 'Bitte warten' },
+          en: { text: 'Redirecting to login...', subtext: 'Please wait' },
+          he: { text: 'מפנה להתחברות...', subtext: 'אנא המתן' },
+          ja: { text: 'ログインページにリダイレクト...', subtext: 'お待ちください' },
+          ru: { text: 'Перенаправление на вход...', subtext: 'Пожалуйста, подождите' },
+          pt: { text: 'Redirecionando para login...', subtext: 'Aguarde' },
+          es: { text: 'Redirigiendo al inicio de sesión...', subtext: 'Espere' },
+          id: { text: 'Mengalihkan ke login...', subtext: 'Mohon tunggu' },
+          ar: { text: 'إعادة التوجيه إلى تسجيل الدخول...', subtext: 'يرجى الانتظار' }
+        };
+        const t = texts[lang] || texts.de;
+        showLoading(t.text, t.subtext);
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
+      });
+    }
   </script>
 </body>
 </html>
