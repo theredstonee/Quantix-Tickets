@@ -202,11 +202,19 @@
       display: flex;
       gap: 1rem;
       align-items: center;
+      height: 2.5rem;
+    }
+
+    .header-actions > * {
+      height: 2.5rem;
     }
 
     /* Language Selector Dropdown */
     .language-selector {
       position: relative;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
     }
 
     .lang-current {
@@ -223,6 +231,7 @@
       min-width: 80px;
       height: 2.5rem;
       box-sizing: border-box;
+      flex-shrink: 0;
     }
 
     .lang-current:hover {
@@ -322,6 +331,8 @@
       align-items: center;
       justify-content: center;
       transition: all 0.3s;
+      box-sizing: border-box;
+      flex-shrink: 0;
     }
 
     .theme-toggle:hover {
@@ -343,6 +354,7 @@
       font-size: 0.95rem;
       height: 2.5rem;
       box-sizing: border-box;
+      flex-shrink: 0;
       box-shadow: 0 2px 8px rgba(0, 184, 148, 0.3);
     }
 
