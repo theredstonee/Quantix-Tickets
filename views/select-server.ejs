@@ -1029,6 +1029,7 @@
 
       let bouncingElements = [];
       let animationId = null;
+      let speedChangeInterval = null;
 
       // Factory function to create bouncing element
       function createBouncingElement(element, speedX, speedY) {
@@ -1043,6 +1044,8 @@
           y: rect.top,
           dx: speedX,
           dy: speedY,
+          accelerationX: 0.001 + Math.random() * 0.003,
+          accelerationY: 0.001 + Math.random() * 0.003,
           scale: 1.0,
           scaleDirection: Math.random() > 0.5 ? 0.01 : -0.01,
           minScale: 0.5,
@@ -1159,6 +1162,10 @@
             const maxX = window.innerWidth - width;
             const maxY = window.innerHeight - height;
 
+            // Apply acceleration to velocity (unlimited speed increase)
+            bouncer.dx += bouncer.dx > 0 ? bouncer.accelerationX : -bouncer.accelerationX;
+            bouncer.dy += bouncer.dy > 0 ? bouncer.accelerationY : -bouncer.accelerationY;
+
             // Update position
             bouncer.x += bouncer.dx;
             bouncer.y += bouncer.dy;
@@ -1197,12 +1204,30 @@
         }
 
         animate();
+
+        // Random speed change every 10 seconds
+        speedChangeInterval = setInterval(() => {
+          bouncingElements.forEach(bouncer => {
+            // Random new speed between -5 and 5
+            const randomSpeedX = (Math.random() * 10) - 5;
+            const randomSpeedY = (Math.random() * 10) - 5;
+
+            // Ensure minimum speed
+            bouncer.dx = randomSpeedX === 0 ? 1 : randomSpeedX;
+            bouncer.dy = randomSpeedY === 0 ? 1 : randomSpeedY;
+          });
+        }, 10000);
       }
 
       function stopDVDBounce() {
         if (animationId) {
           cancelAnimationFrame(animationId);
           animationId = null;
+        }
+
+        if (speedChangeInterval) {
+          clearInterval(speedChangeInterval);
+          speedChangeInterval = null;
         }
 
         // Reset all elements to original styles
