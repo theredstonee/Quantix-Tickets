@@ -204,43 +204,106 @@
       align-items: center;
     }
 
-    /* Language Selector */
+    /* Language Selector Dropdown */
     .language-selector {
-      display: flex;
-      gap: 0.3rem;
+      position: relative;
     }
 
-    .lang-btn {
-      background: transparent;
-      border: 2px solid transparent;
+    .lang-current {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
       border-radius: 0.5rem;
-      padding: 0.4rem 0.6rem;
+      padding: 0.4rem 0.8rem;
       cursor: pointer;
       transition: all 0.3s;
-      text-decoration: none;
-      opacity: 0.7;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 80px;
     }
 
-    .lang-btn:hover {
-      opacity: 1;
+    .lang-current:hover {
       border-color: var(--accent-color);
     }
 
-    .lang-btn.active {
-      opacity: 1;
-      border-color: var(--accent-color);
-      background: rgba(0, 184, 148, 0.1);
-    }
-
-    [data-theme="dark"] .lang-btn.active {
-      background: rgba(0, 255, 136, 0.1);
-    }
-
-    .lang-btn img {
-      display: block;
+    .lang-current img {
       width: 24px;
       height: 18px;
       border-radius: 2px;
+    }
+
+    .lang-current i {
+      margin-left: auto;
+      font-size: 0.8rem;
+      transition: transform 0.3s;
+    }
+
+    .language-selector.open .lang-current i {
+      transform: rotate(180deg);
+    }
+
+    .lang-dropdown {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border);
+      border-radius: 0.75rem;
+      padding: 0.5rem;
+      min-width: 200px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s;
+      box-shadow: 0 10px 40px var(--shadow-color);
+      z-index: 1000;
+    }
+
+    .language-selector.open .lang-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .lang-option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      color: var(--text-color);
+      transition: all 0.2s;
+    }
+
+    .lang-option:hover {
+      background: rgba(0, 184, 148, 0.1);
+      transform: translateX(5px);
+    }
+
+    [data-theme="dark"] .lang-option:hover {
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    .lang-option.active {
+      background: rgba(0, 184, 148, 0.15);
+      border-left: 3px solid var(--accent-color);
+    }
+
+    [data-theme="dark"] .lang-option.active {
+      background: rgba(0, 255, 136, 0.15);
+    }
+
+    .lang-option img {
+      width: 24px;
+      height: 18px;
+      border-radius: 2px;
+    }
+
+    .lang-option span {
+      font-weight: 500;
     }
 
     /* Theme Toggle */
@@ -912,17 +975,18 @@
         gap: 0.5rem;
       }
 
-      .language-selector {
-        gap: 0.2rem;
+      .lang-current {
+        padding: 0.3rem 0.6rem;
       }
 
-      .lang-btn {
-        padding: 0.3rem 0.4rem;
-      }
-
-      .lang-btn img {
+      .lang-current img {
         width: 20px;
         height: 15px;
+      }
+
+      .lang-dropdown {
+        right: auto;
+        left: 0;
       }
 
       .hero {
@@ -1008,34 +1072,62 @@
         <span>TRS Tickets</span>
       </a>
       <div class="header-actions">
-        <div class="language-selector">
-          <a href="/set-user-language/de" class="lang-btn <%= lang === 'de' ? 'active' : '' %>" title="Deutsch">
-            <img src="/images/flags/de.svg" alt="DE" loading="lazy">
-          </a>
-          <a href="/set-user-language/en" class="lang-btn <%= lang === 'en' ? 'active' : '' %>" title="English">
-            <img src="/images/flags/gb.svg" alt="EN" loading="lazy">
-          </a>
-          <a href="/set-user-language/he" class="lang-btn <%= lang === 'he' ? 'active' : '' %>" title="עברית">
-            <img src="/images/flags/il.svg" alt="HE" loading="lazy">
-          </a>
-          <a href="/set-user-language/ja" class="lang-btn <%= lang === 'ja' ? 'active' : '' %>" title="日本語">
-            <img src="/images/flags/jp.svg" alt="JA" loading="lazy">
-          </a>
-          <a href="/set-user-language/ru" class="lang-btn <%= lang === 'ru' ? 'active' : '' %>" title="Русский">
-            <img src="/images/flags/ru.svg" alt="RU" loading="lazy">
-          </a>
-          <a href="/set-user-language/pt" class="lang-btn <%= lang === 'pt' ? 'active' : '' %>" title="Português">
-            <img src="/images/flags/pt.svg" alt="PT" loading="lazy">
-          </a>
-          <a href="/set-user-language/es" class="lang-btn <%= lang === 'es' ? 'active' : '' %>" title="Español">
-            <img src="/images/flags/es.svg" alt="ES" loading="lazy">
-          </a>
-          <a href="/set-user-language/id" class="lang-btn <%= lang === 'id' ? 'active' : '' %>" title="Bahasa Indonesia">
-            <img src="/images/flags/id.svg" alt="ID" loading="lazy">
-          </a>
-          <a href="/set-user-language/ar" class="lang-btn <%= lang === 'ar' ? 'active' : '' %>" title="العربية">
-            <img src="/images/flags/ar.svg" alt="AR" loading="lazy">
-          </a>
+        <div class="language-selector" id="langSelector">
+          <div class="lang-current" onclick="toggleLanguageDropdown()">
+            <%
+              const langFlags = {
+                de: '/images/flags/de.svg',
+                en: '/images/flags/gb.svg',
+                he: '/images/flags/il.svg',
+                ja: '/images/flags/jp.svg',
+                ru: '/images/flags/ru.svg',
+                pt: '/images/flags/pt.svg',
+                es: '/images/flags/es.svg',
+                id: '/images/flags/id.svg',
+                ar: '/images/flags/ar.svg'
+              };
+            %>
+            <img src="<%= langFlags[lang] || langFlags.de %>" alt="<%= lang.toUpperCase() %>">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="lang-dropdown">
+            <a href="/set-user-language/de" class="lang-option <%= lang === 'de' ? 'active' : '' %>">
+              <img src="/images/flags/de.svg" alt="DE">
+              <span>Deutsch</span>
+            </a>
+            <a href="/set-user-language/en" class="lang-option <%= lang === 'en' ? 'active' : '' %>">
+              <img src="/images/flags/gb.svg" alt="EN">
+              <span>English</span>
+            </a>
+            <a href="/set-user-language/he" class="lang-option <%= lang === 'he' ? 'active' : '' %>">
+              <img src="/images/flags/il.svg" alt="HE">
+              <span>עברית</span>
+            </a>
+            <a href="/set-user-language/ja" class="lang-option <%= lang === 'ja' ? 'active' : '' %>">
+              <img src="/images/flags/jp.svg" alt="JA">
+              <span>日本語</span>
+            </a>
+            <a href="/set-user-language/ru" class="lang-option <%= lang === 'ru' ? 'active' : '' %>">
+              <img src="/images/flags/ru.svg" alt="RU">
+              <span>Русский</span>
+            </a>
+            <a href="/set-user-language/pt" class="lang-option <%= lang === 'pt' ? 'active' : '' %>">
+              <img src="/images/flags/pt.svg" alt="PT">
+              <span>Português</span>
+            </a>
+            <a href="/set-user-language/es" class="lang-option <%= lang === 'es' ? 'active' : '' %>">
+              <img src="/images/flags/es.svg" alt="ES">
+              <span>Español</span>
+            </a>
+            <a href="/set-user-language/id" class="lang-option <%= lang === 'id' ? 'active' : '' %>">
+              <img src="/images/flags/id.svg" alt="ID">
+              <span>Bahasa Indonesia</span>
+            </a>
+            <a href="/set-user-language/ar" class="lang-option <%= lang === 'ar' ? 'active' : '' %>">
+              <img src="/images/flags/ar.svg" alt="AR">
+              <span>العربية</span>
+            </a>
+          </div>
         </div>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
           <i id="themeIcon" class="fas fa-moon"></i>
@@ -1849,15 +1941,15 @@
     %><%= testimonialsTitle[lang] || testimonialsTitle.de %></h2>
     <p class="section-subtitle"><%
       const testimonialsSubtitle = {
-        de: 'Über 500 Discord Server vertrauen auf TRS Tickets',
-        en: 'Over 500 Discord servers trust TRS Tickets',
-        he: 'יותר מ-500 שרתי Discord סומכים על TRS Tickets',
-        ja: '500以上のDiscordサーバーがTRS Ticketsを信頼',
-        ru: 'Более 500 Discord серверов доверяют TRS Tickets',
-        pt: 'Mais de 500 servidores Discord confiam no TRS Tickets',
-        es: 'Más de 500 servidores Discord confían en TRS Tickets',
-        id: 'Lebih dari 500 server Discord mempercayai TRS Tickets',
-        ar: 'أكثر من 500 خادم Discord يثقون بـ TRS Tickets'
+        de: `${totalGuilds} Discord Server • ${totalTickets} Tickets bearbeitet • 4.9⭐ Bewertung`,
+        en: `${totalGuilds} Discord Servers • ${totalTickets} Tickets Processed • 4.9⭐ Rating`,
+        he: `${totalGuilds} שרתי Discord • ${totalTickets} כרטיסים שטופלו • דירוג 4.9⭐`,
+        ja: `${totalGuilds}台のDiscordサーバー • ${totalTickets}件のチケット処理済み • 4.9⭐評価`,
+        ru: `${totalGuilds} Discord серверов • ${totalTickets} тикетов обработано • Рейтинг 4.9⭐`,
+        pt: `${totalGuilds} Servidores Discord • ${totalTickets} Tickets Processados • Avaliação 4.9⭐`,
+        es: `${totalGuilds} Servidores Discord • ${totalTickets} Tickets Procesados • Calificación 4.9⭐`,
+        id: `${totalGuilds} Server Discord • ${totalTickets} Tiket Diproses • Rating 4.9⭐`,
+        ar: `${totalGuilds} خادم Discord • ${totalTickets} تذكرة معالجة • تقييم 4.9⭐`
       };
     %><%= testimonialsSubtitle[lang] || testimonialsSubtitle.de %></p>
 
@@ -2286,6 +2378,21 @@
   </footer>
 
   <script>
+    // Language Dropdown Toggle
+    function toggleLanguageDropdown() {
+      const selector = document.getElementById('langSelector');
+      selector.classList.toggle('open');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const selector = document.getElementById('langSelector');
+      const isClickInside = selector.contains(event.target);
+      if (!isClickInside && selector.classList.contains('open')) {
+        selector.classList.remove('open');
+      }
+    });
+
     // Theme Toggle
     function toggleTheme() {
       const html = document.documentElement;
