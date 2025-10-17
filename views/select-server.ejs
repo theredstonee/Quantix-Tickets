@@ -233,6 +233,198 @@
     .server-id { font-size: 0.75rem; opacity: 0.6; font-family: monospace; }
     .current-badge { display: inline-block; background: #00ff00; color: #000; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem; }
     .no-servers { text-align: center; padding: 3rem; opacity: 0.6; }
+
+    /* No Servers Hero Section */
+    .no-servers-hero {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+
+    .no-servers-icon {
+      font-size: 6rem;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .no-servers-title {
+      font-size: 2.5rem;
+      color: var(--accent-color);
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    .no-servers-desc {
+      font-size: 1.1rem;
+      opacity: 0.8;
+      margin-bottom: 3rem;
+      line-height: 1.6;
+    }
+
+    .no-servers-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 4rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-invite {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      color: #000;
+      text-decoration: none;
+      border-radius: 0.75rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      box-shadow: 0 8px 32px var(--shadow-color);
+      transition: all 0.3s;
+    }
+
+    .btn-invite:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px var(--shadow-color);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 2.5rem;
+      background: transparent;
+      border: 2px solid var(--glass-border);
+      color: var(--text-color);
+      text-decoration: none;
+      border-radius: 0.75rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--glass-bg);
+      border-color: var(--accent-color);
+      transform: translateY(-3px);
+    }
+
+    .no-servers-steps {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2rem;
+      text-align: left;
+      box-shadow: 0 8px 32px var(--shadow-color);
+    }
+
+    .no-servers-steps h3 {
+      color: var(--accent-color);
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      background: var(--accent-color);
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-content strong {
+      display: block;
+      color: var(--accent-color);
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-content p {
+      opacity: 0.8;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .no-servers-hero {
+        padding: 2rem 1rem;
+      }
+
+      .no-servers-icon {
+        font-size: 4rem;
+      }
+
+      .no-servers-title {
+        font-size: 1.75rem;
+      }
+
+      .no-servers-desc {
+        font-size: 1rem;
+      }
+
+      .no-servers-actions {
+        flex-direction: column;
+      }
+
+      .btn-invite,
+      .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .no-servers-steps {
+        padding: 1.5rem;
+      }
+
+      .step-item {
+        gap: 1rem;
+      }
+
+      .step-num {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        font-size: 1rem;
+      }
+
+      .step-content strong {
+        font-size: 1rem;
+      }
+
+      .step-content p {
+        font-size: 0.9rem;
+      }
+    }
     .submit-btn { margin-top: 1rem; }
     footer { margin-top: 3rem; margin-bottom: 3rem; padding-bottom: 2rem; text-align: center; font-size: 0.75rem; opacity: 0.6; }
 
@@ -389,6 +581,11 @@
     <a href="/">
       <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : lang === 'zh' ? '返回首页' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Zur Startseite' %>
     </a>
+    <% if (user && (user.id === '928901974106202113' || user.id === '1159182333316968530')) { %>
+      <a href="/owner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+        <i class="fas fa-crown"></i> <%= lang === 'de' ? 'Owner Dashboard' : lang === 'en' ? 'Owner Dashboard' : lang === 'he' ? 'לוח בקרת הבעלים' : lang === 'ja' ? 'オーナーダッシュボード' : lang === 'ru' ? 'Панель владельца' : lang === 'pt' ? 'Painel do Proprietário' : lang === 'es' ? 'Panel del Propietario' : lang === 'id' ? 'Panel Pemilik' : lang === 'zh' ? '所有者仪表板' : lang === 'ar' ? 'لوحة المالك' : 'Owner Dashboard' %>
+      </a>
+    <% } %>
   </div>
 
   <% if (servers && servers.length > 0) { %>
@@ -421,11 +618,182 @@
 
     </form>
   <% } else { %>
-    <div class="no-servers">
-      <p>⚠️ <%= t.web.no_servers %></p>
-      <p style="margin-top: 1rem; font-size: 0.85rem;">
-        <%= t.web.no_servers_desc %>
-      </p>
+    <div class="no-servers-hero">
+      <div class="no-servers-icon">
+        <i class="fab fa-discord"></i>
+      </div>
+      <h2 class="no-servers-title"><%
+        const noServerTitles = {
+          de: 'Bot noch nicht auf deinem Server?',
+          en: 'Bot not on your server yet?',
+          he: 'הבוט עדיין לא בשרת שלך?',
+          ja: 'ボットはまだサーバーにいませんか？',
+          ru: 'Бот еще не на вашем сервере?',
+          pt: 'Bot ainda não está no seu servidor?',
+          es: '¿Bot aún no está en tu servidor?',
+          id: 'Bot belum ada di server Anda?',
+          ar: 'البوت ليس على الخادم الخاص بك بعد؟'
+        };
+      %><%= noServerTitles[lang] || noServerTitles.de %></h2>
+      <p class="no-servers-desc"><%
+        const noServerDescs = {
+          de: 'Du benötigst Administrator-Rechte auf einem Server, auf dem der Bot installiert ist, oder eine Team-Rolle.',
+          en: 'You need administrator permissions on a server where the bot is installed, or a team role.',
+          he: 'אתה צריך הרשאות מנהל בשרת שבו הבוט מותקן, או תפקיד צוות.',
+          ja: 'ボットがインストールされているサーバーの管理者権限、またはチーム役職が必要です。',
+          ru: 'Вам нужны права администратора на сервере, где установлен бот, или роль команды.',
+          pt: 'Você precisa de permissões de administrador em um servidor onde o bot está instalado, ou uma função de equipe.',
+          es: 'Necesitas permisos de administrador en un servidor donde el bot esté instalado, o un rol de equipo.',
+          id: 'Anda memerlukan izin administrator di server tempat bot diinstal, atau peran tim.',
+          ar: 'تحتاج إلى أذونات المسؤول على خادم حيث تم تثبيت البوت، أو دور فريق.'
+        };
+      %><%= noServerDescs[lang] || noServerDescs.de %></p>
+
+      <div class="no-servers-actions">
+        <a href="<%= inviteUrl %>" class="btn-invite" target="_blank">
+          <i class="fab fa-discord"></i>
+          <%
+            const inviteBtnTexts = {
+              de: 'Bot zu Discord hinzufügen',
+              en: 'Add Bot to Discord',
+              he: 'הוסף בוט ל-Discord',
+              ja: 'ボットをDiscordに追加',
+              ru: 'Добавить бота в Discord',
+              pt: 'Adicionar Bot ao Discord',
+              es: 'Agregar Bot a Discord',
+              id: 'Tambahkan Bot ke Discord',
+              ar: 'إضافة البوت إلى Discord'
+            };
+          %><%= inviteBtnTexts[lang] || inviteBtnTexts.de %>
+        </a>
+        <a href="/" class="btn-secondary">
+          <i class="fas fa-home"></i>
+          <%
+            const homeBtnTexts = {
+              de: 'Zurück zur Startseite',
+              en: 'Back to Home',
+              he: 'חזרה לדף הבית',
+              ja: 'ホームに戻る',
+              ru: 'На главную',
+              pt: 'Voltar ao Início',
+              es: 'Volver al Inicio',
+              id: 'Kembali ke Beranda',
+              ar: 'العودة إلى الرئيسية'
+            };
+          %><%= homeBtnTexts[lang] || homeBtnTexts.de %>
+        </a>
+      </div>
+
+      <div class="no-servers-steps">
+        <h3><%
+          const stepsTitle = {
+            de: 'So geht\'s weiter:',
+            en: 'Next Steps:',
+            he: 'שלבים הבאים:',
+            ja: '次のステップ：',
+            ru: 'Следующие шаги:',
+            pt: 'Próximos Passos:',
+            es: 'Próximos Pasos:',
+            id: 'Langkah Selanjutnya:',
+            ar: 'الخطوات التالية:'
+          };
+        %><%= stepsTitle[lang] || stepsTitle.de %></h3>
+        <div class="steps-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <strong><%
+                const step1Title = {
+                  de: 'Bot einladen',
+                  en: 'Invite Bot',
+                  he: 'הזמן בוט',
+                  ja: 'ボットを招待',
+                  ru: 'Пригласить бота',
+                  pt: 'Convidar Bot',
+                  es: 'Invitar Bot',
+                  id: 'Undang Bot',
+                  ar: 'قم بدعوة البوت'
+                };
+              %><%= step1Title[lang] || step1Title.de %></strong>
+              <p><%
+                const step1Desc = {
+                  de: 'Klicke auf den Button oben und wähle deinen Server aus',
+                  en: 'Click the button above and select your server',
+                  he: 'לחץ על הכפתור למעלה ובחר את השרת שלך',
+                  ja: '上のボタンをクリックしてサーバーを選択',
+                  ru: 'Нажмите кнопку выше и выберите свой сервер',
+                  pt: 'Clique no botão acima e selecione seu servidor',
+                  es: 'Haz clic en el botón de arriba y selecciona tu servidor',
+                  id: 'Klik tombol di atas dan pilih server Anda',
+                  ar: 'انقر فوق الزر أعلاه وحدد الخادم الخاص بك'
+                };
+              %><%= step1Desc[lang] || step1Desc.de %></p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <strong><%
+                const step2Title = {
+                  de: 'Berechtigungen bestätigen',
+                  en: 'Confirm Permissions',
+                  he: 'אשר הרשאות',
+                  ja: '権限を確認',
+                  ru: 'Подтвердить разрешения',
+                  pt: 'Confirmar Permissões',
+                  es: 'Confirmar Permisos',
+                  id: 'Konfirmasi Izin',
+                  ar: 'تأكيد الأذونات'
+                };
+              %><%= step2Title[lang] || step2Title.de %></strong>
+              <p><%
+                const step2Desc = {
+                  de: 'Der Bot benötigt Administrator-Rechte für volle Funktionalität',
+                  en: 'The bot needs administrator permissions for full functionality',
+                  he: 'הבוט צריך הרשאות מנהל לפונקציונליות מלאה',
+                  ja: 'ボットは完全な機能のために管理者権限が必要です',
+                  ru: 'Боту нужны права администратора для полной функциональности',
+                  pt: 'O bot precisa de permissões de administrador para funcionalidade completa',
+                  es: 'El bot necesita permisos de administrador para funcionalidad completa',
+                  id: 'Bot memerlukan izin administrator untuk fungsionalitas penuh',
+                  ar: 'يحتاج البوت إلى أذونات المسؤول للوظائف الكاملة'
+                };
+              %><%= step2Desc[lang] || step2Desc.de %></p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <strong><%
+                const step3Title = {
+                  de: 'Seite neu laden',
+                  en: 'Reload Page',
+                  he: 'טען מחדש את הדף',
+                  ja: 'ページを再読み込み',
+                  ru: 'Перезагрузить страницу',
+                  pt: 'Recarregar Página',
+                  es: 'Recargar Página',
+                  id: 'Muat Ulang Halaman',
+                  ar: 'إعادة تحميل الصفحة'
+                };
+              %><%= step3Title[lang] || step3Title.de %></strong>
+              <p><%
+                const step3Desc = {
+                  de: 'Kehre zu dieser Seite zurück und dein Server wird erscheinen',
+                  en: 'Return to this page and your server will appear',
+                  he: 'חזור לדף זה והשרת שלך יופיע',
+                  ja: 'このページに戻るとサーバーが表示されます',
+                  ru: 'Вернитесь на эту страницу и ваш сервер появится',
+                  pt: 'Retorne a esta página e seu servidor aparecerá',
+                  es: 'Regresa a esta página y tu servidor aparecerá',
+                  id: 'Kembali ke halaman ini dan server Anda akan muncul',
+                  ar: 'ارجع إلى هذه الصفحة وسيظهر الخادم الخاص بك'
+                };
+              %><%= step3Desc[lang] || step3Desc.de %></p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   <% } %>
 

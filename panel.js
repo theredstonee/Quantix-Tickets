@@ -339,6 +339,23 @@ module.exports = (client)=>{
     });
   });
 
+  router.get('/invite', (req, res) => {
+    const lang = req.cookies.lang || 'de';
+    const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
+
+    // Bot Invite Link mit allen benötigten Permissions
+    const permissions = '8'; // Administrator
+    const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=${permissions}&scope=bot%20applications.commands`;
+
+    res.render('invite', {
+      t: getTranslations(lang),
+      lang: lang,
+      user: isAuthenticated ? req.user : null,
+      isAuthenticated: isAuthenticated,
+      inviteUrl: inviteUrl
+    });
+  });
+
   router.get('/imprint', (req, res) => {
     const lang = req.cookies.lang || 'de';
     res.render('imprint', {
@@ -397,14 +414,16 @@ module.exports = (client)=>{
         icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null
       }));
 
-      if(availableServers.length === 0){
-        return res.send('<h1>Keine Server verfügbar</h1><p>Du bist auf keinem Server Administrator oder Team-Mitglied, wo der Bot ist.</p><p><a href="/logout">Logout</a></p>');
-      }
+      // Bot Invite Link
+      const permissions = '8'; // Administrator
+      const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=${permissions}&scope=bot%20applications.commands`;
 
       res.render('select-server', {
         servers: availableServers,
         version: VERSION,
         currentGuild: req.session.selectedGuild || null,
+        user: req.user,
+        inviteUrl: inviteUrl,
         t: res.locals.t
       });
     } catch(err){
