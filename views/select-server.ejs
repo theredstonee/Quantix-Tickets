@@ -177,6 +177,14 @@
         font-size: 1.2rem !important;
       }
 
+      .settings-toggle {
+        top: 0.5rem !important;
+        right: 3.5rem !important;
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        font-size: 1.2rem !important;
+      }
+
       .no-servers {
         padding: 2rem !important;
         font-size: 0.9rem;
@@ -520,6 +528,54 @@
       box-shadow: 0 2px 12px rgba(0,255,136,0.4);
     }
 
+    .settings-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 5rem;
+      background: var(--accent-color);
+      color: #000;
+      border: 0;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    .settings-toggle:hover {
+      transform: scale(1.1);
+      background: var(--accent-hover);
+    }
+
+    .settings-toggle.active {
+      animation: spinButton 2s linear infinite;
+    }
+
+    [data-theme="dark"] .settings-toggle {
+      background: var(--accent-color);
+      box-shadow: 0 2px 12px rgba(0,255,136,0.4);
+    }
+
+    @keyframes spinButton {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes spinPage {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    body.spinning {
+      animation: spinPage 3s linear infinite;
+    }
+
     .nav-buttons {
       display: flex;
       gap: 0.5rem;
@@ -580,6 +636,9 @@
   </style>
 </head>
 <body>
+  <button class="settings-toggle" onclick="toggleSpin()" title="Einstellungen" id="settingsBtn">
+    <i class="fas fa-cog"></i>
+  </button>
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
     <i id="themeIcon" class="fas fa-moon"></i>
   </button>
@@ -900,6 +959,50 @@
         }, 300);
       });
     }
+
+    // Cookie Funktionen
+    function setCookie(name, value, days) {
+      const expires = new Date();
+      expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+    }
+
+    function getCookie(name) {
+      const nameEQ = name + '=';
+      const ca = document.cookie.split(';');
+      for(let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+      }
+      return null;
+    }
+
+    // Spin Toggle Funktion
+    function toggleSpin() {
+      const body = document.body;
+      const settingsBtn = document.getElementById('settingsBtn');
+      const isSpinning = body.classList.contains('spinning');
+
+      if (isSpinning) {
+        body.classList.remove('spinning');
+        settingsBtn.classList.remove('active');
+        setCookie('trs-spinning', 'false', 365);
+      } else {
+        body.classList.add('spinning');
+        settingsBtn.classList.add('active');
+        setCookie('trs-spinning', 'true', 365);
+      }
+    }
+
+    // Spin Status beim Laden wiederherstellen
+    (function() {
+      const spinningState = getCookie('trs-spinning');
+      if (spinningState === 'true') {
+        document.body.classList.add('spinning');
+        document.getElementById('settingsBtn').classList.add('active');
+      }
+    })();
   </script>
 </body>
 </html>
