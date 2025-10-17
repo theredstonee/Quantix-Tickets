@@ -138,18 +138,39 @@ module.exports = (client)=>{
     }
   }
 
+  // Calculate milliseconds until midnight
+  function getMillisecondsUntilMidnight() {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    return midnight.getTime() - now.getTime();
+  }
+
   router.use(cookieParser());
   router.use(session({
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly:true, sameSite:'lax', secure: /^https:\/\//i.test(BASE) }
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: /^https:\/\//i.test(BASE),
+      maxAge: getMillisecondsUntilMidnight()
+    }
   }));
 
   router.use(passport.initialize());
   router.use(passport.session());
   router.use(express.urlencoded({extended:true}));
   router.use(express.json());
+
+  // Update session cookie maxAge to midnight on every request
+  router.use((req, res, next) => {
+    if (req.session) {
+      req.session.cookie.maxAge = getMillisecondsUntilMidnight();
+    }
+    next();
+  });
 
   router.use((req, res, next) => {
     const guildId = req.session?.selectedGuild;
