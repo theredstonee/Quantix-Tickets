@@ -1,0 +1,424 @@
+/**
+ * TRS Tickets Bot - Frontend Application Styles
+ * Modern UI components for the frontend application
+ */
+
+/* ============================================================
+ * GLOBAL LOADER
+ * ============================================================ */
+
+.global-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+}
+
+.loader-content {
+  text-align: center;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 3rem;
+  max-width: 400px;
+  box-shadow: 0 8px 32px var(--shadow-color);
+}
+
+.loader-spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(0, 255, 136, 0.2);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 2rem;
+}
+
+.loader-text {
+  font-size: 1.2rem;
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============================================================
+ * NOTIFICATIONS / TOASTS
+ * ============================================================ */
+
+.notification {
+  position: fixed;
+  top: 2rem;
+  right: -400px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  min-width: 300px;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 8px 32px var(--shadow-color);
+  z-index: 99999;
+  transition: right 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.notification.show {
+  right: 2rem;
+}
+
+.notification i {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.notification-success {
+  border-color: var(--accent-color);
+}
+
+.notification-success i {
+  color: var(--accent-color);
+}
+
+.notification-error {
+  border-color: #ff4444;
+}
+
+.notification-error i {
+  color: #ff4444;
+}
+
+.notification-warning {
+  border-color: #ffaa00;
+}
+
+.notification-warning i {
+  color: #ffaa00;
+}
+
+.notification span {
+  flex: 1;
+  line-height: 1.5;
+}
+
+/* Toast Alternative Name */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: -400px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  min-width: 300px;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 8px 32px var(--shadow-color);
+  z-index: 99999;
+  transition: right 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.toast.show {
+  right: 2rem;
+}
+
+.toast i {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.toast-success {
+  border-color: var(--accent-color);
+}
+
+.toast-success i {
+  color: var(--accent-color);
+}
+
+.toast-error {
+  border-color: #ff4444;
+}
+
+.toast-error i {
+  color: #ff4444;
+}
+
+/* ============================================================
+ * TICKETS UI
+ * ============================================================ */
+
+.tickets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.tickets-filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tickets-filters select,
+.tickets-filters input {
+  padding: 0.6rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.tickets-filters select:focus,
+.tickets-filters input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+}
+
+.tickets-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px var(--shadow-color);
+}
+
+.stat-card .stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+}
+
+.stat-card .stat-label {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tickets-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.ticket-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s;
+  box-shadow: 0 4px 16px var(--shadow-color);
+}
+
+.ticket-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px var(--shadow-color);
+  border-color: var(--accent-color);
+}
+
+.ticket-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ticket-id {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-open {
+  background: rgba(0, 255, 136, 0.2);
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+}
+
+.status-closed {
+  background: rgba(255, 68, 68, 0.2);
+  color: #ff4444;
+  border: 1px solid #ff4444;
+}
+
+.status-claimed {
+  background: rgba(255, 170, 0, 0.2);
+  color: #ffaa00;
+  border: 1px solid #ffaa00;
+}
+
+.ticket-card-body {
+  margin-bottom: 1rem;
+}
+
+.ticket-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.ticket-info-row .label {
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.ticket-info-row .value {
+  color: var(--text-color);
+}
+
+.ticket-card-footer {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-view-transcript {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  background: var(--accent-color);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-view-transcript:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+}
+
+/* ============================================================
+ * MOBILE RESPONSIVE
+ * ============================================================ */
+
+@media (max-width: 768px) {
+  .notification,
+  .toast {
+    min-width: auto;
+    max-width: calc(100% - 2rem);
+    left: 1rem;
+    right: auto;
+    transform: translateX(-400px);
+  }
+
+  .notification.show,
+  .toast.show {
+    transform: translateX(0);
+  }
+
+  .tickets-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tickets-filters {
+    flex-direction: column;
+  }
+
+  .tickets-filters select,
+  .tickets-filters input {
+    width: 100%;
+  }
+
+  .tickets-cards-container {
+    grid-template-columns: 1fr;
+  }
+
+  .tickets-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-card .stat-value {
+    font-size: 2rem;
+  }
+}
+
+/* ============================================================
+ * DARK MODE SUPPORT
+ * ============================================================ */
+
+[data-theme="dark"] .loader-spinner {
+  border-color: rgba(0, 255, 136, 0.3);
+  border-top-color: var(--accent-color);
+}
+
+[data-theme="dark"] .notification,
+[data-theme="dark"] .toast {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="dark"] .ticket-card {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+[data-theme="dark"] .ticket-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2);
+}
+
+[data-theme="dark"] .stat-card {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}

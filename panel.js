@@ -138,14 +138,6 @@ module.exports = (client)=>{
     }
   }
 
-  // Calculate milliseconds until midnight
-  function getMillisecondsUntilMidnight() {
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    return midnight.getTime() - now.getTime();
-  }
-
   router.use(cookieParser());
   router.use(session({
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
@@ -155,7 +147,7 @@ module.exports = (client)=>{
       httpOnly: true,
       sameSite: 'lax',
       secure: /^https:\/\//i.test(BASE),
-      maxAge: getMillisecondsUntilMidnight()
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days - Auto-login
     }
   }));
 
@@ -163,14 +155,6 @@ module.exports = (client)=>{
   router.use(passport.session());
   router.use(express.urlencoded({extended:true}));
   router.use(express.json());
-
-  // Update session cookie maxAge to midnight on every request
-  router.use((req, res, next) => {
-    if (req.session) {
-      req.session.cookie.maxAge = getMillisecondsUntilMidnight();
-    }
-    next();
-  });
 
   router.use((req, res, next) => {
     const guildId = req.session?.selectedGuild;
@@ -2775,6 +2759,21 @@ module.exports = (client)=>{
     }
   });
 
+  // ============================================================
+  // REST API ROUTES (Frontend/Backend Separation)
+  // ============================================================
+
+  const apiRoutes = require('./api/routes');
+
+  // Make client accessible to API routes
+  router.use((req, res, next) => {
+    req.app.locals.client = client;
+    next();
+  });
+
+  // Mount API routes
+  router.use('/api', apiRoutes);
+
   return router;
 };
 
@@ -2814,3 +2813,28 @@ function buildPanelEmbed(cfg){
   if(cfg.panelEmbed.footer) e.setFooter({ text: cfg.panelEmbed.footer });
   return e;
 }
+
+// ============================================================
+// UTILITY FUNCTIONS FOR API
+// ============================================================
+
+function loadTickets(guildId) {
+  const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
+  try {
+    const data = fs.readFileSync(ticketsPath, 'utf8');
+    return JSON.parse(data) || [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveTickets(guildId, tickets) {
+  const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
+  fs.writeFileSync(ticketsPath, JSON.stringify(tickets, null, 2));
+}
+
+// Export helper functions for API routes
+module.exports.readCfg = readCfg;
+module.exports.writeCfg = writeCfg;
+module.exports.loadTickets = loadTickets;
+module.exports.saveTickets = saveTickets;
