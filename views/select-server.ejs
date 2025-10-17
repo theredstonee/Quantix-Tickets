@@ -992,6 +992,31 @@
         document.getElementById('settingsBtn').classList.add('active');
       }
     })();
+
+    // Accelerating Spinner Animation
+    (function() {
+      let secondsElapsed = 0;
+
+      function accelerateSpinners() {
+        const spinners = document.querySelectorAll('.loading-spinner, .owner-dashboard-btn.loading i');
+
+        if (spinners.length === 0) return;
+
+        secondsElapsed++;
+
+        // Calculate new duration: 1 / (1 + 0.1 * seconds)
+        // This increases speed by 0.1 rotations per second each second
+        const rotationsPerSecond = 1 + (0.1 * secondsElapsed);
+        const newDuration = 1 / rotationsPerSecond;
+
+        spinners.forEach(spinner => {
+          spinner.style.animationDuration = `${newDuration}s`;
+        });
+      }
+
+      // Run every second
+      setInterval(accelerateSpinners, 1000);
+    })();
   </script>
 </body>
 </html>
