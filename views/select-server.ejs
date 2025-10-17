@@ -1043,6 +1043,10 @@
           y: rect.top,
           dx: speedX,
           dy: speedY,
+          scale: 1.0,
+          scaleDirection: Math.random() > 0.5 ? 0.01 : -0.01,
+          minScale: 0.5,
+          maxScale: 2.0,
           colorIndex: Math.floor(Math.random() * colors.length),
           originalStyles: {
             position: computedStyle.position,
@@ -1150,14 +1154,23 @@
         // Animation loop for all elements
         function animate() {
           bouncingElements.forEach(bouncer => {
-            const width = bouncer.element.offsetWidth;
-            const height = bouncer.element.offsetHeight;
+            const width = bouncer.element.offsetWidth * bouncer.scale;
+            const height = bouncer.element.offsetHeight * bouncer.scale;
             const maxX = window.innerWidth - width;
             const maxY = window.innerHeight - height;
 
             // Update position
             bouncer.x += bouncer.dx;
             bouncer.y += bouncer.dy;
+
+            // Update scale
+            bouncer.scale += bouncer.scaleDirection;
+
+            // Bounce scale between min and max
+            if (bouncer.scale <= bouncer.minScale || bouncer.scale >= bouncer.maxScale) {
+              bouncer.scaleDirection = -bouncer.scaleDirection;
+              bouncer.scale = bouncer.scale <= bouncer.minScale ? bouncer.minScale : bouncer.maxScale;
+            }
 
             // Bounce off edges and change color
             if (bouncer.x <= 0 || bouncer.x >= maxX) {
@@ -1174,9 +1187,10 @@
               bouncer.element.style.background = colors[bouncer.colorIndex];
             }
 
-            // Apply new position
+            // Apply new position and scale
             bouncer.element.style.left = bouncer.x + 'px';
             bouncer.element.style.top = bouncer.y + 'px';
+            bouncer.element.style.transform = `scale(${bouncer.scale})`;
           });
 
           animationId = requestAnimationFrame(animate);
