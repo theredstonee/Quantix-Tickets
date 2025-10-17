@@ -313,13 +313,29 @@ module.exports = (client)=>{
       console.error('Error calculating stats:', err);
     }
 
+    // Load feedbacks
+    let feedbacks = [];
+    try {
+      const feedbackFile = './feedback.json';
+      if (fs.existsSync(feedbackFile)) {
+        feedbacks = JSON.parse(fs.readFileSync(feedbackFile, 'utf8'));
+        // Sort by timestamp (newest first) and limit to 6
+        feedbacks = feedbacks
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+          .slice(0, 6);
+      }
+    } catch(err) {
+      console.error('Error loading feedbacks:', err);
+    }
+
     res.render('home', {
       lang: lang,
       t: getTranslations(lang),
       user: isAuthenticated ? req.user : null,
       isAuthenticated: isAuthenticated,
       totalGuilds: totalGuilds || 150,
-      totalTickets: totalTickets || 5000
+      totalTickets: totalTickets || 5000,
+      feedbacks: feedbacks
     });
   });
 
@@ -413,6 +429,30 @@ module.exports = (client)=>{
       console.error('Feedback submission error:', err);
       res.redirect('/feedback?error=true');
     }
+  });
+
+  router.get('/all-feedbacks', (req, res) => {
+    const lang = req.cookies.lang || 'de';
+    const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
+
+    let feedbacks = [];
+    try {
+      const feedbackFile = './feedback.json';
+      if (fs.existsSync(feedbackFile)) {
+        feedbacks = JSON.parse(fs.readFileSync(feedbackFile, 'utf8'));
+        feedbacks = feedbacks.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      }
+    } catch(err) {
+      console.error('Error loading feedbacks:', err);
+    }
+
+    res.render('all-feedbacks', {
+      t: getTranslations(lang),
+      lang: lang,
+      user: isAuthenticated ? req.user : null,
+      isAuthenticated: isAuthenticated,
+      feedbacks: feedbacks
+    });
   });
 
   router.get('/imprint', (req, res) => {

@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="<%= lang %>" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%
+    const title = {
+      de: 'Alle Feedbacks',
+      en: 'All Feedbacks',
+      he: 'כל המשובים',
+      ja: 'すべてのフィードバック',
+      ru: 'Все отзывы',
+      pt: 'Todos os Feedbacks',
+      es: 'Todos los Comentarios',
+      id: 'Semua Masukan',
+      ar: 'جميع الملاحظات'
+    };
+  %><%= title[lang] || title.de %> - TRS Tickets</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #1a1a1a;
+      --accent-color: #00b894;
+      --accent-hover: #00a077;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --glass-bg: rgba(15, 21, 16, 0.7);
+      --glass-border: rgba(0, 255, 136, 0.3);
+      --shadow-color: rgba(0, 255, 136, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.03;
+      animation: bgMove 20s linear infinite;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .header {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--glass-border);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 16px var(--shadow-color);
+    }
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+    }
+
+    .nav-links a:hover {
+      background: var(--glass-bg);
+      color: var(--accent-color);
+    }
+
+    .theme-toggle {
+      background: transparent;
+      border: 2px solid var(--glass-border);
+      color: var(--text-color);
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .theme-toggle:hover {
+      background: var(--glass-bg);
+      border-color: var(--accent-color);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+
+    .hero-icon {
+      font-size: 4rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--accent-color);
+      font-weight: 700;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 1.1rem;
+      opacity: 0.8;
+      margin-bottom: 3rem;
+      line-height: 1.6;
+    }
+
+    .feedbacks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .feedback-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 8px 32px var(--shadow-color);
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .feedback-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px var(--shadow-color);
+      border-color: var(--accent-color);
+    }
+
+    .feedback-type {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--accent-color);
+      color: #000;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .feedback-rating {
+      display: flex;
+      gap: 0.3rem;
+      margin-bottom: 1rem;
+      color: #f1c40f;
+    }
+
+    .feedback-message {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      opacity: 0.9;
+    }
+
+    .feedback-author {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding-top: 1rem;
+      border-top: 2px solid var(--glass-border);
+    }
+
+    .feedback-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .feedback-info h4 {
+      font-size: 1.1rem;
+      color: var(--accent-color);
+      margin-bottom: 0.25rem;
+    }
+
+    .feedback-info p {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .feedback-meta {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      opacity: 0.6;
+    }
+
+    .no-feedbacks {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px var(--shadow-color);
+    }
+
+    .no-feedbacks i {
+      font-size: 5rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.3;
+    }
+
+    .no-feedbacks h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: var(--accent-color);
+    }
+
+    .no-feedbacks p {
+      font-size: 1.1rem;
+      opacity: 0.7;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 2rem;
+      background: var(--accent-color);
+      color: #000;
+      text-decoration: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px var(--shadow-color);
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px var(--shadow-color);
+    }
+
+    .back-btn {
+      text-align: center;
+      margin-top: 3rem;
+    }
+
+    .back-btn a {
+      background: transparent;
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .back-btn a:hover {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    @media (max-width: 768px) {
+      .header-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .nav-links {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      h1 { font-size: 2rem; }
+
+      .feedbacks-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-container">
+      <a href="/" class="logo">
+        <i class="fas fa-ticket-alt"></i>
+        TRS Tickets
+      </a>
+      <nav class="nav-links">
+        <a href="/">
+          <i class="fas fa-home"></i> Home
+        </a>
+        <% if (isAuthenticated && user) { %>
+          <a href="/panel">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+          </a>
+        <% } else { %>
+          <a href="/login">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </a>
+        <% } %>
+        <button class="theme-toggle" onclick="toggleTheme()">
+          <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="hero-icon">
+      <i class="fas fa-comments"></i>
+    </div>
+    <h1><%
+      const titles = {
+        de: 'Alle Feedbacks',
+        en: 'All Feedbacks',
+        he: 'כל המשובים',
+        ja: 'すべてのフィードバック',
+        ru: 'Все отзывы',
+        pt: 'Todos os Feedbacks',
+        es: 'Todos los Comentarios',
+        id: 'Semua Masukan',
+        ar: 'جميع الملاحظات'
+      };
+    %><%= titles[lang] || titles.de %></h1>
+    <p class="subtitle"><%
+      const subtitles = {
+        de: 'Was unsere Nutzer über TRS Tickets sagen',
+        en: 'What our users say about TRS Tickets',
+        he: 'מה המשתמשים שלנו אומרים על TRS Tickets',
+        ja: 'TRS Ticketsについてのユーザーの声',
+        ru: 'Что наши пользователи говорят о TRS Tickets',
+        pt: 'O que nossos usuários dizem sobre TRS Tickets',
+        es: 'Lo que dicen nuestros usuarios sobre TRS Tickets',
+        id: 'Apa yang pengguna kami katakan tentang TRS Tickets',
+        ar: 'ما يقوله مستخدمونا عن TRS Tickets'
+      };
+    %><%= subtitles[lang] || subtitles.de %> (<%= feedbacks.length %>)</p>
+
+    <% if (feedbacks && feedbacks.length > 0) { %>
+      <div class="feedbacks-grid">
+        <% feedbacks.forEach(function(feedback) {
+          const typeIcons = {
+            bug: '🐛',
+            feature: '✨',
+            improvement: '🚀',
+            other: '💬'
+          };
+          const typeLabels = {
+            bug: { de: 'Bug', en: 'Bug', he: 'באג', ja: 'バグ', ru: 'Ошибка', pt: 'Bug', es: 'Error', id: 'Bug', ar: 'خطأ' },
+            feature: { de: 'Feature', en: 'Feature', he: 'תכונה', ja: '機能', ru: 'Функция', pt: 'Recurso', es: 'Función', id: 'Fitur', ar: 'ميزة' },
+            improvement: { de: 'Verbesserung', en: 'Improvement', he: 'שיפור', ja: '改善', ru: 'Улучшение', pt: 'Melhoria', es: 'Mejora', id: 'Perbaikan', ar: 'تحسين' },
+            other: { de: 'Sonstiges', en: 'Other', he: 'אחר', ja: 'その他', ru: 'Другое', pt: 'Outro', es: 'Otro', id: 'Lainnya', ar: 'آخر' }
+          };
+        %>
+        <div class="feedback-card">
+          <div class="feedback-type">
+            <%= typeIcons[feedback.type] || '💬' %> <%= (typeLabels[feedback.type] && typeLabels[feedback.type][lang]) || typeLabels.other[lang] %>
+          </div>
+          <div class="feedback-rating">
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+          </div>
+          <p class="feedback-message">"<%= feedback.message %>"</p>
+          <div class="feedback-author">
+            <div class="feedback-avatar"><%= feedback.name.charAt(0).toUpperCase() %></div>
+            <div class="feedback-info">
+              <h4><%= feedback.name %></h4>
+              <p><%= feedback.email %></p>
+              <div class="feedback-meta">
+                <span><i class="fas fa-clock"></i> <%= new Date(feedback.timestamp).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-US' : lang + '-' + lang.toUpperCase(), { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <div class="no-feedbacks">
+        <i class="fas fa-inbox"></i>
+        <h2><%
+          const noFeedbacksTitle = {
+            de: 'Noch keine Feedbacks',
+            en: 'No Feedbacks Yet',
+            he: 'עדיין אין משובים',
+            ja: 'まだフィードバックがありません',
+            ru: 'Отзывов пока нет',
+            pt: 'Ainda Sem Feedbacks',
+            es: 'Aún Sin Comentarios',
+            id: 'Belum Ada Masukan',
+            ar: 'لا توجد ملاحظات بعد'
+          };
+        %><%= noFeedbacksTitle[lang] || noFeedbacksTitle.de %></h2>
+        <p><%
+          const noFeedbacksText = {
+            de: 'Sei der Erste und teile deine Meinung!',
+            en: 'Be the first and share your opinion!',
+            he: 'היה הראשון ושתף את דעתך!',
+            ja: '最初の人になって意見を共有してください！',
+            ru: 'Будьте первым и поделитесь своим мнением!',
+            pt: 'Seja o primeiro e compartilhe sua opinião!',
+            es: '¡Sé el primero y comparte tu opinión!',
+            id: 'Jadilah yang pertama dan bagikan pendapat Anda!',
+            ar: 'كن الأول وشارك رأيك!'
+          };
+        %><%= noFeedbacksText[lang] || noFeedbacksText.de %></p>
+        <a href="/feedback" class="btn">
+          <i class="fas fa-comment-alt"></i>
+          <%
+            const feedbackBtn = {
+              de: 'Feedback abgeben',
+              en: 'Submit Feedback',
+              he: 'שלח משוב',
+              ja: 'フィードバックを送る',
+              ru: 'Оставить отзыв',
+              pt: 'Enviar Feedback',
+              es: 'Enviar Comentarios',
+              id: 'Kirim Masukan',
+              ar: 'إرسال ملاحظات'
+            };
+          %><%= feedbackBtn[lang] || feedbackBtn.de %>
+        </a>
+      </div>
+    <% } %>
+
+    <div class="back-btn">
+      <a href="/" class="btn">
+        <i class="fas fa-home"></i>
+        <%
+          const backBtn = {
+            de: 'Zurück zur Startseite',
+            en: 'Back to Home',
+            he: 'חזרה לבית',
+            ja: 'ホームに戻る',
+            ru: 'Вернуться на главную',
+            pt: 'Voltar para Início',
+            es: 'Volver a Inicio',
+            id: 'Kembali ke Beranda',
+            ar: 'العودة إلى الصفحة الرئيسية'
+          };
+        %><%= backBtn[lang] || backBtn.de %>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById('theme-icon');
+      icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+  </script>
+</body>
+</html>

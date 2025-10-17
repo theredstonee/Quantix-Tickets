@@ -1971,6 +1971,27 @@
     %><%= testimonialsSubtitle[lang] || testimonialsSubtitle.de %></p>
 
     <div class="testimonials-grid">
+      <% if (feedbacks && feedbacks.length > 0) { %>
+        <% feedbacks.slice(0, 3).forEach(function(feedback) { %>
+      <div class="testimonial-card">
+        <div class="testimonial-rating">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+        </div>
+        <p class="testimonial-text">"<%= feedback.message %>"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar"><%= feedback.name.charAt(0).toUpperCase() %></div>
+          <div class="testimonial-info">
+            <h4><%= feedback.name %></h4>
+            <p><%= new Date(feedback.timestamp).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-US' : lang + '-' + lang.toUpperCase(), { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+          </div>
+        </div>
+      </div>
+        <% }); %>
+      <% } else { %>
       <div class="testimonial-card">
         <div class="testimonial-rating">
           <i class="fas fa-star"></i>
@@ -2096,6 +2117,45 @@
           </div>
         </div>
       </div>
+      <% } %>
+    </div>
+
+    <!-- Feedback Action Buttons -->
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 3rem; flex-wrap: wrap;">
+      <a href="/feedback" class="btn" style="background: var(--accent-color); color: #000; padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; box-shadow: 0 4px 12px var(--shadow-color);">
+        <i class="fas fa-comment-alt"></i>
+        <%
+          const feedbackBtnText = {
+            de: 'Feedback abgeben',
+            en: 'Submit Feedback',
+            he: 'שלח משוב',
+            ja: 'フィードバックを送る',
+            ru: 'Оставить отзыв',
+            pt: 'Enviar Feedback',
+            es: 'Enviar Comentarios',
+            id: 'Kirim Masukan',
+            ar: 'إرسال ملاحظات'
+          };
+        %><%= feedbackBtnText[lang] || feedbackBtnText.de %>
+      </a>
+      <% if (feedbacks && feedbacks.length > 0) { %>
+      <a href="/all-feedbacks" class="btn" style="background: transparent; border: 2px solid var(--accent-color); color: var(--accent-color); padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s;">
+        <i class="fas fa-list"></i>
+        <%
+          const allFeedbacksText = {
+            de: 'Alle Feedbacks anzeigen',
+            en: 'Show All Feedbacks',
+            he: 'הצג את כל המשובים',
+            ja: 'すべてのフィードバックを表示',
+            ru: 'Показать все отзывы',
+            pt: 'Mostrar Todos os Feedbacks',
+            es: 'Mostrar Todos los Comentarios',
+            id: 'Tampilkan Semua Masukan',
+            ar: 'عرض جميع الملاحظات'
+          };
+        %><%= allFeedbacksText[lang] || allFeedbacksText.de %>
+      </a>
+      <% } %>
     </div>
   </section>
 
