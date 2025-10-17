@@ -1975,11 +1975,10 @@
         <% feedbacks.slice(0, 3).forEach(function(feedback) { %>
       <div class="testimonial-card">
         <div class="testimonial-rating">
-          <i class="fas fa-star"></i>
-          <i class="fas fa-star"></i>
-          <i class="fas fa-star"></i>
-          <i class="fas fa-star"></i>
-          <i class="fas fa-star"></i>
+          <% const rating = feedback.rating || 5; %>
+          <% for (let i = 1; i <= 5; i++) { %>
+            <i class="<%= i <= rating ? 'fas' : 'far' %> fa-star"></i>
+          <% } %>
         </div>
         <p class="testimonial-text">"<%= feedback.message %>"</p>
         <div class="testimonial-author">

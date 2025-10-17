@@ -388,10 +388,15 @@ module.exports = (client)=>{
 
   router.post('/feedback', async (req, res) => {
     try {
-      const { name, email, type, message } = req.body;
+      const { name, email, type, message, rating } = req.body;
 
       // Validation
-      if (!name || !email || !type || !message) {
+      if (!name || !email || !type || !message || !rating) {
+        return res.redirect('/feedback?error=true');
+      }
+
+      const ratingNum = parseInt(rating);
+      if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
         return res.redirect('/feedback?error=true');
       }
 
@@ -400,6 +405,7 @@ module.exports = (client)=>{
         name: name.trim(),
         email: email.trim(),
         type: type,
+        rating: ratingNum,
         message: message.trim(),
         userId: req.isAuthenticated && req.isAuthenticated() ? req.user.id : null,
         username: req.isAuthenticated && req.isAuthenticated() ? req.user.username : null,

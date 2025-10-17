@@ -246,6 +246,39 @@
       color: #e74c3c;
     }
 
+    .star-rating {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 2.5rem;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+
+    .star-rating i {
+      cursor: pointer;
+      color: #ddd;
+      transition: all 0.2s;
+    }
+
+    [data-theme="dark"] .star-rating i {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    .star-rating i:hover,
+    .star-rating i.active {
+      color: #f1c40f;
+      transform: scale(1.1);
+    }
+
+    .star-rating i.active {
+      animation: starPulse 0.3s ease;
+    }
+
+    @keyframes starPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
     @media (max-width: 768px) {
       .header-container {
         flex-direction: column;
@@ -511,6 +544,30 @@
 
       <div class="form-group">
         <label><%
+          const ratingLabel = {
+            de: 'Bewertung',
+            en: 'Rating',
+            he: 'דירוג',
+            ja: '評価',
+            ru: 'Рейтинг',
+            pt: 'Avaliação',
+            es: 'Calificación',
+            id: 'Penilaian',
+            ar: 'تقييم'
+          };
+        %><%= ratingLabel[lang] || ratingLabel.de %> *</label>
+        <div class="star-rating" id="starRating">
+          <i class="far fa-star" data-rating="1"></i>
+          <i class="far fa-star" data-rating="2"></i>
+          <i class="far fa-star" data-rating="3"></i>
+          <i class="far fa-star" data-rating="4"></i>
+          <i class="far fa-star" data-rating="5"></i>
+        </div>
+        <input type="hidden" name="rating" id="ratingInput" value="" required>
+      </div>
+
+      <div class="form-group">
+        <label><%
           const messageLabel = {
             de: 'Nachricht',
             en: 'Message',
@@ -575,6 +632,58 @@
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeIcon(savedTheme);
+
+    // Star Rating System
+    const stars = document.querySelectorAll('.star-rating i');
+    const ratingInput = document.getElementById('ratingInput');
+    let selectedRating = 0;
+
+    stars.forEach(star => {
+      star.addEventListener('click', function() {
+        selectedRating = parseInt(this.getAttribute('data-rating'));
+        ratingInput.value = selectedRating;
+        updateStars(selectedRating);
+      });
+
+      star.addEventListener('mouseenter', function() {
+        const hoverRating = parseInt(this.getAttribute('data-rating'));
+        updateStars(hoverRating);
+      });
+    });
+
+    document.getElementById('starRating').addEventListener('mouseleave', function() {
+      updateStars(selectedRating);
+    });
+
+    function updateStars(rating) {
+      stars.forEach((star, index) => {
+        if (index < rating) {
+          star.className = 'fas fa-star active';
+        } else {
+          star.className = 'far fa-star';
+        }
+      });
+    }
+
+    // Form validation
+    document.querySelector('.feedback-form').addEventListener('submit', function(e) {
+      if (!ratingInput.value || ratingInput.value === '0') {
+        e.preventDefault();
+        alert('<%
+          const alertMsg = {
+            de: "Bitte gib eine Bewertung ab!",
+            en: "Please select a rating!",
+            he: "אנא בחר דירוג!",
+            ja: "評価を選択してください！",
+            ru: "Пожалуйста, выберите рейтинг!",
+            pt: "Por favor, selecione uma avaliação!",
+            es: "¡Por favor, selecciona una calificación!",
+            id: "Silakan pilih penilaian!",
+            ar: "الرجاء اختيار تقييم!"
+          };
+        %><%= alertMsg[lang] || alertMsg.de %>');
+      }
+    });
   </script>
 </body>
 </html>
