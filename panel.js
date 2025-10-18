@@ -2904,10 +2904,13 @@ module.exports = (client)=>{
       const blacklist = loadBlacklist();
 
       const guildsData = [];
+      const processedGuildIds = new Set();
 
+      // Add all guilds where bot is currently a member
       for (const [guildId, guild] of allGuilds) {
         try {
           const fullGuild = await client.guilds.fetch(guildId);
+          processedGuildIds.add(fullGuild.id);
 
           guildsData.push({
             id: fullGuild.id,
@@ -2918,6 +2921,23 @@ module.exports = (client)=>{
           });
         } catch (err) {
           console.error(`Error fetching guild ${guildId}:`, err.message);
+        }
+      }
+
+      // Add blocked guilds that bot is no longer a member of
+      for (const blockedGuildId of blacklist.guilds) {
+        if (!processedGuildIds.has(blockedGuildId)) {
+          // Try to get guild info from configs
+          const cfg = readCfg(blockedGuildId);
+          const guildName = cfg.guildName || `Server ${blockedGuildId}`;
+
+          guildsData.push({
+            id: blockedGuildId,
+            name: guildName + ' (Verlassen)',
+            icon: null,
+            memberCount: 0,
+            blocked: true
+          });
         }
       }
 
@@ -2947,6 +2967,14 @@ module.exports = (client)=>{
         blacklist.guilds.push(guildId);
         saveBlacklist(blacklist);
         console.log(`🚫 Server ${guildId} wurde von ${req.user.username} blockiert`);
+
+        // Leave the server after blocking
+        const guild = await client.guilds.fetch(guildId).catch(() => null);
+        if (guild) {
+          const guildName = guild.name;
+          await guild.leave();
+          console.log(`👋 Bot hat blockierten Server ${guildName} (${guildId}) verlassen`);
+        }
       }
 
       res.redirect('/founder');
