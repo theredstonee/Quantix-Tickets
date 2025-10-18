@@ -27,6 +27,11 @@ if (!process.env.APPLICATION_KEY || process.env.APPLICATION_KEY !== REQUIRED_APP
 }
 
 console.log('✅ Application Key verified successfully');
+
+// Show startup banner
+const { showBanner } = require('./startup-banner');
+showBanner();
+
 const express = require('express');
 const {
   Client, GatewayIntentBits, Partials,

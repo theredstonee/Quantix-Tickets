@@ -1,6 +1,84 @@
 {
-  "currentVersion": "1.0.0",
+  "currentVersion": "1.0.1",
   "versions": [
+    {
+      "version": "1.0.1",
+      "date": "2025-10-18",
+      "changes": {
+        "de": [
+          "🎨 Schönes ASCII Startup-Banner hinzugefügt",
+          "📋 Discord Logger System - Alle Console-Logs werden zu Discord gesendet",
+          "🐛 Translation-Fehler in panel_config behoben (Optional Chaining)",
+          "🔧 Premium-Verwaltung Modal Fix (confirmPremiumAction)",
+          "🎨 Komplettes Panel-Redesign mit neuen Features",
+          "✨ Scroll-Fix für /founder und /owner Fehlerseiten"
+        ],
+        "en": [
+          "🎨 Added beautiful ASCII startup banner",
+          "📋 Discord Logger System - All console logs sent to Discord",
+          "🐛 Fixed translation errors in panel_config (Optional Chaining)",
+          "🔧 Premium management modal fix (confirmPremiumAction)",
+          "🎨 Complete panel redesign with new features",
+          "✨ Scroll fix for /founder and /owner error pages"
+        ],
+        "he": [
+          "🎨 נוסף באנר ASCII יפה בהפעלה",
+          "📋 מערכת Discord Logger - כל לוגי ה-Console נשלחים ל-Discord",
+          "🐛 תוקנו שגיאות תרגום ב-panel_config (Optional Chaining)",
+          "🔧 תיקון Premium management modal (confirmPremiumAction)",
+          "🎨 עיצוב מחדש מלא של הפאנל עם תכונות חדשות",
+          "✨ תיקון גלילה לדפי שגיאה /founder ו-/owner"
+        ],
+        "ja": [
+          "🎨 美しいASCIIスタートアップバナーを追加",
+          "📋 Discord Loggerシステム - すべてのコンソールログをDiscordに送信",
+          "🐛 panel_configの翻訳エラーを修正 (Optional Chaining)",
+          "🔧 プレミアム管理モーダルの修正 (confirmPremiumAction)",
+          "🎨 新機能を備えた完全なパネルの再設計",
+          "✨ /founderと/ownerエラーページのスクロール修正"
+        ],
+        "ru": [
+          "🎨 Добавлен красивый ASCII баннер запуска",
+          "📋 Система Discord Logger - Все логи консоли отправляются в Discord",
+          "🐛 Исправлены ошибки перевода в panel_config (Optional Chaining)",
+          "🔧 Исправление модального окна Premium management (confirmPremiumAction)",
+          "🎨 Полный редизайн панели с новыми функциями",
+          "✨ Исправление прокрутки для страниц ошибок /founder и /owner"
+        ],
+        "pt": [
+          "🎨 Adicionado banner ASCII de inicialização",
+          "📋 Sistema Discord Logger - Todos os logs do console enviados ao Discord",
+          "🐛 Corrigidos erros de tradução em panel_config (Optional Chaining)",
+          "🔧 Correção do modal de gerenciamento Premium (confirmPremiumAction)",
+          "🎨 Redesign completo do painel com novos recursos",
+          "✨ Correção de rolagem para páginas de erro /founder e /owner"
+        ],
+        "es": [
+          "🎨 Añadido banner ASCII de inicio",
+          "📋 Sistema Discord Logger - Todos los logs de consola enviados a Discord",
+          "🐛 Corregidos errores de traducción en panel_config (Optional Chaining)",
+          "🔧 Corrección del modal de gestión Premium (confirmPremiumAction)",
+          "🎨 Rediseño completo del panel con nuevas funciones",
+          "✨ Corrección de scroll para páginas de error /founder y /owner"
+        ],
+        "id": [
+          "🎨 Menambahkan banner ASCII startup yang indah",
+          "📋 Sistem Discord Logger - Semua log konsol dikirim ke Discord",
+          "🐛 Memperbaiki kesalahan terjemahan di panel_config (Optional Chaining)",
+          "🔧 Perbaikan modal manajemen Premium (confirmPremiumAction)",
+          "🎨 Desain ulang panel lengkap dengan fitur baru",
+          "✨ Perbaikan scroll untuk halaman error /founder dan /owner"
+        ],
+        "ar": [
+          "🎨 تمت إضافة شعار ASCII جميل عند البدء",
+          "📋 نظام Discord Logger - جميع سجلات وحدة التحكم يتم إرسالها إلى Discord",
+          "🐛 إصلاح أخطاء الترجمة في panel_config (Optional Chaining)",
+          "🔧 إصلاح نافذة إدارة Premium (confirmPremiumAction)",
+          "🎨 إعادة تصميم كاملة للوحة مع ميزات جديدة",
+          "✨ إصلاح التمرير لصفحات الخطأ /founder و /owner"
+        ]
+      }
+    },
     {
       "version": "1.0.0",
       "date": "2025-10-16",

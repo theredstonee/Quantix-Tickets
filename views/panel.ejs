@@ -1992,7 +1992,7 @@
                     <span><%= t.web.team_role %> <small>(Legacy)</small></span>
                   </div>
                   <p class="card-description">
-                    <%= t.web.panel_config.team_role_help %>
+                    <%= t.web?.panel_config?.team_role_help || 'Team-Rolle für Zugriff auf Tickets und Analytics' %>
                   </p>
                 </div>
               </div>
@@ -2036,7 +2036,7 @@
                     <span><%= lang === 'de' ? 'Ticket-Themen verwalten' : 'Manage Ticket Topics' %></span>
                   </div>
                   <p class="card-description">
-                    <%= t.web.panel_config.topics_help %>
+                    <%= t.web?.panel_config?.topics_help || 'Definiere Ticket-Kategorien mit Name, Beschreibung und Emoji' %>
                   </p>
                 </div>
               </div>
@@ -2227,7 +2227,7 @@
                       <span><%= t.web.ticket_embed %></span>
                     </div>
                     <p class="card-description">
-                      <%= t.web.panel_config.ticket_embed_help %>
+                      <%= t.web?.panel_config?.ticket_embed_help || 'Nachricht im Ticket-Channel nach Erstellung' %>
                     </p>
                   </div>
                 </div>
@@ -2314,7 +2314,7 @@
                       <span><%= t.web.panel_embed %></span>
                     </div>
                     <p class="card-description">
-                      <%= t.web.panel_config.panel_embed_help %>
+                      <%= t.web?.panel_config?.panel_embed_help || 'Embed-Nachricht für das Ticket-Panel' %>
                     </p>
                   </div>
                 </div>
@@ -2414,14 +2414,14 @@
                     <span><%= lang === 'de' ? 'Panel senden' : 'Send Panel' %></span>
                   </div>
                   <p class="card-description">
-                    <%= t.web.panel_config.panel_channel_help %>
+                    <%= t.web?.panel_config?.panel_channel_help || 'Channel in dem das Ticket-Panel erscheinen soll' %>
                   </p>
                 </div>
               </div>
               <div class="card-body">
                 <div class="alert alert-warning">
                   <i class="fas fa-exclamation-triangle"></i>
-                  <span><%= t.web.panel_config.save_first %></span>
+                  <span><%= t.web?.panel_config?.save_first || 'Speichere zuerst die Konfiguration' %></span>
                 </div>
 
                 <div class="form-group">

@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.1] - 2025-10-18
+
+### Added
+- 🎨 **Startup Banner**: Beautiful ASCII art banner with system information displayed on bot startup
+- 📋 **Discord Logger System**: All console logs (log, error, warn, info) are now automatically sent to Discord channel
+- 🎨 **Complete Panel Redesign**: New features and improved UI/UX
+
+### Fixed
+- 🐛 **Translation Errors**: Fixed all `panel_config` translation errors using optional chaining (`?.`)
+- 🔧 **Premium Management Modal**: Fixed `confirmPremiumAction` null reference error
+- ✨ **Error Pages Scroll**: Fixed scroll overflow on `/founder` and `/owner` error pages
+
+### Changed
+- 📊 **Logging**: Console output now includes color-coded embeds in Discord
+- 🎯 **Founder Access**: Enhanced founder panel with improved access controls
+
+---
+
 ## [1.0.0] - 2025-10-16
 
 ### 🎉 First Stable Release
