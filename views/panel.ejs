@@ -2561,11 +2561,7 @@
 
     // Send Panel
     function sendPanel() {
-      <% if (lang === 'de') { %>
-        const confirmMsg = 'Möchtest du die Panel-Nachricht jetzt senden?';
-      <% } else { %>
-        const confirmMsg = 'Do you want to send the panel message now?';
-      <% } %>
+      const confirmMsg = "<%= lang === 'de' ? 'Möchtest du die Panel-Nachricht jetzt senden?' : 'Do you want to send the panel message now?' %>";
       if (!confirm(confirmMsg)) {
         return;
       }
@@ -2581,11 +2577,7 @@
 
     // Edit Panel
     function editPanel() {
-      <% if (lang === 'de') { %>
-        const confirmMsg = 'Möchtest du die Panel-Nachricht aktualisieren?';
-      <% } else { %>
-        const confirmMsg = 'Do you want to update the panel message?';
-      <% } %>
+      const confirmMsg = "<%= lang === 'de' ? 'Möchtest du die Panel-Nachricht aktualisieren?' : 'Do you want to update the panel message?' %>";
       if (!confirm(confirmMsg)) {
         return;
       }
