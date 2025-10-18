@@ -2375,28 +2375,55 @@ module.exports = (client)=>{
   router.get('/tickets/data', isAuth, (req,res)=>{ res.json(loadTickets(req.session.selectedGuild)); });
 
   router.get('/transcript/:id', isAuthOrTeam, (req,res)=>{
-    const id = req.params.id.replace(/[^0-9]/g,'');
-    const guildId = req.session.selectedGuild;
-    if(!id) return res.status(400).send('ID fehlt');
+    try {
+      const id = req.params.id.replace(/[^0-9]/g,'');
+      if(!id) return res.status(400).send('ID fehlt');
 
-    // Override X-Frame-Options to allow iframe embedding from same origin
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      // Override X-Frame-Options to allow iframe embedding from same origin
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
 
-    // Check guild-specific transcript folder first
-    const transcriptsDir = path.join(__dirname, 'transcripts');
-    const guildTranscriptFile = path.join(transcriptsDir, guildId, `transcript_${id}.html`);
+      // Try to get guildId from session first
+      let guildId = req.session.selectedGuild;
+      const transcriptsDir = path.join(__dirname, 'transcripts');
 
-    if(fs.existsSync(guildTranscriptFile)) {
-      return res.sendFile(guildTranscriptFile);
+      // Strategy 1: Search in selectedGuild folder if available
+      if (guildId) {
+        const guildTranscriptFile = path.join(transcriptsDir, guildId, `transcript_${id}.html`);
+        if(fs.existsSync(guildTranscriptFile)) {
+          console.log(`📄 Transcript gefunden: ${guildTranscriptFile}`);
+          return res.sendFile(guildTranscriptFile);
+        }
+      }
+
+      // Strategy 2: Search in all guild folders
+      if (fs.existsSync(transcriptsDir)) {
+        const guildFolders = fs.readdirSync(transcriptsDir);
+        for (const folder of guildFolders) {
+          const folderPath = path.join(transcriptsDir, folder);
+          if (fs.statSync(folderPath).isDirectory()) {
+            const transcriptFile = path.join(folderPath, `transcript_${id}.html`);
+            if (fs.existsSync(transcriptFile)) {
+              console.log(`📄 Transcript gefunden (Suche): ${transcriptFile}`);
+              return res.sendFile(transcriptFile);
+            }
+          }
+        }
+      }
+
+      // Strategy 3: Fallback to legacy root directory
+      const legacyFile = path.join(__dirname, `transcript_${id}.html`);
+      if(fs.existsSync(legacyFile)) {
+        console.log(`📄 Transcript gefunden (Legacy): ${legacyFile}`);
+        return res.sendFile(legacyFile);
+      }
+
+      console.log(`❌ Transcript nicht gefunden: ID ${id}, Guild: ${guildId || 'nicht gesetzt'}`);
+      return res.status(404).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>📄 Transcript nicht gefunden</h2><p>Das Transcript mit der ID <strong>' + id + '</strong> existiert nicht.</p></div></body></html>');
+    } catch(err) {
+      console.error('❌ Fehler beim Laden des Transcripts:', err);
+      return res.status(500).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>⚠️ Fehler</h2><p>Das Transcript konnte nicht geladen werden.</p></div></body></html>');
     }
-
-    // Fallback: check legacy root directory for old transcripts
-    const legacyFile = path.join(__dirname, `transcript_${id}.html`);
-    if(fs.existsSync(legacyFile)) {
-      return res.sendFile(legacyFile);
-    }
-
-    return res.status(404).send('Transcript nicht gefunden');
   });
 
   router.get('/analytics', isAuthOrTeam, async (req,res)=>{
