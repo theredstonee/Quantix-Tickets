@@ -1767,7 +1767,7 @@
                     <span><%= t.web.ticket_category %></span>
                   </div>
                   <p class="card-description">
-                    <%= t.web.panel_config.ticket_category_help %>
+                    <%= t.web?.panel_config?.ticket_category_help || 'Wähle eine oder mehrere Kategorien für dein Ticket-System aus' %>
                   </p>
                 </div>
               </div>
@@ -1816,7 +1816,7 @@
                     </select>
                     <div class="help-text">
                       <i class="fas fa-lightbulb"></i>
-                      <span><%= t.web.panel_config.log_channel_help %></span>
+                      <span><%= t.web?.panel_config?.log_channel_help || 'Channel für Ticket-Logs (Erstellen, Schließen, etc.)' %></span>
                     </div>
                   </div>
                 </div>
@@ -1846,7 +1846,7 @@
                     </select>
                     <div class="help-text">
                       <i class="fas fa-lightbulb"></i>
-                      <span><%= t.web.panel_config.transcript_channel_help %></span>
+                      <span><%= t.web?.panel_config?.transcript_channel_help || 'Channel für Ticket-Transkripte' %></span>
                     </div>
                   </div>
                 </div>
@@ -1860,10 +1860,10 @@
                     <div class="card-icon">
                       <i class="fab fa-github"></i>
                     </div>
-                    <span><%= t.web.panel_config.github_webhook_channel %></span>
+                    <span><%= t.web?.panel_config?.github_webhook_channel || 'GitHub Webhook Channel' %></span>
                   </div>
                   <p class="card-description">
-                    <%= t.web.panel_config.github_webhook_channel_help %>
+                    <%= t.web?.panel_config?.github_webhook_channel_help || 'Channel für GitHub Commit-Benachrichtigungen' %>
                   </p>
                 </div>
               </div>
@@ -1889,7 +1889,7 @@
               <i class="fas fa-info-circle"></i>
               <div>
                 <strong><%= lang === 'de' ? '📊 Hierarchisches System:' : '📊 Hierarchical System:' %></strong><br>
-                <%= t.web.panel_config.priority_roles_help %>
+                <%= t.web?.panel_config?.priority_roles_help || 'Weise Rollen für jede Prioritätsstufe zu (Grün, Orange, Rot)' %>
               </div>
             </div>
 
@@ -1904,7 +1904,7 @@
                       </span>
                     </div>
                     <p class="card-description">
-                      <%= t.web.panel_config.priority_green_help %>
+                      <%= t.web?.panel_config?.priority_green_help || 'Niedrige Priorität - Sieht nur grüne Tickets' %>
                     </p>
                   </div>
                 </div>
@@ -1933,7 +1933,7 @@
                       </span>
                     </div>
                     <p class="card-description">
-                      <%= t.web.panel_config.priority_orange_help %>
+                      <%= t.web?.panel_config?.priority_orange_help || 'Mittlere Priorität - Sieht orange und grüne Tickets' %>
                     </p>
                   </div>
                 </div>
@@ -1962,7 +1962,7 @@
                       </span>
                     </div>
                     <p class="card-description">
-                      <%= t.web.panel_config.priority_red_help %>
+                      <%= t.web?.panel_config?.priority_red_help || 'Hohe Priorität - Sieht alle Tickets' %>
                     </p>
                   </div>
                 </div>

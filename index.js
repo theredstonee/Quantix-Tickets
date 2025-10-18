@@ -247,6 +247,11 @@ const client = new Client({
   ],
   partials: [Partials.Channel, Partials.Message]
 });
+
+// Initialize Discord Logger to send all console logs to Discord channel
+const { initializeLogger } = require('./discord-logger');
+initializeLogger(client);
+
 app.set('trust proxy', 1);
 app.use('/', require('./panel')(client));
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
