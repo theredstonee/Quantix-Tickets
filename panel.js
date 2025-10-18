@@ -2829,6 +2829,43 @@ module.exports = (client)=>{
     }
   });
 
+  // Global Settings Click Counter (User-wide)
+  const GLOBAL_CLICKS_FILE = './global-settings-clicks.json';
+
+  function loadGlobalClicks() {
+    try {
+      if (fs.existsSync(GLOBAL_CLICKS_FILE)) {
+        const data = fs.readFileSync(GLOBAL_CLICKS_FILE, 'utf8');
+        return JSON.parse(data);
+      }
+    } catch (err) {
+      console.error('Error loading global clicks:', err);
+    }
+    return { count: 0 };
+  }
+
+  function saveGlobalClicks(count) {
+    try {
+      fs.writeFileSync(GLOBAL_CLICKS_FILE, JSON.stringify({ count }, null, 2));
+    } catch (err) {
+      console.error('Error saving global clicks:', err);
+    }
+  }
+
+  // API: Get global click count
+  router.get('/api/settings-clicks', (req, res) => {
+    const data = loadGlobalClicks();
+    res.json(data);
+  });
+
+  // API: Increment global click count
+  router.post('/api/settings-clicks/increment', (req, res) => {
+    const data = loadGlobalClicks();
+    data.count++;
+    saveGlobalClicks(data.count);
+    res.json(data);
+  });
+
   // ============================================================
   // REST API ROUTES (Frontend/Backend Separation)
   // ============================================================

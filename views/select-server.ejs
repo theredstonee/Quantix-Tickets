@@ -1021,28 +1021,42 @@
       });
     }
 
-    // Click Counter Management
+    // Global Click Counter Management (User-wide)
     let clickCount = 0;
-    const STORAGE_KEY = 'quantix-settings-clicks';
 
-    function loadClickCount() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        clickCount = parseInt(saved) || 0;
+    async function loadClickCount() {
+      try {
+        const response = await fetch('/api/settings-clicks');
+        const data = await response.json();
+        clickCount = data.count || 0;
+        updateClickDisplay();
+      } catch (err) {
+        console.error('Error loading click count:', err);
+        clickCount = 0;
         updateClickDisplay();
       }
     }
 
-    function incrementClickCount() {
-      clickCount++;
-      localStorage.setItem(STORAGE_KEY, clickCount.toString());
-      updateClickDisplay();
+    async function incrementClickCount() {
+      try {
+        const response = await fetch('/api/settings-clicks/increment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        clickCount = data.count || 0;
+        updateClickDisplay();
 
-      // Animate counter
-      const counter = document.getElementById('clickCount');
-      if (counter) {
-        counter.classList.add('animate');
-        setTimeout(() => counter.classList.remove('animate'), 500);
+        // Animate counter
+        const counter = document.getElementById('clickCount');
+        if (counter) {
+          counter.classList.add('animate');
+          setTimeout(() => counter.classList.remove('animate'), 500);
+        }
+      } catch (err) {
+        console.error('Error incrementing click count:', err);
       }
     }
 
@@ -1052,14 +1066,21 @@
         counter.textContent = clickCount;
 
         // Change color based on count
-        if (clickCount >= 20) {
+        if (clickCount >= 100) {
+          counter.style.background = 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)';
+          counter.style.color = '#fff';
+          counter.style.fontSize = '0.55rem'; // Smaller for 3 digits
+        } else if (clickCount >= 50) {
           counter.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
           counter.style.color = '#fff';
+        } else if (clickCount >= 20) {
+          counter.style.background = 'linear-gradient(135deg, #e67e22 0%, #d35400 100%)';
+          counter.style.color = '#fff';
         } else if (clickCount >= 10) {
-          counter.style.background = 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)';
+          counter.style.background = 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)';
           counter.style.color = '#fff';
         } else if (clickCount >= 5) {
-          counter.style.background = 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)';
+          counter.style.background = 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)';
           counter.style.color = '#fff';
         }
       }
