@@ -39,7 +39,7 @@ function getDefaultConfig() {
         emailNotifications: false,
         dmNotifications: false,
         unlimitedCategories: false,
-        maxCategories: 3
+        maxCategories: 5
       }
     }
   };
@@ -60,7 +60,7 @@ const PREMIUM_TIERS = {
       emailNotifications: false,
       dmNotifications: false,
       unlimitedCategories: false,
-      maxCategories: 3
+      maxCategories: 5
     }
   },
   basic: {
