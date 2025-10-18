@@ -1363,6 +1363,7 @@ module.exports = (client)=>{
       premiumTierName: premiumInfo.tierName,
       isPremium: premiumInfo.isActive,
       isAdmin: req.isAdmin, // Flag ob User Admin ist oder nur Team-Mitglied
+      user: req.user, // User object for display
       t: res.locals.t, // Translation object
       lang: res.locals.lang // Language code
     });
@@ -1837,6 +1838,9 @@ module.exports = (client)=>{
     const id = req.params.id.replace(/[^0-9]/g,'');
     const guildId = req.session.selectedGuild;
     if(!id) return res.status(400).send('ID fehlt');
+
+    // Override X-Frame-Options to allow iframe embedding from same origin
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
 
     // Check guild-specific transcript folder first
     const transcriptsDir = path.join(__dirname, 'transcripts');

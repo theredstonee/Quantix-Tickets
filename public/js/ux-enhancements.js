@@ -319,7 +319,7 @@
     validateForm();
     addDeleteConfirmations();
     addTooltips();
-    enableAutoSaveDraft();
+    // enableAutoSaveDraft(); // Deaktiviert auf Wunsch
     enableKeyboardShortcuts();
     addCharacterCounters();
     enhanceErrorMessages();

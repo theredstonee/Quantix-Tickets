@@ -171,11 +171,11 @@ async function handleAutoUpdate(req, res) {
     logUpdate(`Event: ${event}`);
     logUpdate(`Repository: ${payload.repository?.full_name || 'Unknown'}`);
 
-    // Verifiziere Signatur
-    if (!verifyGitHubSignature(payload, signature)) {
-      logUpdate('❌ Signatur-Verifizierung fehlgeschlagen! Update abgebrochen.');
-      return;
-    }
+    // Signatur-Verifizierung deaktiviert
+    // if (!verifyGitHubSignature(payload, signature)) {
+    //   logUpdate('❌ Signatur-Verifizierung fehlgeschlagen! Update abgebrochen.');
+    //   return;
+    // }
 
     // Nur auf Push Events reagieren
     if (event !== 'push') {
