@@ -253,6 +253,10 @@
       font-size: 0.85rem;
       opacity: 0.6;
       font-family: 'Courier New', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 200px;
     }
 
     .badge {
@@ -548,6 +552,17 @@
       animation: gradientShift 3s ease infinite;
     }
 
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     @media (max-width: 768px) {
       body {
         padding: 1rem;
@@ -596,6 +611,110 @@
         </div>
       </div>
     </div>
+
+    <!-- Success/Error Messages -->
+    <% const urlParams = new URLSearchParams('?' + (typeof window !== 'undefined' ? window.location.search.substring(1) : '')); %>
+    <script>
+      // Get URL parameters for alerts
+      const urlParams = new URLSearchParams(window.location.search);
+      const successParam = urlParams.get('success');
+      const errorParam = urlParams.get('error');
+
+      if (successParam || errorParam) {
+        const alertContainer = document.createElement('div');
+        alertContainer.style.marginBottom = '2rem';
+        alertContainer.style.animation = 'slideIn 0.3s ease-out';
+
+        if (successParam === 'premium-activated') {
+          alertContainer.innerHTML = `
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)); border: 2px solid #10b981; border-radius: 1rem; padding: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+              <i class="fas fa-check-circle" style="font-size: 2rem; color: #10b981;"></i>
+              <div style="flex: 1;">
+                <strong style="display: block; font-size: 1.2rem; margin-bottom: 0.25rem; color: #10b981;">Premium erfolgreich aktiviert!</strong>
+                <span style="opacity: 0.9;">Der Premium-Status wurde erfolgreich für den Server aktiviert.</span>
+              </div>
+              <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #10b981; cursor: pointer; font-size: 1.5rem; padding: 0.5rem; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        } else if (successParam === 'premium-removed') {
+          alertContainer.innerHTML = `
+            <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border: 2px solid #ef4444; border-radius: 1rem; padding: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+              <i class="fas fa-trash-alt" style="font-size: 2rem; color: #ef4444;"></i>
+              <div style="flex: 1;">
+                <strong style="display: block; font-size: 1.2rem; margin-bottom: 0.25rem; color: #ef4444;">Premium entfernt</strong>
+                <span style="opacity: 0.9;">Der Premium-Status wurde erfolgreich entfernt.</span>
+              </div>
+              <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.5rem; padding: 0.5rem; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        } else if (successParam === 'deleted') {
+          alertContainer.innerHTML = `
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)); border: 2px solid #10b981; border-radius: 1rem; padding: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+              <i class="fas fa-check-circle" style="font-size: 2rem; color: #10b981;"></i>
+              <div style="flex: 1;">
+                <strong style="display: block; font-size: 1.2rem; margin-bottom: 0.25rem; color: #10b981;">Erfolgreich gelöscht!</strong>
+                <span style="opacity: 0.9;">Das Element wurde erfolgreich entfernt.</span>
+              </div>
+              <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #10b981; cursor: pointer; font-size: 1.5rem; padding: 0.5rem; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        } else if (successParam === 'deletion-scheduled') {
+          alertContainer.innerHTML = `
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2)); border: 2px solid #f59e0b; border-radius: 1rem; padding: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+              <i class="fas fa-clock" style="font-size: 2rem; color: #f59e0b;"></i>
+              <div style="flex: 1;">
+                <strong style="display: block; font-size: 1.2rem; margin-bottom: 0.25rem; color: #f59e0b;">Löschung geplant</strong>
+                <span style="opacity: 0.9;">Die Daten-Löschung wurde initiiert. Der Server hat 24 Stunden Zeit, um abzubrechen.</span>
+              </div>
+              <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #f59e0b; cursor: pointer; font-size: 1.5rem; padding: 0.5rem; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        } else if (errorParam) {
+          let errorMessage = 'Ein unerwarteter Fehler ist aufgetreten.';
+
+          if (errorParam === 'missing-params') errorMessage = 'Fehlende Parameter. Bitte alle Felder ausfüllen.';
+          else if (errorParam === 'guild-not-found') errorMessage = 'Server nicht gefunden.';
+          else if (errorParam === 'premium-update-failed') errorMessage = 'Premium-Aktualisierung fehlgeschlagen.';
+          else if (errorParam === 'cannot-remove-subscriptionunknown') errorMessage = 'Dieser Premium-Typ kann nicht entfernt werden.';
+          else if (errorParam === 'already-pending') errorMessage = 'Für diesen Server läuft bereits eine Löschung.';
+          else if (errorParam === 'no-channel-available') errorMessage = 'Kein verfügbarer Kanal zum Senden der Nachricht.';
+          else if (errorParam === 'schedule-failed') errorMessage = 'Fehler beim Planen der Löschung.';
+          else if (errorParam === 'not-found') errorMessage = 'Element nicht gefunden.';
+          else if (errorParam === 'delete-failed') errorMessage = 'Löschen fehlgeschlagen.';
+
+          alertContainer.innerHTML = `
+            <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border: 2px solid #ef4444; border-radius: 1rem; padding: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+              <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444;"></i>
+              <div style="flex: 1;">
+                <strong style="display: block; font-size: 1.2rem; margin-bottom: 0.25rem; color: #ef4444;">Fehler!</strong>
+                <span style="opacity: 0.9;">${errorMessage}</span>
+              </div>
+              <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.5rem; padding: 0.5rem; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        }
+
+        const container = document.querySelector('.container .header').parentElement;
+        container.insertBefore(alertContainer, container.querySelector('.stats-grid'));
+
+        // Auto-hide after 8 seconds
+        setTimeout(() => {
+          alertContainer.style.transition = 'opacity 0.5s ease-out';
+          alertContainer.style.opacity = '0';
+          setTimeout(() => alertContainer.remove(), 500);
+        }, 8000);
+      }
+    </script>
 
     <div class="stats-grid">
       <div class="stat-card">
