@@ -872,6 +872,64 @@
       font-family: monospace;
     }
 
+    /* Form Field Items */
+    .form-field-item {
+      background: var(--glass-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      margin-bottom: 1.5rem;
+      transition: all 0.2s;
+    }
+
+    .form-field-item:hover {
+      box-shadow: var(--shadow-sm);
+    }
+
+    .form-field-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .form-field-number {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-field-number::before {
+      content: '📋';
+      font-size: 1.5rem;
+    }
+
+    .btn-icon-danger {
+      background: transparent;
+      border: 1px solid rgba(217, 43, 43, 0.3);
+      color: #d92b2b;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .btn-icon-danger:hover {
+      background: rgba(217, 43, 43, 0.1);
+      border-color: #d92b2b;
+      transform: scale(1.05);
+    }
+
     /* Preview Card */
     .preview-card {
       background: var(--bg-secondary);
@@ -2043,32 +2101,114 @@
                     <span><%= lang === 'de' ? 'Formular-Felder' : 'Form Fields' %></span>
                   </div>
                   <p class="card-description">
-                    <%= t.web.panel_config.forms_help %>
+                    <%= lang === 'de'
+                      ? 'Erstelle benutzerdefinierte Felder für deine Tickets. Diese Felder werden beim Ticket-Erstellen abgefragt.'
+                      : 'Create custom fields for your tickets. These fields will be asked when creating a ticket.'
+                    %>
                   </p>
                 </div>
               </div>
               <div class="card-body">
-                <div class="help-text" style="margin-bottom: 1.5rem;">
-                  <i class="fas fa-info-circle"></i>
-                  <span>
-                    <%= lang === 'de'
-                      ? 'JSON-Format: Array von Objekten mit "label" und "placeholder".'
-                      : 'JSON format: Array of objects with "label" and "placeholder".'
-                    %>
-                  </span>
+                <div id="formFieldsList">
+                  <% (cfg.formFields || []).forEach((field, index) => { %>
+                  <div class="form-field-item" data-index="<%= index %>">
+                    <div class="form-field-header">
+                      <span class="form-field-number"><%= index + 1 %></span>
+                      <button type="button" class="btn-icon-danger" onclick="removeFormField(this)">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-tag"></i>
+                        <span><%= lang === 'de' ? 'Feld-Label' : 'Field Label' %></span>
+                      </div>
+                      <input
+                        type="text"
+                        name="formField_label_<%= index %>"
+                        value="<%= field.label || '' %>"
+                        placeholder="<%= lang === 'de' ? 'z. B. Problem-Beschreibung' : 'e.g. Problem Description' %>"
+                        required>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-keyboard"></i>
+                        <span><%= lang === 'de' ? 'Platzhalter' : 'Placeholder' %></span>
+                      </div>
+                      <input
+                        type="text"
+                        name="formField_placeholder_<%= index %>"
+                        value="<%= field.placeholder || '' %>"
+                        placeholder="<%= lang === 'de' ? 'Erkläre uns genau, worum es geht...' : 'Explain exactly what it is about...' %>">
+                    </div>
+
+                    <div class="grid grid-2">
+                      <div class="form-group">
+                        <div class="form-label">
+                          <i class="fas fa-text-height"></i>
+                          <span><%= lang === 'de' ? 'Feld-Typ' : 'Field Type' %></span>
+                        </div>
+                        <select name="formField_style_<%= index %>">
+                          <option value="short" <%= field.style === 'short' ? 'selected' : '' %>>
+                            <%= lang === 'de' ? 'Kurze Antwort (1 Zeile)' : 'Short Answer (1 line)' %>
+                          </option>
+                          <option value="paragraph" <%= field.style === 'paragraph' ? 'selected' : '' %>>
+                            <%= lang === 'de' ? 'Lange Antwort (Absatz)' : 'Long Answer (Paragraph)' %>
+                          </option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
+                          <input
+                            type="checkbox"
+                            name="formField_required_<%= index %>"
+                            <%= field.required ? 'checked' : '' %>
+                            style="width: auto; margin: 0;">
+                          <span style="font-weight: 500;">
+                            <i class="fas fa-asterisk" style="font-size: 0.7rem; color: var(--accent-color);"></i>
+                            <%= lang === 'de' ? 'Pflichtfeld' : 'Required' %>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-tags"></i>
+                        <span><%= lang === 'de' ? 'Nur für Themen (optional)' : 'Only for Topics (optional)' %></span>
+                      </div>
+                      <select name="formField_topic_<%= index %>" multiple style="height: 120px;">
+                        <option value="" <%= !field.topic || (Array.isArray(field.topic) && field.topic.length === 0) ? 'selected' : '' %>>
+                          <%= lang === 'de' ? 'Alle Themen' : 'All Topics' %>
+                        </option>
+                        <% (cfg.topics || []).forEach(topic => { %>
+                          <option value="<%= topic.value %>"
+                            <%= (Array.isArray(field.topic) && field.topic.includes(topic.value)) || field.topic === topic.value ? 'selected' : '' %>>
+                            <%= topic.emoji || '📌' %> <%= topic.label %>
+                          </option>
+                        <% }); %>
+                      </select>
+                      <div class="help-text">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>
+                          <%= lang === 'de'
+                            ? 'Leer = Feld erscheint bei allen Themen. Strg/Cmd gedrückt halten für Mehrfachauswahl.'
+                            : 'Empty = Field appears for all topics. Hold Ctrl/Cmd for multiple selection.'
+                          %>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <% }); %>
                 </div>
 
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-code"></i>
-                    <span><%= t.web.form_fields_json %></span>
-                  </div>
-                  <textarea
-                    name="formFieldsJson"
-                    rows="14"
-                    placeholder='[{"label": "Beschreibung", "placeholder": "Beschreibe dein Problem..."}]'
-                  ><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
-                </div>
+                <button type="button" class="btn btn-success" onclick="addFormField()" style="width: 100%; margin-top: 1rem;">
+                  <i class="fas fa-plus"></i>
+                  <%= lang === 'de' ? 'Neues Feld hinzufügen' : 'Add New Field' %>
+                </button>
               </div>
             </div>
           </div>
@@ -2764,6 +2904,125 @@
         }, 1000);
       });
     });
+
+    // Form Fields Management
+    function addFormField() {
+      const container = document.getElementById('formFieldsList');
+      const currentFields = container.querySelectorAll('.form-field-item');
+      const newIndex = currentFields.length;
+
+      const fieldHtml = `
+        <div class="form-field-item" data-index="${newIndex}">
+          <div class="form-field-header">
+            <span class="form-field-number">${newIndex + 1}</span>
+            <button type="button" class="btn-icon-danger" onclick="removeFormField(this)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">
+              <i class="fas fa-tag"></i>
+              <span><%= lang === 'de' ? 'Feld-Label' : 'Field Label' %></span>
+            </div>
+            <input
+              type="text"
+              name="formField_label_${newIndex}"
+              placeholder="<%= lang === 'de' ? 'z. B. Problem-Beschreibung' : 'e.g. Problem Description' %>"
+              required>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">
+              <i class="fas fa-keyboard"></i>
+              <span><%= lang === 'de' ? 'Platzhalter' : 'Placeholder' %></span>
+            </div>
+            <input
+              type="text"
+              name="formField_placeholder_${newIndex}"
+              placeholder="<%= lang === 'de' ? 'Erkläre uns genau, worum es geht...' : 'Explain exactly what it is about...' %>">
+          </div>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <div class="form-label">
+                <i class="fas fa-text-height"></i>
+                <span><%= lang === 'de' ? 'Feld-Typ' : 'Field Type' %></span>
+              </div>
+              <select name="formField_style_${newIndex}">
+                <option value="short"><%= lang === 'de' ? 'Kurze Antwort (1 Zeile)' : 'Short Answer (1 line)' %></option>
+                <option value="paragraph"><%= lang === 'de' ? 'Lange Antwort (Absatz)' : 'Long Answer (Paragraph)' %></option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
+                <input
+                  type="checkbox"
+                  name="formField_required_${newIndex}"
+                  style="width: auto; margin: 0;">
+                <span style="font-weight: 500;">
+                  <i class="fas fa-asterisk" style="font-size: 0.7rem; color: var(--accent-color);"></i>
+                  <%= lang === 'de' ? 'Pflichtfeld' : 'Required' %>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">
+              <i class="fas fa-tags"></i>
+              <span><%= lang === 'de' ? 'Nur für Themen (optional)' : 'Only for Topics (optional)' %></span>
+            </div>
+            <select name="formField_topic_${newIndex}" multiple style="height: 120px;">
+              <option value="" selected><%= lang === 'de' ? 'Alle Themen' : 'All Topics' %></option>
+              <% (cfg.topics || []).forEach(topic => { %>
+                <option value="<%= topic.value %>"><%= topic.emoji || '📌' %> <%= topic.label %></option>
+              <% }); %>
+            </select>
+            <div class="help-text">
+              <i class="fas fa-lightbulb"></i>
+              <span>
+                <%= lang === 'de'
+                  ? 'Leer = Feld erscheint bei allen Themen. Strg/Cmd gedrückt halten für Mehrfachauswahl.'
+                  : 'Empty = Field appears for all topics. Hold Ctrl/Cmd for multiple selection.'
+                %>
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.insertAdjacentHTML('beforeend', fieldHtml);
+      updateFormFieldNumbers();
+    }
+
+    function removeFormField(button) {
+      const fieldItem = button.closest('.form-field-item');
+      fieldItem.remove();
+      updateFormFieldNumbers();
+    }
+
+    function updateFormFieldNumbers() {
+      const fields = document.querySelectorAll('.form-field-item');
+      fields.forEach((field, index) => {
+        field.setAttribute('data-index', index);
+        const numberSpan = field.querySelector('.form-field-number');
+        if (numberSpan) {
+          numberSpan.textContent = index + 1;
+        }
+
+        // Update input names
+        field.querySelectorAll('input, select, textarea').forEach(input => {
+          const name = input.getAttribute('name');
+          if (name && name.startsWith('formField_')) {
+            const parts = name.split('_');
+            parts[parts.length - 1] = index;
+            input.setAttribute('name', parts.join('_'));
+          }
+        });
+      });
+    }
   </script>
 </body>
 </html>

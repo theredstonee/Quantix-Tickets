@@ -1594,12 +1594,56 @@ module.exports = (client)=>{
         if(!Array.isArray(cfg.topics)) cfg.topics = [];
       }
 
-      if(Object.prototype.hasOwnProperty.call(req.body,'formFieldsJson')){
-        try {
-          const ff = JSON.parse(req.body.formFieldsJson);
-          cfg.formFields = Array.isArray(ff) ? ff : [];
-        } catch { cfg.formFields = []; }
+      // Process form fields from individual inputs
+      const formFields = [];
+      let fieldIndex = 0;
+      while(true) {
+        const labelKey = `formField_label_${fieldIndex}`;
+        const placeholderKey = `formField_placeholder_${fieldIndex}`;
+        const styleKey = `formField_style_${fieldIndex}`;
+        const requiredKey = `formField_required_${fieldIndex}`;
+        const topicKey = `formField_topic_${fieldIndex}`;
+
+        // Check if field exists
+        if(!Object.prototype.hasOwnProperty.call(req.body, labelKey)) {
+          break;
+        }
+
+        const label = (req.body[labelKey] || '').trim();
+        if(!label) {
+          fieldIndex++;
+          continue;
+        }
+
+        const placeholder = (req.body[placeholderKey] || '').trim();
+        const style = req.body[styleKey] || 'short';
+        const required = req.body[requiredKey] === 'on';
+
+        // Handle topic selection (can be array or single value)
+        let topic = req.body[topicKey];
+        if(Array.isArray(topic)) {
+          // Filter out empty values
+          topic = topic.filter(t => t && t.trim());
+          if(topic.length === 0 || (topic.length === 1 && topic[0] === '')) {
+            topic = null;
+          }
+        } else if(topic === '' || !topic) {
+          topic = null;
+        }
+
+        formFields.push({
+          label: label,
+          placeholder: placeholder || '',
+          style: style,
+          required: required,
+          topic: topic,
+          id: `field_${fieldIndex}`
+        });
+
+        fieldIndex++;
       }
+
+      cfg.formFields = formFields;
 
       const ensureHex = (s, fallback) => {
         const str = (s ?? '').toString().trim();
