@@ -2874,12 +2874,27 @@ module.exports = (client)=>{
     try {
       if (fs.existsSync(BLACKLIST_FILE)) {
         const data = fs.readFileSync(BLACKLIST_FILE, 'utf8');
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+
+        // Migrate old format (array) to new format (object with metadata)
+        if (Array.isArray(parsed.guilds)) {
+          const newFormat = { guilds: {} };
+          for (const guildId of parsed.guilds) {
+            newFormat.guilds[guildId] = {
+              name: `Server ${guildId}`,
+              blockedAt: new Date().toISOString()
+            };
+          }
+          saveBlacklist(newFormat);
+          return newFormat;
+        }
+
+        return parsed;
       }
     } catch (err) {
       console.error('Error loading blacklist:', err);
     }
-    return { guilds: [] };
+    return { guilds: {} };
   }
 
   function saveBlacklist(blacklist) {
@@ -2894,7 +2909,7 @@ module.exports = (client)=>{
 
   function isGuildBlacklisted(guildId) {
     const blacklist = loadBlacklist();
-    return blacklist.guilds.includes(guildId);
+    return blacklist.guilds.hasOwnProperty(guildId);
   }
 
   // Founder Panel - GET Route
@@ -2917,7 +2932,7 @@ module.exports = (client)=>{
             name: fullGuild.name,
             icon: fullGuild.icon ? `https://cdn.discordapp.com/icons/${fullGuild.id}/${fullGuild.icon}.png?size=256` : null,
             memberCount: fullGuild.memberCount,
-            blocked: blacklist.guilds.includes(fullGuild.id)
+            blocked: blacklist.guilds.hasOwnProperty(fullGuild.id)
           });
         } catch (err) {
           console.error(`Error fetching guild ${guildId}:`, err.message);
@@ -2925,15 +2940,11 @@ module.exports = (client)=>{
       }
 
       // Add blocked guilds that bot is no longer a member of
-      for (const blockedGuildId of blacklist.guilds) {
+      for (const [blockedGuildId, blockedData] of Object.entries(blacklist.guilds)) {
         if (!processedGuildIds.has(blockedGuildId)) {
-          // Try to get guild info from configs
-          const cfg = readCfg(blockedGuildId);
-          const guildName = cfg.guildName || `Server ${blockedGuildId}`;
-
           guildsData.push({
             id: blockedGuildId,
-            name: guildName + ' (Verlassen)',
+            name: blockedData.name + ' (Verlassen)',
             icon: null,
             memberCount: 0,
             blocked: true
@@ -2963,15 +2974,22 @@ module.exports = (client)=>{
       const guildId = req.params.guildId;
       const blacklist = loadBlacklist();
 
-      if (!blacklist.guilds.includes(guildId)) {
-        blacklist.guilds.push(guildId);
+      if (!blacklist.guilds.hasOwnProperty(guildId)) {
+        // Get guild info before leaving
+        const guild = await client.guilds.fetch(guildId).catch(() => null);
+        const guildName = guild ? guild.name : `Server ${guildId}`;
+
+        // Add to blacklist with name
+        blacklist.guilds[guildId] = {
+          name: guildName,
+          blockedAt: new Date().toISOString(),
+          blockedBy: req.user.username
+        };
         saveBlacklist(blacklist);
-        console.log(`🚫 Server ${guildId} wurde von ${req.user.username} blockiert`);
+        console.log(`🚫 Server ${guildName} (${guildId}) wurde von ${req.user.username} blockiert`);
 
         // Leave the server after blocking
-        const guild = await client.guilds.fetch(guildId).catch(() => null);
         if (guild) {
-          const guildName = guild.name;
           await guild.leave();
           console.log(`👋 Bot hat blockierten Server ${guildName} (${guildId}) verlassen`);
         }
@@ -2990,9 +3008,12 @@ module.exports = (client)=>{
       const guildId = req.params.guildId;
       const blacklist = loadBlacklist();
 
-      blacklist.guilds = blacklist.guilds.filter(id => id !== guildId);
-      saveBlacklist(blacklist);
-      console.log(`✅ Server ${guildId} wurde von ${req.user.username} entsperrt`);
+      if (blacklist.guilds.hasOwnProperty(guildId)) {
+        const serverName = blacklist.guilds[guildId].name;
+        delete blacklist.guilds[guildId];
+        saveBlacklist(blacklist);
+        console.log(`✅ Server ${serverName} (${guildId}) wurde von ${req.user.username} entsperrt`);
+      }
 
       res.redirect('/founder');
     } catch (err) {

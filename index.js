@@ -626,7 +626,13 @@ client.on(Events.GuildCreate, async (guild) => {
     const BLACKLIST_FILE = './server-blacklist.json';
     if (fs.existsSync(BLACKLIST_FILE)) {
       const blacklist = JSON.parse(fs.readFileSync(BLACKLIST_FILE, 'utf8'));
-      if (blacklist.guilds && blacklist.guilds.includes(guild.id)) {
+
+      // Support both old (array) and new (object) format
+      const isBlacklisted = Array.isArray(blacklist.guilds)
+        ? blacklist.guilds.includes(guild.id)
+        : blacklist.guilds && blacklist.guilds.hasOwnProperty(guild.id);
+
+      if (isBlacklisted) {
         console.log(`🚫 Server ${guild.name} (${guild.id}) is blacklisted - leaving immediately`);
         await guild.leave();
         return;
