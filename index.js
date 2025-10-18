@@ -601,7 +601,7 @@ async function sendWelcomeMessage(guild) {
         .setLabel(isGerman ? '🚀 Zum Dashboard' : '🚀 Open Dashboard')
         .setEmoji('🎫'),
       new ButtonBuilder()
-        .setURL('https://discord.gg/mnYbnpyyBS')
+        .setURL('https://discord.com/invite/mnYbnpyyBS')
         .setStyle(ButtonStyle.Link)
         .setLabel(isGerman ? '💬 Support Server' : '💬 Support Server')
         .setEmoji('🛟')
