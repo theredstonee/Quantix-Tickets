@@ -533,6 +533,12 @@ async function sendStartupNotifications() {
         const fullGuild = await client.guilds.fetch(guildId);
         const cfg = readCfg(guildId);
 
+        // Check if startup notifications are enabled for this guild (default: false)
+        if (!cfg.startupNotificationsEnabled) {
+          console.log(`⏭️ Startup-Benachrichtigung übersprungen für: ${fullGuild.name} (deaktiviert)`);
+          continue;
+        }
+
         // Try to send to log channel first, otherwise find a suitable channel
         let targetChannel = null;
 
