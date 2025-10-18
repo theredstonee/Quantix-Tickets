@@ -12,6 +12,9 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title><%= t.web.title || 'Quantix Tickets - Admin Panel' %></title>
 
   <!-- Favicon -->
@@ -2403,8 +2406,32 @@
       });
     });
 
-    // Restore active tab from localStorage
+    // Disable browser form draft/autosave feature
     window.addEventListener('DOMContentLoaded', () => {
+      // Prevent browser from showing "draft found" dialog
+      const form = document.getElementById('panelForm');
+      if (form) {
+        // Add autocomplete attributes to all inputs
+        const inputs = form.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+          input.setAttribute('autocomplete', 'off');
+          input.setAttribute('data-form-type', 'other'); // Prevents password managers
+        });
+
+        // Clear any stored form data on load
+        try {
+          sessionStorage.removeItem('panelFormData');
+          // Don't restore form values from browser cache
+          setTimeout(() => {
+            if (window.performance && performance.navigation.type === 2) {
+              // Page was accessed by navigating back/forward
+              window.location.reload();
+            }
+          }, 0);
+        } catch(e) {}
+      }
+
+      // Restore active tab from localStorage
       const savedTab = localStorage.getItem('activeTab');
       if (savedTab) {
         const btn = document.querySelector(`[data-tab="${savedTab}"]`);
