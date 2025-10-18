@@ -2561,7 +2561,11 @@
 
     // Send Panel
     function sendPanel() {
-      const confirmMsg = <%= lang === 'de' ? JSON.stringify('Möchtest du die Panel-Nachricht jetzt senden?') : JSON.stringify('Do you want to send the panel message now?') %>;
+      <% if (lang === 'de') { %>
+        const confirmMsg = 'Möchtest du die Panel-Nachricht jetzt senden?';
+      <% } else { %>
+        const confirmMsg = 'Do you want to send the panel message now?';
+      <% } %>
       if (!confirm(confirmMsg)) {
         return;
       }
@@ -2577,7 +2581,11 @@
 
     // Edit Panel
     function editPanel() {
-      const confirmMsg = <%= lang === 'de' ? JSON.stringify('Möchtest du die Panel-Nachricht aktualisieren?') : JSON.stringify('Do you want to update the panel message?') %>;
+      <% if (lang === 'de') { %>
+        const confirmMsg = 'Möchtest du die Panel-Nachricht aktualisieren?';
+      <% } else { %>
+        const confirmMsg = 'Do you want to update the panel message?';
+      <% } %>
       if (!confirm(confirmMsg)) {
         return;
       }
