@@ -206,7 +206,7 @@ module.exports = (client)=>{
   function isOwner(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
-    const OWNER_IDS = ['928901974106202113', '1159182333316968530', '1415387837359984740'];
+    const OWNER_IDS = ['928901974106202113', '1159182333316968530', '1415387837359984740', '1048900200497954868'];
     const userId = req.user.id;
 
     if(!OWNER_IDS.includes(userId)) {
