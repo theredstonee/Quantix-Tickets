@@ -1195,6 +1195,95 @@
       color: #000;
     }
 
+    /* Custom Confirmation Dialog */
+    .confirm-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .confirm-overlay.show {
+      display: flex;
+    }
+
+    .confirm-dialog {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+      text-align: center;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .confirm-icon {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 1.8rem;
+      color: white;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .confirm-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.75rem;
+    }
+
+    .confirm-message {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .confirm-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .confirm-buttons .btn {
+      min-width: 120px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    [data-theme="dark"] .confirm-dialog {
+      background: rgba(15, 21, 16, 0.95);
+      border-color: rgba(0, 255, 136, 0.3);
+    }
+
     /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 10px;
@@ -1218,6 +1307,27 @@
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Custom Confirmation Dialog -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-dialog">
+      <div class="confirm-icon">
+        <i class="fas fa-paper-plane"></i>
+      </div>
+      <h3 class="confirm-title" id="confirmTitle"></h3>
+      <p class="confirm-message" id="confirmMessage"></p>
+      <div class="confirm-buttons">
+        <button class="btn btn-outline" id="confirmCancel">
+          <i class="fas fa-times"></i>
+          <span id="confirmCancelText"><%= lang === 'de' ? 'Abbrechen' : 'Cancel' %></span>
+        </button>
+        <button class="btn btn-primary" id="confirmOk">
+          <i class="fas fa-check"></i>
+          <span id="confirmOkText">Ok</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Theme Toggle -->
@@ -1991,7 +2101,7 @@
                       type="text"
                       name="embedTitle"
                       id="embedTitle"
-                      value="<%= cfg.embedTitle || '' %>"
+                      value="<%= (cfg.ticketEmbed && cfg.ticketEmbed.title) || '' %>"
                       placeholder="<%= lang === 'de' ? 'Ticket #{id}' : 'Ticket #{id}' %>"
                       oninput="updateEmbedPreview('ticket')">
                   </div>
@@ -2007,7 +2117,7 @@
                       rows="4"
                       placeholder="<%= lang === 'de' ? 'Hallo {user}, willkommen in deinem Ticket!' : 'Hello {user}, welcome to your ticket!' %>"
                       oninput="updateEmbedPreview('ticket')"
-                    ><%= cfg.embedDescription || '' %></textarea>
+                    ><%= (cfg.ticketEmbed && cfg.ticketEmbed.description) || '' %></textarea>
                   </div>
 
                   <div class="form-group">
@@ -2019,7 +2129,7 @@
                       type="text"
                       name="embedColor"
                       id="embedColor"
-                      value="<%= cfg.embedColor || '#0ea5e9' %>"
+                      value="<%= (cfg.ticketEmbed && cfg.ticketEmbed.color) || '#0ea5e9' %>"
                       placeholder="#0ea5e9"
                       oninput="updateEmbedPreview('ticket')">
                   </div>
@@ -2033,7 +2143,7 @@
                       type="text"
                       name="embedFooter"
                       id="embedFooter"
-                      value="<%= cfg.embedFooter || '' %>"
+                      value="<%= (cfg.ticketEmbed && cfg.ticketEmbed.footer) || '' %>"
                       placeholder="<%= lang === 'de' ? 'Quantix Tickets System' : 'Quantix Tickets System' %>"
                       oninput="updateEmbedPreview('ticket')">
                   </div>
@@ -2044,10 +2154,10 @@
                       <i class="fas fa-eye"></i>
                       <%= lang === 'de' ? 'Vorschau' : 'Preview' %>
                     </div>
-                    <div class="embed-preview" id="ticketEmbedPreview" style="border-left-color: <%= cfg.embedColor || '#0ea5e9' %>">
-                      <div class="embed-preview-title"><%= cfg.embedTitle || 'Ticket #1234' %></div>
-                      <div class="embed-preview-desc"><%= (cfg.embedDescription || '').replace('{user}', '@User').replace('{id}', '1234').replace('{topic}', 'Support') %></div>
-                      <div class="embed-preview-footer"><%= cfg.embedFooter || 'Quantix Tickets System' %></div>
+                    <div class="embed-preview" id="ticketEmbedPreview" style="border-left-color: <%= (cfg.ticketEmbed && cfg.ticketEmbed.color) || '#0ea5e9' %>">
+                      <div class="embed-preview-title"><%= (cfg.ticketEmbed && cfg.ticketEmbed.title) || 'Ticket #1234' %></div>
+                      <div class="embed-preview-desc"><%= ((cfg.ticketEmbed && cfg.ticketEmbed.description) || '').replace('{user}', '@User').replace('{id}', '1234').replace('{topic}', 'Support') %></div>
+                      <div class="embed-preview-footer"><%= (cfg.ticketEmbed && cfg.ticketEmbed.footer) || 'Quantix Tickets System' %></div>
                     </div>
                   </div>
                 </div>
@@ -2078,7 +2188,7 @@
                       type="text"
                       name="panelTitle"
                       id="panelTitle"
-                      value="<%= cfg.panelTitle || '' %>"
+                      value="<%= (cfg.panelEmbed && cfg.panelEmbed.title) || '' %>"
                       placeholder="<%= lang === 'de' ? '🎫 Ticket System' : '🎫 Ticket System' %>"
                       oninput="updateEmbedPreview('panel')">
                   </div>
@@ -2094,7 +2204,7 @@
                       rows="4"
                       placeholder="<%= lang === 'de' ? 'Wähle ein Thema aus, um ein Ticket zu erstellen.' : 'Select a topic to create a ticket.' %>"
                       oninput="updateEmbedPreview('panel')"
-                    ><%= cfg.panelDescription || '' %></textarea>
+                    ><%= (cfg.panelEmbed && cfg.panelEmbed.description) || '' %></textarea>
                   </div>
 
                   <div class="form-group">
@@ -2106,7 +2216,7 @@
                       type="text"
                       name="panelColor"
                       id="panelColor"
-                      value="<%= cfg.panelColor || '#0ea5e9' %>"
+                      value="<%= (cfg.panelEmbed && cfg.panelEmbed.color) || '#0ea5e9' %>"
                       placeholder="#0ea5e9"
                       oninput="updateEmbedPreview('panel')">
                   </div>
@@ -2120,7 +2230,7 @@
                       type="text"
                       name="panelFooter"
                       id="panelFooter"
-                      value="<%= cfg.panelFooter || '' %>"
+                      value="<%= (cfg.panelEmbed && cfg.panelEmbed.footer) || '' %>"
                       placeholder="<%= lang === 'de' ? 'Klicke auf ein Thema, um ein Ticket zu öffnen' : 'Click a topic to open a ticket' %>"
                       oninput="updateEmbedPreview('panel')">
                   </div>
@@ -2131,10 +2241,10 @@
                       <i class="fas fa-eye"></i>
                       <%= lang === 'de' ? 'Vorschau' : 'Preview' %>
                     </div>
-                    <div class="embed-preview" id="panelEmbedPreview" style="border-left-color: <%= cfg.panelColor || '#0ea5e9' %>">
-                      <div class="embed-preview-title"><%= cfg.panelTitle || '🎫 Ticket System' %></div>
-                      <div class="embed-preview-desc"><%= cfg.panelDescription || (lang === 'de' ? 'Wähle ein Thema aus, um ein Ticket zu erstellen.' : 'Select a topic to create a ticket.') %></div>
-                      <div class="embed-preview-footer"><%= cfg.panelFooter || (lang === 'de' ? 'Klicke auf ein Thema, um ein Ticket zu öffnen' : 'Click a topic to open a ticket') %></div>
+                    <div class="embed-preview" id="panelEmbedPreview" style="border-left-color: <%= (cfg.panelEmbed && cfg.panelEmbed.color) || '#0ea5e9' %>">
+                      <div class="embed-preview-title"><%= (cfg.panelEmbed && cfg.panelEmbed.title) || '🎫 Ticket System' %></div>
+                      <div class="embed-preview-desc"><%= (cfg.panelEmbed && cfg.panelEmbed.description) || (lang === 'de' ? 'Wähle ein Thema aus, um ein Ticket zu erstellen.' : 'Select a topic to create a ticket.') %></div>
+                      <div class="embed-preview-footer"><%= (cfg.panelEmbed && cfg.panelEmbed.footer) || (lang === 'de' ? 'Klicke auf ein Thema, um ein Ticket zu öffnen' : 'Click a topic to open a ticket') %></div>
                     </div>
                   </div>
                 </div>
@@ -2558,12 +2668,54 @@
       }
     }
 
+    // Custom Confirm Dialog
+    function showConfirm(title, message, okCallback) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('confirmOverlay');
+        const titleEl = document.getElementById('confirmTitle');
+        const messageEl = document.getElementById('confirmMessage');
+        const okBtn = document.getElementById('confirmOk');
+        const cancelBtn = document.getElementById('confirmCancel');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        overlay.classList.add('show');
+
+        const handleOk = () => {
+          overlay.classList.remove('show');
+          okBtn.removeEventListener('click', handleOk);
+          cancelBtn.removeEventListener('click', handleCancel);
+          resolve(true);
+          if (okCallback) okCallback();
+        };
+
+        const handleCancel = () => {
+          overlay.classList.remove('show');
+          okBtn.removeEventListener('click', handleOk);
+          cancelBtn.removeEventListener('click', handleCancel);
+          resolve(false);
+        };
+
+        okBtn.addEventListener('click', handleOk);
+        cancelBtn.addEventListener('click', handleCancel);
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            handleCancel();
+          }
+        });
+      });
+    }
+
     // Send Panel
-    function sendPanel() {
-      const confirmMsg = "<%= lang === 'de' ? 'Möchtest du die Panel-Nachricht jetzt senden?' : 'Do you want to send the panel message now?' %>";
-      if (!confirm(confirmMsg)) {
-        return;
-      }
+    async function sendPanel() {
+      const title = "<%= lang === 'de' ? 'Panel senden?' : 'Send Panel?' %>";
+      const message = "<%= lang === 'de' ? 'Möchtest du die Panel-Nachricht jetzt senden?' : 'Do you want to send the panel message now?' %>";
+
+      const confirmed = await showConfirm(title, message);
+      if (!confirmed) return;
 
       document.getElementById('loadingOverlay').classList.add('show');
 
@@ -2575,11 +2727,12 @@
     }
 
     // Edit Panel
-    function editPanel() {
-      const confirmMsg = "<%= lang === 'de' ? 'Möchtest du die Panel-Nachricht aktualisieren?' : 'Do you want to update the panel message?' %>";
-      if (!confirm(confirmMsg)) {
-        return;
-      }
+    async function editPanel() {
+      const title = "<%= lang === 'de' ? 'Panel aktualisieren?' : 'Update Panel?' %>";
+      const message = "<%= lang === 'de' ? 'Möchtest du die Panel-Nachricht aktualisieren?' : 'Do you want to update the panel message?' %>";
+
+      const confirmed = await showConfirm(title, message);
+      if (!confirmed) return;
 
       document.getElementById('loadingOverlay').classList.add('show');
 
