@@ -3330,8 +3330,44 @@ module.exports = (client)=>{
 
       const guild = await client.guilds.fetch(guildId).catch(() => null);
 
+      // If bot is NOT on the server, delete immediately without warning
       if (!guild) {
-        return res.redirect('/owner?error=guild-not-found');
+        console.log(`🗑️ Bot not on server ${guildId}, deleting immediately...`);
+
+        // Delete all server data files
+        const configFile = `./configs/${guildId}.json`;
+        const ticketsFile = `./configs/${guildId}_tickets.json`;
+        const counterFile = `./configs/${guildId}_counter.json`;
+        const transcriptsDir = path.join(__dirname, 'transcripts', guildId);
+
+        let deletedFiles = 0;
+
+        // Delete config files
+        if (fs.existsSync(configFile)) {
+          fs.unlinkSync(configFile);
+          console.log(`🗑️ Deleted config: ${configFile}`);
+          deletedFiles++;
+        }
+        if (fs.existsSync(ticketsFile)) {
+          fs.unlinkSync(ticketsFile);
+          console.log(`🗑️ Deleted tickets: ${ticketsFile}`);
+          deletedFiles++;
+        }
+        if (fs.existsSync(counterFile)) {
+          fs.unlinkSync(counterFile);
+          console.log(`🗑️ Deleted counter: ${counterFile}`);
+          deletedFiles++;
+        }
+
+        // Delete transcripts directory
+        if (fs.existsSync(transcriptsDir)) {
+          fs.rmSync(transcriptsDir, { recursive: true, force: true });
+          console.log(`🗑️ Deleted transcripts: ${transcriptsDir}`);
+          deletedFiles++;
+        }
+
+        console.log(`✅ Immediately deleted all data for server ${guildId} (${deletedFiles} items) by ${sanitizeUsername(req.user.username || req.user.id)}`);
+        return res.redirect('/owner?success=server-deleted-immediately');
       }
 
       console.log(`⚠️ Owner initiated deletion for guild: ${guildId}`);
