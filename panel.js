@@ -1327,6 +1327,40 @@ module.exports = (client)=>{
     const guildId = req.session.selectedGuild;
     const cfg = readCfg(guildId);
 
+    // Auto-Migration: Convert old flat embed fields to nested structure
+    let needsSave = false;
+    if (!cfg.ticketEmbed) {
+      cfg.ticketEmbed = {
+        title: cfg.embedTitle || '',
+        description: cfg.embedDescription || '',
+        color: cfg.embedColor || '#0ea5e9',
+        footer: cfg.embedFooter || ''
+      };
+      // Clean up old fields
+      delete cfg.embedTitle;
+      delete cfg.embedDescription;
+      delete cfg.embedColor;
+      delete cfg.embedFooter;
+      needsSave = true;
+    }
+    if (!cfg.panelEmbed) {
+      cfg.panelEmbed = {
+        title: cfg.panelTitle || '',
+        description: cfg.panelDescription || '',
+        color: cfg.panelColor || '#5865F2',
+        footer: cfg.panelFooter || ''
+      };
+      // Clean up old fields
+      delete cfg.panelTitle;
+      delete cfg.panelDescription;
+      delete cfg.panelColor;
+      delete cfg.panelFooter;
+      needsSave = true;
+    }
+    if (needsSave) {
+      writeCfg(guildId, cfg);
+    }
+
     let channels = [];
     let roles = [];
     let guildName = 'Server';
