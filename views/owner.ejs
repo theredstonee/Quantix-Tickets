@@ -855,9 +855,17 @@
                 <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="copyToClipboard('<%= guild.id %>')">
                   <i class="fas fa-copy"></i> ID
                 </button>
-                <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e74c3c;" onclick="showServerDeleteModal('<%= guild.id %>', '<%= guild.name %>')">
-                  <i class="fas fa-trash"></i> Daten löschen
-                </button>
+                <% if (guild.onBot) { %>
+                  <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e74c3c;" onclick="showServerDeleteModal('<%= guild.id %>', '<%= guild.name %>')">
+                    <i class="fas fa-trash"></i> Daten löschen
+                  </button>
+                <% } else { %>
+                  <form method="POST" action="/owner/delete-server-data/<%= guild.id %>" style="display: inline;">
+                    <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e74c3c;">
+                      <i class="fas fa-trash"></i> Daten löschen
+                    </button>
+                  </form>
+                <% } %>
               </div>
             </td>
           </tr>

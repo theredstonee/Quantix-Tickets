@@ -347,6 +347,7 @@
 
     .content-header {
       margin-bottom: 2rem;
+      margin-top: 4rem; /* Platz für fixed Language-Dropdown */
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -374,6 +375,11 @@
       display: flex;
       gap: 0.75rem;
       flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .header-actions .btn {
+      white-space: nowrap; /* Verhindert Textumbruch im Button */
     }
 
     /* Alerts */
@@ -1082,6 +1088,7 @@
       top: 1.5rem;
       right: 5.5rem;
       z-index: 1001;
+      max-width: calc(100% - 11rem); /* Verhindert Überlappung mit Theme-Toggle */
     }
 
     .lang-dropdown-toggle {
@@ -1262,6 +1269,7 @@
       .content-header {
         flex-direction: column;
         align-items: flex-start;
+        margin-top: 5rem; /* Mehr Platz auf Tablets für fixed Elements */
       }
 
       .grid-2,
@@ -1291,6 +1299,39 @@
 
       .card {
         padding: 1.25rem;
+      }
+
+      .content-header {
+        margin-top: 6rem; /* Noch mehr Platz auf Mobile */
+      }
+
+      .lang-dropdown {
+        right: 4.5rem; /* Weniger Abstand auf Mobile */
+      }
+
+      .theme-toggle {
+        right: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .content-header {
+        margin-top: 7rem; /* Extra Platz auf sehr kleinen Bildschirmen */
+      }
+
+      .lang-dropdown {
+        right: 3.5rem;
+        max-width: calc(100% - 7rem);
+      }
+
+      .lang-dropdown-toggle {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+      }
+
+      .header-actions .btn {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
       }
     }
 
@@ -2266,6 +2307,9 @@
                           <option value="paragraph" <%= field.style === 'paragraph' ? 'selected' : '' %>>
                             <%= lang === 'de' ? 'Lange Antwort (Absatz)' : 'Long Answer (Paragraph)' %>
                           </option>
+                          <option value="number" <%= field.style === 'number' ? 'selected' : '' %>>
+                            <%= lang === 'de' ? 'Nur Zahl' : 'Number Only' %>
+                          </option>
                         </select>
                       </div>
 
@@ -3061,6 +3105,7 @@
               <select name="formField_style_${newIndex}">
                 <option value="short"><%= lang === 'de' ? 'Kurze Antwort (1 Zeile)' : 'Short Answer (1 line)' %></option>
                 <option value="paragraph"><%= lang === 'de' ? 'Lange Antwort (Absatz)' : 'Long Answer (Paragraph)' %></option>
+                <option value="number"><%= lang === 'de' ? 'Nur Zahl' : 'Number Only' %></option>
               </select>
             </div>
 

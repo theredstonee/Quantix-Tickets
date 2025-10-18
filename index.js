@@ -1528,7 +1528,9 @@ function normalizeField(field, index){
     label: (field.label||`Feld ${index+1}`).substring(0,45),
     id: (field.id||`f${index}`),
     required: field.required? true:false,
-    style: field.style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short
+    style: field.style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short,
+    placeholder: field.placeholder || '',
+    isNumber: field.style === 'number'
   };
 }
 
@@ -1609,13 +1611,22 @@ client.on(Events.InteractionCreate, async i => {
         const modal = new ModalBuilder().setCustomId(`modal_newticket:${topic.value}`).setTitle(`Ticket: ${topic.label}`.substring(0,45));
         formFields.forEach((f,idx)=>{
           const nf = normalizeField(f,idx);
-            modal.addComponents(new ActionRowBuilder().addComponents(
-              new TextInputBuilder()
-                .setCustomId(nf.id)
-                .setLabel(nf.label)
-                .setRequired(nf.required)
-                .setStyle(nf.style)
-            ));
+          const inputBuilder = new TextInputBuilder()
+            .setCustomId(nf.id)
+            .setLabel(nf.label)
+            .setRequired(nf.required)
+            .setStyle(nf.style);
+
+          // Add placeholder with number hint if applicable
+          let placeholder = nf.placeholder;
+          if (nf.isNumber) {
+            placeholder = placeholder ? `${placeholder} (Nur Zahlen)` : 'Nur Zahlen erlaubt';
+          }
+          if (placeholder) {
+            inputBuilder.setPlaceholder(placeholder.substring(0, 100));
+          }
+
+          modal.addComponents(new ActionRowBuilder().addComponents(inputBuilder));
         });
         return i.showModal(modal);
       }
@@ -1632,6 +1643,20 @@ client.on(Events.InteractionCreate, async i => {
       const formFields = getFormFieldsForTopic(cfg, topic.value).map(normalizeField);
       const answers = {};
       formFields.forEach(f=>{ answers[f.id] = i.fields.getTextInputValue(f.id); });
+
+      // Validate number fields
+      for (const field of formFields) {
+        if (field.isNumber && answers[field.id]) {
+          const value = answers[field.id].trim();
+          if (value && !/^\d+([.,]\d+)?$/.test(value)) {
+            return i.reply({
+              ephemeral: true,
+              content: `❌ **${field.label}** muss eine Zahl sein! (z.B. 123 oder 45.67)`
+            });
+          }
+        }
+      }
+
       await createTicketChannel(i, topic, answers, cfg);
       return;
     }

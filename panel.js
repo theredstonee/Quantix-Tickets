@@ -3166,6 +3166,7 @@ module.exports = (client)=>{
           const cfg = JSON.parse(fs.readFileSync(`./configs/${file}`, 'utf8'));
 
           let guildInfo = null;
+          let onBot = true;
           try {
             const guild = await client.guilds.fetch(guildId);
             guildInfo = {
@@ -3175,6 +3176,7 @@ module.exports = (client)=>{
               icon: guild.iconURL({ size: 128 })
             };
           } catch(err) {
+            onBot = false;
             guildInfo = {
               id: guildId,
               name: 'Unbekannt (Bot nicht auf Server)',
@@ -3194,6 +3196,7 @@ module.exports = (client)=>{
 
           guildsData.push({
             ...guildInfo,
+            onBot: onBot,
             tickets: ticketCount,
             premium: premiumInfo.tier,
             premiumExpires: premiumInfo.expiresAt,
@@ -3791,6 +3794,60 @@ module.exports = (client)=>{
     } catch (err) {
       console.error('Kick server error:', err);
       res.redirect('/founder?error=kick-failed');
+    }
+  });
+
+  router.post('/founder/force-delete-server/:guildId', isFounder, async (req, res) => {
+    try {
+      // Restricted user cannot perform admin actions
+      const RESTRICTED_USER_ID = '928901974106202113';
+      if (req.user.id === RESTRICTED_USER_ID) {
+        return res.status(403).send('Keine Berechtigung für diese Aktion');
+      }
+
+      const guildId = validateDiscordId(req.params.guildId);
+      if (!guildId) return res.redirect('/founder?error=invalid-guild-id');
+
+      const guild = await client.guilds.fetch(guildId).catch(() => null);
+      const guildName = guild ? sanitizeString(guild.name, 100) : `Server ${guildId}`;
+
+      // 1. Leave server if bot is still on it
+      if (guild) {
+        await guild.leave();
+        console.log(`👋 Bot left server during force delete: ${guildName} (${guildId})`);
+      }
+
+      // 2. Delete all server data files
+      const configFile = `./configs/${guildId}.json`;
+      const ticketsFile = `./configs/${guildId}_tickets.json`;
+      const counterFile = `./configs/${guildId}_counter.json`;
+      const transcriptsDir = path.join(__dirname, 'transcripts', guildId);
+
+      // Delete config files
+      if (fs.existsSync(configFile)) {
+        fs.unlinkSync(configFile);
+        console.log(`🗑️ Deleted config: ${configFile}`);
+      }
+      if (fs.existsSync(ticketsFile)) {
+        fs.unlinkSync(ticketsFile);
+        console.log(`🗑️ Deleted tickets: ${ticketsFile}`);
+      }
+      if (fs.existsSync(counterFile)) {
+        fs.unlinkSync(counterFile);
+        console.log(`🗑️ Deleted counter: ${counterFile}`);
+      }
+
+      // Delete transcripts directory
+      if (fs.existsSync(transcriptsDir)) {
+        fs.rmSync(transcriptsDir, { recursive: true, force: true });
+        console.log(`🗑️ Deleted transcripts: ${transcriptsDir}`);
+      }
+
+      console.log(`🗑️ Force deleted all data for ${guildName} (${guildId}) by ${sanitizeUsername(req.user.username || req.user.id)}`);
+      res.redirect('/founder?success=server-deleted');
+    } catch (err) {
+      console.error('Force delete server error:', err);
+      res.redirect('/founder?error=delete-failed');
     }
   });
 
