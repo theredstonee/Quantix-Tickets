@@ -482,7 +482,7 @@ module.exports = (client)=>{
   function isFounder(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
-    const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530', '928901974106202113'];
+    const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
     const userId = req.user.id;
 
     if(!FOUNDER_IDS.includes(userId)) {
@@ -3432,21 +3432,25 @@ module.exports = (client)=>{
           return res.redirect('/owner?success=premium-activated');
         }
       } else if (action === 'remove') {
-        // Remove Premium
-        const premiumInfo = require('./premium').getPremiumInfo(serverId);
+        // Remove Premium - works for ALL premium types (Lifetime, Beta, Trial, Regular)
+        const { deactivatePremium, getPremiumInfo } = require('./premium');
+        const premiumInfo = getPremiumInfo(serverId);
 
-        if (premiumInfo.lifetime) {
-          result = removeLifetimePremium(serverId);
-        } else if (premiumInfo.tier === 'beta') {
-          result = deactivateBetatester(serverId);
-        } else {
-          return res.redirect('/owner?error=cannot-remove-subscriptionunknown');
+        // Check if server has any premium
+        if (premiumInfo.tier === 'none') {
+          return res.redirect('/owner?error=no-premium-to-remove');
         }
 
-        if (result.success) {
-          console.log(`🚫 Premium removed for ${sanitizeString(guild.name, 100)} (${serverId}) by ${sanitizeUsername(req.user.username || req.user.id)}`);
-          return res.redirect('/owner?success=premium-removed');
-        }
+        // Deactivate any premium type (Lifetime, Beta, Trial, Regular)
+        deactivatePremium(serverId);
+
+        const premiumType = premiumInfo.isTrial ? 'Trial' :
+                           premiumInfo.isLifetime ? 'Lifetime' :
+                           premiumInfo.tier === 'beta' ? 'Beta' :
+                           premiumInfo.tier;
+
+        console.log(`🚫 ${premiumType} Premium removed for ${sanitizeString(guild.name, 100)} (${serverId}) by ${sanitizeUsername(req.user.username || req.user.id)}`);
+        return res.redirect('/owner?success=premium-removed');
       }
 
       res.redirect('/owner?error=premium-update-failed');
