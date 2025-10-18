@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" data-theme="light">
+<html lang="<%= lang || 'de' %>" data-theme="light">
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SLMX16ZJ6Y"></script>
@@ -7,12 +7,12 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-SLMX16ZJ6Y');
   </script>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Ticket‑Bot Panel</title>
+  <title><%= t.web.title || 'Quantix Tickets - Admin Panel' %></title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
@@ -23,95 +23,64 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/markdown.css">
+
   <style>
+    /* ============================================================
+     * MODERN TAB-BASED PANEL DESIGN
+     * ============================================================ */
+
+    /* CSS Variables */
     :root {
       --bg-color: #f0f8ff;
+      --bg-secondary: #e5f3ff;
       --text-color: #1a1a2e;
+      --text-secondary: #64748b;
       --border-color: #bdd7ee;
       --accent-color: #0ea5e9;
       --accent-hover: #0284c7;
-      --fieldset-bg: rgba(240, 248, 255, 0.9);
-      --thead-bg: #dae9f7;
-      --input-bg: #ffffff;
-      --code-bg: #e0f2ff;
-      --success-bg: #cfe7f3;
-      --success-border: #0ea5e9;
-      --error-bg: #fee2e2;
-      --error-border: #ef4444;
-      --glass-bg: rgba(240, 248, 255, 0.7);
-      --glass-border: rgba(14, 165, 233, 0.3);
-      --shadow-color: rgba(14, 165, 233, 0.15);
+      --glass-bg: rgba(255, 255, 255, 0.8);
+      --glass-bg-solid: rgba(255, 255, 255, 0.95);
+      --glass-border: rgba(14, 165, 233, 0.2);
+      --shadow-sm: 0 2px 8px rgba(14, 165, 233, 0.08);
+      --shadow-md: 0 4px 16px rgba(14, 165, 233, 0.12);
+      --shadow-lg: 0 8px 32px rgba(14, 165, 233, 0.16);
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --error-color: #ef4444;
+      --sidebar-width: 280px;
+      --header-height: 70px;
+      --tab-height: 60px;
     }
 
     [data-theme="dark"] {
       --bg-color: #0a0a0a;
+      --bg-secondary: #0f1510;
       --text-color: #00ff88;
+      --text-secondary: #7dd3ae;
       --border-color: #1a3a2a;
       --accent-color: #00ff88;
       --accent-hover: #00dd77;
-      --fieldset-bg: rgba(15, 21, 16, 0.9);
-      --thead-bg: #0f1f15;
-      --input-bg: #0f1510;
-      --code-bg: #0a1a0f;
-      --success-bg: #0a2015;
-      --success-border: #00ff88;
-      --error-bg: #2a0a0a;
-      --error-border: #ff4444;
-      --glass-bg: rgba(15, 21, 16, 0.7);
-      --glass-border: rgba(0, 255, 136, 0.3);
-      --shadow-color: rgba(0, 255, 136, 0.2);
+      --glass-bg: rgba(15, 21, 16, 0.8);
+      --glass-bg-solid: rgba(15, 21, 16, 0.95);
+      --glass-border: rgba(0, 255, 136, 0.2);
+      --shadow-sm: 0 2px 8px rgba(0, 255, 136, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 255, 136, 0.12);
+      --shadow-lg: 0 8px 32px rgba(0, 255, 136, 0.16);
     }
 
-    [data-theme="dark"] body {
-      background-color: var(--bg-color);
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg-color);
       color: var(--text-color);
-    }
-
-    [data-theme="dark"] input,
-    [data-theme="dark"] select,
-    [data-theme="dark"] textarea {
-      background-color: var(--input-bg);
-      border-color: var(--border-color);
-      color: var(--text-color);
-    }
-
-    [data-theme="dark"] fieldset {
-      background-color: var(--fieldset-bg);
-      border-color: var(--border-color);
-    }
-
-    [data-theme="dark"] thead {
-      background: var(--thead-bg);
-    }
-
-    [data-theme="dark"] code {
-      background: var(--code-bg);
-      color: var(--accent-color);
-    }
-
-    [data-theme="dark"] .good {
-      background: var(--success-bg);
-      border-color: var(--success-border);
-      color: var(--accent-color);
-    }
-
-    [data-theme="dark"] .bad {
-      background: var(--error-bg);
-      border-color: var(--error-border);
-      color: #ff6666;
-    }
-
-    [data-theme="dark"] a {
-      color: var(--accent-color);
-    }
-
-    [data-theme="dark"] button:not(.del-btn):not(.theme-toggle):not(.settings-toggle) {
-      background-color: var(--accent-color);
-      color: #000;
-    }
-
-    [data-theme="dark"] button:not(.del-btn):not(.theme-toggle):not(.settings-toggle):hover {
-      background-color: var(--accent-hover);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
     }
 
     /* Animated Background */
@@ -122,316 +91,911 @@
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: -1;
-      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
-      background-size: 50px 50px;
+      background: radial-gradient(circle at 20% 50%, var(--accent-color) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, var(--accent-color) 0%, transparent 50%);
       opacity: 0.03;
-      animation: bgMove 20s linear infinite;
+      animation: bgPulse 15s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
     }
 
-    @keyframes bgMove {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(50px, 50px); }
+    @keyframes bgPulse {
+      0%, 100% { opacity: 0.03; }
+      50% { opacity: 0.05; }
     }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
+    /* Layout */
+    .app-container {
       display: flex;
-      flex-direction: row;
       min-height: 100vh;
-      width: 100%;
-      max-width: 100%;
-      padding: 0;
-      line-height: 1.8;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--glass-bg-solid);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--glass-border);
+      padding: 1.5rem 0;
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 1000;
+      transition: transform 0.3s;
+      box-shadow: var(--shadow-md);
+    }
+
+    .sidebar-header {
+      padding: 0 1.5rem 1.5rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .sidebar-logo i {
+      font-size: 2rem;
+      color: var(--accent-color);
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sidebar-logo-text h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-color);
       margin: 0;
     }
 
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-      body {
-        padding: 0 1rem;
-      }
-
-      h1 { font-size: 1.5rem; }
-
-      table { font-size: 0.85rem; overflow-x: auto; display: block; }
-      th, td { padding: 0.4rem 0.6rem !important; }
-
-      .grid { flex-direction: column !important; }
-      fieldset { min-width: 100% !important; padding: 1rem !important; }
-
-      textarea { font-size: 0.9rem; }
-      input, select { font-size: 0.9rem; }
-
-      .add-btn, button[type="submit"] {
-        width: 100%;
-        padding: 0.8rem !important;
-      }
-
-      .actions form {
-        display: block !important;
-        width: 100%;
-        margin-bottom: 0.5rem !important;
-      }
-
-      .actions select,
-      .actions button {
-        width: 100% !important;
-        margin-right: 0 !important;
-        margin-bottom: 0.5rem;
-      }
-
-      .theme-toggle {
-        top: 0.5rem !important;
-        right: 0.5rem !important;
-        width: 2.5rem !important;
-        height: 2.5rem !important;
-        font-size: 1.2rem !important;
-      }
-
-      .header-flex {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 1rem;
-      }
-
-      /* Tabellen horizontal scrollbar */
-      table {
-        min-width: 600px;
-      }
-
-      /* Formfelder Stack */
-      .topic-row {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
-      }
-
-      .topic-row input {
-        width: 100% !important;
-      }
-    }
-
-    /* Tablet Responsive */
-    @media (min-width: 769px) and (max-width: 1024px) {
-      body {
-        padding: 0 2rem;
-      }
-
-      .grid {
-        gap: 1.5rem !important;
-      }
-
-      fieldset {
-        flex: 1 1 600px !important;
-        min-width: 500px !important;
-      }
-    }
-
-    main {
-      flex: 1;
-    }
-    table { width:100%; border-collapse:collapse; }
-    th,td { padding:.6rem .8rem; }
-    table input, table select { width:100%; }
-    .grid { display:flex; flex-wrap:wrap; gap:2rem; }
-    fieldset {
-      flex:1 1 800px;
-      min-width:740px;
-      padding:2rem;
-      background: var(--glass-bg);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 2px solid var(--glass-border);
-      box-shadow: 0 8px 32px var(--shadow-color);
-      transition: all 0.3s ease;
-    }
-    fieldset:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 40px var(--shadow-color);
-    }
-    textarea { width:100%; font-family: monospace; resize:vertical; }
-    .bad { border:1px solid var(--error-border); padding:1rem 1.5rem; border-radius:6px; background: var(--error-bg); margin:1rem 0; }
-    .good { border:1px solid var(--success-border); padding:1rem 1.5rem; border-radius:6px; background: var(--success-bg); margin:1rem 0; }
-    .actions form { display:inline-block; margin-right:1rem; }
-    footer { margin-top:3rem; margin-bottom: 3rem; padding-bottom: 2rem; font-size:.7rem; opacity:.6; }
-
-    [data-theme="dark"] footer {
-      margin-bottom: 4rem;
-      padding-bottom: 3rem;
-    }
-    .placeholder-list code { margin-right:.4rem; }
-    .add-btn { margin-top:.5rem; }
-    .soft-note { font-size:.7rem; opacity:.65; }
-    .del-btn { background:#e55353; color:#fff; border:0; padding:.25rem .55rem; border-radius:4px; cursor:pointer; font-size:.7rem; }
-    .del-btn:hover { background:#c84242; }
-    thead { background: var(--thead-bg); }
-    .mini { font-size:.65rem; opacity:.55; }
-
-    .theme-toggle {
-      position: fixed;
-      top: 1.5rem;
-      right: 1.5rem;
-      background: var(--accent-color);
-      color: #000;
-      border: 0;
-      width: 3rem;
-      height: 3rem;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 1000;
-    }
-
-    .theme-toggle:hover {
-      transform: scale(1.1);
-      background: var(--accent-hover);
-    }
-
-    [data-theme="dark"] .theme-toggle {
-      background: var(--accent-color);
-      box-shadow: 0 2px 12px rgba(0,255,136,0.4);
-    }
-
-    .header-flex {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
+    .sidebar-logo-text p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin: 0;
     }
 
     .server-info {
-      font-size: 0.85rem;
-      opacity: 0.7;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--glass-bg);
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      transition: all 0.2s;
     }
 
-    [data-theme="dark"] .server-info {
+    .server-info:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .server-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .server-icon img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .server-details h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-color);
+    }
+
+    .server-details p {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    .user-info {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .sidebar-nav {
+      padding: 1.5rem 0;
+    }
+
+    .nav-section {
+      margin-bottom: 2rem;
+    }
+
+    .nav-section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-secondary);
+      padding: 0 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      color: var(--text-color);
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+      position: relative;
+    }
+
+    .nav-item:hover {
+      background: linear-gradient(90deg, var(--glass-bg) 0%, transparent 100%);
+      border-left-color: var(--accent-color);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(90deg, var(--glass-bg) 0%, transparent 100%);
+      border-left-color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    .nav-item.active::after {
+      content: '';
+      position: absolute;
+      right: 1rem;
+      width: 6px;
+      height: 6px;
+      background: var(--accent-color);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-color);
+    }
+
+    .nav-item i {
+      font-size: 1.1rem;
+      width: 24px;
+      text-align: center;
       color: var(--accent-color);
     }
 
-    [data-theme="dark"] select {
-      background: var(--accent-color) !important;
-      color: #000 !important;
+    /* Main Content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 2rem;
+      max-width: calc(100% - var(--sidebar-width));
     }
 
-    .nav-buttons {
-      display: flex;
-      gap: 0.5rem;
+    .content-header {
       margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .content-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .content-title i {
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
       flex-wrap: wrap;
     }
 
-    .nav-buttons a {
-      padding: 0.6rem 1.2rem;
-      background: var(--accent-color);
-      color: #000;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transition: all 0.2s;
-      display: inline-flex;
+    /* Alerts */
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      display: flex;
       align-items: center;
-      gap: 0.5rem;
-      border: 2px solid transparent;
+      gap: 1rem;
+      animation: slideIn 0.3s ease-out;
+      border: 1px solid;
+      backdrop-filter: blur(10px);
     }
 
-    .nav-buttons a:hover {
-      background: var(--accent-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,184,148,0.3);
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
-    [data-theme="dark"] .nav-buttons a {
-      background: var(--accent-color);
-      color: #000;
+    .alert-success {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: var(--success-color);
+      color: var(--success-color);
     }
 
-    [data-theme="dark"] .nav-buttons a:hover {
-      background: var(--accent-hover);
-      box-shadow: 0 4px 12px rgba(0,255,136,0.4);
+    .alert-warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: var(--warning-color);
+      color: var(--warning-color);
     }
 
-    .nav-buttons a.secondary-btn {
-      background: transparent;
+    .alert-error {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--error-color);
+      color: var(--error-color);
+    }
+
+    .alert-info {
+      background: rgba(14, 165, 233, 0.1);
       border-color: var(--accent-color);
       color: var(--accent-color);
     }
 
-    .nav-buttons a.secondary-btn:hover {
+    .alert i {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    /* Read-Only Banner */
+    .readonly-banner {
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 15px;
+      text-align: center;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .readonly-banner h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.3rem;
+    }
+
+    .readonly-banner p {
+      margin: 0;
+      opacity: 0.95;
+      font-size: 0.95rem;
+    }
+
+    /* Tabs */
+    .tabs-container {
+      margin-bottom: 2rem;
+    }
+
+    .tabs-nav {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      padding: 0.5rem;
+      border-radius: 15px;
+      border: 1px solid var(--glass-border);
+      overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tabs-nav::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .tabs-nav::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .tabs-nav::-webkit-scrollbar-thumb {
       background: var(--accent-color);
-      color: #000;
+      border-radius: 3px;
     }
 
-    @media (max-width: 768px) {
-      .nav-buttons {
-        flex-direction: column;
-      }
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.2s;
+      white-space: nowrap;
+      position: relative;
+    }
 
-      .nav-buttons a {
-        width: 100%;
-        justify-content: center;
+    .tab-btn:hover {
+      background: rgba(14, 165, 233, 0.1);
+      color: var(--text-color);
+    }
+
+    .tab-btn.active {
+      background: var(--accent-color);
+      color: white;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    }
+
+    .tab-btn i {
+      font-size: 1rem;
+    }
+
+    .tab-badge {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--error-color);
+      border: 1px solid var(--error-color);
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .tab-btn.active .tab-badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
-    /* Custom Language Dropdown with Flags */
+    /* Cards */
+    .card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.1rem;
+    }
+
+    .card-description {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+
+    .card-body {
+      /* Content area */
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-color);
+      font-size: 0.9rem;
+    }
+
+    .form-label i {
+      color: var(--accent-color);
+      font-size: 0.9rem;
+    }
+
+    .form-label-optional {
+      font-weight: normal;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      margin-left: auto;
+    }
+
+    .help-text {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      line-height: 1.5;
+    }
+
+    .help-text i {
+      margin-top: 0.2rem;
+      color: var(--accent-color);
+      flex-shrink: 0;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      color: var(--text-color);
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    }
+
+    input:disabled, select:disabled, textarea:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: var(--bg-secondary);
+    }
+
+    select[multiple] {
+      height: auto;
+      min-height: 150px;
+      padding: 0.5rem;
+    }
+
+    select[multiple] option {
+      padding: 0.5rem;
+      border-radius: 6px;
+      margin-bottom: 0.25rem;
+    }
+
+    select[multiple] option:checked {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      line-height: 1.6;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      color: white;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success-color), #059669);
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, var(--warning-color), #d97706);
+      color: white;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-warning:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .btn-outline:hover {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* Grid System */
+    .grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    /* Stats Cards */
+    .stats-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stats-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stats-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .stats-content h4 {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin: 0 0 0.25rem 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stats-content p {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-color);
+      margin: 0;
+    }
+
+    /* Priority Badge */
+    .priority-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid;
+    }
+
+    .priority-green {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success-color);
+      border-color: var(--success-color);
+    }
+
+    .priority-orange {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning-color);
+      border-color: var(--warning-color);
+    }
+
+    .priority-red {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--error-color);
+      border-color: var(--error-color);
+    }
+
+    /* Topics List */
+    .topics-list {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .topic-item {
+      background: var(--glass-bg);
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.2s;
+    }
+
+    .topic-item:hover {
+      transform: translateX(4px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .topic-emoji {
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+
+    .topic-details {
+      flex: 1;
+    }
+
+    .topic-label {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--text-color);
+    }
+
+    .topic-value {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-family: monospace;
+    }
+
+    /* Preview Card */
+    .preview-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .preview-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .embed-preview {
+      background: var(--glass-bg);
+      border-left: 4px solid var(--accent-color);
+      border-radius: 0 8px 8px 0;
+      padding: 1rem;
+      max-width: 500px;
+    }
+
+    .embed-preview-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      color: var(--text-color);
+    }
+
+    .embed-preview-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .embed-preview-footer {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1001;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-md);
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-2px) rotate(20deg);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .theme-toggle i {
+      font-size: 1.2rem;
+      color: var(--accent-color);
+    }
+
+    /* Language Dropdown */
     .lang-dropdown {
       position: fixed;
       top: 1.5rem;
       right: 5.5rem;
-      z-index: 1000;
+      z-index: 1001;
     }
 
     .lang-dropdown-toggle {
-      background: var(--accent-color);
-      color: #000;
-      border: 0;
-      padding: 0.75rem;
-      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      border-radius: 25px;
       cursor: pointer;
-      font-size: 0.9rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      box-shadow: var(--shadow-md);
       transition: all 0.2s;
+      font-size: 0.9rem;
+      color: var(--text-color);
     }
 
     .lang-dropdown-toggle:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: var(--shadow-lg);
     }
 
     .lang-dropdown-toggle img {
       width: 24px;
       height: 18px;
-      border-radius: 2px;
+      border-radius: 3px;
+      border: 1px solid var(--glass-border);
     }
 
     .lang-dropdown-menu {
       position: absolute;
       top: calc(100% + 0.5rem);
       right: 0;
-      background: var(--card-bg);
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      background: var(--glass-bg-solid);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
       display: none;
-      min-width: 180px;
+      min-width: 200px;
       overflow: hidden;
     }
 
     .lang-dropdown-menu.show {
       display: block;
+      animation: slideDown 0.2s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .lang-dropdown-item {
@@ -443,7 +1007,7 @@
       transition: all 0.2s;
       text-decoration: none;
       color: var(--text-color);
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--glass-border);
     }
 
     .lang-dropdown-item:last-child {
@@ -452,31 +1016,19 @@
 
     .lang-dropdown-item:hover {
       background: var(--accent-color);
-      color: #000;
+      color: white;
     }
 
     .lang-dropdown-item.active {
       background: var(--accent-color);
-      color: #000;
+      color: white;
       font-weight: 600;
     }
 
     .lang-dropdown-item img {
       width: 24px;
       height: 18px;
-      border-radius: 2px;
-    }
-
-    @media (max-width: 768px) {
-      .lang-dropdown {
-        top: 0.5rem;
-        right: 3.5rem;
-      }
-
-      .lang-dropdown-toggle {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.85rem;
-      }
+      border-radius: 3px;
     }
 
     /* Loading Overlay */
@@ -486,316 +1038,184 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.95);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
       display: none;
       justify-content: center;
       align-items: center;
-      z-index: 99999;
-      flex-direction: column;
-      gap: 2rem;
+      z-index: 9999;
     }
 
     .loading-overlay.show {
       display: flex;
     }
 
-    .loading-content {
-      text-align: center;
-      background: rgba(255,255,255,0.05);
-      padding: 3rem;
-      border-radius: 20px;
-      border: 1px solid rgba(0,255,136,0.2);
-      max-width: 400px;
-      width: 90%;
-    }
-
     .loading-spinner {
       width: 60px;
       height: 60px;
-      border: 6px solid rgba(0,255,136,0.1);
-      border-top: 6px solid var(--accent-color);
+      border: 6px solid rgba(14, 165, 233, 0.2);
+      border-top-color: var(--accent-color);
       border-radius: 50%;
-      animation: loadingSpin 1s linear infinite;
-      margin: 0 auto 2rem;
+      animation: spin 1s linear infinite;
     }
 
-    .loading-text {
-      font-size: 1.3rem;
-      color: var(--accent-color);
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .loading-subtext {
-      font-size: 0.9rem;
-      opacity: 0.7;
-      color: var(--text-color);
-    }
-
-    @keyframes loadingSpin {
+    @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
 
-    /* Sidebar Layout */
-    .sidebar {
-      width: 280px;
-      min-width: 280px;
-      height: 100vh;
-      position: sticky;
-      top: 0;
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-right: 2px solid var(--glass-border);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      z-index: 100;
+    /* Save Button Fixed */
+    .save-button-fixed {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 998;
+      box-shadow: var(--shadow-lg);
     }
 
-    .sidebar-header {
-      padding: 2rem 1.5rem 1.5rem;
-      border-bottom: 2px solid var(--glass-border);
-    }
-
-    .sidebar-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .sidebar-logo i {
-      font-size: 2rem;
-      color: var(--accent-color);
-    }
-
-    .sidebar-logo-text {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--accent-color);
-    }
-
-    .sidebar-server-info {
-      background: rgba(0, 0, 0, 0.05);
-      padding: 1rem;
-      border-radius: 0.75rem;
-      border: 1px solid var(--glass-border);
-    }
-
-    [data-theme="dark"] .sidebar-server-info {
-      background: rgba(0, 255, 136, 0.05);
-    }
-
-    .sidebar-server-name {
-      font-size: 0.95rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-      color: var(--text-color);
-    }
-
-    .sidebar-server-id {
-      font-size: 0.75rem;
-      opacity: 0.6;
-      font-family: 'Courier New', monospace;
-    }
-
-    .sidebar-nav {
-      flex: 1;
-      padding: 1.5rem 0;
-    }
-
-    .sidebar-nav-section {
-      margin-bottom: 2rem;
-    }
-
-    .sidebar-nav-title {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      font-weight: 700;
-      opacity: 0.5;
-      padding: 0 1.5rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .sidebar-nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1.5rem;
-      color: var(--text-color);
-      text-decoration: none;
-      transition: all 0.2s;
-      border-left: 3px solid transparent;
-      font-size: 0.95rem;
-    }
-
-    .sidebar-nav-item:hover {
-      background: rgba(0, 0, 0, 0.05);
-      border-left-color: var(--accent-color);
-    }
-
-    [data-theme="dark"] .sidebar-nav-item:hover {
-      background: rgba(0, 255, 136, 0.1);
-    }
-
-    .sidebar-nav-item.active {
-      background: rgba(0, 0, 0, 0.08);
-      border-left-color: var(--accent-color);
-      font-weight: 600;
-    }
-
-    [data-theme="dark"] .sidebar-nav-item.active {
-      background: rgba(0, 255, 136, 0.15);
-    }
-
-    .sidebar-nav-item i {
-      width: 20px;
-      text-align: center;
-      font-size: 1.1rem;
-    }
-
-    .sidebar-premium-badge {
-      margin: 0 1.5rem 1.5rem;
-      padding: 1rem;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-      border: 2px solid rgba(102, 126, 234, 0.3);
-      border-radius: 0.75rem;
-      text-align: center;
-    }
-
-    .sidebar-premium-badge.active {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-color: #667eea;
-    }
-
-    .sidebar-premium-icon {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .sidebar-premium-text {
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .sidebar-premium-badge.active .sidebar-premium-text {
-      color: white;
-    }
-
-    .sidebar-footer {
-      padding: 1.5rem;
-      border-top: 2px solid var(--glass-border);
-      text-align: center;
-      font-size: 0.7rem;
-      opacity: 0.6;
-    }
-
-    .main-content {
-      flex: 1;
-      padding: 2rem;
-      overflow-y: auto;
-      height: 100vh;
-    }
-
-    .content-header {
-      margin-bottom: 2rem;
-    }
-
-    .content-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--accent-color);
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    /* Mobile Sidebar Toggle */
-    .sidebar-toggle {
+    /* Mobile Menu Toggle */
+    .mobile-toggle {
       display: none;
       position: fixed;
-      top: 1rem;
-      left: 1rem;
-      background: var(--accent-color);
-      color: #000;
-      border: 0;
-      width: 3rem;
-      height: 3rem;
+      bottom: 2rem;
+      left: 2rem;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
-      cursor: pointer;
+      background: var(--accent-color);
+      color: white;
+      border: none;
       font-size: 1.5rem;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 1001;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: var(--shadow-lg);
+      transition: all 0.2s;
     }
 
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 99;
+    .mobile-toggle:hover {
+      transform: scale(1.1);
     }
 
-    @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-      }
-
+    /* Responsive */
+    @media (max-width: 1024px) {
       .sidebar {
-        position: fixed;
-        left: -280px;
-        transition: left 0.3s ease;
-        z-index: 1000;
+        transform: translateX(-100%);
       }
 
-      .sidebar.open {
-        left: 0;
-      }
-
-      .sidebar-overlay.active {
-        display: block;
-      }
-
-      .sidebar-toggle {
-        display: flex;
+      .sidebar.mobile-open {
+        transform: translateX(0);
       }
 
       .main-content {
-        padding: 1rem;
-        margin-top: 4rem;
+        margin-left: 0;
+        max-width: 100%;
       }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .save-button-fixed {
+        bottom: 5rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .tabs-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+      }
+
+      .tab-btn {
+        font-size: 0.85rem;
+        padding: 0.65rem 1.25rem;
+      }
+
+      .content-title {
+        font-size: 1.5rem;
+      }
+
+      .card {
+        padding: 1.25rem;
+      }
+    }
+
+    /* Dark Mode Overrides */
+    [data-theme="dark"] input,
+    [data-theme="dark"] select,
+    [data-theme="dark"] textarea {
+      background-color: rgba(15, 21, 16, 0.9);
+      border-color: var(--border-color);
+      color: var(--text-color);
+    }
+
+    [data-theme="dark"] .card,
+    [data-theme="dark"] .stats-card,
+    [data-theme="dark"] .server-info,
+    [data-theme="dark"] .topic-item {
+      background: rgba(15, 21, 16, 0.7);
+      border-color: var(--glass-border);
+    }
+
+    [data-theme="dark"] .preview-card {
+      background: rgba(10, 15, 12, 0.8);
+    }
+
+    [data-theme="dark"] select[multiple] option:checked {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent-color);
+      border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-hover);
     }
   </style>
 </head>
 <body>
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-content">
-      <div class="loading-spinner"></div>
-      <div class="loading-text" id="loadingText">Wird gespeichert...</div>
-      <div class="loading-subtext">Bitte warten</div>
-    </div>
+    <div class="loading-spinner"></div>
   </div>
 
+  <!-- Theme Toggle -->
+  <button class="theme-toggle" onclick="toggleTheme()" title="<%= lang === 'de' ? 'Dark Mode umschalten' : 'Toggle Dark Mode' %>">
+    <i id="themeIcon" class="fas fa-moon"></i>
+  </button>
+
+  <!-- Language Dropdown -->
   <div class="lang-dropdown">
     <button class="lang-dropdown-toggle" onclick="toggleLangDropdown()">
       <%
         const langFlags = { de: 'de', en: 'gb', he: 'il', ja: 'jp', ru: 'ru', pt: 'pt', es: 'es', id: 'id', zh: 'zh', ar: 'ar' };
-        const langNames = { de: 'Deutsch', en: 'English', he: 'עברית', ja: '日本語', ru: 'Русский', pt: 'Português', es: 'Español', id: 'Bahasa Indonesia', zh: '中文', ar: 'العربية' };
+        const langNames = { de: 'Deutsch', en: 'English', he: 'עברית', ja: '日本語', ru: 'Русский', pt: 'Português', es: 'Español', id: 'Bahasa', zh: '中文', ar: 'العربية' };
       %>
       <img src="/images/flags/<%= langFlags[lang] %>.svg" alt="<%= lang %>">
       <span><%= langNames[lang] %></span>
-      <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.25rem;"></i>
+      <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
     </button>
     <div class="lang-dropdown-menu" id="langDropdownMenu">
       <a href="/set-language/de" class="lang-dropdown-item <%= lang === 'de' ? 'active' : '' %>">
@@ -828,7 +1248,7 @@
       </a>
       <a href="/set-language/id" class="lang-dropdown-item <%= lang === 'id' ? 'active' : '' %>">
         <img src="/images/flags/id.svg" alt="ID">
-        <span>Bahasa Indonesia</span>
+        <span>Bahasa</span>
       </a>
       <a href="/set-language/zh" class="lang-dropdown-item <%= lang === 'zh' ? 'active' : '' %>">
         <img src="/images/flags/zh.svg" alt="ZH">
@@ -840,1079 +1260,1320 @@
       </a>
     </div>
   </div>
-  <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
-    <i id="themeIcon" class="fas fa-moon"></i>
-  </button>
 
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <!-- Sidebar Header -->
-    <div class="sidebar-header">
-      <!-- Logo -->
-      <div class="sidebar-logo">
-        <i class="fas fa-ticket-alt" style="font-size: 1.8rem; color: var(--accent-color);"></i>
-        <div>
-          <div style="font-size: 1.2rem; font-weight: 700; color: var(--text-color);">Quantix Tickets</div>
-          <div style="font-size: 0.75rem; opacity: 0.7; color: var(--text-color);">Admin Panel</div>
-        </div>
-      </div>
-
-      <!-- Server Info -->
-      <div class="sidebar-server-info">
-        <% if (typeof guild !== 'undefined' && guild) { %>
-          <% if (guild.icon) { %>
-            <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png?size=64" alt="Server Icon" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 0.75rem;">
-          <% } else { %>
-            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-color); display: flex; align-items: center; justify-content: center; margin-right: 0.75rem; font-weight: bold; color: white;">
-              <%= guild.name.charAt(0).toUpperCase() %>
-            </div>
-          <% } %>
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= guild.name %></div>
-            <div style="font-size: 0.75rem; opacity: 0.7; color: var(--text-color);"><%= guild.id %></div>
-          </div>
-        <% } %>
-      </div>
-
-      <!-- User Info -->
-      <% if (typeof user !== 'undefined' && user) { %>
-      <div class="sidebar-server-info" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
-        <% if (user.avatar) { %>
-          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" alt="User Avatar" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 0.75rem;">
-        <% } else { %>
-          <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-color); display: flex; align-items: center; justify-content: center; margin-right: 0.75rem; font-weight: bold; color: white;">
-            <%= user.username ? user.username.charAt(0).toUpperCase() : 'U' %>
-          </div>
-        <% } %>
-        <div style="flex: 1; min-width: 0;">
-          <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= user.global_name || user.username %></div>
-          <div style="font-size: 0.75rem; opacity: 0.7; color: var(--text-color);">@<%= user.username %></div>
-        </div>
-      </div>
-      <% } %>
-    </div>
-
-    <!-- Navigation -->
-    <nav class="sidebar-nav">
-      <!-- Main Section -->
-      <div class="sidebar-nav-section">
-        <div class="sidebar-nav-title">
-          <%= lang === 'de' ? 'Haupt' : lang === 'en' ? 'Main' : lang === 'he' ? 'ראשי' : lang === 'ja' ? 'メイン' : lang === 'ru' ? 'Главное' : lang === 'pt' ? 'Principal' : lang === 'es' ? 'Principal' : lang === 'id' ? 'Utama' : lang === 'zh' ? '主要' : lang === 'ar' ? 'الرئيسية' : 'Haupt' %>
-        </div>
-        <a href="/" class="sidebar-nav-item">
-          <i class="fas fa-home"></i>
-          <span><%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : lang === 'zh' ? '返回首页' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Zur Startseite' %></span>
-        </a>
-        <a href="/panel" class="sidebar-nav-item active">
-          <i class="fas fa-cog"></i>
-          <span><%= lang === 'de' ? 'Einstellungen' : lang === 'en' ? 'Settings' : lang === 'he' ? 'הגדרות' : lang === 'ja' ? '設定' : lang === 'ru' ? 'Настройки' : lang === 'pt' ? 'Configurações' : lang === 'es' ? 'Configuración' : lang === 'id' ? 'Pengaturan' : lang === 'zh' ? '设置' : lang === 'ar' ? 'الإعدادات' : 'Einstellungen' %></span>
-        </a>
-        <a href="/select-server" class="sidebar-nav-item">
-          <i class="fas fa-server"></i>
-          <span><%= lang === 'de' ? 'Server wechseln' : lang === 'en' ? 'Change Server' : lang === 'he' ? 'החלף שרת' : lang === 'ja' ? 'サーバーを変更' : lang === 'ru' ? 'Сменить сервер' : lang === 'pt' ? 'Trocar Servidor' : lang === 'es' ? 'Cambiar Servidor' : lang === 'id' ? 'Ganti Server' : lang === 'zh' ? '切换服务器' : lang === 'ar' ? 'تغيير الخادم' : 'Server wechseln' %></span>
-        </a>
-      </div>
-
-      <!-- Tickets Section -->
-      <div class="sidebar-nav-section">
-        <div class="sidebar-nav-title">
-          <%= lang === 'de' ? 'Tickets' : lang === 'en' ? 'Tickets' : lang === 'he' ? 'כרטיסים' : lang === 'ja' ? 'チケット' : lang === 'ru' ? 'Тикеты' : lang === 'pt' ? 'Tickets' : lang === 'es' ? 'Tickets' : lang === 'id' ? 'Tiket' : lang === 'zh' ? '工单' : lang === 'ar' ? 'التذاكر' : 'Tickets' %>
-        </div>
-        <a href="/tickets" class="sidebar-nav-item">
-          <i class="fas fa-history"></i>
-          <span><%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : lang === 'he' ? 'היסטוריית כרטיסים' : lang === 'ja' ? 'チケット履歴' : lang === 'ru' ? 'История тикетов' : lang === 'pt' ? 'Histórico de Tickets' : lang === 'es' ? 'Historial de Tickets' : lang === 'id' ? 'Riwayat Tiket' : lang === 'zh' ? '工单历史' : lang === 'ar' ? 'سجل التذاكر' : 'Ticket-Verlauf' %></span>
-        </a>
-        <% if (premiumTier === 'pro' || premiumTier === 'beta' || guildId === '1291125037876904026') { %>
-        <a href="/analytics" class="sidebar-nav-item">
-          <i class="fas fa-chart-line"></i>
-          <span><%= lang === 'de' ? 'Analytics' : lang === 'en' ? 'Analytics' : lang === 'he' ? 'אנליטיקה' : lang === 'ja' ? 'アナリティクス' : lang === 'ru' ? 'Аналитика' : lang === 'pt' ? 'Análise' : lang === 'es' ? 'Analítica' : lang === 'id' ? 'Analitik' : lang === 'zh' ? '分析' : lang === 'ar' ? 'تحليلات' : 'Analytics' %></span>
-        </a>
-        <% } %>
-      </div>
-
-      <!-- Support Section -->
-      <div class="sidebar-nav-section">
-        <div class="sidebar-nav-title">
-          <%= lang === 'de' ? 'Support' : lang === 'en' ? 'Support' : lang === 'he' ? 'תמיכה' : lang === 'ja' ? 'サポート' : lang === 'ru' ? 'Поддержка' : lang === 'pt' ? 'Suporte' : lang === 'es' ? 'Soporte' : lang === 'id' ? 'Dukungan' : lang === 'zh' ? '支持' : lang === 'ar' ? 'الدعم' : 'Support' %>
-        </div>
-        <a href="https://dc.theredstonee.de/" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item">
-          <i class="fab fa-discord"></i>
-          <span><%= lang === 'de' ? 'Support Discord' : lang === 'en' ? 'Support Discord' : lang === 'he' ? 'תמיכה Discord' : lang === 'ja' ? 'サポート Discord' : lang === 'ru' ? 'Поддержка Discord' : lang === 'pt' ? 'Suporte Discord' : lang === 'es' ? 'Soporte Discord' : lang === 'id' ? 'Dukungan Discord' : lang === 'zh' ? '支持 Discord' : lang === 'ar' ? 'دعم Discord' : 'Support Discord' %></span>
-        </a>
-      </div>
-    </nav>
-
-    <!-- Premium Badge in Sidebar -->
-    <% if (isPremium) { %>
-    <div class="sidebar-premium-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <span style="font-size: 1.5rem;">💎</span>
-        <div style="flex: 1;">
-          <div style="font-weight: 700; font-size: 0.9rem; color: white;"><%= premiumTierName %></div>
-          <div style="font-size: 0.75rem; opacity: 0.9; color: white;"><%= lang === 'de' ? 'Aktiv' : lang === 'en' ? 'Active' : lang === 'he' ? 'פעיל' : lang === 'ja' ? 'アクティブ' : lang === 'ru' ? 'Активен' : lang === 'pt' ? 'Ativo' : lang === 'es' ? 'Activo' : lang === 'id' ? 'Aktif' : lang === 'zh' ? '活跃' : lang === 'ar' ? 'نشط' : 'Aktiv' %></div>
-        </div>
-      </div>
-      <a href="/premium" style="display: block; margin-top: 0.75rem; padding: 0.5rem; background: rgba(255,255,255,0.2); color: white; text-decoration: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-align: center; transition: all 0.2s;">
-        <%= t.premium.badge_manage %>
-      </a>
-    </div>
-    <% } else { %>
-    <div class="sidebar-premium-badge" style="background: rgba(102, 126, 234, 0.1); border: 2px solid rgba(102, 126, 234, 0.3);">
-      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-        <span style="font-size: 1.5rem;">✨</span>
-        <div style="flex: 1;">
-          <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-color);"><%= lang === 'de' ? 'Free Plan' : lang === 'en' ? 'Free Plan' : lang === 'he' ? 'תוכנית חינמית' : lang === 'ja' ? '無料プラン' : lang === 'ru' ? 'Бесплатно' : lang === 'pt' ? 'Plano Grátis' : lang === 'es' ? 'Plan Gratis' : lang === 'id' ? 'Paket Gratis' : lang === 'zh' ? '免费计划' : lang === 'ar' ? 'خطة مجانية' : 'Free Plan' %></div>
-          <div style="font-size: 0.75rem; opacity: 0.7; color: var(--text-color);"><%= lang === 'de' ? 'Upgrade für mehr' : lang === 'en' ? 'Upgrade for more' : lang === 'he' ? 'שדרג לעוד' : lang === 'ja' ? 'アップグレード' : lang === 'ru' ? 'Обновите' : lang === 'pt' ? 'Atualize' : lang === 'es' ? 'Actualiza' : lang === 'id' ? 'Upgrade' : lang === 'zh' ? '升级' : lang === 'ar' ? 'ترقية' : 'Upgrade für mehr' %></div>
-        </div>
-      </div>
-      <a href="/premium" style="display: block; padding: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-align: center; transition: all 0.2s;">
-        <%= t.premium.badge_upgrade_btn %>
-      </a>
-    </div>
-    <% } %>
-
-    <!-- Sidebar Footer -->
-    <div class="sidebar-footer">
-      <div style="font-size: 0.75rem; opacity: 0.6; text-align: center; color: var(--text-color);">
-        © 2025 Quantix Development
-      </div>
-    </div>
-  </aside>
-
-  <!-- Mobile Toggle Button -->
-  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+  <!-- Mobile Menu Toggle -->
+  <button class="mobile-toggle" onclick="toggleMobileSidebar()">
     <i class="fas fa-bars"></i>
   </button>
 
-  <!-- Mobile Overlay -->
-  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <i class="fas fa-ticket-alt"></i>
+          <div class="sidebar-logo-text">
+            <h1>Quantix Tickets</h1>
+            <p><%= lang === 'de' ? 'Admin Panel' : 'Admin Panel' %></p>
+          </div>
+        </div>
 
-  <!-- Main Content -->
-  <div class="main-content">
-    <div class="content-header">
-      <h1 class="content-title"><i class="fas fa-ticket-alt"></i> <%= t.web.title %></h1>
-    </div>
+        <!-- Server Info -->
+        <% if (typeof guild !== 'undefined' && guild) { %>
+        <div class="server-info">
+          <div class="server-icon">
+            <% if (guild.icon) { %>
+              <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png?size=64" alt="Server">
+            <% } else { %>
+              <%= guild.name.charAt(0).toUpperCase() %>
+            <% } %>
+          </div>
+          <div class="server-details">
+            <h3><%= guild.name %></h3>
+            <p><%= guild.id %></p>
+          </div>
+        </div>
+        <% } else if (typeof guildId !== 'undefined' && guildId) { %>
+        <div class="server-info">
+          <div class="server-icon">
+            <i class="fas fa-server"></i>
+          </div>
+          <div class="server-details">
+            <h3><%= typeof guildName !== 'undefined' ? guildName : 'Server' %></h3>
+            <p><%= guildId %></p>
+          </div>
+        </div>
+        <% } %>
 
-  <!-- Read-Only Mode Notice for Team Members -->
-  <% if (typeof isAdmin !== 'undefined' && !isAdmin) { %>
-  <div style="margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border-radius: 15px; color: white; text-align: center; box-shadow: 0 4px 20px rgba(243, 156, 18, 0.4);">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-      <span style="font-size: 2.5rem;">👁️</span>
-      <div style="text-align: left;">
-        <h3 style="margin: 0; font-size: 1.5rem; color: white;">
-          <%= lang === 'de' ? 'Nur-Lese-Modus' : lang === 'en' ? 'Read-Only Mode' : lang === 'he' ? 'מצב קריאה בלבד' : lang === 'ja' ? '読み取り専用モード' : lang === 'ru' ? 'Режим только для чтения' : lang === 'pt' ? 'Modo Somente Leitura' : lang === 'es' ? 'Modo Solo Lectura' : lang === 'id' ? 'Mode Hanya Baca' : lang === 'ar' ? 'وضع القراءة فقط' : 'Nur-Lese-Modus' %>
-        </h3>
-        <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">
-          <%= lang === 'de' ? 'Du kannst als Team-Mitglied alle Einstellungen sehen, aber keine Änderungen vornehmen. Nur Administratoren können Einstellungen bearbeiten.' : lang === 'en' ? 'As a team member, you can view all settings but cannot make changes. Only administrators can edit settings.' : lang === 'he' ? 'כחבר צוות, אתה יכול לראות את כל ההגדרות אך לא לבצע שינויים. רק מנהלים יכולים לערוך הגדרות.' : lang === 'ja' ? 'チームメンバーとして、すべての設定を表示できますが、変更はできません。管理者のみが設定を編集できます。' : lang === 'ru' ? 'Как член команды, вы можете просматривать все настройки, но не можете вносить изменения. Только администраторы могут редактировать настройки.' : lang === 'pt' ? 'Como membro da equipe, você pode ver todas as configurações, mas não pode fazer alterações. Apenas administradores podem editar configurações.' : lang === 'es' ? 'Como miembro del equipo, puedes ver todas las configuraciones pero no puedes hacer cambios. Solo los administradores pueden editar configuraciones.' : lang === 'id' ? 'Sebagai anggota tim, Anda dapat melihat semua pengaturan tetapi tidak dapat melakukan perubahan. Hanya administrator yang dapat mengedit pengaturan.' : lang === 'ar' ? 'كعضو في الفريق، يمكنك عرض جميع الإعدادات ولكن لا يمكنك إجراء تغييرات. يمكن للمسؤولين فقط تحرير الإعدادات.' : 'Du kannst als Team-Mitglied alle Einstellungen sehen, aber keine Änderungen vornehmen. Nur Administratoren können Einstellungen bearbeiten.' %>
+        <!-- User Info -->
+        <% if (typeof user !== 'undefined' && user) { %>
+        <div class="server-info user-info">
+          <div class="server-icon">
+            <% if (user.avatar) { %>
+              <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" alt="User">
+            <% } else { %>
+              <%= user.username ? user.username.charAt(0).toUpperCase() : 'U' %>
+            <% } %>
+          </div>
+          <div class="server-details">
+            <h3><%= user.global_name || user.username %></h3>
+            <p>@<%= user.username %></p>
+          </div>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title"><%= lang === 'de' ? 'NAVIGATION' : 'NAVIGATION' %></div>
+          <a href="/" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span><%= lang === 'de' ? 'Startseite' : 'Home' %></span>
+          </a>
+          <a href="/panel" class="nav-item active">
+            <i class="fas fa-cog"></i>
+            <span><%= lang === 'de' ? 'Einstellungen' : 'Settings' %></span>
+          </a>
+          <a href="/select-server" class="nav-item">
+            <i class="fas fa-server"></i>
+            <span><%= lang === 'de' ? 'Server wechseln' : 'Change Server' %></span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title"><%= lang === 'de' ? 'TICKETS' : 'TICKETS' %></div>
+          <a href="/tickets" class="nav-item">
+            <i class="fas fa-history"></i>
+            <span><%= lang === 'de' ? 'Verlauf' : 'History' %></span>
+          </a>
+          <% if (premiumTier === 'pro' || premiumTier === 'beta' || guildId === '1291125037876904026') { %>
+          <a href="/analytics" class="nav-item">
+            <i class="fas fa-chart-line"></i>
+            <span>Analytics</span>
+          </a>
+          <% } %>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title"><%= lang === 'de' ? 'SUPPORT' : 'SUPPORT' %></div>
+          <a href="https://discord.com/invite/mnYbnpyyBS" target="_blank" class="nav-item">
+            <i class="fab fa-discord"></i>
+            <span>Support Server</span>
+          </a>
+          <a href="/premium" class="nav-item">
+            <i class="fas fa-gem"></i>
+            <span>Premium</span>
+          </a>
+          <a href="/logout" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span><%= lang === 'de' ? 'Abmelden' : 'Logout' %></span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content-header">
+        <h1 class="content-title">
+          <i class="fas fa-sliders-h"></i>
+          <%= lang === 'de' ? 'Server-Konfiguration' : 'Server Configuration' %>
+        </h1>
+        <div class="header-actions">
+          <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+          <button type="button" class="btn btn-success btn-sm" onclick="quickSave()">
+            <i class="fas fa-save"></i>
+            <%= lang === 'de' ? 'Speichern' : 'Save' %>
+          </button>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Read-Only Mode Notice -->
+      <% if (typeof isAdmin !== 'undefined' && !isAdmin) { %>
+      <div class="readonly-banner">
+        <span style="font-size: 2.5rem;">👁️</span>
+        <h3><%= lang === 'de' ? 'Nur-Lese-Modus' : 'Read-Only Mode' %></h3>
+        <p>
+          <%= lang === 'de'
+            ? 'Du kannst als Team-Mitglied alle Einstellungen sehen, aber keine Änderungen vornehmen. Nur Administratoren können Einstellungen bearbeiten.'
+            : 'As a team member, you can view all settings but cannot make changes. Only administrators can edit settings.'
+          %>
         </p>
       </div>
-    </div>
-  </div>
-  <% } %>
+      <% } %>
 
-  <% if (msg==='saved')  { %><p class="good"><%= t.web.messages.saved %></p><% } %>
-  <% if (msg==='sent')   { %><p class="good"><%= t.web.messages.sent %></p><% } %>
-  <% if (msg==='edited') { %><p class="good"><%= t.web.messages.edited %></p><% } %>
-  <% if (msg==='nopanel'){ %><p class="bad"><%= t.web.messages.nopanel %></p><% } %>
-  <% if (msg==='error')  { %><p class="bad"><%= t.web.messages.error %></p><% } %>
+      <!-- Success/Error Messages -->
+      <% if (msg === 'saved') { %>
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        <span><%= t.web.messages.saved %></span>
+      </div>
+      <% } %>
+      <% if (msg === 'sent') { %>
+      <div class="alert alert-success">
+        <i class="fas fa-paper-plane"></i>
+        <span><%= t.web.messages.sent %></span>
+      </div>
+      <% } %>
+      <% if (msg === 'edited') { %>
+      <div class="alert alert-success">
+        <i class="fas fa-edit"></i>
+        <span><%= t.web.messages.edited %></span>
+      </div>
+      <% } %>
+      <% if (msg === 'nopanel') { %>
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span><%= t.web.messages.nopanel %></span>
+      </div>
+      <% } %>
+      <% if (msg === 'error') { %>
+      <div class="alert alert-error">
+        <i class="fas fa-times-circle"></i>
+        <span><%= t.web.messages.error %></span>
+      </div>
+      <% } %>
 
-  <form method="POST" autocomplete="off" id="panelForm">
-    <div class="grid">
+      <!-- Main Form -->
+      <form method="POST" action="/panel" autocomplete="off" id="panelForm">
 
-      <!-- Server Einstellungen -->
-      <fieldset>
-        <legend><i class="fas fa-server"></i> <%= t.web.server_settings %></legend>
-        <label><%= t.web.guild_id %>
-          <input name="guildId" value="<%= cfg.guildId || guildId || '' %>" placeholder="1234567890123456789" readonly style="background: var(--fieldset-bg); cursor: not-allowed;">
-        </label>
-        <label><%= t.web.ticket_category %>
-          <select name="ticketCategoryId" multiple size="5" style="height: auto;">
-            <%
-            const selectedCategories = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
-            channels.filter(ch => ch.type === 4).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= selectedCategories.includes(ch.id) ? 'selected' : '' %>>
-                🎫 <%= ch.name %>
-              </option>
-            <% }) %>
-          </select>
-        </label>
-        <label><%= t.web.log_channel %>
-          <select name="logChannelId" multiple size="5" style="height: auto;">
-            <%
-            const selectedLogChannels = Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : []);
-            channels.filter(ch => ch.type === 0).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= selectedLogChannels.includes(ch.id) ? 'selected' : '' %>>
-                📊 # <%= ch.name %>
-              </option>
-            <% }) %>
-          </select>
-        </label>
-        <label><%= t.web.transcript_channel %>
-          <select name="transcriptChannelId" multiple size="5" style="height: auto;">
-            <%
-            const selectedTranscriptChannels = Array.isArray(cfg.transcriptChannelId) ? cfg.transcriptChannelId : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : []);
-            channels.filter(ch => ch.type === 0).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= selectedTranscriptChannels.includes(ch.id) ? 'selected' : '' %>>
-                📄 # <%= ch.name %>
-              </option>
-            <% }) %>
-          </select>
-        </label>
-        <label><%= t.web.team_role %> (Legacy)
-          <select name="teamRoleId" multiple size="5" style="height: auto;">
-            <%
-            const selectedTeamRoles = Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : (cfg.teamRoleId ? [cfg.teamRoleId] : []);
-            roles.forEach(role => { %>
-              <option value="<%= role.id %>" <%= selectedTeamRoles.includes(role.id) ? 'selected' : '' %>>
-                🧑‍💼 @ <%= role.name %>
-              </option>
-            <% }) %>
-          </select>
-        </label>
-        <p class="soft-note">Guild ID wird automatisch gesetzt. Mehrfachauswahl mit STRG/CMD. Legacy Team-Rolle für Rückwärtskompatibilität.</p>
-      </fieldset>
-
-      <!-- Priority Rollen (NEU) -->
-      <fieldset>
-        <legend><i class="fas fa-users-cog"></i> Priorit<%= lang === 'he' ? 'יות' : 'ä' %>ts-Rollen (Multi-Level)</legend>
-        <p class="soft-note">Lege fest welche Rollen Zugriff auf Tickets mit spezifischer Priorit<%= lang === 'he' ? 'יות' : 'ä' %>t haben. Mehrfachauswahl mit STRG/CMD.</p>
-
-        <label>🟢 Grün (Niedrig) - Rollen
-          <select name="priorityRoles_0" multiple size="5" style="height: auto;">
-            <%
-            const green = (cfg.priorityRoles && cfg.priorityRoles['0']) || [];
-            roles.forEach(role => { %>
-              <option value="<%= role.id %>" <%= green.includes(role.id) ? 'selected' : '' %>>
-                @ <%= role.name %>
-              </option>
-            <% }) %>
-          </select>
-        </label>
-
-        <label>🟠 Orange (Mittel) - Rollen
-          <select name="priorityRoles_1" multiple size="5" style="height: auto;">
-            <%
-            const orange = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
-            roles.forEach(role => { %>
-              <option value="<%= role.id %>" <%= orange.includes(role.id) ? 'selected' : '' %>>
-                @ <%= role.name %>
-              </option>
-            <% }) %>
-          </select>
-        </label>
-
-        <label>🔴 Rot (Hoch) - Rollen
-          <select name="priorityRoles_2" multiple size="5" style="height: auto;">
-            <%
-            const red = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
-            roles.forEach(role => { %>
-              <option value="<%= role.id %>" <%= red.includes(role.id) ? 'selected' : '' %>>
-                @ <%= role.name %>
-              </option>
-            <% }) %>
-          </select>
-        </label>
-
-        <div class="soft-note" style="margin-top: 1rem; padding: 1rem; background: var(--fieldset-bg); border-radius: 6px; border-left: 4px solid var(--accent-color);">
-          <strong>📝 Vorschau:</strong><br>
-          <span style="font-size: 0.85rem;">
-            🟢 Grün: <%= green.length %> Rolle(n) |
-            🟠 Orange: <%= orange.length %> Rolle(n) |
-            🔴 Rot: <%= red.length %> Rolle(n)
-          </span>
-        </div>
-      </fieldset>
-
-      <!-- Premium Features -->
-      <fieldset style="border: 2px solid <%= isPremium ? '#667eea' : 'rgba(102, 126, 234, 0.3)' %>; <%= isPremium ? 'background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);' : '' %>">
-        <legend>
-          <i class="fas fa-gem"></i> 💎 Premium Features
-          <%= isPremium ? '| ' + premiumTierName : '' %>
-        </legend>
-
-        <%
-        // Feature-Definitionen mit Plänen
-        const features = [
-          { name: t.premium.feature_ticket_categories, icon: '📁', free: 3, basic: 7, pro: 999, current: true },
-          { name: t.premium.feature_no_ads, icon: '🚫', free: false, basic: true, pro: true },
-          { name: t.premium.feature_custom_avatar, icon: '🎨', free: false, basic: true, pro: true },
-          { name: t.premium.feature_statistics, icon: '📊', free: false, basic: true, pro: true },
-          { name: t.premium.feature_priority_support, icon: '⚡', free: false, basic: true, pro: true },
-          { name: t.premium.feature_auto_close, icon: '⏰', free: false, basic: false, pro: true },
-          { name: t.premium.feature_email_notifications, icon: '📧', free: false, basic: false, pro: true, config: true },
-          { name: t.premium.feature_dm_notifications, icon: '🔔', free: false, basic: false, pro: true, config: true }
-        ];
-        %>
-
-        <!-- Feature-Übersicht -->
-        <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--fieldset-bg); border-radius: 8px;">
-          <strong style="font-size: 1.1rem;"><%= t.premium.feature_overview %></strong>
-          <table style="margin-top: 1rem; width: 100%; font-size: 0.9rem;">
-            <thead style="background: var(--thead-bg);">
-              <tr>
-                <th style="text-align: left; padding: 0.75rem;">Feature</th>
-                <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'none' ? 'rgba(0,184,148,0.1)' : 'transparent' %>;">
-                  <%= t.premium.tier_free %>
-                </th>
-                <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'basic' ? 'rgba(102,126,234,0.1)' : 'transparent' %>;">
-                  <%= t.premium.tier_basic %>
-                </th>
-                <th style="text-align: center; padding: 0.75rem; background: <%= premiumTier === 'pro' || premiumTier === 'beta' ? 'rgba(118,75,162,0.15)' : 'transparent' %>;">
-                  <%= t.premium.tier_pro %>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <% features.forEach(feature => { %>
-              <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.75rem;">
-                  <%= feature.icon %> <%= feature.name %>
-                </td>
-                <td style="text-align: center; padding: 0.75rem;">
-                  <% if (typeof feature.free === 'number') { %>
-                    <span style="color: var(--accent-color); font-weight: bold;"><%= feature.free %></span>
-                  <% } else if (feature.free) { %>
-                    <span style="color: #00ff88;">✓</span>
-                  <% } else { %>
-                    <span style="opacity: 0.3;">—</span>
-                  <% } %>
-                </td>
-                <td style="text-align: center; padding: 0.75rem;">
-                  <% if (typeof feature.basic === 'number') { %>
-                    <span style="color: #667eea; font-weight: bold;"><%= feature.basic %></span>
-                  <% } else if (feature.basic) { %>
-                    <span style="color: #667eea;">✓</span>
-                  <% } else { %>
-                    <span style="opacity: 0.3;">—</span>
-                  <% } %>
-                </td>
-                <td style="text-align: center; padding: 0.75rem;">
-                  <% if (typeof feature.pro === 'number') { %>
-                    <span style="color: #764ba2; font-weight: bold;">♾️</span>
-                  <% } else if (feature.pro) { %>
-                    <span style="color: #764ba2;">✓</span>
-                  <% } else { %>
-                    <span style="opacity: 0.3;">—</span>
-                  <% } %>
-                </td>
-              </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-
-        <% if (!isPremium) { %>
-        <!-- Upgrade CTA für Free-User -->
-        <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 10px; text-align: center; margin-bottom: 1.5rem; border: 2px dashed rgba(102, 126, 234, 0.4);">
-          <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">✨</span>
-          <h3 style="margin: 0 0 0.5rem 0; color: #667eea;"><%= t.premium.upgrade_cta_title %></h3>
-          <p style="margin: 0 0 1rem 0; opacity: 0.8; font-size: 0.9rem;">
-            <%= t.premium.upgrade_cta_description %>
-          </p>
-          <a href="/premium" style="display: inline-block; padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); transition: all 0.2s;">
-            <%= t.premium.upgrade_cta_button %>
-          </a>
-        </div>
-        <% } %>
-
-        <!-- Konfigurierbare Features -->
-        <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--fieldset-bg); border-radius: 8px; border: 2px solid rgba(102, 126, 234, 0.2);">
-          <strong style="font-size: 1.1rem; display: block; margin-bottom: 1rem;">⚙️ Konfigurierbare Features</strong>
-
-          <!-- Email-Benachrichtigungen (nur Pro) -->
-          <% if (premiumTier === 'pro' || premiumTier === 'beta' || guildId === '1291125037876904026') { %>
-          <div style="margin-bottom: 1.5rem;">
-            <label>
-              <%= t.premium.email_notifications_label %>
-              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
-              <input
-                type="email"
-                name="notificationEmail"
-                value="<%= cfg.notificationEmail || '' %>"
-                placeholder="<%= t.premium.email_notifications_placeholder %>"
-                style="margin-top: 0.5rem;"
-              >
-              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                <%= t.premium.email_notifications_description %>
-              </small>
-            </label>
+        <!-- Tabs Navigation -->
+        <div class="tabs-container">
+          <div class="tabs-nav">
+            <button type="button" class="tab-btn active" data-tab="overview">
+              <i class="fas fa-home"></i>
+              <span><%= lang === 'de' ? 'Übersicht' : 'Overview' %></span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="channels">
+              <i class="fas fa-hashtag"></i>
+              <span><%= lang === 'de' ? 'Kanäle' : 'Channels' %></span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="roles">
+              <i class="fas fa-users-cog"></i>
+              <span><%= lang === 'de' ? 'Rollen' : 'Roles' %></span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="topics">
+              <i class="fas fa-tags"></i>
+              <span><%= lang === 'de' ? 'Themen' : 'Topics' %></span>
+              <% if (cfg.topics && cfg.topics.length > 0) { %>
+                <span class="tab-badge"><%= cfg.topics.length %></span>
+              <% } %>
+            </button>
+            <button type="button" class="tab-btn" data-tab="forms">
+              <i class="fas fa-clipboard-question"></i>
+              <span><%= lang === 'de' ? 'Formulare' : 'Forms' %></span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="embeds">
+              <i class="fas fa-palette"></i>
+              <span><%= lang === 'de' ? 'Design' : 'Design' %></span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="panel">
+              <i class="fas fa-paper-plane"></i>
+              <span>Panel</span>
+            </button>
+            <% if (isPremium) { %>
+            <button type="button" class="tab-btn" data-tab="premium">
+              <i class="fas fa-gem"></i>
+              <span>Premium</span>
+            </button>
+            <% } %>
           </div>
 
-          <!-- Auto-Close System (nur Pro) -->
-          <div style="margin-bottom: 1.5rem;">
-            <label>
-              <%= t.premium.auto_close_label %>
-              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
-              <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
-                <input
-                  type="checkbox"
-                  name="autoCloseEnabled"
-                  id="autoCloseEnabled"
-                  <%= cfg.autoCloseEnabled ? 'checked' : '' %>
-                  style="width: auto; margin: 0;"
-                >
-                <label for="autoCloseEnabled" style="margin: 0; cursor: pointer;">
-                  <%= t.premium.auto_close_enable %>
-                </label>
+          <!-- Tab: Overview -->
+          <div class="tab-content active" id="tab-overview">
+            <div class="grid grid-2" style="margin-bottom: 2rem;">
+              <div class="stats-card">
+                <div class="stats-icon">
+                  <i class="fas fa-tags"></i>
+                </div>
+                <div class="stats-content">
+                  <h4><%= lang === 'de' ? 'Ticket-Themen' : 'Ticket Topics' %></h4>
+                  <p><%= (cfg.topics || []).length %></p>
+                </div>
               </div>
-              <div style="margin-top: 0.75rem;">
-                <input
-                  type="number"
-                  name="autoCloseDays"
-                  value="<%= cfg.autoCloseDays || 7 %>"
-                  min="1"
-                  max="365"
-                  placeholder="7"
-                  style="width: 100px;"
-                  <%= !cfg.autoCloseEnabled ? 'disabled' : '' %>
-                >
-                <span style="margin-left: 0.5rem;"><%= t.premium.auto_close_days %></span>
+              <div class="stats-card">
+                <div class="stats-icon">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="stats-content">
+                  <h4><%= lang === 'de' ? 'Team-Rollen' : 'Team Roles' %></h4>
+                  <p><%= ((cfg.priorityRoles && cfg.priorityRoles['0']) || []).length + ((cfg.priorityRoles && cfg.priorityRoles['1']) || []).length + ((cfg.priorityRoles && cfg.priorityRoles['2']) || []).length %></p>
+                </div>
               </div>
-              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                <%= t.premium.auto_close_description %>
-              </small>
-            </label>
+              <div class="stats-card">
+                <div class="stats-icon">
+                  <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stats-content">
+                  <h4><%= lang === 'de' ? 'Formular-Felder' : 'Form Fields' %></h4>
+                  <p><%= (cfg.formFields || []).length %></p>
+                </div>
+              </div>
+              <div class="stats-card">
+                <div class="stats-icon">
+                  <i class="fas fa-gem"></i>
+                </div>
+                <div class="stats-content">
+                  <h4>Premium Status</h4>
+                  <p><%= premiumTierName || 'Free' %></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-info-circle"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Server-Informationen' : 'Server Information' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de' ? 'Grundlegende Informationen über deinen Server' : 'Basic information about your server' %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-server"></i>
+                    <span><%= t.web.guild_id %></span>
+                  </div>
+                  <input
+                    type="text"
+                    name="guildId"
+                    value="<%= cfg.guildId || guildId || '' %>"
+                    readonly
+                    disabled>
+                  <div class="help-text">
+                    <i class="fas fa-info-circle"></i>
+                    <span><%= t.web.panel_config.guild_id_help %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-info">
+              <i class="fas fa-lightbulb"></i>
+              <div>
+                <strong><%= lang === 'de' ? 'Tipp:' : 'Tip:' %></strong><br>
+                <%= lang === 'de'
+                  ? 'Nutze die Tabs oben, um schnell zwischen verschiedenen Konfigurationsbereichen zu wechseln.'
+                  : 'Use the tabs above to quickly switch between different configuration areas.'
+                %>
+              </div>
+            </div>
           </div>
 
-          <!-- Custom Bot-Avatar (Basic+) -->
-          <div style="margin-bottom: 1.5rem;">
-            <label>
-              <%= t.premium.custom_avatar_label %>
-              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">BASIC+</span>
-              <input
-                type="url"
-                name="customAvatarUrl"
-                value="<%= cfg.customAvatarUrl || '' %>"
-                placeholder="<%= t.premium.custom_avatar_placeholder %>"
-                style="margin-top: 0.5rem;"
-              >
-              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                <%= t.premium.custom_avatar_description %>
-              </small>
-            </label>
-          </div>
-
-          <!-- Discord DM-Benachrichtigungen (nur Pro) -->
-          <div style="margin-bottom: 1.5rem;">
-            <label>
-              <%= t.premium.dm_notifications_label %>
-              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
-              <textarea
-                name="dmNotificationUsers"
-                rows="3"
-                placeholder="<%= t.premium.dm_notifications_placeholder %>"
-                style="margin-top: 0.5rem; font-family: monospace; font-size: 0.9rem;"
-              ><%= (cfg.dmNotificationUsers || []).join('\n') %></textarea>
-              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                <%= t.premium.dm_notifications_description %>
-              </small>
-            </label>
-          </div>
-
-          <% } else if (premiumTier === 'basic') { %>
-          <!-- Basic User: Nur Custom Avatar -->
-          <div style="margin-bottom: 1.5rem;">
-            <label>
-              <%= t.premium.custom_avatar_label %>
-              <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">BASIC+</span>
-              <input
-                type="url"
-                name="customAvatarUrl"
-                value="<%= cfg.customAvatarUrl || '' %>"
-                placeholder="<%= t.premium.custom_avatar_placeholder %>"
-                style="margin-top: 0.5rem;"
-              >
-              <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.5rem;">
-                <%= t.premium.custom_avatar_description %>
-              </small>
-            </label>
-          </div>
-
-          <!-- Pro-Features Locked -->
-          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-top: 1rem;">
-            <strong><%= t.premium.email_notifications_label %></strong>
-            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
-            <br>
-            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              <%= t.premium.feature_locked_pro %>
-            </span>
-          </div>
-
-          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-top: 1rem;">
-            <strong><%= t.premium.auto_close_label %></strong>
-            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
-            <br>
-            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              <%= t.premium.feature_locked_pro %>
-            </span>
-          </div>
-
-          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-top: 1rem;">
-            <strong><%= t.premium.dm_notifications_label %></strong>
-            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
-            <br>
-            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              <%= t.premium.feature_locked_pro %>
-            </span>
-          </div>
-
-          <% } else { %>
-          <!-- Free User: Alle Features Locked -->
-          <div style="padding: 1rem; background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; border-radius: 6px; margin-bottom: 1rem;">
-            <strong><%= t.premium.custom_avatar_label %></strong>
-            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">BASIC+</span>
-            <br>
-            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              <%= t.premium.feature_locked_basic %>
-            </span>
-          </div>
-
-          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-bottom: 1rem;">
-            <strong><%= t.premium.email_notifications_label %></strong>
-            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
-            <br>
-            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              <%= t.premium.feature_locked_pro %>
-            </span>
-          </div>
-
-          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px; margin-bottom: 1rem;">
-            <strong><%= t.premium.auto_close_label %></strong>
-            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
-            <br>
-            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              <%= t.premium.feature_locked_pro %>
-            </span>
-          </div>
-
-          <div style="padding: 1rem; background: rgba(118, 75, 162, 0.1); border-left: 4px solid #764ba2; border-radius: 6px;">
-            <strong><%= t.premium.dm_notifications_label %></strong>
-            <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">PRO</span>
-            <br>
-            <span style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-              <%= t.premium.feature_locked_pro %>
-            </span>
-          </div>
-          <% } %>
-        </div>
-
-        <!-- Kategorie-Limit Anzeige -->
-        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--fieldset-bg); border-radius: 8px; border-left: 4px solid var(--accent-color);">
-          <strong><%= t.premium.category_limit_title %></strong>
-          <br>
-          <span style="font-size: 1.2rem; color: var(--accent-color); font-weight: bold; margin-top: 0.5rem; display: block;">
-            <%= premiumTier === 'pro' || premiumTier === 'beta' || guildId === '1291125037876904026' ? t.premium.category_limit_unlimited : premiumTier === 'basic' ? '7 ' + t.premium.feature_ticket_categories : '3 ' + t.premium.feature_ticket_categories %>
-          </span>
-          <% if (premiumTier === 'none') { %>
-          <span style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem; display: block;">
-            <%= t.premium.category_limit_hint %>
-          </span>
-          <% } %>
-        </div>
-
-        <% if (isPremium) { %>
-        <p style="margin-top: 1rem; text-align: center;">
-          <a href="/premium" style="color: #667eea; text-decoration: none; font-weight: 600;">
-            <%= t.premium.manage_subscription %>
-          </a>
-        </p>
-        <% } %>
-      </fieldset>
-
-      <!-- GitHub Commit Logs (NEU) -->
-      <fieldset>
-        <legend><i class="fab fa-github"></i> GitHub Commit Logs</legend>
-<p class="soft-note">Konfiguriere wo GitHub Commits vom Quantix-Tickets-Bot Repository geloggt werden sollen.</p>
-
-        <label>📢 GitHub Webhook Channel
-          <select name="githubWebhookChannelId">
-            <option value=""><%= t.web.select_channel %></option>
-            <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= cfg.githubWebhookChannelId === ch.id ? 'selected' : '' %>>
-                # <%= ch.name %>
-              </option>
-            <% }) %>
-          </select>
-        </label>
-
-        <div style="margin-top: 1rem; padding: 1rem; background: var(--fieldset-bg); border-radius: 6px; border-left: 4px solid <%= cfg.githubCommitsEnabled !== false ? '#00ff88' : '#ff4444' %>;">
-          <strong>Status:</strong>
-          <%= cfg.githubCommitsEnabled !== false ? '✅ Aktiviert' : '❌ Deaktiviert' %>
-          <br>
-          <span style="font-size: 0.85rem; opacity: 0.8;">
-            Verwende den <code>/github-commits</code> Command im Discord um den Status zu ändern.
-          </span>
-          <% if (cfg.githubWebhookChannelId) { %>
-            <br>
-            <span style="font-size: 0.85rem; opacity: 0.8;">
-              Logs werden gesendet an: <strong><%= channels.find(ch => ch.id === cfg.githubWebhookChannelId)?.name || 'Unbekannt' %></strong>
-            </span>
-          <% } else { %>
-            <br>
-            <span style="font-size: 0.85rem; opacity: 0.8; color: #ff6666;">
-              ⚠️ Kein Webhook-Channel ausgewählt! Bitte wähle einen Channel aus.
-            </span>
-          <% } %>
-        </div>
-
-        <p class="soft-note" style="margin-top: 1rem;">
-          💡 <strong>Webhook URL Setup:</strong><br>
-          1. Wähle oben den Channel aus<br>
-          2. Speichere die Einstellungen<br>
-          3. Füge in deinem GitHub Repository die Webhook-URL hinzu:<br>
-          <code style="font-size: 0.75rem; word-break: break-all;">
-            <%= process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de' %>/webhook/github
-          </code><br>
-          4. Content-Type: <code>application/json</code><br>
-          5. Event: <strong>Pushes</strong> (oder "Just the push event")
-        </p>
-      </fieldset>
-
-      <!-- Topics -->
-      <fieldset>
-        <legend><%= t.web.topics %></legend>
-        <table>
-          <thead>
-            <tr><th><%= t.web.topic_label %>*</th><th><%= t.web.topic_value %></th><th><%= t.web.topic_emoji %></th><th><%= t.web.delete %></th></tr>
-          </thead>
-          <tbody id="topicRows">
-            <% (cfg.topics||[]).forEach(topic=>{ %>
-              <tr>
-                <td><input name="label" value="<%= topic.label %>" required></td>
-                <td><input name="value" value="<%= topic.value %>" placeholder="auto"></td>
-                <td><input name="emoji" value="<%= topic.emoji||'' %>"></td>
-                <td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
-        <button type="button" class="add-btn" onclick="addTopicRow()">➕ Topic</button>
-        <p class="soft-note">Ist <b>Value</b> leer, wird es aus dem Label generiert (klein + Bindestriche).</p>
-      </fieldset>
-
-      <!-- Ticket Embed -->
-      <fieldset>
-        <legend><%= t.web.ticket_embed %></legend>
-        <p class="placeholder-list soft-note"><%= t.web.placeholders %>: <code>{userMention}</code> <code>{userId}</code> <code>{topicLabel}</code> <code>{topicValue}</code> <code>{ticketNumber}</code></p>
-        <label><%= t.web.embed_title %> <input name="embedTitle" value="<%= cfg.ticketEmbed?.title || '' %>"></label>
-        <label><%= t.web.embed_description %> <textarea name="embedDescription" rows="7"><%= cfg.ticketEmbed?.description || '' %></textarea></label>
-        <label><%= t.web.embed_color %> <input name="embedColor" value="<%= cfg.ticketEmbed?.color || '#2b90d9' %>" placeholder="#2b90d9"></label>
-        <label><%= t.web.embed_footer %> <input name="embedFooter" value="<%= cfg.ticketEmbed?.footer || '' %>"></label>
-      </fieldset>
-
-      <!-- Panel Embed -->
-      <fieldset>
-        <legend><%= t.web.panel_embed %></legend>
-        <label><%= t.web.embed_title %> <input name="panelTitle" value="<%= cfg.panelEmbed?.title || '' %>"></label>
-        <label><%= t.web.embed_description %> <textarea name="panelDescription" rows="6"><%= cfg.panelEmbed?.description || '' %></textarea></label>
-        <label><%= t.web.embed_color %> <input name="panelColor" value="<%= cfg.panelEmbed?.color || '#5865F2' %>" placeholder="#5865F2"></label>
-        <label><%= t.web.embed_footer %> <input name="panelFooter" value="<%= cfg.panelEmbed?.footer || '' %>"></label>
-      </fieldset>
-
-      <!-- Formular Felder -->
-      <fieldset>
-        <legend>Benutzer‑Formular Felder</legend>
-        <p class="soft-note">Diese Felder MUSS der Nutzer beim Ticket erstellen ausfüllen (Modal öffnet sich nach Themenwahl).</p>
-        <table>
-          <thead>
-            <tr><th>Label*</th><th>Placeholder</th><th>Typ</th><th>Required</th><th>Löschen</th></tr>
-          </thead>
-          <tbody id="formRows">
-            <% (cfg.formFields||[]).forEach(f=>{ %>
-              <tr>
-                <td><input name="ffLabel" value="<%= f.label %>" required></td>
-                <td><input name="ffPlaceholder" value="<%= f.placeholder||'' %>"></td>
-                <td>
-                  <select name="ffType">
-                    <option value="short" <%= f.type==='short'?'selected':'' %>>Kurz</option>
-                    <option value="paragraph" <%= f.type==='paragraph'?'selected':'' %>>Lang</option>
-                    <option value="number" <%= f.type==='number'?'selected':'' %>>Zahl</option>
+          <!-- Tab: Channels -->
+          <div class="tab-content" id="tab-channels">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-folder-open"></i>
+                    </div>
+                    <span><%= t.web.ticket_category %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= t.web.panel_config.ticket_category_help %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-list"></i>
+                    <span><%= lang === 'de' ? 'Kategorien auswählen' : 'Select Categories' %></span>
+                    <span class="form-label-optional">(<%= lang === 'de' ? 'Mehrfachauswahl mit Strg/Cmd' : 'Multi-select with Ctrl/Cmd' %>)</span>
+                  </div>
+                  <select name="ticketCategoryId" multiple size="8">
+                    <%
+                    const selectedCategories = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
+                    channels.filter(ch => ch.type === 4).forEach(ch => { %>
+                      <option value="<%= ch.id %>" <%= selectedCategories.includes(ch.id) ? 'selected' : '' %>>
+                        🎫 <%= ch.name %>
+                      </option>
+                    <% }) %>
                   </select>
-                </td>
-                <td style="text-align:center"><input type="checkbox" name="ffRequired" <%= f.required? 'checked':'' %>></td>
-                <td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
-        <button type="button" class="add-btn" onclick="addFormRow()">➕ Feld</button>
-        <p class="soft-note mini">Typen: <b>short</b> = kurzer Text, <b>paragraph</b> = langer Text, <b>number</b> = numerisch (als Text gespeichert).</p>
-        <label class="soft-note">FormFields (JSON Vorschau)
-          <textarea id="formFieldsJson" name="formFieldsJson" rows="8"><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
-        </label>
-      </fieldset>
+                </div>
+              </div>
+            </div>
 
-      <!-- Raw Topics JSON (optional) -->
-      <fieldset>
-        <legend>Topics JSON (optional)</legend>
-        <p class="soft-note">Wird nur benutzt wenn keine Topic‑Zeile (Label) vorhanden ist.</p>
-        <label>Topics (JSON)
-          <textarea name="topicsJson" rows="8" id="topicsJson"><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
-        </label>
-      </fieldset>
+            <div class="grid grid-2">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <div class="card-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                      </div>
+                      <span><%= t.web.log_channel %></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <select name="logChannelId" multiple size="6">
+                      <%
+                      const selectedLogChannels = Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : []);
+                      channels.filter(ch => ch.type === 0).forEach(ch => { %>
+                        <option value="<%= ch.id %>" <%= selectedLogChannels.includes(ch.id) ? 'selected' : '' %>>
+                          📊 # <%= ch.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span><%= t.web.panel_config.log_channel_help %></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-      <!-- Umgebungsvariablen Info -->
-      <fieldset>
-        <legend>🔧 Umgebungsvariablen (.env)</legend>
-        <p class="soft-note">Diese Einstellungen müssen direkt in der <code>.env</code> Datei auf dem Server bearbeitet werden:</p>
-        <ul class="soft-note" style="margin-top: 0.5rem; line-height: 1.8;">
-          <li><code>DISCORD_TOKEN</code> - Bot Token</li>
-          <li><code>CLIENT_ID</code> - OAuth2 Client ID</li>
-          <li><code>CLIENT_SECRET</code> - OAuth2 Client Secret</li>
-          <li><code>PUBLIC_BASE_URL</code> - Öffentliche URL (z.B. https://tickets.quantix-bot.de)</li>
-          <li><code>SESSION_SECRET</code> - Session Secret für Web-Panel</li>
-        </ul>
-        <p class="soft-note" style="margin-top: 0.8rem;">⚠️ Aus Sicherheitsgründen können diese Werte nicht über das Web-Panel geändert werden.</p>
-      </fieldset>
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <div class="card-icon">
+                        <i class="fas fa-file-alt"></i>
+                      </div>
+                      <span><%= t.web.transcript_channel %></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <select name="transcriptChannelId" multiple size="6">
+                      <%
+                      const selectedTranscriptChannels = Array.isArray(cfg.transcriptChannelId) ? cfg.transcriptChannelId : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : []);
+                      channels.filter(ch => ch.type === 0).forEach(ch => { %>
+                        <option value="<%= ch.id %>" <%= selectedTranscriptChannels.includes(ch.id) ? 'selected' : '' %>>
+                          📄 # <%= ch.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span><%= t.web.panel_config.transcript_channel_help %></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-    </div>
-    <% if (typeof isAdmin === 'undefined' || isAdmin) { %>
-    <button type="submit">💾 <%= t.web.save %></button>
-    <% } %>
-  </form>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fab fa-github"></i>
+                    </div>
+                    <span><%= t.web.panel_config.github_webhook_channel %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= t.web.panel_config.github_webhook_channel_help %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <select name="githubWebhookChannelId">
+                    <option value=""><%= t.web.select_channel %></option>
+                    <%
+                    channels.filter(ch => ch.type === 0).forEach(ch => { %>
+                      <option value="<%= ch.id %>" <%= cfg.githubWebhookChannelId === ch.id ? 'selected' : '' %>>
+                        # <%= ch.name %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
 
-  <% if (typeof isAdmin === 'undefined' || isAdmin) { %>
-  <hr>
-  <h2><%= t.web.panel_actions %></h2>
-  <div class="actions">
-    <form action="/panel/send" method="POST">
-      <select name="channelId" required style="min-width: 250px;">
-        <option value=""><%= t.web.select_channel %></option>
-        <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
-          <option value="<%= ch.id %>" <%= cfg.panelChannelId === ch.id ? 'selected' : '' %>>
-            # <%= ch.name %>
-          </option>
-        <% }) %>
-      </select>
-      <button><i class="fas fa-paper-plane"></i> <%= t.web.send_panel %></button>
-    </form>
-    <form action="/panel/edit" method="POST">
-      <button><i class="fas fa-edit"></i> <%= t.web.edit_panel %></button>
-    </form>
-    <a href="/tickets" role="button" class="secondary"><i class="fas fa-history"></i> <%= t.web.ticket_history %></a>
+          <!-- Tab: Roles -->
+          <div class="tab-content" id="tab-roles">
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle"></i>
+              <div>
+                <strong><%= lang === 'de' ? '📊 Hierarchisches System:' : '📊 Hierarchical System:' %></strong><br>
+                <%= t.web.panel_config.priority_roles_help %>
+              </div>
+            </div>
+
+            <div class="grid grid-3">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <span class="priority-badge priority-green">
+                        <span>🟢</span>
+                        <%= lang === 'de' ? 'Niedrig' : 'Low' %>
+                      </span>
+                    </div>
+                    <p class="card-description">
+                      <%= t.web.panel_config.priority_green_help %>
+                    </p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <select name="priorityRoles_0" multiple size="8">
+                      <%
+                      const green = (cfg.priorityRoles && cfg.priorityRoles['0']) || [];
+                      roles.forEach(role => { %>
+                        <option value="<%= role.id %>" <%= green.includes(role.id) ? 'selected' : '' %>>
+                          @ <%= role.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <span class="priority-badge priority-orange">
+                        <span>🟠</span>
+                        <%= lang === 'de' ? 'Mittel' : 'Medium' %>
+                      </span>
+                    </div>
+                    <p class="card-description">
+                      <%= t.web.panel_config.priority_orange_help %>
+                    </p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <select name="priorityRoles_1" multiple size="8">
+                      <%
+                      const orange = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
+                      roles.forEach(role => { %>
+                        <option value="<%= role.id %>" <%= orange.includes(role.id) ? 'selected' : '' %>>
+                          @ <%= role.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <span class="priority-badge priority-red">
+                        <span>🔴</span>
+                        <%= lang === 'de' ? 'Hoch' : 'High' %>
+                      </span>
+                    </div>
+                    <p class="card-description">
+                      <%= t.web.panel_config.priority_red_help %>
+                    </p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <select name="priorityRoles_2" multiple size="8">
+                      <%
+                      const red = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
+                      roles.forEach(role => { %>
+                        <option value="<%= role.id %>" <%= red.includes(role.id) ? 'selected' : '' %>>
+                          @ <%= role.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="opacity: 0.8;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-users"></i>
+                    </div>
+                    <span><%= t.web.team_role %> <small>(Legacy)</small></span>
+                  </div>
+                  <p class="card-description">
+                    <%= t.web.panel_config.team_role_help %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <select name="teamRoleId" multiple size="5">
+                    <%
+                    const selectedTeamRoles = Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : (cfg.teamRoleId ? [cfg.teamRoleId] : []);
+                    roles.forEach(role => { %>
+                      <option value="<%= role.id %>" <%= selectedTeamRoles.includes(role.id) ? 'selected' : '' %>>
+                        🧑‍💼 @ <%= role.name %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-success">
+              <i class="fas fa-chart-pie"></i>
+              <div>
+                <strong><%= lang === 'de' ? '📊 Zusammenfassung:' : '📊 Summary:' %></strong><br>
+                <span style="font-size: 0.95rem;">
+                  🟢 <%= lang === 'de' ? 'Grün' : 'Green' %>: <%= green.length %> |
+                  🟠 <%= lang === 'de' ? 'Orange' : 'Orange' %>: <%= orange.length %> |
+                  🔴 <%= lang === 'de' ? 'Rot' : 'Red' %>: <%= red.length %>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Topics -->
+          <div class="tab-content" id="tab-topics">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-tags"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Ticket-Themen verwalten' : 'Manage Ticket Topics' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= t.web.panel_config.topics_help %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="help-text" style="margin-bottom: 1.5rem;">
+                  <i class="fas fa-info-circle"></i>
+                  <span>
+                    <%= lang === 'de'
+                      ? 'JSON-Format: Array von Objekten mit "label", "value" und "emoji".'
+                      : 'JSON format: Array of objects with "label", "value" and "emoji".'
+                    %>
+                  </span>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-code"></i>
+                    <span><%= t.web.topics_json %></span>
+                  </div>
+                  <textarea
+                    name="topicsJson"
+                    id="topicsJson"
+                    rows="14"
+                    placeholder='[{"label": "Support", "value": "support", "emoji": "❓"}]'
+                    oninput="updateTopicsPreview()"
+                  ><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
+                </div>
+
+                <!-- Live Preview -->
+                <% if (cfg.topics && cfg.topics.length > 0) { %>
+                <div class="preview-card">
+                  <div class="preview-title">
+                    <i class="fas fa-eye"></i>
+                    <%= lang === 'de' ? 'Live-Vorschau' : 'Live Preview' %>
+                  </div>
+                  <div class="topics-list" id="topicsPreview">
+                    <% cfg.topics.forEach(topic => { %>
+                    <div class="topic-item">
+                      <div class="topic-emoji"><%= topic.emoji || '📌' %></div>
+                      <div class="topic-details">
+                        <div class="topic-label"><%= topic.label %></div>
+                        <div class="topic-value"><%= topic.value %></div>
+                      </div>
+                    </div>
+                    <% }) %>
+                  </div>
+                </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Forms -->
+          <div class="tab-content" id="tab-forms">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-clipboard-question"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Formular-Felder' : 'Form Fields' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= t.web.panel_config.forms_help %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="help-text" style="margin-bottom: 1.5rem;">
+                  <i class="fas fa-info-circle"></i>
+                  <span>
+                    <%= lang === 'de'
+                      ? 'JSON-Format: Array von Objekten mit "label" und "placeholder".'
+                      : 'JSON format: Array of objects with "label" and "placeholder".'
+                    %>
+                  </span>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-code"></i>
+                    <span><%= t.web.form_fields_json %></span>
+                  </div>
+                  <textarea
+                    name="formFieldsJson"
+                    rows="14"
+                    placeholder='[{"label": "Beschreibung", "placeholder": "Beschreibe dein Problem..."}]'
+                  ><%= JSON.stringify(cfg.formFields || [], null, 2) %></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Embeds -->
+          <div class="tab-content" id="tab-embeds">
+            <div class="grid grid-2">
+              <!-- Ticket Embed -->
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <div class="card-icon">
+                        <i class="fas fa-ticket-alt"></i>
+                      </div>
+                      <span><%= t.web.ticket_embed %></span>
+                    </div>
+                    <p class="card-description">
+                      <%= t.web.panel_config.ticket_embed_help %>
+                    </p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-heading"></i>
+                      <span><%= t.web.embed_title %></span>
+                    </div>
+                    <input
+                      type="text"
+                      name="embedTitle"
+                      id="embedTitle"
+                      value="<%= cfg.embedTitle || '' %>"
+                      placeholder="<%= lang === 'de' ? 'Ticket #{id}' : 'Ticket #{id}' %>"
+                      oninput="updateEmbedPreview('ticket')">
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-align-left"></i>
+                      <span><%= t.web.embed_description %></span>
+                    </div>
+                    <textarea
+                      name="embedDescription"
+                      id="embedDescription"
+                      rows="4"
+                      placeholder="<%= lang === 'de' ? 'Hallo {user}, willkommen in deinem Ticket!' : 'Hello {user}, welcome to your ticket!' %>"
+                      oninput="updateEmbedPreview('ticket')"
+                    ><%= cfg.embedDescription || '' %></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-palette"></i>
+                      <span><%= t.web.embed_color %></span>
+                    </div>
+                    <input
+                      type="text"
+                      name="embedColor"
+                      id="embedColor"
+                      value="<%= cfg.embedColor || '#0ea5e9' %>"
+                      placeholder="#0ea5e9"
+                      oninput="updateEmbedPreview('ticket')">
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-shoe-prints"></i>
+                      <span><%= t.web.embed_footer %></span>
+                    </div>
+                    <input
+                      type="text"
+                      name="embedFooter"
+                      id="embedFooter"
+                      value="<%= cfg.embedFooter || '' %>"
+                      placeholder="<%= lang === 'de' ? 'Quantix Tickets System' : 'Quantix Tickets System' %>"
+                      oninput="updateEmbedPreview('ticket')">
+                  </div>
+
+                  <!-- Live Preview -->
+                  <div class="preview-card">
+                    <div class="preview-title">
+                      <i class="fas fa-eye"></i>
+                      <%= lang === 'de' ? 'Vorschau' : 'Preview' %>
+                    </div>
+                    <div class="embed-preview" id="ticketEmbedPreview" style="border-left-color: <%= cfg.embedColor || '#0ea5e9' %>">
+                      <div class="embed-preview-title"><%= cfg.embedTitle || 'Ticket #1234' %></div>
+                      <div class="embed-preview-desc"><%= (cfg.embedDescription || '').replace('{user}', '@User').replace('{id}', '1234').replace('{topic}', 'Support') %></div>
+                      <div class="embed-preview-footer"><%= cfg.embedFooter || 'Quantix Tickets System' %></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Panel Embed -->
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <div class="card-icon">
+                        <i class="fas fa-rectangle-list"></i>
+                      </div>
+                      <span><%= t.web.panel_embed %></span>
+                    </div>
+                    <p class="card-description">
+                      <%= t.web.panel_config.panel_embed_help %>
+                    </p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-heading"></i>
+                      <span><%= t.web.embed_title %></span>
+                    </div>
+                    <input
+                      type="text"
+                      name="panelTitle"
+                      id="panelTitle"
+                      value="<%= cfg.panelTitle || '' %>"
+                      placeholder="<%= lang === 'de' ? '🎫 Ticket System' : '🎫 Ticket System' %>"
+                      oninput="updateEmbedPreview('panel')">
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-align-left"></i>
+                      <span><%= t.web.embed_description %></span>
+                    </div>
+                    <textarea
+                      name="panelDescription"
+                      id="panelDescription"
+                      rows="4"
+                      placeholder="<%= lang === 'de' ? 'Wähle ein Thema aus, um ein Ticket zu erstellen.' : 'Select a topic to create a ticket.' %>"
+                      oninput="updateEmbedPreview('panel')"
+                    ><%= cfg.panelDescription || '' %></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-palette"></i>
+                      <span><%= t.web.embed_color %></span>
+                    </div>
+                    <input
+                      type="text"
+                      name="panelColor"
+                      id="panelColor"
+                      value="<%= cfg.panelColor || '#0ea5e9' %>"
+                      placeholder="#0ea5e9"
+                      oninput="updateEmbedPreview('panel')">
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-shoe-prints"></i>
+                      <span><%= t.web.embed_footer %></span>
+                    </div>
+                    <input
+                      type="text"
+                      name="panelFooter"
+                      id="panelFooter"
+                      value="<%= cfg.panelFooter || '' %>"
+                      placeholder="<%= lang === 'de' ? 'Klicke auf ein Thema, um ein Ticket zu öffnen' : 'Click a topic to open a ticket' %>"
+                      oninput="updateEmbedPreview('panel')">
+                  </div>
+
+                  <!-- Live Preview -->
+                  <div class="preview-card">
+                    <div class="preview-title">
+                      <i class="fas fa-eye"></i>
+                      <%= lang === 'de' ? 'Vorschau' : 'Preview' %>
+                    </div>
+                    <div class="embed-preview" id="panelEmbedPreview" style="border-left-color: <%= cfg.panelColor || '#0ea5e9' %>">
+                      <div class="embed-preview-title"><%= cfg.panelTitle || '🎫 Ticket System' %></div>
+                      <div class="embed-preview-desc"><%= cfg.panelDescription || (lang === 'de' ? 'Wähle ein Thema aus, um ein Ticket zu erstellen.' : 'Select a topic to create a ticket.') %></div>
+                      <div class="embed-preview-footer"><%= cfg.panelFooter || (lang === 'de' ? 'Klicke auf ein Thema, um ein Ticket zu öffnen' : 'Click a topic to open a ticket') %></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="fas fa-code"></i>
+              <div>
+                <strong><%= t.web.placeholders %>:</strong><br>
+                <code>{user}</code> = <%= lang === 'de' ? 'Benutzer-Mention' : 'User mention' %> |
+                <code>{id}</code> = Ticket ID |
+                <code>{topic}</code> = <%= lang === 'de' ? 'Ticket-Thema' : 'Ticket topic' %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Panel -->
+          <div class="tab-content" id="tab-panel">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Panel senden' : 'Send Panel' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= t.web.panel_config.panel_channel_help %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="alert alert-warning">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span><%= t.web.panel_config.save_first %></span>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-hashtag"></i>
+                    <span><%= t.web.panel_channel %></span>
+                  </div>
+                  <select name="panelChannelId">
+                    <option value=""><%= t.web.select_channel %></option>
+                    <%
+                    channels.filter(ch => ch.type === 0).forEach(ch => { %>
+                      <option value="<%= ch.id %>" <%= cfg.panelChannelId === ch.id ? 'selected' : '' %>>
+                        # <%= ch.name %>
+                      </option>
+                    <% }) %>
+                  </select>
+                </div>
+
+                <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                <div class="btn-group" style="margin-top: 1.5rem;">
+                  <button
+                    type="button"
+                    class="btn btn-success"
+                    onclick="sendPanel()"
+                    <% if (!cfg.panelChannelId) { %>disabled<% } %>>
+                    <i class="fas fa-paper-plane"></i>
+                    <%= t.web.send_panel %>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-warning"
+                    onclick="editPanel()"
+                    <% if (!cfg.panelMessageId) { %>disabled<% } %>>
+                    <i class="fas fa-edit"></i>
+                    <%= t.web.edit_panel %>
+                  </button>
+                </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Premium -->
+          <% if (isPremium) { %>
+          <div class="tab-content" id="tab-premium">
+            <div class="alert alert-success" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-color: #667eea;">
+              <i class="fas fa-gem"></i>
+              <div>
+                <strong style="font-size: 1.1rem;">
+                  <%= lang === 'de' ? '✨ Premium Aktiv' : '✨ Premium Active' %>: <%= premiumTierName %>
+                </strong><br>
+                <span style="opacity: 0.9;">
+                  <%= lang === 'de'
+                    ? 'Du hast Zugriff auf exklusive Premium-Features!'
+                    : 'You have access to exclusive premium features!'
+                  %>
+                </span>
+              </div>
+            </div>
+
+            <!-- Custom Avatar (Basic+) -->
+            <% if (premiumTier === 'basic' || premiumTier === 'pro' || premiumTier === 'beta') { %>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                      <i class="fas fa-image"></i>
+                    </div>
+                    <span><%= t.premium.custom_avatar_label %></span>
+                    <span class="priority-badge" style="background: #667eea; color: white; border-color: #667eea;">BASIC+</span>
+                  </div>
+                  <p class="card-description">
+                    <%= t.premium.custom_avatar_description %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-link"></i>
+                    <span><%= lang === 'de' ? 'Avatar-URL' : 'Avatar URL' %></span>
+                  </div>
+                  <input
+                    type="url"
+                    name="customAvatarUrl"
+                    value="<%= cfg.customAvatarUrl || '' %>"
+                    placeholder="<%= t.premium.custom_avatar_placeholder %>">
+                  <div class="help-text">
+                    <i class="fas fa-lightbulb"></i>
+                    <span><%= lang === 'de' ? 'Direktlink zu einem Bild (PNG, JPG, GIF)' : 'Direct link to an image (PNG, JPG, GIF)' %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Pro Features -->
+            <% if (premiumTier === 'pro' || premiumTier === 'beta') { %>
+            <div class="grid grid-2">
+              <!-- Email Notifications -->
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <div class="card-icon" style="background: linear-gradient(135deg, #764ba2, #667eea);">
+                        <i class="fas fa-envelope"></i>
+                      </div>
+                      <span><%= t.premium.email_notifications_label %></span>
+                      <span class="priority-badge" style="background: #764ba2; color: white; border-color: #764ba2;">PRO</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <input
+                      type="email"
+                      name="notificationEmail"
+                      value="<%= cfg.notificationEmail || '' %>"
+                      placeholder="<%= t.premium.email_notifications_placeholder %>">
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span><%= t.premium.email_notifications_description %></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Auto-Close System -->
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <div class="card-icon" style="background: linear-gradient(135deg, #764ba2, #667eea);">
+                        <i class="fas fa-clock"></i>
+                      </div>
+                      <span><%= t.premium.auto_close_label %></span>
+                      <span class="priority-badge" style="background: #764ba2; color: white; border-color: #764ba2;">PRO</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
+                    <input
+                      type="checkbox"
+                      name="autoCloseEnabled"
+                      <%= cfg.autoCloseEnabled ? 'checked' : '' %>
+                      style="width: auto; margin: 0;">
+                    <span style="font-weight: 500;"><%= t.premium.auto_close_enable %></span>
+                  </label>
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-calendar-days"></i>
+                      <span><%= lang === 'de' ? 'Tage' : 'Days' %></span>
+                    </div>
+                    <input
+                      type="number"
+                      name="autoCloseDays"
+                      value="<%= cfg.autoCloseDays || 7 %>"
+                      min="1"
+                      max="365"
+                      placeholder="7">
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span><%= t.premium.auto_close_description %></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DM Notifications -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #764ba2, #667eea);">
+                      <i class="fas fa-bell"></i>
+                    </div>
+                    <span><%= t.premium.dm_notifications_label %></span>
+                    <span class="priority-badge" style="background: #764ba2; color: white; border-color: #764ba2;">PRO</span>
+                  </div>
+                  <p class="card-description">
+                    <%= t.premium.dm_notifications_description %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-users"></i>
+                    <span><%= lang === 'de' ? 'Benutzer-IDs (eine pro Zeile)' : 'User IDs (one per line)' %></span>
+                  </div>
+                  <textarea
+                    name="dmNotificationUsers"
+                    rows="6"
+                    placeholder="<%= t.premium.dm_notifications_placeholder %>"
+                  ><%= (cfg.dmNotificationUsers || []).join('\n') %></textarea>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Link to Premium Page -->
+            <div class="btn-group">
+              <a href="/premium" class="btn btn-outline">
+                <i class="fas fa-gem"></i>
+                <%= t.premium.manage_subscription %>
+              </a>
+            </div>
+          </div>
+          <% } %>
+
+        </div>
+
+        <!-- Save Button (Fixed) -->
+        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+        <button type="submit" class="btn btn-primary save-button-fixed">
+          <i class="fas fa-save"></i>
+          <%= t.web.save %>
+        </button>
+        <% } %>
+      </form>
+    </main>
   </div>
-  <% } %>
 
-  <footer>
-    <p>Quantix Tickets © 2025 Quantix Development • Alle Rechte vorbehalten • Version <%= version %></p>
-    <p class="soft-note">Änderungen speichern sofort in <code>config.json</code></p>
-  </footer>
+  <!-- JavaScript -->
+  <script src="/js/ux-enhancements.js"></script>
+  <script>
+    // Tab Switching
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
 
-  </div><!-- End Main Content -->
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.getAttribute('data-tab');
 
-<script>
-function delRow(btn){ const tr=btn.closest('tr'); if(tr) tr.remove(); syncFormJson(); syncTopicsPreview(); }
-function addTopicRow(){ const tr=document.createElement('tr'); tr.innerHTML=`<td><input name="label" required></td><td><input name="value" placeholder="auto"></td><td><input name="emoji"></td><td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>`; document.getElementById('topicRows').appendChild(tr); }
-function addFormRow(data={label:'',placeholder:'',type:'short',required:false}){ const tr=document.createElement('tr'); tr.innerHTML=`<td><input name="ffLabel" value="${esc(data.label)}" required></td><td><input name="ffPlaceholder" value="${esc(data.placeholder)}"></td><td><select name="ffType"><option value="short" ${data.type==='short'?'selected':''}>Kurz</option><option value="paragraph" ${data.type==='paragraph'?'selected':''}>Lang</option><option value="number" ${data.type==='number'?'selected':''}>Zahl</option></select></td><td style="text-align:center"><input type="checkbox" name="ffRequired" ${data.required?'checked':''}></td><td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>`; document.getElementById('formRows').appendChild(tr); syncFormJson(); }
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
-function syncFormJson(){ const labels=[...document.querySelectorAll('#formRows input[name="ffLabel"]')]; const arr=[]; labels.forEach((inp,idx)=>{ const label=inp.value.trim(); if(!label) return; const placeholder=document.querySelectorAll('#formRows input[name="ffPlaceholder"]')[idx].value.trim(); const type=document.querySelectorAll('#formRows select[name="ffType"]')[idx].value; const required=document.querySelectorAll('#formRows input[name="ffRequired"]')[idx].checked; const obj={label,type}; if(placeholder) obj.placeholder=placeholder; if(required) obj.required=true; arr.push(obj); }); document.getElementById('formFieldsJson').value=JSON.stringify(arr,null,2); }
-function syncTopicsPreview(){ const labels=[...document.querySelectorAll('#topicRows input[name="label"]')]; if(!labels.length) return; const arr=[]; labels.forEach((inp,idx)=>{ const L=inp.value.trim(); if(!L) return; const V=document.querySelectorAll('#topicRows input[name="value"]')[idx].value.trim() || L.toLowerCase().replace(/\s+/g,'-'); const E=document.querySelectorAll('#topicRows input[name="emoji"]')[idx].value.trim(); arr.push(E?{label:L,value:V,emoji:E}:{label:L,value:V}); }); document.getElementById('topicsJson').value=JSON.stringify(arr,null,2); }
-document.getElementById('formRows').addEventListener('input',syncFormJson);
-document.getElementById('topicRows').addEventListener('input',syncTopicsPreview);
-// Vor Submit leere Label-Zeilen entfernen
-document.getElementById('panelForm').addEventListener('submit',()=>{ [...document.querySelectorAll('#topicRows tr')].forEach(tr=>{ if(!tr.querySelector('input[name="label"]').value.trim()) tr.remove(); }); syncFormJson(); });
+        // Remove active class from all
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
 
-// Theme Toggle
-function toggleTheme() {
-  const html = document.documentElement;
-  const currentTheme = html.getAttribute('data-theme');
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', newTheme);
-  localStorage.setItem('trs-theme', newTheme);
-  document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-}
+        // Add active class to clicked
+        btn.classList.add('active');
+        document.getElementById(`tab-${tabId}`).classList.add('active');
 
-// Theme beim Laden setzen
-(function() {
-  const savedTheme = localStorage.getItem('trs-theme') || 'light';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-})();
-
-// Language Dropdown Toggle
-function toggleLangDropdown() {
-  const menu = document.getElementById('langDropdownMenu');
-  menu.classList.toggle('show');
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(event) {
-  const dropdown = document.querySelector('.lang-dropdown');
-  const menu = document.getElementById('langDropdownMenu');
-  if (dropdown && !dropdown.contains(event.target)) {
-    menu.classList.remove('show');
-  }
-});
-
-// Auto-Close Checkbox Toggle
-const autoCloseCheckbox = document.getElementById('autoCloseEnabled');
-const autoCloseDaysInput = document.querySelector('input[name="autoCloseDays"]');
-if(autoCloseCheckbox && autoCloseDaysInput) {
-  autoCloseCheckbox.addEventListener('change', function() {
-    autoCloseDaysInput.disabled = !this.checked;
-  });
-}
-
-// Loading Animations
-function showLoading(text, subtext) {
-  const overlay = document.getElementById('loadingOverlay');
-  const loadingText = document.getElementById('loadingText');
-  const loadingSubtext = overlay.querySelector('.loading-subtext');
-
-  loadingText.textContent = text;
-  if (subtext) {
-    loadingSubtext.textContent = subtext;
-  }
-  overlay.classList.add('show');
-}
-
-// Show loading on main form submit (Save button)
-document.getElementById('panelForm').addEventListener('submit', function(e) {
-  const lang = '<%= lang %>';
-  const texts = {
-    de: { text: 'Wird gespeichert...', subtext: 'Bitte warten' },
-    en: { text: 'Saving...', subtext: 'Please wait' },
-    he: { text: 'שומר...', subtext: 'אנא המתן' },
-    ja: { text: '保存中...', subtext: 'お待ちください' },
-    ru: { text: 'Сохранение...', subtext: 'Пожалуйста, подождите' },
-    pt: { text: 'Salvando...', subtext: 'Por favor, aguarde' },
-    es: { text: 'Guardando...', subtext: 'Por favor, espere' },
-    id: { text: 'Menyimpan...', subtext: 'Mohon tunggu' },
-    ar: { text: 'جاري الحفظ...', subtext: 'يرجى الانتظار' }
-  };
-
-  const t = texts[lang] || texts.de;
-  showLoading(t.text, t.subtext);
-});
-
-// Show loading on Send Panel button
-document.querySelector('form[action="/panel/send"]').addEventListener('submit', function(e) {
-  const lang = '<%= lang %>';
-  const texts = {
-    de: { text: 'Panel wird gesendet...', subtext: 'Bitte warten' },
-    en: { text: 'Sending panel...', subtext: 'Please wait' },
-    he: { text: 'שולח פאנל...', subtext: 'אנא המתן' },
-    ja: { text: 'パネルを送信中...', subtext: 'お待ちください' },
-    ru: { text: 'Отправка панели...', subtext: 'Пожалуйста, подождите' },
-    pt: { text: 'Enviando painel...', subtext: 'Por favor, aguarde' },
-    es: { text: 'Enviando panel...', subtext: 'Por favor, espere' },
-    id: { text: 'Mengirim panel...', subtext: 'Mohon tunggu' },
-    ar: { text: 'إرسال اللوحة...', subtext: 'يرجى الانتظار' }
-  };
-
-  const t = texts[lang] || texts.de;
-  showLoading(t.text, t.subtext);
-});
-
-// Show loading on Edit Panel button
-document.querySelector('form[action="/panel/edit"]').addEventListener('submit', function(e) {
-  const lang = '<%= lang %>';
-  const texts = {
-    de: { text: 'Panel wird bearbeitet...', subtext: 'Bitte warten' },
-    en: { text: 'Editing panel...', subtext: 'Please wait' },
-    he: { text: 'עורך פאנל...', subtext: 'אנא המתן' },
-    ja: { text: 'パネルを編集中...', subtext: 'お待ちください' },
-    ru: { text: 'Редактирование панели...', subtext: 'Пожалуйста, подождите' },
-    pt: { text: 'Editando painel...', subtext: 'Por favor, aguarde' },
-    es: { text: 'Editando panel...', subtext: 'Por favor, espere' },
-    id: { text: 'Mengedit panel...', subtext: 'Mohon tunggu' },
-    ar: { text: 'تحرير اللوحة...', subtext: 'يرجى الانتظار' }
-  };
-
-  const t = texts[lang] || texts.de;
-  showLoading(t.text, t.subtext);
-});
-
-// Show loading on Analytics link click
-const analyticsLink = document.querySelector('a[href="/analytics"]');
-if (analyticsLink) {
-  analyticsLink.addEventListener('click', function(e) {
-    e.preventDefault();
-    const href = this.getAttribute('href');
-
-    const lang = '<%= lang %>';
-    const texts = {
-      de: { text: 'Analytics wird geladen...', subtext: 'Bitte warten' },
-      en: { text: 'Loading analytics...', subtext: 'Please wait' },
-      he: { text: 'טוען נתונים...', subtext: 'אנא המתן' },
-      ja: { text: '分析を読み込み中...', subtext: 'お待ちください' },
-      ru: { text: 'Загрузка аналитики...', subtext: 'Пожалуйста, подождите' },
-      pt: { text: 'Carregando análise...', subtext: 'Por favor, aguarde' },
-      es: { text: 'Cargando analítica...', subtext: 'Por favor, espere' },
-      id: { text: 'Memuat analitik...', subtext: 'Mohon tunggu' },
-      ar: { text: 'تحميل التحليلات...', subtext: 'يرجى الانتظار' }
-    };
-
-    const t = texts[lang] || texts.de;
-    showLoading(t.text, t.subtext);
-
-    setTimeout(() => {
-      window.location.href = href;
-    }, 100);
-  });
-}
-
-// Show loading on server switch
-const serverSwitchLink = document.querySelector('a[href="/select-server"]');
-if (serverSwitchLink) {
-  serverSwitchLink.addEventListener('click', function(e) {
-    e.preventDefault();
-    const href = this.getAttribute('href');
-
-    const lang = '<%= lang %>';
-    const texts = {
-      de: { text: 'Server wird gewechselt...', subtext: 'Bitte warten' },
-      en: { text: 'Switching server...', subtext: 'Please wait' },
-      he: { text: 'מחליף שרת...', subtext: 'אנא המתן' },
-      ja: { text: 'サーバーを切り替え中...', subtext: 'お待ちください' },
-      ru: { text: 'Переключение сервера...', subtext: 'Пожалуйста, подождите' },
-      pt: { text: 'Trocando servidor...', subtext: 'Por favor, aguarde' },
-      es: { text: 'Cambiando servidor...', subtext: 'Por favor, espere' },
-      id: { text: 'Mengganti server...', subtext: 'Mohon tunggu' },
-      ar: { text: 'تبديل الخادم...', subtext: 'يرجى الانتظار' }
-    };
-
-    const t = texts[lang] || texts.de;
-    showLoading(t.text, t.subtext);
-
-    setTimeout(() => {
-      window.location.href = href;
-    }, 100);
-  });
-}
-
-// Show loading on Home link click
-const homeLink = document.querySelector('a[href="/"]');
-if (homeLink) {
-  homeLink.addEventListener('click', function(e) {
-    e.preventDefault();
-    const href = this.getAttribute('href');
-
-    const lang = '<%= lang %>';
-    const texts = {
-      de: { text: 'Zur Startseite...', subtext: 'Bitte warten' },
-      en: { text: 'Going to home...', subtext: 'Please wait' },
-      he: { text: 'חזרה לדף הבית...', subtext: 'אנא המתן' },
-      ja: { text: 'ホームに移動中...', subtext: 'お待ちください' },
-      ru: { text: 'Переход на главную...', subtext: 'Пожалуйста, подождите' },
-      pt: { text: 'Indo para início...', subtext: 'Por favor, aguarde' },
-      es: { text: 'Yendo al inicio...', subtext: 'Por favor, espere' },
-      id: { text: 'Ke beranda...', subtext: 'Mohon tunggu' },
-      ar: { text: 'الذهاب إلى الرئيسية...', subtext: 'يرجى الانتظار' }
-    };
-
-    const t = texts[lang] || texts.de;
-    showLoading(t.text, t.subtext);
-
-    setTimeout(() => {
-      window.location.href = href;
-    }, 100);
-  });
-}
-
-// Show loading on Ticket History link click
-const ticketsLink = document.querySelector('a[href="/tickets"]');
-if (ticketsLink) {
-  ticketsLink.addEventListener('click', function(e) {
-    e.preventDefault();
-    const href = this.getAttribute('href');
-
-    const lang = '<%= lang %>';
-    const texts = {
-      de: { text: 'Ticket-Verlauf wird geladen...', subtext: 'Bitte warten' },
-      en: { text: 'Loading ticket history...', subtext: 'Please wait' },
-      he: { text: 'טוען היסטוריה...', subtext: 'אנא המתן' },
-      ja: { text: '履歴を読み込み中...', subtext: 'お待ちください' },
-      ru: { text: 'Загрузка истории...', subtext: 'Пожалуйста, подождите' },
-      pt: { text: 'Carregando histórico...', subtext: 'Por favor, aguarde' },
-      es: { text: 'Cargando historial...', subtext: 'Por favor, espere' },
-      id: { text: 'Memuat riwayat...', subtext: 'Mohon tunggu' },
-      ar: { text: 'تحميل السجل...', subtext: 'يرجى الانتظار' }
-    };
-
-    const t = texts[lang] || texts.de;
-    showLoading(t.text, t.subtext);
-
-    setTimeout(() => {
-      window.location.href = href;
-    }, 100);
-  });
-}
-
-// Disable all form elements for non-admin users (team members in read-only mode)
-<% if (typeof isAdmin !== 'undefined' && !isAdmin) { %>
-(function() {
-  // Disable all inputs, textareas, and selects in the main form
-  const mainForm = document.getElementById('panelForm');
-  if (mainForm) {
-    const formElements = mainForm.querySelectorAll('input:not([readonly]), textarea, select');
-    formElements.forEach(element => {
-      element.disabled = true;
-      element.style.cursor = 'not-allowed';
-      element.style.opacity = '0.6';
+        // Save to localStorage
+        localStorage.setItem('activeTab', tabId);
+      });
     });
 
-    // Disable all buttons (add/delete buttons)
-    const buttons = mainForm.querySelectorAll('button:not([type="submit"])');
-    buttons.forEach(button => {
-      button.disabled = true;
-      button.style.cursor = 'not-allowed';
-      button.style.opacity = '0.5';
+    // Restore active tab from localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTab = localStorage.getItem('activeTab');
+      if (savedTab) {
+        const btn = document.querySelector(`[data-tab="${savedTab}"]`);
+        if (btn) {
+          btn.click();
+        }
+      }
     });
 
-    // Prevent form submission
-    mainForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      alert('<%= lang === "de" ? "Du hast keine Berechtigung, Einstellungen zu ändern." : lang === "en" ? "You do not have permission to change settings." : lang === "he" ? "אין לך הרשאה לשנות הגדרות." : lang === "ja" ? "設定を変更する権限がありません。" : lang === "ru" ? "У вас нет разрешения на изменение настроек." : lang === "pt" ? "Você não tem permissão para alterar as configurações." : lang === "es" ? "No tienes permiso para cambiar la configuración." : lang === "id" ? "Anda tidak memiliki izin untuk mengubah pengaturan." : lang === "ar" ? "ليس لديك إذن لتغيير الإعدادات." : "Du hast keine Berechtigung, Einstellungen zu ändern." %>');
-      return false;
-    });
-  }
-})();
-<% } %>
-</script>
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-<!-- Sidebar Toggle Script -->
-<script>
-function toggleSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('sidebarOverlay');
-  const toggleBtn = document.getElementById('sidebarToggle');
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
 
-  if (sidebar && overlay) {
-    const isOpen = sidebar.classList.contains('open');
-
-    if (isOpen) {
-      sidebar.classList.remove('open');
-      overlay.classList.remove('active');
-      toggleBtn.setAttribute('aria-expanded', 'false');
-    } else {
-      sidebar.classList.add('open');
-      overlay.classList.add('active');
-      toggleBtn.setAttribute('aria-expanded', 'true');
+      const icon = document.getElementById('themeIcon');
+      icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
-  }
-}
 
-// Close sidebar when clicking outside on mobile
-document.addEventListener('DOMContentLoaded', function() {
-  const overlay = document.getElementById('sidebarOverlay');
-  if (overlay) {
-    overlay.addEventListener('click', toggleSidebar);
-  }
+    // Load saved theme
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const icon = document.getElementById('themeIcon');
+      if (icon) {
+        icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+      }
+    })();
 
-  // Close sidebar when pressing Escape key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
+    // Language Dropdown
+    function toggleLangDropdown() {
+      const menu = document.getElementById('langDropdownMenu');
+      menu.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const dropdown = document.querySelector('.lang-dropdown');
+      if (dropdown && !dropdown.contains(e.target)) {
+        document.getElementById('langDropdownMenu').classList.remove('show');
+      }
+    });
+
+    // Mobile Sidebar Toggle
+    function toggleMobileSidebar() {
+      document.getElementById('sidebar').classList.toggle('mobile-open');
+    }
+
+    // Close mobile sidebar when clicking outside
+    document.addEventListener('click', function(e) {
       const sidebar = document.getElementById('sidebar');
-      if (sidebar && sidebar.classList.contains('open')) {
-        toggleSidebar();
+      const toggle = document.querySelector('.mobile-toggle');
+      if (sidebar && !sidebar.contains(e.target) && !toggle.contains(e.target)) {
+        sidebar.classList.remove('mobile-open');
+      }
+    });
+
+    // Topics Preview Update
+    function updateTopicsPreview() {
+      try {
+        const json = document.getElementById('topicsJson').value;
+        const topics = JSON.parse(json);
+
+        if (Array.isArray(topics)) {
+          const preview = topics.map(topic => `
+            <div class="topic-item">
+              <div class="topic-emoji">${topic.emoji || '📌'}</div>
+              <div class="topic-details">
+                <div class="topic-label">${topic.label}</div>
+                <div class="topic-value">${topic.value}</div>
+              </div>
+            </div>
+          `).join('');
+
+          const previewContainer = document.getElementById('topicsPreview');
+          if (previewContainer) {
+            previewContainer.innerHTML = preview;
+          }
+        }
+      } catch(err) {
+        // Invalid JSON - ignore
       }
     }
-  });
-});
-</script>
 
-<!-- UX Enhancements -->
-<script src="/js/ux-enhancements.js"></script>
+    // Embed Preview Update
+    function updateEmbedPreview(type) {
+      if (type === 'ticket') {
+        const title = document.getElementById('embedTitle').value || 'Ticket #1234';
+        const desc = (document.getElementById('embedDescription').value || '').replace('{user}', '@User').replace('{id}', '1234').replace('{topic}', 'Support');
+        const color = document.getElementById('embedColor').value || '#0ea5e9';
+        const footer = document.getElementById('embedFooter').value || 'Quantix Tickets System';
+
+        const preview = document.getElementById('ticketEmbedPreview');
+        if (preview) {
+          preview.style.borderLeftColor = color;
+          preview.querySelector('.embed-preview-title').textContent = title;
+          preview.querySelector('.embed-preview-desc').textContent = desc;
+          preview.querySelector('.embed-preview-footer').textContent = footer;
+        }
+      } else if (type === 'panel') {
+        const title = document.getElementById('panelTitle').value || '🎫 Ticket System';
+        const desc = document.getElementById('panelDescription').value || '<%= lang === "de" ? "Wähle ein Thema aus, um ein Ticket zu erstellen." : "Select a topic to create a ticket." %>';
+        const color = document.getElementById('panelColor').value || '#0ea5e9';
+        const footer = document.getElementById('panelFooter').value || '<%= lang === "de" ? "Klicke auf ein Thema, um ein Ticket zu öffnen" : "Click a topic to open a ticket" %>';
+
+        const preview = document.getElementById('panelEmbedPreview');
+        if (preview) {
+          preview.style.borderLeftColor = color;
+          preview.querySelector('.embed-preview-title').textContent = title;
+          preview.querySelector('.embed-preview-desc').textContent = desc;
+          preview.querySelector('.embed-preview-footer').textContent = footer;
+        }
+      }
+    }
+
+    // Send Panel
+    function sendPanel() {
+      if (!confirm('<%= lang === "de" ? "Möchtest du die Panel-Nachricht jetzt senden?" : "Do you want to send the panel message now?" %>')) {
+        return;
+      }
+
+      document.getElementById('loadingOverlay').classList.add('show');
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/panel/send';
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    // Edit Panel
+    function editPanel() {
+      if (!confirm('<%= lang === "de" ? "Möchtest du die Panel-Nachricht aktualisieren?" : "Do you want to update the panel message?" %>')) {
+        return;
+      }
+
+      document.getElementById('loadingOverlay').classList.add('show');
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/panel/edit';
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    // Quick Save
+    function quickSave() {
+      document.getElementById('panelForm').submit();
+      document.getElementById('loadingOverlay').classList.add('show');
+    }
+
+    // Form Submit Loading
+    document.getElementById('panelForm').addEventListener('submit', function() {
+      document.getElementById('loadingOverlay').classList.add('show');
+    });
+
+    // Auto-save to localStorage on input
+    let saveTimeout;
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+      input.addEventListener('input', () => {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          // Optional: Add visual feedback that draft was saved
+        }, 1000);
+      });
+    });
+  </script>
 </body>
 </html>
