@@ -235,47 +235,237 @@ module.exports = (client)=>{
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zugriff verweigert</title>
+  <title>Zugriff verweigert - Nur für Owner</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0;
-      padding: 20px;
+      padding: 2rem;
+      position: relative;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
-    .error-box {
-      background: rgba(255,255,255,0.95);
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: bgMove 20s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
       padding: 3rem;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
       text-align: center;
-      max-width: 500px;
+      animation: slideIn 0.4s ease;
+      position: relative;
+      z-index: 1;
     }
-    h1 { color: #e74c3c; margin: 0 0 1rem 0; font-size: 3rem; }
-    p { color: #555; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; }
-    .btn {
+
+    .icon {
+      font-size: 5rem;
+      margin-bottom: 1.5rem;
       display: inline-block;
-      padding: 12px 30px;
-      background: #667eea;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: 600;
-      transition: all 0.3s;
+      animation: bounce 2s infinite;
     }
-    .btn:hover { background: #764ba2; transform: translateY(-2px); }
+
+    h1 {
+      color: #2d3748;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: #718096;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border: 2px solid rgba(102, 126, 234, 0.3);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      text-align: left;
+    }
+
+    .info-box strong {
+      display: block;
+      color: #667eea;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .info-box p {
+      color: #4a5568;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .info-box ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .info-box li {
+      color: #4a5568;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .info-box li:last-child {
+      border-bottom: none;
+    }
+
+    .info-box li i {
+      color: #667eea;
+      font-size: 1.2rem;
+      width: 24px;
+      text-align: center;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-group a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.75rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .btn-group a:first-child {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-group a:first-child:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-group a.secondary {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      border: 2px solid rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-group a.secondary:hover {
+      background: rgba(102, 126, 234, 0.2);
+      border-color: rgba(102, 126, 234, 0.5);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 2rem 1.5rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .icon {
+        font-size: 4rem;
+      }
+
+      .btn-group {
+        flex-direction: column;
+      }
+
+      .btn-group a {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="error-box">
-    <h1>🚫</h1>
-    <h2>Zugriff verweigert</h2>
-    <p>Du hast keine Berechtigung für das Bot Owner Panel.</p>
-    <a href="/" class="btn">Zurück zur Startseite</a>
+  <div class="container">
+    <div class="icon">🔒</div>
+    <h1>Zugriff verweigert</h1>
+    <p class="subtitle">Nur für Owner zugänglich</p>
+
+    <div class="info-box">
+      <strong><i class="fas fa-crown"></i> Owner-Bereich</strong>
+      <p>Dieser Bereich enthält administrative Funktionen, die nur den Ownern des Bots zur Verfügung stehen:</p>
+      <ul>
+        <li><i class="fas fa-server"></i> Server-Verwaltung & Blacklist</li>
+        <li><i class="fas fa-chart-line"></i> System-Statistiken</li>
+        <li><i class="fas fa-shield-alt"></i> Sicherheitseinstellungen</li>
+      </ul>
+    </div>
+
+    <div class="btn-group">
+      <a href="/" class="secondary">
+        <i class="fas fa-home"></i>
+        Zur Startseite
+      </a>
+      <a href="/panel">
+        <i class="fas fa-cog"></i>
+        Zum Panel
+      </a>
+    </div>
   </div>
 </body>
 </html>
@@ -318,7 +508,8 @@ module.exports = (client)=>{
       justify-content: center;
       padding: 2rem;
       position: relative;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     body::before {
