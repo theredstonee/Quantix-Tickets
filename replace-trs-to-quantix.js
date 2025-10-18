@@ -45,12 +45,12 @@ filesToUpdate.forEach(file => {
     let content = fs.readFileSync(filePath, 'utf8');
     const originalContent = content;
 
-    // Ersetze alle Vorkommen von "TRS Tickets" mit "Quantix Tickets"
-    content = content.replace(/TRS Tickets/g, 'Quantix Tickets');
+    // Ersetze alle Vorkommen von "Quantix Tickets" mit "Quantix Tickets"
+    content = content.replace(/Quantix Tickets/g, 'Quantix Tickets');
 
     if (content !== originalContent) {
       fs.writeFileSync(filePath, content, 'utf8');
-      const count = (originalContent.match(/TRS Tickets/g) || []).length;
+      const count = (originalContent.match(/Quantix Tickets/g) || []).length;
       totalReplacements += count;
       console.log(`✅ ${file}: ${count} Ersetzung(en)`);
     } else {

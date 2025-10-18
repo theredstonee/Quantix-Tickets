@@ -1,5 +1,5 @@
 /**
- * TRS Tickets Bot - Main Application Entry Point
+ * Quantix Tickets Bot - Main Application Entry Point
  * Initializes the frontend application
  */
 
@@ -23,7 +23,7 @@ async function initApp() {
   }
 
   try {
-    console.log('Initializing TRS Tickets App...');
+    console.log('Initializing Quantix Tickets App...');
 
     // Initialize API Service
     window.TRSApp.api = new APIService('/api');
@@ -66,7 +66,7 @@ async function initApp() {
     }
 
     window.TRSApp.initialized = true;
-    console.log('TRS Tickets App initialized successfully');
+    console.log('Quantix Tickets App initialized successfully');
 
     // Dispatch custom event
     window.dispatchEvent(new CustomEvent('trs-app-ready'));

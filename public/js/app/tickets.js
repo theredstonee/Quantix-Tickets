@@ -1,5 +1,5 @@
 /**
- * TRS Tickets Bot - Tickets UI Module
+ * Quantix Tickets Bot - Tickets UI Module
  * Handles tickets display and filtering
  */
 

@@ -15,7 +15,7 @@ module.exports = {
     const guildId = interaction.guild?.id;
 
     const embed = new EmbedBuilder()
-      .setTitle('🤖 TRS Tickets Bot')
+      .setTitle('🤖 Quantix Tickets Bot')
       .setDescription(
         `**Version:** ${VERSION}\n` +
         `**Release Date:** ${RELEASE_DATE}\n\n` +

@@ -231,7 +231,7 @@ module.exports = {
           )
           .setColor(tier === 'pro' ? 0x764ba2 : 0x667eea)
           .setTimestamp()
-          .setFooter({ text: 'TRS Tickets Bot • Lifetime Premium' });
+          .setFooter({ text: 'Quantix Tickets Bot • Lifetime Premium' });
 
         await interaction.reply({
           embeds: [embed],
@@ -271,7 +271,7 @@ module.exports = {
           )
           .setColor(0xff4444)
           .setTimestamp()
-          .setFooter({ text: 'TRS Tickets Bot • Lifetime Premium' });
+          .setFooter({ text: 'Quantix Tickets Bot • Lifetime Premium' });
 
         await interaction.reply({
           embeds: [embed],
@@ -317,7 +317,7 @@ module.exports = {
           )
           .setColor(0x764ba2)
           .setTimestamp()
-          .setFooter({ text: 'TRS Tickets Bot • Lifetime Premium' });
+          .setFooter({ text: 'Quantix Tickets Bot • Lifetime Premium' });
 
         await interaction.reply({
           embeds: [embed],

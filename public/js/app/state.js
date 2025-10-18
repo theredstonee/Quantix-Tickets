@@ -1,5 +1,5 @@
 /**
- * TRS Tickets Bot - Frontend State Management
+ * Quantix Tickets Bot - Frontend State Management
  * Simple reactive state management system
  */
 

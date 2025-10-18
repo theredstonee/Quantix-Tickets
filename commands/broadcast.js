@@ -102,42 +102,42 @@ module.exports = {
         const texts = {
           de: {
             title: '📢 Versions-Update',
-            description: `**TRS Tickets Bot** wurde auf Version **${VERSION}** aktualisiert`,
+            description: `**Quantix Tickets Bot** wurde auf Version **${VERSION}** aktualisiert`,
             versionLabel: '🆕 Version',
             dateLabel: '📅 Datum',
             changesLabel: '✨ Änderungen'
           },
           en: {
             title: '📢 Version Update',
-            description: `**TRS Tickets Bot** has been updated to version **${VERSION}**`,
+            description: `**Quantix Tickets Bot** has been updated to version **${VERSION}**`,
             versionLabel: '🆕 Version',
             dateLabel: '📅 Date',
             changesLabel: '✨ Changes'
           },
           he: {
             title: '📢 עדכון גרסה',
-            description: `**בוט TRS Tickets** עודכן לגרסה **${VERSION}**`,
+            description: `**בוט Quantix Tickets** עודכן לגרסה **${VERSION}**`,
             versionLabel: '🆕 גרסה',
             dateLabel: '📅 תאריך',
             changesLabel: '✨ שינויים'
           },
           ja: {
             title: '📢 バージョンアップデート',
-            description: `**TRS Tickets Bot** がバージョン **${VERSION}** にアップデートされました`,
+            description: `**Quantix Tickets Bot** がバージョン **${VERSION}** にアップデートされました`,
             versionLabel: '🆕 バージョン',
             dateLabel: '📅 日付',
             changesLabel: '✨ 変更点'
           },
           ru: {
             title: '📢 Обновление версии',
-            description: `**TRS Tickets Bot** обновлен до версии **${VERSION}**`,
+            description: `**Quantix Tickets Bot** обновлен до версии **${VERSION}**`,
             versionLabel: '🆕 Версия',
             dateLabel: '📅 Дата',
             changesLabel: '✨ Изменения'
           },
           pt: {
             title: '📢 Atualização de Versão',
-            description: `**TRS Tickets Bot** foi atualizado para a versão **${VERSION}**`,
+            description: `**Quantix Tickets Bot** foi atualizado para a versão **${VERSION}**`,
             versionLabel: '🆕 Versão',
             dateLabel: '📅 Data',
             changesLabel: '✨ Mudanças'

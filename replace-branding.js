@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const replacements = [
-  { from: /TRS Tickets/g, to: 'Quantix Tickets' },
+  { from: /Quantix Tickets/g, to: 'Quantix Tickets' },
   { from: /Theredstonee/g, to: 'Quantix Development' }
 ];
 

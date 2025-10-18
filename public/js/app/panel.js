@@ -1,5 +1,5 @@
 /**
- * TRS Tickets Bot - Panel UI Module
+ * Quantix Tickets Bot - Panel UI Module
  * Handles panel configuration interface
  */
 

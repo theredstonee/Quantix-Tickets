@@ -113,7 +113,7 @@ module.exports = {
           )
           .setColor(0x00ff88)
           .setTimestamp()
-          .setFooter({ text: 'TRS Tickets Bot • Premium Role' });
+          .setFooter({ text: 'Quantix Tickets Bot • Premium Role' });
 
         await interaction.reply({
           embeds: [embed],
@@ -150,7 +150,7 @@ module.exports = {
             )
             .setColor(0xff4444)
             .setTimestamp()
-            .setFooter({ text: 'TRS Tickets Bot • Premium Role' });
+            .setFooter({ text: 'Quantix Tickets Bot • Premium Role' });
 
           await interaction.reply({
             embeds: [embed],

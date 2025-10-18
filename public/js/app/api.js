@@ -1,5 +1,5 @@
 /**
- * TRS Tickets Bot - Frontend API Service
+ * Quantix Tickets Bot - Frontend API Service
  * Modern fetch-based API communication layer
  */
 

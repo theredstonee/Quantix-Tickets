@@ -18,7 +18,7 @@ module.exports = {
     );
 
     await interaction.reply({
-      content: '**TRS Tickets Admin-Panel**\nKlicke auf den Button um das Dashboard zu öffnen:',
+      content: '**Quantix Tickets Admin-Panel**\nKlicke auf den Button um das Dashboard zu öffnen:',
       components: [button],
       ephemeral: true
     });

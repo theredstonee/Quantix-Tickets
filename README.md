@@ -1,4 +1,4 @@
-# 🎫 TRS Tickets Bot
+# 🎫 Quantix Tickets Bot
 
 **Version:** Beta 0.3.5
 
@@ -470,6 +470,6 @@ Siehe [changelog.json](./changelog.json) für die vollständige Versionshistorie
 
 ---
 
-**TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten**
+**Quantix Tickets © 2025 Theredstonee • Alle Rechte vorbehalten**
 
 **Version:** Beta 0.3.5 | **Status:** [status.theredstonee.de](https://status.theredstonee.de)

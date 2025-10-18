@@ -4,7 +4,7 @@
 
 ### 🎉 First Stable Release
 
-Dies ist der erste stabile Release des TRS Tickets Bot mit vollständig modernisiertem Design und allen Core-Features.
+Dies ist der erste stabile Release des Quantix Tickets Bot mit vollständig modernisiertem Design und allen Core-Features.
 
 **Alle Features von Release 0.1.0 sind enthalten:**
 - Modernes Glassmorphism-Design auf allen Seiten

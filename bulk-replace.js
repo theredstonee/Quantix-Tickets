@@ -51,7 +51,7 @@ files.forEach(file => {
     let content = fs.readFileSync(filePath, 'utf8');
     const original = content;
 
-    content = content.replace(/TRS Tickets/g, 'Quantix Tickets');
+    content = content.replace(/Quantix Tickets/g, 'Quantix Tickets');
     content = content.replace(/Theredstonee/g, 'Quantix Development');
 
     if (content !== original) {

@@ -1372,7 +1372,7 @@ client.on(Events.InteractionCreate, async i => {
             `${cfg.githubWebhookChannelId ? `**Log Channel:** <#${cfg.githubWebhookChannelId}>` : '⚠️ **No log channel set!** Please configure a channel in the panel.'}`
           )
           .setColor(newStatus ? 0x00ff88 : 0xff4444)
-          .setFooter({ text: 'TRS Tickets ©️' })
+          .setFooter({ text: 'Quantix Tickets ©️' })
           .setTimestamp();
 
         const row = new ActionRowBuilder().addComponents(

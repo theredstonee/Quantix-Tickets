@@ -690,7 +690,7 @@ module.exports = (client)=>{
     <h1>Zugriff verweigert</h1>
     <p class="subtitle">Nur für Gründer zugänglich</p>
 
-    <p>Diese Seite ist ausschließlich für die Gründer des TRS Tickets Bots reserviert.</p>
+    <p>Diese Seite ist ausschließlich für die Gründer des Quantix Tickets Bots reserviert.</p>
 
     <div class="info-box">
       <strong><i class="fas fa-crown"></i> Gründer-Bereich</strong>

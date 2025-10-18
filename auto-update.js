@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Auto-Update System für TRS Tickets Bot
+ * Auto-Update System für Quantix Tickets Bot
  * Führt bei GitHub Push automatisch git pull aus und startet den Bot neu
  */
 
@@ -254,7 +254,7 @@ function showUpdateLog(req, res) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Auto-Update Log - TRS Tickets Bot</title>
+  <title>Auto-Update Log - Quantix Tickets Bot</title>
   <meta http-equiv="refresh" content="10">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -312,7 +312,7 @@ function showUpdateLog(req, res) {
     <div class="refresh-info">↻ Automatische Aktualisierung alle 10 Sekunden | <a href="/">← Zurück zur Homepage</a></div>
     <pre>${escapeHtml(log)}</pre>
     <div class="footer">
-      <p>TRS Tickets Bot © ${new Date().getFullYear()} | Letzte 100 Log-Einträge</p>
+      <p>Quantix Tickets Bot © ${new Date().getFullYear()} | Letzte 100 Log-Einträge</p>
     </div>
   </div>
 </body>

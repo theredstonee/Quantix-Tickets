@@ -26,7 +26,7 @@ module.exports = {
     );
 
     await interaction.reply({
-      content: '🌐 **Choose your language / Wähle deine Sprache / בחר את השפה שלך**\n\nClick a button to set your preferred language for the TRS Tickets web panel.',
+      content: '🌐 **Choose your language / Wähle deine Sprache / בחר את השפה שלך**\n\nClick a button to set your preferred language for the Quantix Tickets web panel.',
       components: [row],
       ephemeral: true
     });

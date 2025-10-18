@@ -14,14 +14,14 @@ module.exports = {
     const guildId = interaction.guild?.id;
 
     const embed = new EmbedBuilder()
-      .setTitle('📊 TRS Tickets Status')
+      .setTitle('📊 Quantix Tickets Status')
       .setDescription(
         '**Bot Status:** ✅ Online\n' +
         '**Server Status:** ✅ Operational\n\n' +
         'Für detaillierte Informationen über alle Dienste, klicke auf den Button unten:'
       )
       .setColor(0x00ff88)
-      .setFooter({ text: 'TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten' })
+      .setFooter({ text: 'Quantix Tickets © 2025 Theredstonee • Alle Rechte vorbehalten' })
       .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(

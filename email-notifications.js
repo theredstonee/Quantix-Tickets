@@ -182,7 +182,7 @@ function buildTicketEmail(ticketInfo) {
   <div class="container">
     <div class="header">
       <h1>🎫 Neues Ticket</h1>
-      <p style="margin: 10px 0 0 0; opacity: 0.9;">TRS Tickets Bot</p>
+      <p style="margin: 10px 0 0 0; opacity: 0.9;">Quantix Tickets Bot</p>
     </div>
 
     <div class="content">
@@ -223,7 +223,7 @@ function buildTicketEmail(ticketInfo) {
     </div>
 
     <div class="footer">
-      <p>Diese Email wurde automatisch von TRS Tickets Bot gesendet.</p>
+      <p>Diese Email wurde automatisch von Quantix Tickets Bot gesendet.</p>
       <p style="margin-top: 10px;">
         <a href="https://github.com/Theredstonee/TRS-Tickets-Bot" style="color: #667eea;">GitHub</a>
       </p>

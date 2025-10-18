@@ -45,7 +45,7 @@ async function sendDMNotification(client, guildId, ticketInfo) {
         }
       ],
       footer: {
-        text: 'TRS Tickets Bot | Premium Pro Feature'
+        text: 'Quantix Tickets Bot | Premium Pro Feature'
       },
       timestamp: new Date()
     };
