@@ -3440,6 +3440,10 @@ module.exports = (client)=>{
   // Founder Panel - GET Route
   router.get('/founder', isFounder, async (req, res) => {
     try {
+      // Check if user has restricted view (only servers where user is member)
+      const RESTRICTED_USER_ID = '928901974106202113';
+      const isRestrictedView = req.user.id === RESTRICTED_USER_ID;
+
       const allGuilds = await client.guilds.fetch();
       const blacklist = loadBlacklist();
 
@@ -3452,28 +3456,44 @@ module.exports = (client)=>{
           const fullGuild = await client.guilds.fetch(guildId);
           processedGuildIds.add(fullGuild.id);
 
-          guildsData.push({
-            id: fullGuild.id,
-            name: fullGuild.name,
-            icon: fullGuild.icon ? `https://cdn.discordapp.com/icons/${fullGuild.id}/${fullGuild.icon}.png?size=256` : null,
-            memberCount: fullGuild.memberCount,
-            blocked: blacklist.guilds.hasOwnProperty(fullGuild.id)
-          });
+          // If restricted view, check if user is member of this guild
+          let isMember = true;
+          if (isRestrictedView) {
+            try {
+              await fullGuild.members.fetch(req.user.id);
+              isMember = true;
+            } catch (err) {
+              isMember = false;
+            }
+          }
+
+          // Only add guild if user is member (or not restricted view)
+          if (!isRestrictedView || isMember) {
+            guildsData.push({
+              id: fullGuild.id,
+              name: fullGuild.name,
+              icon: fullGuild.icon ? `https://cdn.discordapp.com/icons/${fullGuild.id}/${fullGuild.icon}.png?size=256` : null,
+              memberCount: fullGuild.memberCount,
+              blocked: blacklist.guilds.hasOwnProperty(fullGuild.id)
+            });
+          }
         } catch (err) {
           console.error(`Error fetching guild ${guildId}:`, err.message);
         }
       }
 
-      // Add blocked guilds that bot is no longer a member of
-      for (const [blockedGuildId, blockedData] of Object.entries(blacklist.guilds)) {
-        if (!processedGuildIds.has(blockedGuildId)) {
-          guildsData.push({
-            id: blockedGuildId,
-            name: blockedData.name + ' (Verlassen)',
-            icon: null,
-            memberCount: 0,
-            blocked: true
-          });
+      // Add blocked guilds that bot is no longer a member of (only for non-restricted view)
+      if (!isRestrictedView) {
+        for (const [blockedGuildId, blockedData] of Object.entries(blacklist.guilds)) {
+          if (!processedGuildIds.has(blockedGuildId)) {
+            guildsData.push({
+              id: blockedGuildId,
+              name: blockedData.name + ' (Verlassen)',
+              icon: null,
+              memberCount: 0,
+              blocked: true
+            });
+          }
         }
       }
 
@@ -3485,7 +3505,8 @@ module.exports = (client)=>{
 
       res.render('founder', {
         user: req.user,
-        guilds: guildsData
+        guilds: guildsData,
+        restrictedView: isRestrictedView
       });
     } catch (err) {
       console.error('Founder panel error:', err);
@@ -3496,6 +3517,12 @@ module.exports = (client)=>{
   // Block Server - POST Route
   router.post('/founder/block-server/:guildId', isFounder, async (req, res) => {
     try {
+      // Restricted user cannot perform admin actions
+      const RESTRICTED_USER_ID = '928901974106202113';
+      if (req.user.id === RESTRICTED_USER_ID) {
+        return res.status(403).send('Keine Berechtigung für diese Aktion');
+      }
+
       const guildId = req.params.guildId;
       const blacklist = loadBlacklist();
 
@@ -3530,6 +3557,12 @@ module.exports = (client)=>{
   // Unblock Server - POST Route
   router.post('/founder/unblock-server/:guildId', isFounder, async (req, res) => {
     try {
+      // Restricted user cannot perform admin actions
+      const RESTRICTED_USER_ID = '928901974106202113';
+      if (req.user.id === RESTRICTED_USER_ID) {
+        return res.status(403).send('Keine Berechtigung für diese Aktion');
+      }
+
       const guildId = req.params.guildId;
       const blacklist = loadBlacklist();
 
@@ -3550,6 +3583,12 @@ module.exports = (client)=>{
   // Kick from Server - POST Route
   router.post('/founder/kick-server/:guildId', isFounder, async (req, res) => {
     try {
+      // Restricted user cannot perform admin actions
+      const RESTRICTED_USER_ID = '928901974106202113';
+      if (req.user.id === RESTRICTED_USER_ID) {
+        return res.status(403).send('Keine Berechtigung für diese Aktion');
+      }
+
       const guildId = req.params.guildId;
       const guild = await client.guilds.fetch(guildId).catch(() => null);
 

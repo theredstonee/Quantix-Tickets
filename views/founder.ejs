@@ -451,7 +451,9 @@
               <th>Server</th>
               <th>Mitglieder</th>
               <th>Status</th>
+              <% if (!restrictedView) { %>
               <th>Aktionen</th>
+              <% } %>
             </tr>
           </thead>
           <tbody id="guildsTable">
@@ -479,6 +481,7 @@
                 <span class="badge badge-active"><i class="fas fa-check"></i> Aktiv</span>
               <% } %>
             </td>
+            <% if (!restrictedView) { %>
             <td>
               <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <% if (guild.blocked) { %>
@@ -495,6 +498,7 @@
                 <% } %>
               </div>
             </td>
+            <% } %>
           </tr>
             <% }); %>
           </tbody>
