@@ -652,11 +652,40 @@
         justify-content: center;
       }
     }
+    .settings-toggle .click-count {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+      color: #000;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border: 2px solid #0a0a0a;
+      box-shadow: 0 2px 6px rgba(241, 196, 15, 0.6);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes clickPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3) rotate(15deg); }
+    }
+
+    .settings-toggle .click-count.animate {
+      animation: clickPulse 0.5s ease;
+    }
   </style>
 </head>
 <body>
   <button class="settings-toggle" onclick="toggleSpin()" title="Einstellungen" id="settingsBtn">
     <i class="fas fa-cog"></i>
+    <span class="click-count" id="clickCount">0</span>
   </button>
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
     <i id="themeIcon" class="fas fa-moon"></i>
@@ -989,11 +1018,58 @@
       });
     }
 
-    // Spin Toggle Funktion (mit sessionStorage)
+    // Click Counter Management
+    let clickCount = 0;
+    const STORAGE_KEY = 'quantix-settings-clicks';
+
+    function loadClickCount() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        clickCount = parseInt(saved) || 0;
+        updateClickDisplay();
+      }
+    }
+
+    function incrementClickCount() {
+      clickCount++;
+      localStorage.setItem(STORAGE_KEY, clickCount.toString());
+      updateClickDisplay();
+
+      // Animate counter
+      const counter = document.getElementById('clickCount');
+      if (counter) {
+        counter.classList.add('animate');
+        setTimeout(() => counter.classList.remove('animate'), 500);
+      }
+    }
+
+    function updateClickDisplay() {
+      const counter = document.getElementById('clickCount');
+      if (counter) {
+        counter.textContent = clickCount;
+
+        // Change color based on count
+        if (clickCount >= 20) {
+          counter.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
+          counter.style.color = '#fff';
+        } else if (clickCount >= 10) {
+          counter.style.background = 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)';
+          counter.style.color = '#fff';
+        } else if (clickCount >= 5) {
+          counter.style.background = 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)';
+          counter.style.color = '#fff';
+        }
+      }
+    }
+
+    // Spin Toggle Funktion (mit sessionStorage und Click Counter)
     function toggleSpin() {
       const body = document.body;
       const settingsBtn = document.getElementById('settingsBtn');
       const isSpinning = body.classList.contains('spinning');
+
+      // Increment click counter
+      incrementClickCount();
 
       if (isSpinning) {
         body.classList.remove('spinning');
@@ -1008,6 +1084,8 @@
 
     // Spin-Zustand beim Laden wiederherstellen
     (function() {
+      loadClickCount(); // Load click counter first
+
       const spinEnabled = sessionStorage.getItem('quantix-spin-enabled');
       if (spinEnabled === 'true') {
         document.body.classList.add('spinning');
