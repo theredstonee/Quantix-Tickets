@@ -465,6 +465,156 @@ function startPendingDeletionsChecker() {
   setInterval(checkPendingDeletions, 60 * 1000);
 }
 
+// Trial Expiry Warning Checker
+function startTrialExpiryWarningChecker() {
+  const checkTrialWarnings = async () => {
+    try {
+      const { getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo } = require('./premium');
+      const { getGuildLanguage, t } = require('./translations');
+      const expiringTrials = getExpiringTrials();
+
+      if (expiringTrials.length === 0) return;
+
+      console.log(`🔔 ${expiringTrials.length} Trial(s) läuft/laufen bald ab`);
+
+      for (const trial of expiringTrials) {
+        // Check if warning was already sent for this day count
+        if (wasWarningSent(trial.guildId, trial.daysRemaining)) {
+          continue;
+        }
+
+        try {
+          const guild = await client.guilds.fetch(trial.guildId).catch(() => null);
+          if (!guild) continue;
+
+          const cfg = readCfg(trial.guildId);
+          const guildLanguage = getGuildLanguage(trial.guildId);
+          const isGerman = guildLanguage === 'de';
+          const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de').replace(/\/+$/, '');
+
+          // Find target channel (log channel or general channel)
+          let targetChannel = null;
+
+          if (cfg.logChannelId) {
+            targetChannel = await guild.channels.fetch(cfg.logChannelId).catch(() => null);
+          }
+
+          if (!targetChannel) {
+            const generalNames = ['general', 'allgemein', 'chat', 'main', 'lobby'];
+            for (const name of generalNames) {
+              const channel = guild.channels.cache.find(ch =>
+                ch.type === ChannelType.GuildText &&
+                ch.name.toLowerCase().includes(name) &&
+                ch.permissionsFor(guild.members.me).has([
+                  PermissionsBitField.Flags.ViewChannel,
+                  PermissionsBitField.Flags.SendMessages
+                ])
+              );
+              if (channel) {
+                targetChannel = channel;
+                break;
+              }
+            }
+          }
+
+          if (!targetChannel) {
+            targetChannel = guild.channels.cache.find(ch =>
+              ch.type === ChannelType.GuildText &&
+              ch.permissionsFor(guild.members.me).has([
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages
+              ])
+            );
+          }
+
+          if (!targetChannel) {
+            console.log(`⚠️ Kein geeigneter Channel für Trial-Warnung in ${guild.name}`);
+            continue;
+          }
+
+          // Build warning message
+          const title = isGerman
+            ? `⚠️ Dein Premium Pro Trial läuft bald ab!`
+            : `⚠️ Your Premium Pro Trial is expiring soon!`;
+
+          const description = isGerman
+            ? `🎁 **Premium Pro Trial** läuft in **${trial.daysRemaining} Tag${trial.daysRemaining !== 1 ? 'en' : ''}** ab!\n\n` +
+              `**💎 Premium Pro Features:**\n` +
+              `✅ Unbegrenzte Kategorien\n` +
+              `✅ Auto-Close für inaktive Tickets\n` +
+              `✅ Email-Benachrichtigungen\n` +
+              `✅ Discord DM-Benachrichtigungen\n` +
+              `✅ Erweiterte Analytics\n` +
+              `✅ Priority Support\n\n` +
+              `**🚀 Upgrade jetzt:**\n` +
+              `Besuche das **[Dashboard](${dashboardUrl})** und wähle ein Premium-Paket, um weiterhin von allen Features zu profitieren!\n\n` +
+              `💰 **Premium Preise:**\n` +
+              `• **Basic** (€2.99/Monat): 7 Kategorien, Custom Avatar, Statistiken\n` +
+              `• **Pro** (€4.99/Monat): Alle Features ohne Limits!`
+            : `🎁 **Premium Pro Trial** expires in **${trial.daysRemaining} day${trial.daysRemaining !== 1 ? 's' : ''}**!\n\n` +
+              `**💎 Premium Pro Features:**\n` +
+              `✅ Unlimited categories\n` +
+              `✅ Auto-close for inactive tickets\n` +
+              `✅ Email notifications\n` +
+              `✅ Discord DM notifications\n` +
+              `✅ Advanced analytics\n` +
+              `✅ Priority support\n\n` +
+              `**🚀 Upgrade now:**\n` +
+              `Visit the **[Dashboard](${dashboardUrl})** and choose a premium plan to continue enjoying all features!\n\n` +
+              `💰 **Premium Pricing:**\n` +
+              `• **Basic** (€2.99/month): 7 categories, custom avatar, statistics\n` +
+              `• **Pro** (€4.99/month): All features without limits!`;
+
+          const warningEmbed = new EmbedBuilder()
+            .setTitle(title)
+            .setDescription(description)
+            .setColor(0xff6b6b) // Red warning color
+            .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
+            .setFooter({ text: COPYRIGHT })
+            .setTimestamp();
+
+          const buttonRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setURL(`${dashboardUrl}/premium`)
+              .setStyle(ButtonStyle.Link)
+              .setLabel(isGerman ? '💎 Upgrade zu Premium' : '💎 Upgrade to Premium')
+              .setEmoji('🚀'),
+            new ButtonBuilder()
+              .setURL('https://discord.com/invite/mnYbnpyyBS')
+              .setStyle(ButtonStyle.Link)
+              .setLabel(isGerman ? '💬 Support Server' : '💬 Support Server')
+              .setEmoji('🛟')
+          );
+
+          await targetChannel.send({
+            embeds: [warningEmbed],
+            components: [buttonRow]
+          });
+
+          // Mark warning as sent
+          markTrialWarningSent(trial.guildId, trial.daysRemaining);
+
+          console.log(`✅ Trial-Warnung gesendet an ${guild.name} (${trial.daysRemaining} Tage verbleibend)`);
+
+          // Rate limiting: Wait 1s between messages
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (err) {
+          console.error(`❌ Fehler beim Senden der Trial-Warnung für Guild ${trial.guildId}:`, err.message);
+        }
+      }
+    } catch (err) {
+      console.error('❌ Fehler beim Trial Warning Check:', err);
+    }
+  };
+
+  // Initial check
+  console.log('🔔 Trial Expiry Warning Checker gestartet (läuft alle 6 Stunden)');
+  checkTrialWarnings();
+
+  // Check every 6 hours (6 * 60 * 60 * 1000 ms)
+  setInterval(checkTrialWarnings, 6 * 60 * 60 * 1000);
+}
+
 async function executeDeletion(deletion) {
   try {
     console.log(`🗑️ Executing deletion for guild: ${deletion.guildId}`);
@@ -512,6 +662,9 @@ client.once('ready', async () => {
 
   // Pending Deletions Checker - läuft jede Minute
   startPendingDeletionsChecker();
+
+  // Trial Expiry Warning Checker - läuft alle 6 Stunden
+  startTrialExpiryWarningChecker();
 
   // Send startup notification to all guilds
   await sendStartupNotifications();
@@ -642,47 +795,70 @@ async function sendWelcomeMessage(guild) {
 
     const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de').replace(/\/+$/, '');
 
+    // Check if trial is active
+    const { isTrialActive, getTrialInfo } = require('./premium');
+    const trialActive = isTrialActive(guild.id);
+    const trialInfo = trialActive ? getTrialInfo(guild.id) : null;
+
+    // Build description with trial banner
+    let description = '';
+
+    if (trialActive && trialInfo) {
+      // Trial Banner
+      description += isGerman
+        ? `## 🎁 **14 Tage Premium Pro - KOSTENLOS!**\n` +
+          `🎉 Dein Server hat **Premium Pro** für **14 Tage gratis** aktiviert!\n` +
+          `⏰ Noch **${trialInfo.daysRemaining} Tage** verbleibend\n\n` +
+          `**💎 Du hast jetzt Zugriff auf:**\n` +
+          `✅ Unbegrenzte Kategorien\n` +
+          `✅ Auto-Close für inaktive Tickets\n` +
+          `✅ Email-Benachrichtigungen\n` +
+          `✅ Discord DM-Benachrichtigungen\n` +
+          `✅ Erweiterte Analytics\n` +
+          `✅ Priority Support\n\n`
+        : `## 🎁 **14 Days Premium Pro - FREE!**\n` +
+          `🎉 Your server has **Premium Pro** activated for **14 days free**!\n` +
+          `⏰ **${trialInfo.daysRemaining} days** remaining\n\n` +
+          `**💎 You now have access to:**\n` +
+          `✅ Unlimited categories\n` +
+          `✅ Auto-close for inactive tickets\n` +
+          `✅ Email notifications\n` +
+          `✅ Discord DM notifications\n` +
+          `✅ Advanced analytics\n` +
+          `✅ Priority support\n\n`;
+    }
+
+    description += isGerman
+      ? `Vielen Dank, dass du Quantix Tickets zu deinem Server hinzugefügt hast!\n\n` +
+        `**🚀 Schnellstart:**\n` +
+        `1️⃣ Öffne das **[Dashboard](${dashboardUrl})** und melde dich mit Discord an\n` +
+        `2️⃣ Wähle deinen Server aus\n` +
+        `3️⃣ Konfiguriere deine Ticket-Kategorien und Team-Rollen\n` +
+        `4️⃣ Sende das Ticket-Panel in einen Channel mit \`/panel/send\`\n\n` +
+        `**✨ Features:**\n` +
+        `• 🌍 **Multi-Language:** 9 Sprachen\n` +
+        `• 🎨 **Anpassbar:** Custom Embeds & Formulare\n` +
+        `• 📊 **Analytics:** Detaillierte Statistiken\n` +
+        `• 🎯 **Priority System:** 3 Prioritätsstufen\n` +
+        `• 📝 **Transcripts:** HTML & TXT Transcripts`
+      : `Thank you for adding Quantix Tickets to your server!\n\n` +
+        `**🚀 Quick Start:**\n` +
+        `1️⃣ Open the **[Dashboard](${dashboardUrl})** and login with Discord\n` +
+        `2️⃣ Select your server\n` +
+        `3️⃣ Configure your ticket categories and team roles\n` +
+        `4️⃣ Send the ticket panel to a channel with \`/panel/send\`\n\n` +
+        `**✨ Features:**\n` +
+        `• 🌍 **Multi-Language:** 9 languages\n` +
+        `• 🎨 **Customizable:** Custom embeds & forms\n` +
+        `• 📊 **Analytics:** Detailed statistics\n` +
+        `• 🎯 **Priority System:** 3 priority levels\n` +
+        `• 📝 **Transcripts:** HTML & TXT transcripts`;
+
     // Create welcome embed
     const welcomeEmbed = new EmbedBuilder()
       .setTitle(isGerman ? '🎫 Willkommen bei Quantix Tickets!' : '🎫 Welcome to Quantix Tickets!')
-      .setDescription(
-        isGerman
-          ? `Vielen Dank, dass du Quantix Tickets zu deinem Server hinzugefügt hast!\n\n` +
-            `**Was ist Quantix Tickets?**\n` +
-            `Ein professionelles Ticket-System für Discord mit Web-Dashboard, Multi-Server-Support und 9 Sprachen.\n\n` +
-            `**🚀 Schnellstart:**\n` +
-            `1️⃣ Öffne das **[Dashboard](${dashboardUrl})** und melde dich mit Discord an\n` +
-            `2️⃣ Wähle deinen Server aus\n` +
-            `3️⃣ Konfiguriere deine Ticket-Kategorien und Team-Rollen\n` +
-            `4️⃣ Sende das Ticket-Panel in einen Channel mit \`/panel/send\`\n\n` +
-            `**✨ Features:**\n` +
-            `• 🌍 **Multi-Language:** 9 Sprachen (DE, EN, HE, JA, RU, PT, ES, ID, AR)\n` +
-            `• 🎨 **Anpassbar:** Custom Embeds, Formulare und Design\n` +
-            `• 📊 **Analytics:** Detaillierte Ticket-Statistiken\n` +
-            `• 🎯 **Priority System:** 3 Prioritätsstufen mit hierarchischen Rollen\n` +
-            `• 📝 **Transcripts:** HTML & TXT Transcripts für alle Tickets\n` +
-            `• 💎 **Premium:** Erweiterte Features wie Auto-Close, Email-Benachrichtigungen\n\n` +
-            `**📖 Hilfe benötigt?**\n` +
-            `Besuche das [Dashboard](${dashboardUrl}) für die vollständige Konfiguration!`
-          : `Thank you for adding Quantix Tickets to your server!\n\n` +
-            `**What is Quantix Tickets?**\n` +
-            `A professional ticket system for Discord with web dashboard, multi-server support and 9 languages.\n\n` +
-            `**🚀 Quick Start:**\n` +
-            `1️⃣ Open the **[Dashboard](${dashboardUrl})** and login with Discord\n` +
-            `2️⃣ Select your server\n` +
-            `3️⃣ Configure your ticket categories and team roles\n` +
-            `4️⃣ Send the ticket panel to a channel with \`/panel/send\`\n\n` +
-            `**✨ Features:**\n` +
-            `• 🌍 **Multi-Language:** 9 languages (DE, EN, HE, JA, RU, PT, ES, ID, AR)\n` +
-            `• 🎨 **Customizable:** Custom embeds, forms and design\n` +
-            `• 📊 **Analytics:** Detailed ticket statistics\n` +
-            `• 🎯 **Priority System:** 3 priority levels with hierarchical roles\n` +
-            `• 📝 **Transcripts:** HTML & TXT transcripts for all tickets\n` +
-            `• 💎 **Premium:** Advanced features like auto-close, email notifications\n\n` +
-            `**📖 Need help?**\n` +
-            `Visit the [Dashboard](${dashboardUrl}) for full configuration!`
-      )
-      .setColor(0x00ff88)
+      .setDescription(description)
+      .setColor(trialActive ? 0xf093fb : 0x00ff88)
       .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
       .setFooter({ text: COPYRIGHT })
       .setTimestamp();
@@ -734,6 +910,20 @@ client.on(Events.GuildCreate, async (guild) => {
     }
   } catch (err) {
     console.error('❌ Error checking blacklist:', err);
+  }
+
+  // Activate 14-day auto-trial for new servers
+  try {
+    const { activateAutoTrial } = require('./premium');
+    const trialResult = activateAutoTrial(guild.id);
+
+    if (trialResult.success) {
+      console.log(`🎁 Auto-Trial aktiviert für ${guild.name} (${guild.id}) - 14 Tage Premium Pro`);
+    } else if (trialResult.alreadyHadTrial) {
+      console.log(`ℹ️ ${guild.name} (${guild.id}) hatte bereits Trial`);
+    }
+  } catch (err) {
+    console.error('❌ Error activating auto-trial:', err);
   }
 
   try {

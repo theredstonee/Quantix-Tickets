@@ -251,9 +251,17 @@ function getPremiumInfo(guildId) {
 
   // Check if Lifetime Premium
   const isLifetime = cfg.premium?.lifetime === true;
-  const tierName = isLifetime
-    ? `${PREMIUM_TIERS[tier].name} (Lifetime)`
-    : PREMIUM_TIERS[tier].name;
+
+  // Check if Trial
+  const isTrial = cfg.premium?.isTrial === true;
+  const trialInfo = isTrial ? getTrialInfo(guildId) : null;
+
+  let tierName = PREMIUM_TIERS[tier].name;
+  if (isLifetime) {
+    tierName = `${tierName} (Lifetime)`;
+  } else if (isTrial && trialInfo) {
+    tierName = `${tierName} (Trial - ${trialInfo.daysRemaining} ${trialInfo.daysRemaining === 1 ? 'Tag' : 'Tage'})`;
+  }
 
   return {
     tier: tier,
@@ -263,6 +271,8 @@ function getPremiumInfo(guildId) {
     expiresAt: cfg.premium?.expiresAt || null,
     isActive: tier !== 'none',
     isLifetime: isLifetime,
+    isTrial: isTrial,
+    trialInfo: trialInfo,
     subscriptionId: cfg.premium?.subscriptionId || null
   };
 }
@@ -667,6 +677,151 @@ function listBetatesterServers() {
   return betatesterServers;
 }
 
+/**
+ * Aktiviert automatische 14-Tage Trial (Premium Pro) für neue Server
+ * @param {string} guildId - Discord Guild ID
+ * @returns {object}
+ */
+function activateAutoTrial(guildId) {
+  const cfg = readCfg(guildId);
+
+  // Prüfe ob Server bereits Premium oder Trial hatte
+  if (cfg.premium && (cfg.premium.tier !== 'none' || cfg.premium.hadTrial === true)) {
+    return {
+      success: false,
+      message: 'Server hatte bereits Premium oder Trial',
+      alreadyHadTrial: cfg.premium.hadTrial === true
+    };
+  }
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 14); // 14 Tage Trial
+
+  cfg.premium = {
+    tier: 'pro',
+    expiresAt: expiresAt.toISOString(),
+    subscriptionId: 'trial_' + guildId,
+    customerId: 'trial_customer_' + guildId,
+    isTrial: true,
+    hadTrial: true, // Markiere dass Server Trial hatte
+    trialStartedAt: new Date().toISOString(),
+    features: { ...PREMIUM_TIERS.pro.features }
+  };
+
+  saveCfg(guildId, cfg);
+  console.log(`🎁 Auto-Trial (14 Tage Pro) aktiviert für Guild ${guildId} bis ${expiresAt.toLocaleDateString()}`);
+
+  return {
+    success: true,
+    tier: 'pro',
+    guildId: guildId,
+    isTrial: true,
+    expiresAt: expiresAt.toISOString(),
+    daysRemaining: 14
+  };
+}
+
+/**
+ * Prüft ob ein Server noch im Trial ist
+ * @param {string} guildId - Discord Guild ID
+ * @returns {boolean}
+ */
+function isTrialActive(guildId) {
+  const cfg = readCfg(guildId);
+  if (!cfg.premium || !cfg.premium.isTrial) return false;
+
+  const tier = getPremiumTier(guildId);
+  return tier === 'pro' && cfg.premium.isTrial === true;
+}
+
+/**
+ * Gibt Trial-Informationen zurück
+ * @param {string} guildId - Discord Guild ID
+ * @returns {object|null}
+ */
+function getTrialInfo(guildId) {
+  const cfg = readCfg(guildId);
+  if (!cfg.premium || !cfg.premium.isTrial) return null;
+
+  const expiresAt = new Date(cfg.premium.expiresAt);
+  const now = new Date();
+  const daysRemaining = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+
+  return {
+    isActive: isTrialActive(guildId),
+    startedAt: cfg.premium.trialStartedAt,
+    expiresAt: cfg.premium.expiresAt,
+    daysRemaining: daysRemaining > 0 ? daysRemaining : 0,
+    isExpiringSoon: daysRemaining <= 3 && daysRemaining > 0,
+    warningsSent: cfg.premium.trialWarningsSent || []
+  };
+}
+
+/**
+ * Get all servers with expiring trials (3 days or less)
+ * @returns {Array<{guildId: string, daysRemaining: number}>}
+ */
+function getExpiringTrials() {
+  const configsPath = './configs';
+  if (!fs.existsSync(configsPath)) return [];
+
+  const expiringTrials = [];
+  const files = fs.readdirSync(configsPath);
+
+  for (const file of files) {
+    // Only process main config files (not _tickets.json or _counter.json)
+    if (!file.endsWith('.json') || file.includes('_')) continue;
+
+    const guildId = file.replace('.json', '');
+    const trialInfo = getTrialInfo(guildId);
+
+    if (trialInfo && trialInfo.isActive && trialInfo.isExpiringSoon) {
+      expiringTrials.push({
+        guildId,
+        daysRemaining: trialInfo.daysRemaining,
+        warningsSent: trialInfo.warningsSent
+      });
+    }
+  }
+
+  return expiringTrials;
+}
+
+/**
+ * Mark that a trial warning was sent
+ * @param {string} guildId - Guild ID
+ * @param {number} daysRemaining - Days remaining when warning was sent
+ */
+function markTrialWarningSent(guildId, daysRemaining) {
+  const cfg = readCfg(guildId);
+  if (!cfg.premium || !cfg.premium.isTrial) return;
+
+  if (!cfg.premium.trialWarningsSent) {
+    cfg.premium.trialWarningsSent = [];
+  }
+
+  // Add warning timestamp and days remaining
+  cfg.premium.trialWarningsSent.push({
+    sentAt: new Date().toISOString(),
+    daysRemaining
+  });
+
+  saveCfg(guildId, cfg);
+}
+
+/**
+ * Check if warning was already sent for this day count
+ * @param {string} guildId - Guild ID
+ * @param {number} daysRemaining - Days remaining
+ * @returns {boolean}
+ */
+function wasWarningSent(guildId, daysRemaining) {
+  const cfg = readCfg(guildId);
+  if (!cfg.premium || !cfg.premium.trialWarningsSent) return false;
+
+  return cfg.premium.trialWarningsSent.some(w => w.daysRemaining === daysRemaining);
+}
+
 module.exports = {
   PREMIUM_TIERS,
   isPremium,
@@ -686,6 +841,12 @@ module.exports = {
   activateBetatester,
   deactivateBetatester,
   listBetatesterServers,
+  activateAutoTrial,
+  isTrialActive,
+  getTrialInfo,
+  getExpiringTrials,
+  markTrialWarningSent,
+  wasWarningSent,
   readCfg,
   saveCfg
 };

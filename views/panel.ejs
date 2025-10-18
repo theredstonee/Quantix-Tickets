@@ -226,6 +226,40 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .trial-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.15rem 0.5rem;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(240, 147, 251, 0.4);
+      animation: trialPulse 2s ease-in-out infinite;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    @keyframes trialPulse {
+      0%, 100% {
+        box-shadow: 0 2px 8px rgba(240, 147, 251, 0.4);
+      }
+      50% {
+        box-shadow: 0 4px 16px rgba(240, 147, 251, 0.6);
+      }
+    }
+
+    .trial-badge i {
+      font-size: 0.7rem;
     }
 
     .server-details p {
@@ -788,6 +822,20 @@
     .stats-card:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
+    }
+
+    .trial-stats-card {
+      background: linear-gradient(135deg, rgba(240, 147, 251, 0.15) 0%, rgba(245, 87, 108, 0.15) 100%);
+      border: 2px solid rgba(240, 147, 251, 0.5);
+      box-shadow: 0 4px 16px rgba(240, 147, 251, 0.3);
+    }
+
+    .trial-stats-card:hover {
+      box-shadow: 0 6px 20px rgba(240, 147, 251, 0.5);
+    }
+
+    .trial-stats-card .stats-icon {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     }
 
     .stats-icon {
@@ -1495,7 +1543,15 @@
             <% } %>
           </div>
           <div class="server-details">
-            <h3><%= guild.name %></h3>
+            <h3>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><%= guild.name %></span>
+              <% if (typeof isTrial !== 'undefined' && isTrial && trialInfo) { %>
+                <span class="trial-badge">
+                  <i class="fas fa-gift"></i>
+                  Trial <%= trialInfo.daysRemaining %>d
+                </span>
+              <% } %>
+            </h3>
             <p><%= guild.id %></p>
           </div>
         </div>
@@ -1505,7 +1561,15 @@
             <i class="fas fa-server"></i>
           </div>
           <div class="server-details">
-            <h3><%= typeof guildName !== 'undefined' ? guildName : 'Server' %></h3>
+            <h3>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><%= typeof guildName !== 'undefined' ? guildName : 'Server' %></span>
+              <% if (typeof isTrial !== 'undefined' && isTrial && trialInfo) { %>
+                <span class="trial-badge">
+                  <i class="fas fa-gift"></i>
+                  Trial <%= trialInfo.daysRemaining %>d
+                </span>
+              <% } %>
+            </h3>
             <p><%= guildId %></p>
           </div>
         </div>
@@ -1717,13 +1781,20 @@
                   <p><%= (cfg.formFields || []).length %></p>
                 </div>
               </div>
-              <div class="stats-card">
+              <div class="stats-card<% if (isTrial) { %> trial-stats-card<% } %>">
                 <div class="stats-icon">
-                  <i class="fas fa-gem"></i>
+                  <i class="fas fa-<% if (isTrial) { %>gift<% } else { %>gem<% } %>"></i>
                 </div>
                 <div class="stats-content">
                   <h4>Premium Status</h4>
-                  <p><%= premiumTierName || 'Free' %></p>
+                  <p>
+                    <%= premiumTierName || 'Free' %>
+                    <% if (isTrial && trialInfo && trialInfo.isExpiringSoon) { %>
+                      <br><small style="color: #ff6b6b; font-size: 0.75rem;">
+                        <i class="fas fa-exclamation-triangle"></i> <%= lang === 'de' ? 'Läuft bald ab!' : 'Expiring soon!' %>
+                      </small>
+                    <% } %>
+                  </p>
                 </div>
               </div>
             </div>

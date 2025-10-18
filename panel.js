@@ -1835,6 +1835,8 @@ module.exports = (client)=>{
       premiumTier: premiumInfo.tier,
       premiumTierName: premiumInfo.tierName,
       isPremium: premiumInfo.isActive,
+      isTrial: premiumInfo.isTrial || false,
+      trialInfo: premiumInfo.trialInfo || null,
       isAdmin: req.isAdmin, // Flag ob User Admin ist oder nur Team-Mitglied
       user: req.user, // User object for display
       t: res.locals.t, // Translation object
@@ -3458,6 +3460,78 @@ module.exports = (client)=>{
   // Blacklist file handling
   const BLACKLIST_FILE = './server-blacklist.json';
 
+  /**
+   * Send ban message to server before bot leaves
+   * @param {Guild} guild - Discord Guild object
+   * @param {string} reason - Ban reason
+   * @param {string} bannedBy - Username who initiated the ban
+   */
+  async function sendBanMessage(guild, reason, bannedBy) {
+    try {
+      const { EmbedBuilder } = require('discord.js');
+      const { COPYRIGHT } = require('./version.config');
+
+      // Try to find a suitable channel
+      let targetChannel = null;
+      const cfg = readCfg(guild.id);
+
+      // Priority 1: Log channel
+      if (cfg.logChannelId) {
+        targetChannel = await guild.channels.fetch(cfg.logChannelId).catch(() => null);
+      }
+
+      // Priority 2: General channel
+      if (!targetChannel) {
+        const generalNames = ['general', 'allgemein', 'chat', 'main', 'lobby'];
+        for (const name of generalNames) {
+          const channel = guild.channels.cache.find(ch =>
+            ch.type === 0 && // Text channel
+            ch.name.toLowerCase().includes(name) &&
+            ch.permissionsFor(guild.members.me).has(['SendMessages', 'EmbedLinks'])
+          );
+          if (channel) {
+            targetChannel = channel;
+            break;
+          }
+        }
+      }
+
+      // Priority 3: First available text channel
+      if (!targetChannel) {
+        targetChannel = guild.channels.cache.find(ch =>
+          ch.type === 0 && // Text channel
+          ch.permissionsFor(guild.members.me).has(['SendMessages', 'EmbedLinks'])
+        );
+      }
+
+      if (!targetChannel) {
+        console.log(`⚠️ No suitable channel found in ${guild.name} for ban message`);
+        return;
+      }
+
+      // Create ban embed
+      const banEmbed = new EmbedBuilder()
+        .setTitle('🚫 Server wurde gebannt')
+        .setDescription(
+          `**Dieser Server wurde vom Quantix Tickets Bot gebannt.**\n\n` +
+          `**Grund:**\n${reason}\n\n` +
+          `**Gebannt von:** ${bannedBy}\n` +
+          `**Datum:** ${new Date().toLocaleString('de-DE')}\n\n` +
+          `Der Bot wird diesen Server jetzt verlassen. Bei Fragen oder um den Ban anzufechten, ` +
+          `kontaktiere bitte unseren Support-Server: https://discord.com/invite/mnYbnpyyBS`
+        )
+        .setColor(0xff0000) // Red
+        .setFooter({ text: COPYRIGHT })
+        .setTimestamp();
+
+      await targetChannel.send({ embeds: [banEmbed] });
+      console.log(`✅ Ban message sent to ${guild.name} in channel #${targetChannel.name}`);
+    } catch (err) {
+      console.error(`❌ Error sending ban message to ${guild.name}:`, err);
+      throw err;
+    }
+  }
+
   function loadBlacklist() {
     try {
       if (fs.existsSync(BLACKLIST_FILE)) {
@@ -3532,12 +3606,14 @@ module.exports = (client)=>{
 
           // Only add guild if user is member (or not restricted view)
           if (!isRestrictedView || isMember) {
+            const isBlocked = blacklist.guilds.hasOwnProperty(fullGuild.id);
             guildsData.push({
               id: fullGuild.id,
               name: fullGuild.name,
               icon: fullGuild.icon ? `https://cdn.discordapp.com/icons/${fullGuild.id}/${fullGuild.icon}.png?size=256` : null,
               memberCount: fullGuild.memberCount,
-              blocked: blacklist.guilds.hasOwnProperty(fullGuild.id)
+              blocked: isBlocked,
+              blockReason: isBlocked ? blacklist.guilds[fullGuild.id].reason : null
             });
           }
         } catch (err) {
@@ -3554,7 +3630,8 @@ module.exports = (client)=>{
               name: blockedData.name + ' (Verlassen)',
               icon: null,
               memberCount: 0,
-              blocked: true
+              blocked: true,
+              blockReason: blockedData.reason || null
             });
           }
         }
@@ -3589,6 +3666,8 @@ module.exports = (client)=>{
       const guildId = validateDiscordId(req.params.guildId);
       if (!guildId) return res.redirect('/founder?error=invalid-guild-id');
 
+      const banReason = req.body.reason ? sanitizeString(req.body.reason.trim(), 500) : 'Kein Grund angegeben';
+
       const blacklist = loadBlacklist();
 
       if (!blacklist.guilds.hasOwnProperty(guildId)) {
@@ -3596,23 +3675,33 @@ module.exports = (client)=>{
         const guild = await client.guilds.fetch(guildId).catch(() => null);
         const guildName = guild ? guild.name : `Server ${guildId}`;
 
-        // Add to blacklist with name
+        // Send ban message BEFORE leaving
+        if (guild) {
+          try {
+            await sendBanMessage(guild, banReason, req.user.username || req.user.id);
+          } catch (err) {
+            console.error(`⚠️ Could not send ban message to ${guildName}:`, err.message);
+          }
+        }
+
+        // Add to blacklist with name and reason
         blacklist.guilds[guildId] = {
           name: sanitizeString(guildName, 100),
           blockedAt: new Date().toISOString(),
-          blockedBy: sanitizeUsername(req.user.username || req.user.id)
+          blockedBy: sanitizeUsername(req.user.username || req.user.id),
+          reason: banReason
         };
         saveBlacklist(blacklist);
-        console.log(`🚫 Server ${sanitizeString(guildName, 100)} (${guildId}) wurde von ${sanitizeUsername(req.user.username || req.user.id)} blockiert`);
+        console.log(`🚫 Server ${sanitizeString(guildName, 100)} (${guildId}) wurde von ${sanitizeUsername(req.user.username || req.user.id)} blockiert - Grund: ${banReason}`);
 
-        // Leave the server after blocking
+        // Leave the server after blocking and sending message
         if (guild) {
           await guild.leave();
           console.log(`👋 Bot hat blockierten Server ${guildName} (${guildId}) verlassen`);
         }
       }
 
-      res.redirect('/founder');
+      res.redirect('/founder?success=server-banned');
     } catch (err) {
       console.error('Block server error:', err);
       res.redirect('/founder?error=block-failed');

@@ -646,6 +646,15 @@
       animation: spin 1s linear infinite;
     }
 
+    .founder-dashboard-btn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .founder-dashboard-btn.loading i {
+      animation: spin 1s linear infinite;
+    }
+
     @media (max-width: 768px) {
       .nav-buttons {
         flex-direction: column;
@@ -707,6 +716,11 @@
     <% if (user && (user.id === '928901974106202113' || user.id === '1159182333316968530' || user.id === '1415387837359984740' || user.id === '1048900200497954868')) { %>
       <a href="/owner" id="ownerDashboardBtn" class="owner-dashboard-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
         <i class="fas fa-crown"></i> <%= lang === 'de' ? 'Owner Dashboard' : lang === 'en' ? 'Owner Dashboard' : lang === 'he' ? 'לוח בקרת הבעלים' : lang === 'ja' ? 'オーナーダッシュボード' : lang === 'ru' ? 'Панель владельца' : lang === 'pt' ? 'Painel do Proprietário' : lang === 'es' ? 'Panel del Propietario' : lang === 'id' ? 'Panel Pemilik' : lang === 'zh' ? '所有者仪表板' : lang === 'ar' ? 'لوحة المالك' : 'Owner Dashboard' %>
+      </a>
+    <% } %>
+    <% if (user && (user.id === '1048900200497954868' || user.id === '1159182333316968530' || user.id === '928901974106202113')) { %>
+      <a href="/founder" id="founderDashboardBtn" class="founder-dashboard-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 4px 12px rgba(240,147,251,0.4);">
+        <i class="fas fa-user-shield"></i> <%= lang === 'de' ? 'Founder Panel' : lang === 'en' ? 'Founder Panel' : lang === 'he' ? 'לוח מייסדים' : lang === 'ja' ? '創設者パネル' : lang === 'ru' ? 'Панель основателя' : lang === 'pt' ? 'Painel de Fundador' : lang === 'es' ? 'Panel de Fundador' : lang === 'id' ? 'Panel Pendiri' : lang === 'zh' ? '创始人面板' : lang === 'ar' ? 'لوحة المؤسس' : 'Founder Panel' %>
       </a>
     <% } %>
   </div>
@@ -1028,6 +1042,47 @@
       });
     }
 
+    // Founder Dashboard Button Loading Animation
+    const founderDashboardBtn = document.getElementById('founderDashboardBtn');
+    if (founderDashboardBtn) {
+      founderDashboardBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
+        // Show loading overlay
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const loadingSubtext = document.getElementById('loadingSubtext');
+
+        // Founder Panel specific loading messages
+        const messages = {
+          de: { text: 'Lade Founder Panel...', subtext: 'Bereite erweiterte Verwaltung vor' },
+          en: { text: 'Loading Founder Panel...', subtext: 'Preparing advanced management' },
+          he: { text: 'טוען לוח מייסדים...', subtext: 'מכין ניהול מתקדם' },
+          ja: { text: '創設者パネルを読み込み中...', subtext: '高度な管理を準備中' },
+          ru: { text: 'Загрузка панели основателя...', subtext: 'Подготовка расширенного управления' },
+          pt: { text: 'Carregando Painel de Fundador...', subtext: 'Preparando gerenciamento avançado' },
+          es: { text: 'Cargando Panel de Fundador...', subtext: 'Preparando gestión avanzada' },
+          id: { text: 'Memuat Panel Pendiri...', subtext: 'Menyiapkan manajemen lanjutan' },
+          zh: { text: '正在加载创始人面板...', subtext: '准备高级管理' },
+          ar: { text: 'تحميل لوحة المؤسس...', subtext: 'إعداد الإدارة المتقدمة' }
+        };
+
+        const lang = '<%= lang %>' || 'de';
+        const message = messages[lang] || messages.de;
+
+        if (loadingText) loadingText.textContent = message.text;
+        if (loadingSubtext) loadingSubtext.textContent = message.subtext;
+        if (loadingOverlay) loadingOverlay.classList.add('show');
+
+        this.classList.add('loading');
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 300);
+      });
+    }
+
     // Global Click Counter Management (User-wide)
     let clickCount = 0;
 
@@ -1129,7 +1184,7 @@
       let secondsElapsed = 0;
 
       function accelerateSpinners() {
-        const spinners = document.querySelectorAll('.loading-spinner, .owner-dashboard-btn.loading i');
+        const spinners = document.querySelectorAll('.loading-spinner, .owner-dashboard-btn.loading i, .founder-dashboard-btn.loading i');
 
         if (spinners.length === 0) return;
 

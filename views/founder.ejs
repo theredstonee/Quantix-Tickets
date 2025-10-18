@@ -490,6 +490,11 @@
             <td>
               <% if (guild.blocked) { %>
                 <span class="badge badge-blocked"><i class="fas fa-ban"></i> Blockiert</span>
+                <% if (guild.blockReason) { %>
+                  <div style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.8; font-style: italic;">
+                    <i class="fas fa-comment-alt"></i> <%= guild.blockReason %>
+                  </div>
+                <% } %>
               <% } else { %>
                 <span class="badge badge-active"><i class="fas fa-check"></i> Aktiv</span>
               <% } %>
@@ -537,12 +542,27 @@
         Möchtest du <strong id="blockServerName"></strong> wirklich blockieren?
         <br><br>
         <span style="opacity: 0.7; font-size: 0.95rem;">
-          Der Bot kann diesem Server nicht mehr beitreten:
-          <br>• Automatisches Verlassen beim Beitritt
-          <br>• Server wird auf Blacklist gesetzt
+          Der Bot wird folgendes tun:
+          <br>• Ban-Nachricht im Server hinterlassen
+          <br>• Server automatisch verlassen
+          <br>• Server auf Blacklist setzen
+          <br>• Automatisches Verlassen bei erneutem Beitritt
           <br>• Kann später entsperrt werden
         </span>
       </p>
+      <div style="margin: 1.5rem 0;">
+        <label for="banReason" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-color);">
+          <i class="fas fa-comment-alt"></i> Ban-Grund (wird im Server angezeigt):
+        </label>
+        <textarea
+          id="banReason"
+          rows="4"
+          maxlength="500"
+          placeholder="z.B. Verstoß gegen die Bot-Nutzungsbedingungen..."
+          style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); font-family: inherit; resize: vertical; min-height: 80px;"
+        ></textarea>
+        <small style="opacity: 0.6; font-size: 0.85rem;">Max. 500 Zeichen</small>
+      </div>
       <div class="modal-buttons">
         <button class="modal-btn modal-btn-cancel" onclick="closeBlockModal()">
           <i class="fas fa-times"></i> Abbrechen
@@ -636,15 +656,32 @@
 
     function closeBlockModal() {
       document.getElementById('blockModal').classList.remove('active');
+      document.getElementById('banReason').value = ''; // Clear reason field
       currentGuildId = null;
       currentGuildName = null;
     }
 
     function confirmBlock() {
       if (currentGuildId) {
+        const banReason = document.getElementById('banReason').value.trim();
+
+        // Validate ban reason
+        if (!banReason || banReason.length === 0) {
+          alert('Bitte gib einen Ban-Grund an!');
+          return;
+        }
+
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '/founder/block-server/' + currentGuildId;
+
+        // Add reason field
+        const reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = banReason;
+        form.appendChild(reasonInput);
+
         document.body.appendChild(form);
         form.submit();
       }
