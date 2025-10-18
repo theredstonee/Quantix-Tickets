@@ -476,11 +476,11 @@ module.exports = (client)=>{
   }
 
   // Middleware für Zugriff mit Admin ODER Team-Rolle
-  // Founder-only middleware (restricted to 2 specific IDs)
+  // Founder-only middleware (restricted to 3 specific IDs)
   function isFounder(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
-    const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
+    const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530', '928901974106202113'];
     const userId = req.user.id;
 
     if(!FOUNDER_IDS.includes(userId)) {
