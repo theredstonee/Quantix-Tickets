@@ -1450,10 +1450,23 @@ module.exports = (client)=>{
       const cfg = readCfg(guildId);
 
       cfg.guildId = guildId;
-      if(req.body.ticketCategoryId) cfg.ticketCategoryId = sanitizeDiscordId(req.body.ticketCategoryId) || req.body.ticketCategoryId.trim();
-      if(req.body.logChannelId) cfg.logChannelId = sanitizeDiscordId(req.body.logChannelId) || req.body.logChannelId.trim();
-      if(req.body.transcriptChannelId) cfg.transcriptChannelId = sanitizeDiscordId(req.body.transcriptChannelId) || req.body.transcriptChannelId.trim();
-      if(req.body.teamRoleId) cfg.teamRoleId = sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim();
+
+      // Multi-Select Support: Convert to arrays
+      cfg.ticketCategoryId = Array.isArray(req.body.ticketCategoryId)
+        ? req.body.ticketCategoryId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
+        : (req.body.ticketCategoryId ? [sanitizeDiscordId(req.body.ticketCategoryId) || req.body.ticketCategoryId.trim()] : []);
+
+      cfg.logChannelId = Array.isArray(req.body.logChannelId)
+        ? req.body.logChannelId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
+        : (req.body.logChannelId ? [sanitizeDiscordId(req.body.logChannelId) || req.body.logChannelId.trim()] : []);
+
+      cfg.transcriptChannelId = Array.isArray(req.body.transcriptChannelId)
+        ? req.body.transcriptChannelId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
+        : (req.body.transcriptChannelId ? [sanitizeDiscordId(req.body.transcriptChannelId) || req.body.transcriptChannelId.trim()] : []);
+
+      cfg.teamRoleId = Array.isArray(req.body.teamRoleId)
+        ? req.body.teamRoleId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
+        : (req.body.teamRoleId ? [sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim()] : []);
 
       if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
 

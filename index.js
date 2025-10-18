@@ -50,6 +50,10 @@ const PRIORITY_STATES = [
 
 function getTeamRole(guildId){
   const cfg = readCfg(guildId);
+  // Legacy support: Return first team role ID or null
+  if(Array.isArray(cfg.teamRoleId)){
+    return cfg.teamRoleId.length > 0 ? cfg.teamRoleId[0] : null;
+  }
   return cfg.teamRoleId || null;
 }
 
@@ -68,8 +72,11 @@ function getPriorityRoles(guildId, priority = null){
     return [...new Set(allRoles)];
   }
 
-  const legacyRole = cfg.teamRoleId;
-  return legacyRole ? [legacyRole] : [];
+  // Legacy support: teamRoleId can be string or array
+  if(Array.isArray(cfg.teamRoleId)){
+    return cfg.teamRoleId.filter(r => r && r.trim());
+  }
+  return cfg.teamRoleId ? [cfg.teamRoleId] : [];
 }
 
 function getAllTeamRoles(guildId){
@@ -82,7 +89,14 @@ function getAllTeamRoles(guildId){
     });
   }
 
-  if(cfg.teamRoleId) roles.add(cfg.teamRoleId);
+  // Legacy support: teamRoleId can be string or array
+  if(cfg.teamRoleId){
+    if(Array.isArray(cfg.teamRoleId)){
+      cfg.teamRoleId.forEach(r => roles.add(r));
+    } else {
+      roles.add(cfg.teamRoleId);
+    }
+  }
 
   return Array.from(roles).filter(r => r && r.trim());
 }
@@ -92,8 +106,11 @@ function getHierarchicalPriorityRoles(guildId, priority = 0){
   const roles = new Set();
 
   if(!cfg.priorityRoles){
-    const legacyRole = cfg.teamRoleId;
-    return legacyRole ? [legacyRole] : [];
+    // Legacy support: teamRoleId can be string or array
+    if(Array.isArray(cfg.teamRoleId)){
+      return cfg.teamRoleId.filter(r => r && r.trim());
+    }
+    return cfg.teamRoleId ? [cfg.teamRoleId] : [];
   }
 
   // Hierarchisch: Rot (2) sieht 2+1+0, Orange (1) sieht 1+0, Grün (0) sieht nur 0
@@ -576,13 +593,18 @@ async function sendWelcomeMessage(guild) {
       .setFooter({ text: COPYRIGHT })
       .setTimestamp();
 
-    // Create button row with dashboard link
+    // Create button row with dashboard and support server links
     const buttonRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setURL(dashboardUrl)
         .setStyle(ButtonStyle.Link)
         .setLabel(isGerman ? '🚀 Zum Dashboard' : '🚀 Open Dashboard')
-        .setEmoji('🎫')
+        .setEmoji('🎫'),
+      new ButtonBuilder()
+        .setURL('https://discord.gg/mnYbnpyyBS')
+        .setStyle(ButtonStyle.Link)
+        .setLabel(isGerman ? '💬 Support Server' : '💬 Support Server')
+        .setEmoji('🛟')
     );
 
     await targetChannel.send({
@@ -674,26 +696,31 @@ function renameChannelIfNeeded(channel, ticket){ const desired = buildChannelNam
 
 async function logEvent(guild, text){
   const cfg = readCfg(guild.id);
-  if(!cfg.logChannelId) return;
-  try {
-    const ch = await guild.channels.fetch(cfg.logChannelId);
-    if(!ch) return;
+  const logChannelIds = Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : []);
+  if(logChannelIds.length === 0) return;
 
-    const now = new Date();
-    const berlinTime = now.toLocaleString('de-DE', {
-      timeZone: 'Europe/Berlin',
-      dateStyle: 'short',
-      timeStyle: 'medium'
-    });
+  const now = new Date();
+  const berlinTime = now.toLocaleString('de-DE', {
+    timeZone: 'Europe/Berlin',
+    dateStyle: 'short',
+    timeStyle: 'medium'
+  });
 
-    const embed = new EmbedBuilder()
-      .setDescription(text)
-      .setColor(0x00ff00)
-      .setTimestamp()
-      .setFooter({ text: COPYRIGHT });
+  const embed = new EmbedBuilder()
+    .setDescription(text)
+    .setColor(0x00ff00)
+    .setTimestamp()
+    .setFooter({ text: COPYRIGHT });
 
-    await ch.send({ embeds: [embed] });
-  } catch {}
+  // Send to all configured log channels
+  for(const channelId of logChannelIds){
+    try {
+      const ch = await guild.channels.fetch(channelId);
+      if(ch) await ch.send({ embeds: [embed] });
+    } catch(err) {
+      console.error(`Log-Channel ${channelId} nicht gefunden:`, err.message);
+    }
+  }
 }
 
 async function createTranscript(channel, ticket, opts = {}) {
@@ -1490,26 +1517,35 @@ client.on(Events.InteractionCreate, async i => {
         let files = null;
         try { files = await createTranscript(i.channel, ticket, { resolveMentions: true }); } catch {}
 
-        const transcriptChannelId = cfg.transcriptChannelId || cfg.logChannelId;
-        if (transcriptChannelId && files){
-          try {
-            const tc = await i.guild.channels.fetch(transcriptChannelId);
-            if (tc) {
-              const transcriptUrl = PANEL_FIXED_URL.replace('/panel', `/transcript/${ticket.id}`);
-              const transcriptButton = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                  .setURL(transcriptUrl)
-                  .setStyle(ButtonStyle.Link)
-                  .setLabel('📄 Transcript ansehen')
-              );
-              await tc.send({
-                content:`📁 Transcript Ticket #${ticket.id}`,
-                files:[files.txt, files.html],
-                components: [transcriptButton]
-              });
+        // Send transcripts to all configured transcript channels (or fallback to log channels)
+        const transcriptChannelIds = Array.isArray(cfg.transcriptChannelId) && cfg.transcriptChannelId.length > 0
+          ? cfg.transcriptChannelId
+          : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : (Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : [])));
+
+        if (transcriptChannelIds.length > 0 && files){
+          const transcriptUrl = PANEL_FIXED_URL.replace('/panel', `/transcript/${ticket.id}`);
+          const transcriptButton = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setURL(transcriptUrl)
+              .setStyle(ButtonStyle.Link)
+              .setLabel('📄 Transcript ansehen')
+          );
+
+          for(const channelId of transcriptChannelIds){
+            try {
+              const tc = await i.guild.channels.fetch(channelId);
+              if (tc) {
+                await tc.send({
+                  content:`📁 Transcript Ticket #${ticket.id}`,
+                  files:[files.txt, files.html],
+                  components: [transcriptButton]
+                });
+              }
+            } catch(err) {
+              console.error(`Transcript-Channel ${channelId} nicht gefunden:`, err.message);
             }
-         } catch {}
-       }
+          }
+        }
 
   logEvent(i.guild, t(guildId, 'logs.ticket_closed', { id: ticket.id, user: closerTag }));
   setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
@@ -1623,14 +1659,15 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   const nr = nextTicket(guildId);
 
   let parentId = null;
-  if(cfg.ticketCategoryId && cfg.ticketCategoryId.trim()){
+  const categoryIds = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
+  if(categoryIds.length > 0 && categoryIds[0]){
     try {
-      const category = await interaction.guild.channels.fetch(cfg.ticketCategoryId.trim());
+      const category = await interaction.guild.channels.fetch(categoryIds[0].trim());
       if(category && category.type === ChannelType.GuildCategory){
         parentId = category.id;
       }
     } catch {
-      console.error('Kategorie nicht gefunden:', cfg.ticketCategoryId);
+      console.error('Kategorie nicht gefunden:', categoryIds[0]);
     }
   }
 

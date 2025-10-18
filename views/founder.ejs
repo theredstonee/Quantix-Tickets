@@ -112,14 +112,45 @@
       gap: 0.5rem;
     }
 
+    .table-wrapper {
+      max-height: 600px;
+      overflow-y: auto;
+      border-radius: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .table-wrapper::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-track {
+      background: rgba(0, 255, 136, 0.05);
+      border-radius: 6px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb {
+      background: var(--accent-color);
+      border-radius: 6px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-hover);
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
     .guilds-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1.5rem;
     }
 
     .guilds-table thead {
       background: rgba(0, 255, 136, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .guilds-table th {
@@ -130,6 +161,8 @@
       font-size: 0.85rem;
       letter-spacing: 0.05em;
       border-bottom: 2px solid var(--glass-border);
+      background: rgba(0, 255, 136, 0.1);
+      backdrop-filter: blur(10px);
     }
 
     .guilds-table td {
@@ -407,18 +440,19 @@
         <input type="text" id="searchInput" placeholder="🔍 Server suchen (Name oder ID)...">
       </div>
 
-      <table class="guilds-table">
-        <thead>
-          <tr>
-            <th>Server</th>
-            <th>Mitglieder</th>
-            <th>Status</th>
-            <th>Aktionen</th>
-          </tr>
-        </thead>
-        <tbody id="guildsTable">
-          <% guilds.forEach(guild => { %>
-          <tr>
+      <div class="table-wrapper">
+        <table class="guilds-table">
+          <thead>
+            <tr>
+              <th>Server</th>
+              <th>Mitglieder</th>
+              <th>Status</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="guildsTable">
+            <% guilds.forEach(guild => { %>
+            <tr>
             <td>
               <div class="guild-info">
                 <% if (guild.icon) { %>
@@ -458,9 +492,10 @@
               </div>
             </td>
           </tr>
-          <% }); %>
-        </tbody>
-      </table>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div style="text-align: center; margin-top: 3rem;">

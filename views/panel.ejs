@@ -1009,46 +1009,50 @@
           <input name="guildId" value="<%= cfg.guildId || guildId || '' %>" placeholder="1234567890123456789" readonly style="background: var(--fieldset-bg); cursor: not-allowed;">
         </label>
         <label><%= t.web.ticket_category %>
-          <select name="ticketCategoryId">
-            <option value=""><%= t.web.select_category %></option>
-            <% channels.filter(ch => ch.type === 4).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= cfg.ticketCategoryId === ch.id ? 'selected' : '' %>>
-                📁 <%= ch.name %>
+          <select name="ticketCategoryId" multiple size="5" style="height: auto;">
+            <%
+            const selectedCategories = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
+            channels.filter(ch => ch.type === 4).forEach(ch => { %>
+              <option value="<%= ch.id %>" <%= selectedCategories.includes(ch.id) ? 'selected' : '' %>>
+                🎫 <%= ch.name %>
               </option>
             <% }) %>
           </select>
         </label>
         <label><%= t.web.log_channel %>
-          <select name="logChannelId">
-            <option value=""><%= t.web.select_channel %></option>
-            <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= cfg.logChannelId === ch.id ? 'selected' : '' %>>
-                # <%= ch.name %>
+          <select name="logChannelId" multiple size="5" style="height: auto;">
+            <%
+            const selectedLogChannels = Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : []);
+            channels.filter(ch => ch.type === 0).forEach(ch => { %>
+              <option value="<%= ch.id %>" <%= selectedLogChannels.includes(ch.id) ? 'selected' : '' %>>
+                📊 # <%= ch.name %>
               </option>
             <% }) %>
           </select>
         </label>
         <label><%= t.web.transcript_channel %>
-          <select name="transcriptChannelId">
-            <option value=""><%= t.web.select_channel %></option>
-            <% channels.filter(ch => ch.type === 0).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= cfg.transcriptChannelId === ch.id ? 'selected' : '' %>>
-                # <%= ch.name %>
+          <select name="transcriptChannelId" multiple size="5" style="height: auto;">
+            <%
+            const selectedTranscriptChannels = Array.isArray(cfg.transcriptChannelId) ? cfg.transcriptChannelId : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : []);
+            channels.filter(ch => ch.type === 0).forEach(ch => { %>
+              <option value="<%= ch.id %>" <%= selectedTranscriptChannels.includes(ch.id) ? 'selected' : '' %>>
+                📄 # <%= ch.name %>
               </option>
             <% }) %>
           </select>
         </label>
         <label><%= t.web.team_role %> (Legacy)
-          <select name="teamRoleId">
-            <option value=""><%= t.web.select_role %></option>
-            <% roles.forEach(role => { %>
-              <option value="<%= role.id %>" <%= cfg.teamRoleId === role.id ? 'selected' : '' %>>
-                @ <%= role.name %>
+          <select name="teamRoleId" multiple size="5" style="height: auto;">
+            <%
+            const selectedTeamRoles = Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : (cfg.teamRoleId ? [cfg.teamRoleId] : []);
+            roles.forEach(role => { %>
+              <option value="<%= role.id %>" <%= selectedTeamRoles.includes(role.id) ? 'selected' : '' %>>
+                🧑‍💼 @ <%= role.name %>
               </option>
             <% }) %>
           </select>
         </label>
-        <p class="soft-note">Guild ID wird automatisch gesetzt. Legacy Team-Rolle für Rückwärtskompatibilität.</p>
+        <p class="soft-note">Guild ID wird automatisch gesetzt. Mehrfachauswahl mit STRG/CMD. Legacy Team-Rolle für Rückwärtskompatibilität.</p>
       </fieldset>
 
       <!-- Priority Rollen (NEU) -->
