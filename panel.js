@@ -568,6 +568,7 @@ module.exports = (client)=>{
         user: req.user,
         inviteUrl: inviteUrl,
         installUrl: 'https://tickets.quantix-bot.de/install',
+        clientId: process.env.CLIENT_ID,
         t: res.locals.t
       });
     } catch(err){
