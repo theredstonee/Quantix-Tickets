@@ -843,27 +843,138 @@
   <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
     <i id="themeIcon" class="fas fa-moon"></i>
   </button>
-  <h1><i class="fas fa-ticket-alt"></i> <%= t.web.title %></h1>
 
-  <div class="nav-buttons">
-    <a href="/">
-      <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : lang === 'zh' ? '返回首页' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Zur Startseite' %>
-    </a>
-    <a href="/select-server" class="secondary-btn">
-      <i class="fas fa-server"></i> <%= lang === 'de' ? 'Server wechseln' : lang === 'en' ? 'Change Server' : lang === 'he' ? 'החלף שרת' : lang === 'ja' ? 'サーバーを変更' : lang === 'ru' ? 'Сменить сервер' : lang === 'pt' ? 'Trocar Servidor' : lang === 'es' ? 'Cambiar Servidor' : lang === 'id' ? 'Ganti Server' : lang === 'zh' ? '切换服务器' : lang === 'ar' ? 'تغيير الخادم' : 'Server wechseln' %>
-    </a>
-    <a href="/tickets" class="secondary-btn">
-      <i class="fas fa-history"></i> <%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : lang === 'he' ? 'היסטוריית כרטיסים' : lang === 'ja' ? 'チケット履歴' : lang === 'ru' ? 'История тикетов' : lang === 'pt' ? 'Histórico de Tickets' : lang === 'es' ? 'Historial de Tickets' : lang === 'id' ? 'Riwayat Tiket' : lang === 'zh' ? '工单历史' : lang === 'ar' ? 'سجل التذاكر' : 'Ticket-Verlauf' %>
-    </a>
-    <% if (premiumTier === 'pro' || premiumTier === 'beta' || guildId === '1291125037876904026') { %>
-    <a href="/analytics" class="secondary-btn">
-      <i class="fas fa-chart-line"></i> <%= lang === 'de' ? 'Analytics' : lang === 'en' ? 'Analytics' : lang === 'he' ? 'אנליטיקה' : lang === 'ja' ? 'アナリティクス' : lang === 'ru' ? 'Аналитика' : lang === 'pt' ? 'Análise' : lang === 'es' ? 'Analítica' : lang === 'id' ? 'Analitik' : lang === 'zh' ? '分析' : lang === 'ar' ? 'تحليلات' : 'Analytics' %>
-    </a>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <!-- Logo -->
+      <div class="sidebar-logo">
+        <i class="fas fa-ticket-alt" style="font-size: 1.8rem; color: var(--accent-color);"></i>
+        <div>
+          <div style="font-size: 1.2rem; font-weight: 700; color: var(--text-color);">Quantix Tickets</div>
+          <div style="font-size: 0.75rem; opacity: 0.7; color: var(--text-color);">Admin Panel</div>
+        </div>
+      </div>
+
+      <!-- Server Info -->
+      <div class="sidebar-server-info">
+        <% if (typeof guild !== 'undefined' && guild) { %>
+          <% if (guild.icon) { %>
+            <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png?size=64" alt="Server Icon" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 0.75rem;">
+          <% } else { %>
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-color); display: flex; align-items: center; justify-content: center; margin-right: 0.75rem; font-weight: bold; color: white;">
+              <%= guild.name.charAt(0).toUpperCase() %>
+            </div>
+          <% } %>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= guild.name %></div>
+            <div style="font-size: 0.75rem; opacity: 0.7; color: var(--text-color);"><%= guild.id %></div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <!-- Main Section -->
+      <div class="sidebar-nav-section">
+        <div class="sidebar-nav-title">
+          <%= lang === 'de' ? 'Haupt' : lang === 'en' ? 'Main' : lang === 'he' ? 'ראשי' : lang === 'ja' ? 'メイン' : lang === 'ru' ? 'Главное' : lang === 'pt' ? 'Principal' : lang === 'es' ? 'Principal' : lang === 'id' ? 'Utama' : lang === 'zh' ? '主要' : lang === 'ar' ? 'الرئيسية' : 'Haupt' %>
+        </div>
+        <a href="/" class="sidebar-nav-item">
+          <i class="fas fa-home"></i>
+          <span><%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : lang === 'zh' ? '返回首页' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Zur Startseite' %></span>
+        </a>
+        <a href="/panel" class="sidebar-nav-item active">
+          <i class="fas fa-cog"></i>
+          <span><%= lang === 'de' ? 'Einstellungen' : lang === 'en' ? 'Settings' : lang === 'he' ? 'הגדרות' : lang === 'ja' ? '設定' : lang === 'ru' ? 'Настройки' : lang === 'pt' ? 'Configurações' : lang === 'es' ? 'Configuración' : lang === 'id' ? 'Pengaturan' : lang === 'zh' ? '设置' : lang === 'ar' ? 'الإعدادات' : 'Einstellungen' %></span>
+        </a>
+        <a href="/select-server" class="sidebar-nav-item">
+          <i class="fas fa-server"></i>
+          <span><%= lang === 'de' ? 'Server wechseln' : lang === 'en' ? 'Change Server' : lang === 'he' ? 'החלף שרת' : lang === 'ja' ? 'サーバーを変更' : lang === 'ru' ? 'Сменить сервер' : lang === 'pt' ? 'Trocar Servidor' : lang === 'es' ? 'Cambiar Servidor' : lang === 'id' ? 'Ganti Server' : lang === 'zh' ? '切换服务器' : lang === 'ar' ? 'تغيير الخادم' : 'Server wechseln' %></span>
+        </a>
+      </div>
+
+      <!-- Tickets Section -->
+      <div class="sidebar-nav-section">
+        <div class="sidebar-nav-title">
+          <%= lang === 'de' ? 'Tickets' : lang === 'en' ? 'Tickets' : lang === 'he' ? 'כרטיסים' : lang === 'ja' ? 'チケット' : lang === 'ru' ? 'Тикеты' : lang === 'pt' ? 'Tickets' : lang === 'es' ? 'Tickets' : lang === 'id' ? 'Tiket' : lang === 'zh' ? '工单' : lang === 'ar' ? 'التذاكر' : 'Tickets' %>
+        </div>
+        <a href="/tickets" class="sidebar-nav-item">
+          <i class="fas fa-history"></i>
+          <span><%= lang === 'de' ? 'Ticket-Verlauf' : lang === 'en' ? 'Ticket History' : lang === 'he' ? 'היסטוריית כרטיסים' : lang === 'ja' ? 'チケット履歴' : lang === 'ru' ? 'История тикетов' : lang === 'pt' ? 'Histórico de Tickets' : lang === 'es' ? 'Historial de Tickets' : lang === 'id' ? 'Riwayat Tiket' : lang === 'zh' ? '工单历史' : lang === 'ar' ? 'سجل التذاكر' : 'Ticket-Verlauf' %></span>
+        </a>
+        <% if (premiumTier === 'pro' || premiumTier === 'beta' || guildId === '1291125037876904026') { %>
+        <a href="/analytics" class="sidebar-nav-item">
+          <i class="fas fa-chart-line"></i>
+          <span><%= lang === 'de' ? 'Analytics' : lang === 'en' ? 'Analytics' : lang === 'he' ? 'אנליטיקה' : lang === 'ja' ? 'アナリティクス' : lang === 'ru' ? 'Аналитика' : lang === 'pt' ? 'Análise' : lang === 'es' ? 'Analítica' : lang === 'id' ? 'Analitik' : lang === 'zh' ? '分析' : lang === 'ar' ? 'تحليلات' : 'Analytics' %></span>
+        </a>
+        <% } %>
+      </div>
+
+      <!-- Support Section -->
+      <div class="sidebar-nav-section">
+        <div class="sidebar-nav-title">
+          <%= lang === 'de' ? 'Support' : lang === 'en' ? 'Support' : lang === 'he' ? 'תמיכה' : lang === 'ja' ? 'サポート' : lang === 'ru' ? 'Поддержка' : lang === 'pt' ? 'Suporte' : lang === 'es' ? 'Soporte' : lang === 'id' ? 'Dukungan' : lang === 'zh' ? '支持' : lang === 'ar' ? 'الدعم' : 'Support' %>
+        </div>
+        <a href="https://dc.theredstonee.de/" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item">
+          <i class="fab fa-discord"></i>
+          <span><%= lang === 'de' ? 'Support Discord' : lang === 'en' ? 'Support Discord' : lang === 'he' ? 'תמיכה Discord' : lang === 'ja' ? 'サポート Discord' : lang === 'ru' ? 'Поддержка Discord' : lang === 'pt' ? 'Suporte Discord' : lang === 'es' ? 'Soporte Discord' : lang === 'id' ? 'Dukungan Discord' : lang === 'zh' ? '支持 Discord' : lang === 'ar' ? 'دعم Discord' : 'Support Discord' %></span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Premium Badge in Sidebar -->
+    <% if (isPremium) { %>
+    <div class="sidebar-premium-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.5rem;">💎</span>
+        <div style="flex: 1;">
+          <div style="font-weight: 700; font-size: 0.9rem; color: white;"><%= premiumTierName %></div>
+          <div style="font-size: 0.75rem; opacity: 0.9; color: white;"><%= lang === 'de' ? 'Aktiv' : lang === 'en' ? 'Active' : lang === 'he' ? 'פעיל' : lang === 'ja' ? 'アクティブ' : lang === 'ru' ? 'Активен' : lang === 'pt' ? 'Ativo' : lang === 'es' ? 'Activo' : lang === 'id' ? 'Aktif' : lang === 'zh' ? '活跃' : lang === 'ar' ? 'نشط' : 'Aktiv' %></div>
+        </div>
+      </div>
+      <a href="/premium" style="display: block; margin-top: 0.75rem; padding: 0.5rem; background: rgba(255,255,255,0.2); color: white; text-decoration: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-align: center; transition: all 0.2s;">
+        <%= t.premium.badge_manage %>
+      </a>
+    </div>
+    <% } else { %>
+    <div class="sidebar-premium-badge" style="background: rgba(102, 126, 234, 0.1); border: 2px solid rgba(102, 126, 234, 0.3);">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <span style="font-size: 1.5rem;">✨</span>
+        <div style="flex: 1;">
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-color);"><%= lang === 'de' ? 'Free Plan' : lang === 'en' ? 'Free Plan' : lang === 'he' ? 'תוכנית חינמית' : lang === 'ja' ? '無料プラン' : lang === 'ru' ? 'Бесплатно' : lang === 'pt' ? 'Plano Grátis' : lang === 'es' ? 'Plan Gratis' : lang === 'id' ? 'Paket Gratis' : lang === 'zh' ? '免费计划' : lang === 'ar' ? 'خطة مجانية' : 'Free Plan' %></div>
+          <div style="font-size: 0.75rem; opacity: 0.7; color: var(--text-color);"><%= lang === 'de' ? 'Upgrade für mehr' : lang === 'en' ? 'Upgrade for more' : lang === 'he' ? 'שדרג לעוד' : lang === 'ja' ? 'アップグレード' : lang === 'ru' ? 'Обновите' : lang === 'pt' ? 'Atualize' : lang === 'es' ? 'Actualiza' : lang === 'id' ? 'Upgrade' : lang === 'zh' ? '升级' : lang === 'ar' ? 'ترقية' : 'Upgrade für mehr' %></div>
+        </div>
+      </div>
+      <a href="/premium" style="display: block; padding: 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-align: center; transition: all 0.2s;">
+        <%= t.premium.badge_upgrade_btn %>
+      </a>
+    </div>
     <% } %>
-    <a href="https://dc.theredstonee.de/" target="_blank" rel="noopener noreferrer" class="secondary-btn">
-      <i class="fab fa-discord"></i> <%= lang === 'de' ? 'Support Discord' : lang === 'en' ? 'Support Discord' : lang === 'he' ? 'תמיכה Discord' : lang === 'ja' ? 'サポート Discord' : lang === 'ru' ? 'Поддержка Discord' : lang === 'pt' ? 'Suporte Discord' : lang === 'es' ? 'Soporte Discord' : lang === 'id' ? 'Dukungan Discord' : lang === 'zh' ? '支持 Discord' : lang === 'ar' ? 'دعم Discord' : 'Support Discord' %>
-    </a>
-  </div>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <div style="font-size: 0.75rem; opacity: 0.6; text-align: center; color: var(--text-color);">
+        © 2025 Quantix Development
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Toggle Button -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Mobile Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="content-header">
+      <h1 class="content-title"><i class="fas fa-ticket-alt"></i> <%= t.web.title %></h1>
+    </div>
 
   <!-- Read-Only Mode Notice for Team Members -->
   <% if (typeof isAdmin !== 'undefined' && !isAdmin) { %>
@@ -878,35 +989,6 @@
           <%= lang === 'de' ? 'Du kannst als Team-Mitglied alle Einstellungen sehen, aber keine Änderungen vornehmen. Nur Administratoren können Einstellungen bearbeiten.' : lang === 'en' ? 'As a team member, you can view all settings but cannot make changes. Only administrators can edit settings.' : lang === 'he' ? 'כחבר צוות, אתה יכול לראות את כל ההגדרות אך לא לבצע שינויים. רק מנהלים יכולים לערוך הגדרות.' : lang === 'ja' ? 'チームメンバーとして、すべての設定を表示できますが、変更はできません。管理者のみが設定を編集できます。' : lang === 'ru' ? 'Как член команды, вы можете просматривать все настройки, но не можете вносить изменения. Только администраторы могут редактировать настройки.' : lang === 'pt' ? 'Como membro da equipe, você pode ver todas as configurações, mas não pode fazer alterações. Apenas administradores podem editar configurações.' : lang === 'es' ? 'Como miembro del equipo, puedes ver todas las configuraciones pero no puedes hacer cambios. Solo los administradores pueden editar configuraciones.' : lang === 'id' ? 'Sebagai anggota tim, Anda dapat melihat semua pengaturan tetapi tidak dapat melakukan perubahan. Hanya administrator yang dapat mengedit pengaturan.' : lang === 'ar' ? 'كعضو في الفريق، يمكنك عرض جميع الإعدادات ولكن لا يمكنك إجراء تغييرات. يمكن للمسؤولين فقط تحرير الإعدادات.' : 'Du kannst als Team-Mitglied alle Einstellungen sehen, aber keine Änderungen vornehmen. Nur Administratoren können Einstellungen bearbeiten.' %>
         </p>
       </div>
-    </div>
-  </div>
-  <% } %>
-
-  <!-- Premium Badge -->
-  <% if (isPremium) { %>
-  <div style="margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white; text-align: center; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-      <span style="font-size: 2.5rem;">💎</span>
-      <div style="text-align: left;">
-        <h3 style="margin: 0; font-size: 1.5rem; color: white;"><%= t.premium.badge_active.replace('{tier}', premiumTierName) %></h3>
-        <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;"><%= t.premium.badge_thank_you %></p>
-      </div>
-      <a href="/premium" style="margin-left: auto; padding: 0.75rem 1.5rem; background: white; color: #667eea; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.2s;">
-        <%= t.premium.badge_manage %>
-      </a>
-    </div>
-  </div>
-  <% } else { %>
-  <div style="margin: 2rem 0; padding: 1.5rem; background: rgba(102, 126, 234, 0.1); border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 15px; text-align: center;">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-      <span style="font-size: 2rem;">✨</span>
-      <div style="text-align: left;">
-        <h3 style="margin: 0; font-size: 1.3rem;"><%= t.premium.badge_upgrade %></h3>
-        <p style="margin: 0.5rem 0 0 0; opacity: 0.8; font-size: 0.85rem;"><%= t.premium.badge_upgrade_desc %></p>
-      </div>
-      <a href="/premium" style="margin-left: auto; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.2s; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
-        <%= t.premium.badge_upgrade_btn %>
-      </a>
     </div>
   </div>
   <% } %>
@@ -1495,6 +1577,8 @@
     <p class="soft-note">Änderungen speichern sofort in <code>config.json</code></p>
   </footer>
 
+  </div><!-- End Main Content -->
+
 <script>
 function delRow(btn){ const tr=btn.closest('tr'); if(tr) tr.remove(); syncFormJson(); syncTopicsPreview(); }
 function addTopicRow(){ const tr=document.createElement('tr'); tr.innerHTML=`<td><input name="label" required></td><td><input name="value" placeholder="auto"></td><td><input name="emoji"></td><td><button type="button" class="del-btn" onclick="delRow(this)">✖</button></td>`; document.getElementById('topicRows').appendChild(tr); }
@@ -1764,6 +1848,47 @@ if (ticketsLink) {
   }
 })();
 <% } %>
+</script>
+
+<!-- Sidebar Toggle Script -->
+<script>
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const toggleBtn = document.getElementById('sidebarToggle');
+
+  if (sidebar && overlay) {
+    const isOpen = sidebar.classList.contains('open');
+
+    if (isOpen) {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+    } else {
+      sidebar.classList.add('open');
+      overlay.classList.add('active');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+    }
+  }
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('DOMContentLoaded', function() {
+  const overlay = document.getElementById('sidebarOverlay');
+  if (overlay) {
+    overlay.addEventListener('click', toggleSidebar);
+  }
+
+  // Close sidebar when pressing Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar && sidebar.classList.contains('open')) {
+        toggleSidebar();
+      }
+    }
+  });
+});
 </script>
 
 <!-- UX Enhancements -->
