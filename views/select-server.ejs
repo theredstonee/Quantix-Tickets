@@ -12,7 +12,7 @@
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Server Auswahl - TRS Tickets</title>
+  <title>Server Auswahl - Quantix Tickets</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
@@ -25,18 +25,18 @@
   <link rel="stylesheet" href="/markdown.css">
   <style>
     :root {
-      --bg-color: #fff;
-      --text-color: #1a1a1a;
-      --border-color: #e5e8ec;
-      --accent-color: #00b894;
-      --accent-hover: #00a077;
-      --card-bg: #fff;
-      --card-hover-shadow: rgba(0,255,0,0.1);
-      --icon-bg: #e5e8ec;
-      --badge-bg: #00ff00;
-      --glass-bg: rgba(255, 255, 255, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.3);
-      --shadow-color: rgba(0, 0, 0, 0.1);
+      --bg-color: #f0f8ff;
+      --text-color: #1a1a2e;
+      --border-color: #bdd7ee;
+      --accent-color: #0ea5e9;
+      --accent-hover: #0284c7;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --card-hover-shadow: rgba(14, 165, 233, 0.15);
+      --icon-bg: #bdd7ee;
+      --badge-bg: #0ea5e9;
+      --glass-bg: rgba(240, 248, 255, 0.7);
+      --glass-border: rgba(14, 165, 233, 0.3);
+      --shadow-color: rgba(14, 165, 233, 0.15);
     }
 
     [data-theme="dark"] {
@@ -897,7 +897,7 @@
   </div>
 
   <footer>
-    <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten • Version <%= version %></p>
+    <p>Quantix Tickets © 2025 Quantix Development • Alle Rechte vorbehalten • Version <%= version %></p>
   </footer>
 
   <script>
@@ -930,13 +930,13 @@
       const currentTheme = html.getAttribute('data-theme');
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', newTheme);
-      localStorage.setItem('trs-theme', newTheme);
+      localStorage.setItem('quantix-theme', newTheme);
       document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
     // Theme beim Laden setzen
     (function() {
-      const savedTheme = localStorage.getItem('trs-theme') || 'light';
+      const savedTheme = localStorage.getItem('quantix-theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
       document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     })();
@@ -998,17 +998,17 @@
       if (isSpinning) {
         body.classList.remove('spinning');
         settingsBtn.classList.remove('active');
-        sessionStorage.setItem('trs-spin-enabled', 'false');
+        sessionStorage.setItem('quantix-spin-enabled', 'false');
       } else {
         body.classList.add('spinning');
         settingsBtn.classList.add('active');
-        sessionStorage.setItem('trs-spin-enabled', 'true');
+        sessionStorage.setItem('quantix-spin-enabled', 'true');
       }
     }
 
     // Spin-Zustand beim Laden wiederherstellen
     (function() {
-      const spinEnabled = sessionStorage.getItem('trs-spin-enabled');
+      const spinEnabled = sessionStorage.getItem('quantix-spin-enabled');
       if (spinEnabled === 'true') {
         document.body.classList.add('spinning');
         document.getElementById('settingsBtn').classList.add('active');
@@ -1284,7 +1284,7 @@
       };
 
       // Check if spinning is already active on page load
-      const spinEnabled = sessionStorage.getItem('trs-spin-enabled');
+      const spinEnabled = sessionStorage.getItem('quantix-spin-enabled');
       if (spinEnabled === 'true') {
         setTimeout(startDVDBounce, 100);
       }

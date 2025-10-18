@@ -12,21 +12,21 @@
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : lang === 'he' ? 'מידע משפטי' : lang === 'ja' ? '法的通知' : lang === 'ru' ? 'Юридическая информация' : lang === 'pt' ? 'Aviso Legal' : lang === 'es' ? 'Aviso Legal' : lang === 'id' ? 'Pemberitahuan Hukum' : lang === 'zh' ? '法律声明' : lang === 'ar' ? 'إشعار قانوني' : 'Impressum' %> - TRS Tickets</title>
+  <title><%= lang === 'de' ? 'Impressum' : lang === 'en' ? 'Legal Notice' : lang === 'he' ? 'מידע משפטי' : lang === 'ja' ? '法的通知' : lang === 'ru' ? 'Юридическая информация' : lang === 'pt' ? 'Aviso Legal' : lang === 'es' ? 'Aviso Legal' : lang === 'id' ? 'Pemberitahuan Hukum' : lang === 'zh' ? '法律声明' : lang === 'ar' ? 'إشعار قانوني' : 'Impressum' %> - Quantix Tickets</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/markdown.css">
   <style>
     :root {
-      --bg-color: #fff;
-      --text-color: #1a1a1a;
-      --border-color: #e5e8ec;
-      --accent-color: #00b894;
-      --accent-hover: #00a077;
-      --card-bg: #f8f9fa;
-      --glass-bg: rgba(255, 255, 255, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.3);
-      --shadow-color: rgba(0, 0, 0, 0.1);
+      --bg-color: #f0f8ff;
+      --text-color: #1a1a2e;
+      --border-color: #bdd7ee;
+      --accent-color: #0ea5e9;
+      --accent-hover: #0284c7;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --glass-bg: rgba(240, 248, 255, 0.7);
+      --glass-border: rgba(14, 165, 233, 0.3);
+      --shadow-color: rgba(14, 165, 233, 0.15);
     }
 
     [data-theme="dark"] {
@@ -228,7 +228,7 @@
   <h2><%= lang === 'de' ? '2. Kontakt' : lang === 'en' ? '2. Contact' : lang === 'he' ? '2. יצירת קשר' : lang === 'ja' ? '2. お問い合わせ' : lang === 'ru' ? '2. Контакт' : lang === 'pt' ? '2. Contato' : lang === 'es' ? '2. Contacto' : lang === 'id' ? '2. Kontak' : lang === 'zh' ? '2. 联系方式' : lang === 'ar' ? '2. اتصال' : '2. Kontakt' %></h2>
   <div class="info-box">
     <p><strong>E-Mail:</strong> <a href="mailto:info@theredstonee.de">info@theredstonee.de</a></p>
-    <p><strong><%= lang === 'de' ? 'Website' : lang === 'en' ? 'Website' : lang === 'he' ? 'אתר אינטרנט' : lang === 'ja' ? 'ウェブサイト' : lang === 'ru' ? 'Веб-сайт' : lang === 'pt' ? 'Site' : lang === 'es' ? 'Sitio web' : lang === 'id' ? 'Situs web' : lang === 'zh' ? '网站' : lang === 'ar' ? 'الموقع الإلكتروني' : 'Website' %>:</strong> <a href="https://trstickets.theredstonee.de">trstickets.theredstonee.de</a></p>
+    <p><strong><%= lang === 'de' ? 'Website' : lang === 'en' ? 'Website' : lang === 'he' ? 'אתר אינטרנט' : lang === 'ja' ? 'ウェブサイト' : lang === 'ru' ? 'Веб-сайт' : lang === 'pt' ? 'Site' : lang === 'es' ? 'Sitio web' : lang === 'id' ? 'Situs web' : lang === 'zh' ? '网站' : lang === 'ar' ? 'الموقع الإلكتروني' : 'Website' %>:</strong> <a href="https://tickets.quantix-bot.de">tickets.quantix-bot.de</a></p>
   </div>
 
   <!-- Verantwortlich für den Inhalt / Responsible for content -->
@@ -268,7 +268,7 @@
   <a href="/" role="button" class="back-btn secondary">← <%= lang === 'de' ? 'Zurück zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : lang === 'zh' ? '返回首页' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Zurück zur Startseite' %></a>
 
   <footer>
-    <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten | <a href="/terms-of-service"><%= lang === 'de' ? 'Nutzungsbedingungen' : lang === 'en' ? 'Terms of Service' : lang === 'he' ? 'תנאי שימוש' : lang === 'ja' ? '利用規約' : lang === 'ru' ? 'Условия использования' : lang === 'pt' ? 'Termos de Serviço' : lang === 'es' ? 'Términos de Servicio' : lang === 'id' ? 'Ketentuan Layanan' : lang === 'zh' ? '服务条款' : lang === 'ar' ? 'شروط الخدمة' : 'Nutzungsbedingungen' %></a> | <a href="/privacy-policy"><%= lang === 'de' ? 'Datenschutzerklärung' : lang === 'en' ? 'Privacy Policy' : lang === 'he' ? 'מדיניות פרטיות' : lang === 'ja' ? 'プライバシーポリシー' : lang === 'ru' ? 'Политика конфиденциальности' : lang === 'pt' ? 'Política de Privacidade' : lang === 'es' ? 'Política de Privacidad' : lang === 'id' ? 'Kebijakan Privasi' : lang === 'zh' ? '隐私政策' : lang === 'ar' ? 'سياسة الخصوصية' : 'Datenschutzerklärung' %></a></p>
+    <p>Quantix Tickets © 2025 Quantix Development • Alle Rechte vorbehalten | <a href="/terms-of-service"><%= lang === 'de' ? 'Nutzungsbedingungen' : lang === 'en' ? 'Terms of Service' : lang === 'he' ? 'תנאי שימוש' : lang === 'ja' ? '利用規約' : lang === 'ru' ? 'Условия использования' : lang === 'pt' ? 'Termos de Serviço' : lang === 'es' ? 'Términos de Servicio' : lang === 'id' ? 'Ketentuan Layanan' : lang === 'zh' ? '服务条款' : lang === 'ar' ? 'شروط الخدمة' : 'Nutzungsbedingungen' %></a> | <a href="/privacy-policy"><%= lang === 'de' ? 'Datenschutzerklärung' : lang === 'en' ? 'Privacy Policy' : lang === 'he' ? 'מדיניות פרטיות' : lang === 'ja' ? 'プライバシーポリシー' : lang === 'ru' ? 'Политика конфиденциальности' : lang === 'pt' ? 'Política de Privacidade' : lang === 'es' ? 'Política de Privacidad' : lang === 'id' ? 'Kebijakan Privasi' : lang === 'zh' ? '隐私政策' : lang === 'ar' ? 'سياسة الخصوصية' : 'Datenschutzerklärung' %></a></p>
   </footer>
 
   <script>

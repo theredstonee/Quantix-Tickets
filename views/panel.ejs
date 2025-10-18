@@ -25,22 +25,22 @@
   <link rel="stylesheet" href="/markdown.css">
   <style>
     :root {
-      --bg-color: #fff;
-      --text-color: #1a1a1a;
-      --border-color: #e5e8ec;
-      --accent-color: #00b894;
-      --accent-hover: #00a077;
-      --fieldset-bg: rgba(248, 249, 250, 0.9);
-      --thead-bg: #f2f4f8;
-      --input-bg: #fff;
-      --code-bg: #f0f0f0;
-      --success-bg: #d1f2eb;
-      --success-border: #2bb780;
-      --error-bg: #f8d7da;
-      --error-border: #c33;
-      --glass-bg: rgba(255, 255, 255, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.3);
-      --shadow-color: rgba(0, 0, 0, 0.1);
+      --bg-color: #f0f8ff;
+      --text-color: #1a1a2e;
+      --border-color: #bdd7ee;
+      --accent-color: #0ea5e9;
+      --accent-hover: #0284c7;
+      --fieldset-bg: rgba(240, 248, 255, 0.9);
+      --thead-bg: #dae9f7;
+      --input-bg: #ffffff;
+      --code-bg: #e0f2ff;
+      --success-bg: #cfe7f3;
+      --success-border: #0ea5e9;
+      --error-bg: #fee2e2;
+      --error-border: #ef4444;
+      --glass-bg: rgba(240, 248, 255, 0.7);
+      --glass-border: rgba(14, 165, 233, 0.3);
+      --shadow-color: rgba(14, 165, 233, 0.15);
     }
 
     [data-theme="dark"] {
@@ -1080,7 +1080,7 @@
       <!-- GitHub Commit Logs (NEU) -->
       <fieldset>
         <legend><i class="fab fa-github"></i> GitHub Commit Logs</legend>
-        <p class="soft-note">Konfiguriere wo GitHub Commits vom TRS-Tickets-Bot Repository geloggt werden sollen.</p>
+<p class="soft-note">Konfiguriere wo GitHub Commits vom Quantix-Tickets-Bot Repository geloggt werden sollen.</p>
 
         <label>📢 GitHub Webhook Channel
           <select name="githubWebhookChannelId">
@@ -1119,7 +1119,7 @@
           2. Speichere die Einstellungen<br>
           3. Füge in deinem GitHub Repository die Webhook-URL hinzu:<br>
           <code style="font-size: 0.75rem; word-break: break-all;">
-            <%= process.env.PUBLIC_BASE_URL || 'https://trstickets.theredstonee.de' %>/webhook/github
+            <%= process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de' %>/webhook/github
           </code><br>
           4. Content-Type: <code>application/json</code><br>
           5. Event: <strong>Pushes</strong> (oder "Just the push event")
@@ -1217,7 +1217,7 @@
           <li><code>DISCORD_TOKEN</code> - Bot Token</li>
           <li><code>CLIENT_ID</code> - OAuth2 Client ID</li>
           <li><code>CLIENT_SECRET</code> - OAuth2 Client Secret</li>
-          <li><code>PUBLIC_BASE_URL</code> - Öffentliche URL (z.B. https://trstickets.theredstonee.de)</li>
+          <li><code>PUBLIC_BASE_URL</code> - Öffentliche URL (z.B. https://tickets.quantix-bot.de)</li>
           <li><code>SESSION_SECRET</code> - Session Secret für Web-Panel</li>
         </ul>
         <p class="soft-note" style="margin-top: 0.8rem;">⚠️ Aus Sicherheitsgründen können diese Werte nicht über das Web-Panel geändert werden.</p>
@@ -1252,7 +1252,7 @@
   <% } %>
 
   <footer>
-    <p>TRS Tickets © 2025 Theredstonee • Alle Rechte vorbehalten • Version <%= version %></p>
+    <p>Quantix Tickets © 2025 Quantix Development • Alle Rechte vorbehalten • Version <%= version %></p>
     <p class="soft-note">Änderungen speichern sofort in <code>config.json</code></p>
   </footer>
 
@@ -1526,5 +1526,8 @@ if (ticketsLink) {
 })();
 <% } %>
 </script>
+
+<!-- UX Enhancements -->
+<script src="/js/ux-enhancements.js"></script>
 </body>
 </html>

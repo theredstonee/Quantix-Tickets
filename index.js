@@ -235,7 +235,7 @@ app.use('/', require('./panel')(client));
 app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
 
 const TOKEN = process.env.DISCORD_TOKEN;
-const PANEL_FIXED_URL = 'https://trstickets.theredstonee.de/panel';
+const PANEL_FIXED_URL = 'https://quantixtickets.theredstonee.de/panel';
 
 function nextTicket(guildId){
   const counterPath = getCounterPath(guildId);
@@ -529,15 +529,15 @@ async function sendWelcomeMessage(guild) {
     const guildLanguage = getGuildLanguage(guild.id);
     const isGerman = guildLanguage === 'de' || guild.preferredLocale?.startsWith('de');
 
-    const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://trstickets.theredstonee.de').replace(/\/+$/, '');
+    const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de').replace(/\/+$/, '');
 
     // Create welcome embed
     const welcomeEmbed = new EmbedBuilder()
-      .setTitle(isGerman ? '🎫 Willkommen bei TRS Tickets!' : '🎫 Welcome to TRS Tickets!')
+      .setTitle(isGerman ? '🎫 Willkommen bei Quantix Tickets!' : '🎫 Welcome to Quantix Tickets!')
       .setDescription(
         isGerman
-          ? `Vielen Dank, dass du TRS Tickets zu deinem Server hinzugefügt hast!\n\n` +
-            `**Was ist TRS Tickets?**\n` +
+          ? `Vielen Dank, dass du Quantix Tickets zu deinem Server hinzugefügt hast!\n\n` +
+            `**Was ist Quantix Tickets?**\n` +
             `Ein professionelles Ticket-System für Discord mit Web-Dashboard, Multi-Server-Support und 9 Sprachen.\n\n` +
             `**🚀 Schnellstart:**\n` +
             `1️⃣ Öffne das **[Dashboard](${dashboardUrl})** und melde dich mit Discord an\n` +
@@ -553,8 +553,8 @@ async function sendWelcomeMessage(guild) {
             `• 💎 **Premium:** Erweiterte Features wie Auto-Close, Email-Benachrichtigungen\n\n` +
             `**📖 Hilfe benötigt?**\n` +
             `Besuche das [Dashboard](${dashboardUrl}) für die vollständige Konfiguration!`
-          : `Thank you for adding TRS Tickets to your server!\n\n` +
-            `**What is TRS Tickets?**\n` +
+          : `Thank you for adding Quantix Tickets to your server!\n\n` +
+            `**What is Quantix Tickets?**\n` +
             `A professional ticket system for Discord with web dashboard, multi-server support and 9 languages.\n\n` +
             `**🚀 Quick Start:**\n` +
             `1️⃣ Open the **[Dashboard](${dashboardUrl})** and login with Discord\n` +
@@ -1155,8 +1155,8 @@ async function createTranscript(channel, ticket, opts = {}) {
     </div>
 
     <div class="footer">
-      <p>Erstellt mit <strong>TRS Tickets Bot</strong> • <a href="https://github.com/TheRedstoneE/TRS-Tickets-Bot" target="_blank">GitHub</a></p>
-      <p style="margin-top: 0.5rem; font-size: 0.75rem;">© ${new Date().getFullYear()} TRS Tickets • Alle Rechte vorbehalten</p>
+      <p>Erstellt mit <strong>Quantix Tickets Bot</strong> • <a href="https://github.com/TheRedstoneE/TRS-Tickets-Bot" target="_blank">GitHub</a></p>
+      <p style="margin-top: 0.5rem; font-size: 0.75rem;">© ${new Date().getFullYear()} Quantix Tickets • Alle Rechte vorbehalten</p>
     </div>
   </div>
 </body>

@@ -14,6 +14,18 @@ const { JSDOM } = require('jsdom');
 const { VERSION, COPYRIGHT } = require('./version.config');
 const { handleAutoUpdate, showUpdateLog } = require('./auto-update');
 const { isPremium, hasFeature, getPremiumTier, getPremiumInfo, activatePremium, deactivatePremium, renewPremium, downgradePremium, cancelPremium, PREMIUM_TIERS } = require('./premium');
+const {
+  sanitizeHtml,
+  sanitizeText,
+  sanitizeUrl,
+  sanitizeEmail,
+  sanitizeDiscordId,
+  sanitizeColor,
+  sanitizeNumber,
+  sanitizeString,
+  sanitizeJson,
+  cspMiddleware
+} = require('./xss-protection');
 
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
@@ -65,13 +77,13 @@ function readCfg(guildId){
           title: '🎫 Ticket #{ticketNumber}',
           description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
           color: '#2b90d9',
-          footer: 'TRS Tickets ©️'
+          footer: 'Quantix Tickets ©️'
         },
         panelEmbed: {
           title: '🎫 Ticket System',
           description: 'Wähle dein Thema',
           color: '#5865F2',
-          footer: 'TRS Tickets ©️'
+          footer: 'Quantix Tickets ©️'
         }
       };
       writeCfg(guildId, defaultCfg);
@@ -139,6 +151,7 @@ module.exports = (client)=>{
   }
 
   router.use(cookieParser());
+  router.use(cspMiddleware());
   router.use(session({
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
@@ -554,7 +567,7 @@ module.exports = (client)=>{
         currentGuild: req.session.selectedGuild || null,
         user: req.user,
         inviteUrl: inviteUrl,
-        installUrl: 'https://trstickets.theredstonee.de/install',
+        installUrl: 'https://tickets.quantix-bot.de/install',
         t: res.locals.t
       });
     } catch(err){
@@ -1046,7 +1059,7 @@ module.exports = (client)=>{
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Abgemeldet - TRS Tickets</title>
+  <title>Abgemeldet - Quantix Tickets</title>
   <style>
     * {
       margin: 0;
@@ -1416,10 +1429,10 @@ module.exports = (client)=>{
       const cfg = readCfg(guildId);
 
       cfg.guildId = guildId;
-      if(req.body.ticketCategoryId) cfg.ticketCategoryId = req.body.ticketCategoryId.trim();
-      if(req.body.logChannelId) cfg.logChannelId = req.body.logChannelId.trim();
-      if(req.body.transcriptChannelId) cfg.transcriptChannelId = req.body.transcriptChannelId.trim();
-      if(req.body.teamRoleId) cfg.teamRoleId = req.body.teamRoleId.trim();
+      if(req.body.ticketCategoryId) cfg.ticketCategoryId = sanitizeDiscordId(req.body.ticketCategoryId) || req.body.ticketCategoryId.trim();
+      if(req.body.logChannelId) cfg.logChannelId = sanitizeDiscordId(req.body.logChannelId) || req.body.logChannelId.trim();
+      if(req.body.transcriptChannelId) cfg.transcriptChannelId = sanitizeDiscordId(req.body.transcriptChannelId) || req.body.transcriptChannelId.trim();
+      if(req.body.teamRoleId) cfg.teamRoleId = sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim();
 
       if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
 
@@ -1443,13 +1456,8 @@ module.exports = (client)=>{
 
       // Email-Benachrichtigungen (Pro Feature)
       if(req.body.notificationEmail){
-        const email = req.body.notificationEmail.trim();
-        // Einfache Email-Validierung
-        if(email.includes('@') && email.includes('.')){
-          cfg.notificationEmail = email;
-        } else {
-          cfg.notificationEmail = null;
-        }
+        const email = sanitizeEmail(req.body.notificationEmail);
+        cfg.notificationEmail = email || null;
       } else {
         cfg.notificationEmail = null;
       }
@@ -1457,36 +1465,26 @@ module.exports = (client)=>{
       // Auto-Close System (Pro Feature)
       cfg.autoCloseEnabled = req.body.autoCloseEnabled === 'on';
       if(req.body.autoCloseDays){
-        const days = parseInt(req.body.autoCloseDays);
-        if(days >= 1 && days <= 365){
-          cfg.autoCloseDays = days;
-        } else {
-          cfg.autoCloseDays = 7; // Default
-        }
+        cfg.autoCloseDays = sanitizeNumber(req.body.autoCloseDays, 1, 365);
       }
 
       // Custom Bot-Avatar (Basic+ Feature)
       if(req.body.customAvatarUrl){
-        const url = req.body.customAvatarUrl.trim();
-        // Einfache URL-Validierung
-        if(url.startsWith('http://') || url.startsWith('https://')){
-          cfg.customAvatarUrl = url;
-        } else {
-          cfg.customAvatarUrl = null;
-        }
+        const url = sanitizeUrl(req.body.customAvatarUrl);
+        cfg.customAvatarUrl = url || null;
       } else {
         cfg.customAvatarUrl = null;
       }
 
       // Discord DM-Benachrichtigungen (Pro Feature)
       if(req.body.dmNotificationUsers){
-        const userIdsText = req.body.dmNotificationUsers.trim();
+        const userIdsText = sanitizeString(req.body.dmNotificationUsers, 10000);
         if(userIdsText){
           // Parse User-IDs (eine pro Zeile)
           const userIds = userIdsText
             .split('\n')
-            .map(id => id.trim())
-            .filter(id => /^\d{17,20}$/.test(id)); // Discord User IDs sind 17-20 Zeichen lang
+            .map(id => sanitizeDiscordId(id))
+            .filter(id => id); // Filter empty strings
           cfg.dmNotificationUsers = userIds;
         } else {
           cfg.dmNotificationUsers = [];
@@ -1533,18 +1531,18 @@ module.exports = (client)=>{
 
       const prevTE = cfg.ticketEmbed || {};
       cfg.ticketEmbed = {
-        title:       take('embedTitle',       prevTE.title),
-        description: take('embedDescription', prevTE.description),
+        title:       sanitizeString(take('embedTitle',       prevTE.title), 256),
+        description: sanitizeString(take('embedDescription', prevTE.description), 4096),
         color:       ensureHex(take('embedColor', prevTE.color), '#2b90d9'),
-        footer:      take('embedFooter',      prevTE.footer)
+        footer:      sanitizeString(take('embedFooter',      prevTE.footer), 2048)
       };
 
       const prevPE = cfg.panelEmbed || {};
       cfg.panelEmbed = {
-        title:       take('panelTitle',       prevPE.title),
-        description: take('panelDescription', prevPE.description),
+        title:       sanitizeString(take('panelTitle',       prevPE.title), 256),
+        description: sanitizeString(take('panelDescription', prevPE.description), 4096),
         color:       ensureHex(take('panelColor', prevPE.color), '#5865F2'),
-        footer:      take('panelFooter',      prevPE.footer)
+        footer:      sanitizeString(take('panelFooter',      prevPE.footer), 2048)
       };
 
       writeCfg(guildId, cfg);
@@ -1987,7 +1985,7 @@ module.exports = (client)=>{
                 { name: '📦 Repository', value: repository, inline: false }
               )
               .setTimestamp(new Date(commit.timestamp))
-              .setFooter({ text: 'TRS Tickets Bot Updates' });
+              .setFooter({ text: 'Quantix Tickets Bot Updates' });
 
             if (commit.url) {
               embed.setURL(commit.url);
@@ -2000,7 +1998,7 @@ module.exports = (client)=>{
             const moreEmbed = new EmbedBuilder()
               .setDescription(`... und ${commits.length - 5} weitere Commit(s)`)
               .setColor(0x00ff88)
-              .setFooter({ text: 'TRS Tickets Bot Updates' });
+              .setFooter({ text: 'Quantix Tickets Bot Updates' });
             await channel.send({ embeds: [moreEmbed] });
           }
 
@@ -2079,7 +2077,7 @@ module.exports = (client)=>{
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TRS Tickets Bot - Status</title>
+  <title>Quantix Tickets Bot - Status</title>
   <meta http-equiv="refresh" content="30">
   <style>
     * {
@@ -2166,7 +2164,7 @@ module.exports = (client)=>{
   <div class="container">
     <div class="header">
       <div class="status-badge">${statusEmoji} ${statusText}</div>
-      <h1 class="bot-name">${user ? user.username : 'TRS Tickets Bot'}</h1>
+      <h1 class="bot-name">${user ? user.username : 'Quantix Tickets Bot'}</h1>
       <p class="version">Version ${VERSION}</p>
     </div>
 
@@ -2205,7 +2203,7 @@ module.exports = (client)=>{
     </div>
 
     <div class="footer">
-      <p>TRS Tickets Bot ©️ ${new Date().getFullYear()}</p>
+      <p>Quantix Tickets Bot ©️ ${new Date().getFullYear()}</p>
       <p style="margin-top: 0.5rem;"><a href="/" style="color: ${statusColor}; text-decoration: none;">← Zurück zur Homepage</a></p>
     </div>
   </div>
