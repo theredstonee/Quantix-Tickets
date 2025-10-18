@@ -775,6 +775,79 @@
         margin-top: 4rem;
       }
     }
+
+    /* Selection Cards Styling */
+    .selection-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .selection-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .selection-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: transparent;
+      transition: all 0.3s ease;
+    }
+
+    .selection-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px var(--shadow-color);
+      border-color: var(--accent-color);
+    }
+
+    .selection-card.selected {
+      border-color: var(--accent-color);
+      background: var(--glass-bg);
+      box-shadow: 0 4px 12px var(--shadow-color);
+    }
+
+    .selection-card.selected::before {
+      background: var(--accent-color);
+    }
+
+    .selection-card .card-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .selection-card .card-name {
+      flex: 1;
+      font-weight: 500;
+      word-break: break-word;
+    }
+
+    .selection-card.selected .card-name {
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .selection-cards {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1008,51 +1081,71 @@
         <label><%= t.web.guild_id %>
           <input name="guildId" value="<%= cfg.guildId || guildId || '' %>" placeholder="1234567890123456789" readonly style="background: var(--fieldset-bg); cursor: not-allowed;">
         </label>
-        <label><%= t.web.ticket_category %>
-          <select name="ticketCategoryId" multiple size="5" style="height: auto;">
+        <div style="margin-bottom: 1.5rem;">
+          <label style="margin-bottom: 0.75rem; display: block;"><%= t.web.ticket_category %></label>
+          <div class="selection-cards" id="categoryCards">
             <%
             const selectedCategories = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
             channels.filter(ch => ch.type === 4).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= selectedCategories.includes(ch.id) ? 'selected' : '' %>>
-                🎫 <%= ch.name %>
-              </option>
+              <div class="selection-card <%= selectedCategories.includes(ch.id) ? 'selected' : '' %>"
+                   data-value="<%= ch.id %>"
+                   data-group="ticketCategoryId"
+                   onclick="toggleCard(this)">
+                <span class="card-icon">🎫</span>
+                <span class="card-name"><%= ch.name %></span>
+              </div>
             <% }) %>
-          </select>
-        </label>
-        <label><%= t.web.log_channel %>
-          <select name="logChannelId" multiple size="5" style="height: auto;">
+          </div>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label style="margin-bottom: 0.75rem; display: block;"><%= t.web.log_channel %></label>
+          <div class="selection-cards" id="logChannelCards">
             <%
             const selectedLogChannels = Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : []);
             channels.filter(ch => ch.type === 0).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= selectedLogChannels.includes(ch.id) ? 'selected' : '' %>>
-                📊 # <%= ch.name %>
-              </option>
+              <div class="selection-card <%= selectedLogChannels.includes(ch.id) ? 'selected' : '' %>"
+                   data-value="<%= ch.id %>"
+                   data-group="logChannelId"
+                   onclick="toggleCard(this)">
+                <span class="card-icon">📊</span>
+                <span class="card-name"># <%= ch.name %></span>
+              </div>
             <% }) %>
-          </select>
-        </label>
-        <label><%= t.web.transcript_channel %>
-          <select name="transcriptChannelId" multiple size="5" style="height: auto;">
+          </div>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label style="margin-bottom: 0.75rem; display: block;"><%= t.web.transcript_channel %></label>
+          <div class="selection-cards" id="transcriptChannelCards">
             <%
             const selectedTranscriptChannels = Array.isArray(cfg.transcriptChannelId) ? cfg.transcriptChannelId : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : []);
             channels.filter(ch => ch.type === 0).forEach(ch => { %>
-              <option value="<%= ch.id %>" <%= selectedTranscriptChannels.includes(ch.id) ? 'selected' : '' %>>
-                📄 # <%= ch.name %>
-              </option>
+              <div class="selection-card <%= selectedTranscriptChannels.includes(ch.id) ? 'selected' : '' %>"
+                   data-value="<%= ch.id %>"
+                   data-group="transcriptChannelId"
+                   onclick="toggleCard(this)">
+                <span class="card-icon">📄</span>
+                <span class="card-name"># <%= ch.name %></span>
+              </div>
             <% }) %>
-          </select>
-        </label>
-        <label><%= t.web.team_role %> (Legacy)
-          <select name="teamRoleId" multiple size="5" style="height: auto;">
+          </div>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <label style="margin-bottom: 0.75rem; display: block;"><%= t.web.team_role %> (Legacy)</label>
+          <div class="selection-cards" id="teamRoleCards">
             <%
             const selectedTeamRoles = Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : (cfg.teamRoleId ? [cfg.teamRoleId] : []);
             roles.forEach(role => { %>
-              <option value="<%= role.id %>" <%= selectedTeamRoles.includes(role.id) ? 'selected' : '' %>>
-                🧑‍💼 @ <%= role.name %>
-              </option>
+              <div class="selection-card <%= selectedTeamRoles.includes(role.id) ? 'selected' : '' %>"
+                   data-value="<%= role.id %>"
+                   data-group="teamRoleId"
+                   onclick="toggleCard(this)">
+                <span class="card-icon">🧑‍💼</span>
+                <span class="card-name">@ <%= role.name %></span>
+              </div>
             <% }) %>
-          </select>
-        </label>
-        <p class="soft-note">Guild ID wird automatisch gesetzt. Mehrfachauswahl mit STRG/CMD. Legacy Team-Rolle für Rückwärtskompatibilität.</p>
+          </div>
+        </div>
+        <p class="soft-note">Guild ID wird automatisch gesetzt. Klicke auf eine Karte zum Auswählen/Abwählen. Legacy Team-Rolle für Rückwärtskompatibilität.</p>
       </fieldset>
 
       <!-- Priority Rollen (NEU) -->
@@ -1649,8 +1742,39 @@ function showLoading(text, subtext) {
   overlay.classList.add('show');
 }
 
+// Selection Cards Toggle Functionality
+function toggleCard(card) {
+  card.classList.toggle('selected');
+}
+
+// Generate hidden inputs from selected cards before form submission
+function generateHiddenInputs() {
+  // Remove existing hidden inputs for selection cards
+  document.querySelectorAll('input[data-generated="true"]').forEach(input => input.remove());
+
+  // Groups to process
+  const groups = ['ticketCategoryId', 'logChannelId', 'transcriptChannelId', 'teamRoleId'];
+
+  groups.forEach(group => {
+    const selectedCards = document.querySelectorAll(`.selection-card[data-group="${group}"].selected`);
+    const form = document.getElementById('panelForm');
+
+    selectedCards.forEach(card => {
+      const value = card.getAttribute('data-value');
+      const hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = group;
+      hiddenInput.value = value;
+      hiddenInput.setAttribute('data-generated', 'true');
+      form.appendChild(hiddenInput);
+    });
+  });
+}
+
 // Show loading on main form submit (Save button)
 document.getElementById('panelForm').addEventListener('submit', function(e) {
+  // Generate hidden inputs from selected cards
+  generateHiddenInputs();
   const lang = '<%= lang %>';
   const texts = {
     de: { text: 'Wird gespeichert...', subtext: 'Bitte warten' },
