@@ -316,6 +316,13 @@
 
   // Initialize all enhancements
   document.addEventListener('DOMContentLoaded', function() {
+    // Lösche alte Entwürfe aus dem LocalStorage
+    try {
+      localStorage.removeItem('quantix-panel-draft');
+    } catch (err) {
+      console.error('Error removing old draft:', err);
+    }
+
     validateForm();
     addDeleteConfirmations();
     addTooltips();
