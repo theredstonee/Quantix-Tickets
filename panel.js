@@ -294,7 +294,240 @@ module.exports = (client)=>{
     const userId = req.user.id;
 
     if(!FOUNDER_IDS.includes(userId)) {
-      return res.status(403).send('Access Denied: Only founders can access this page.');
+      return res.status(403).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zugriff verweigert - Nur für Gründer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 3rem;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .icon {
+      font-size: 5rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #667eea;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 1.3rem;
+      color: #333;
+      margin-bottom: 2rem;
+      font-weight: 600;
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border-left: 4px solid #667eea;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+
+    .info-box strong {
+      color: #667eea;
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    .info-box ul {
+      list-style: none;
+      margin-top: 1rem;
+    }
+
+    .info-box li {
+      padding: 0.5rem 0;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .info-box li i {
+      color: #667eea;
+      font-size: 1.2rem;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    a.secondary {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+      box-shadow: none;
+    }
+
+    a.secondary:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 2rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .subtitle {
+        font-size: 1.1rem;
+      }
+
+      .icon {
+        font-size: 4rem;
+      }
+
+      .btn-group {
+        flex-direction: column;
+      }
+
+      a {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🔒</div>
+    <h1>Zugriff verweigert</h1>
+    <p class="subtitle">Nur für Gründer zugänglich</p>
+
+    <p>Diese Seite ist ausschließlich für die Gründer des TRS Tickets Bots reserviert.</p>
+
+    <div class="info-box">
+      <strong><i class="fas fa-crown"></i> Gründer-Bereich</strong>
+      <p style="margin: 0; color: #666;">
+        Dieser Bereich enthält administrative Funktionen, die nur den Gründern des Bots zur Verfügung stehen:
+      </p>
+      <ul>
+        <li><i class="fas fa-server"></i> Server-Verwaltung & Blacklist</li>
+        <li><i class="fas fa-gem"></i> Premium-Verwaltung</li>
+        <li><i class="fas fa-chart-line"></i> System-Statistiken</li>
+        <li><i class="fas fa-shield-alt"></i> Sicherheitseinstellungen</li>
+      </ul>
+    </div>
+
+    <div class="btn-group">
+      <a href="/" class="secondary">
+        <i class="fas fa-home"></i>
+        Zur Startseite
+      </a>
+      <a href="/panel">
+        <i class="fas fa-cog"></i>
+        Zum Panel
+      </a>
+    </div>
+  </div>
+</body>
+</html>
+      `);
     }
 
     next();
@@ -1759,7 +1992,17 @@ module.exports = (client)=>{
 
     try {
       const cfg = readCfg(guildId);
-      cfg.panelChannelId = req.body.channelId;
+
+      // Only update panelChannelId if provided in request body
+      if(req.body.channelId) {
+        cfg.panelChannelId = req.body.channelId;
+      }
+
+      // Check if panelChannelId is set
+      if(!cfg.panelChannelId) {
+        return res.redirect('/panel?msg=nopanel');
+      }
+
       const guild   = await client.guilds.fetch(guildId);
       const channel = await guild.channels.fetch(cfg.panelChannelId);
       const row = buildPanelSelect(cfg);
