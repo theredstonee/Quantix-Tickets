@@ -1308,6 +1308,14 @@
     function confirmPremiumAction() {
       if (!pendingPremiumAction || !currentPremiumServerId) return;
 
+      // Store action data before closing modal
+      const actionData = {
+        type: pendingPremiumAction.type,
+        tier: pendingPremiumAction.tier,
+        days: pendingPremiumAction.days,
+        serverId: currentPremiumServerId
+      };
+
       // Close confirm modal
       closePremiumConfirm();
 
@@ -1322,28 +1330,28 @@
       const serverIdInput = document.createElement('input');
       serverIdInput.type = 'hidden';
       serverIdInput.name = 'serverId';
-      serverIdInput.value = currentPremiumServerId;
+      serverIdInput.value = actionData.serverId;
       form.appendChild(serverIdInput);
 
       const actionInput = document.createElement('input');
       actionInput.type = 'hidden';
       actionInput.name = 'action';
-      actionInput.value = pendingPremiumAction.type;
+      actionInput.value = actionData.type;
       form.appendChild(actionInput);
 
-      if (pendingPremiumAction.tier) {
+      if (actionData.tier) {
         const tierInput = document.createElement('input');
         tierInput.type = 'hidden';
         tierInput.name = 'tier';
-        tierInput.value = pendingPremiumAction.tier;
+        tierInput.value = actionData.tier;
         form.appendChild(tierInput);
       }
 
-      if (pendingPremiumAction.days) {
+      if (actionData.days) {
         const daysInput = document.createElement('input');
         daysInput.type = 'hidden';
         daysInput.name = 'days';
-        daysInput.value = pendingPremiumAction.days;
+        daysInput.value = actionData.days;
         form.appendChild(daysInput);
       }
 
