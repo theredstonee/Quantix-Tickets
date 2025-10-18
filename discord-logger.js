@@ -77,21 +77,52 @@ async function setupLogChannel() {
 }
 
 /**
- * Send initialization message
+ * Send initialization message with banner
  */
 async function sendInitMessage() {
   if (!logChannel) return;
 
   try {
+    const { VERSION } = require('./version.config');
+    const { version: nodeVersion } = require('process');
+    const { version: discordVersion } = require('discord.js');
+    const now = new Date();
+    const timestamp = now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+
+    // Send banner as code block
+    const bannerText = `
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║     ██████╗ ██╗   ██╗ █████╗ ███╗   ██╗████████╗██╗██╗  ██╗              ║
+║    ██╔═══██╗██║   ██║██╔══██╗████╗  ██║╚══██╔══╝██║╚██╗██╔╝              ║
+║    ██║   ██║██║   ██║███████║██╔██╗ ██║   ██║   ██║ ╚███╔╝               ║
+║    ██║▄▄ ██║██║   ██║██╔══██║██║╚██╗██║   ██║   ██║ ██╔██╗               ║
+║    ╚██████╔╝╚██████╔╝██║  ██║██║ ╚████║   ██║   ██║██╔╝ ██╗              ║
+║     ╚══▀▀═╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚═╝  ╚═╝              ║
+║                                                                            ║
+║                        Quantix Tickets Bot                              ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+`;
+
     await logChannel.send({
+      content: '```' + bannerText + '```',
       embeds: [{
         color: 0x00ff88,
-        title: '🚀 Bot gestartet',
-        description: 'Console-Logs werden nun hierher gesendet',
+        title: '🚀 Bot erfolgreich gestartet',
+        fields: [
+          { name: '🎫 Quantix Tickets Bot', value: `v${VERSION}`, inline: true },
+          { name: '🤖 Discord Bot System', value: 'Beta v0.6.7', inline: true },
+          { name: '📅 Startzeit', value: timestamp, inline: false },
+          { name: '⚡ Node.js Version', value: nodeVersion, inline: true },
+          { name: '🔷 Discord.js Version', value: discordVersion, inline: true }
+        ],
         timestamp: new Date(),
         footer: { text: 'Quantix Tickets Logger' }
       }]
     });
+
+    originalConsole.log('✅ Startup-Banner zu Discord gesendet');
   } catch (err) {
     originalConsole.error('Fehler beim Senden der Init-Message:', err);
   }

@@ -511,7 +511,84 @@ client.once('ready', async () => {
 
   // Pending Deletions Checker - läuft jede Minute
   startPendingDeletionsChecker();
+
+  // Send startup notification to all guilds
+  await sendStartupNotifications();
 });
+
+/**
+ * Send startup notification to all guilds
+ */
+async function sendStartupNotifications() {
+  try {
+    const { VERSION, RELEASE_DATE } = require('./version.config');
+    const guilds = await client.guilds.fetch();
+    let successCount = 0;
+    let failCount = 0;
+
+    console.log(`📢 Sende Startup-Benachrichtigungen an ${guilds.size} Server...`);
+
+    for (const [guildId, guild] of guilds) {
+      try {
+        const fullGuild = await client.guilds.fetch(guildId);
+        const cfg = readCfg(guildId);
+
+        // Try to send to log channel first, otherwise find a suitable channel
+        let targetChannel = null;
+
+        if (cfg.logChannelId) {
+          targetChannel = await fullGuild.channels.fetch(cfg.logChannelId).catch(() => null);
+        }
+
+        // If no log channel, find a suitable text channel
+        if (!targetChannel) {
+          const channels = await fullGuild.channels.fetch();
+          for (const [channelId, channel] of channels) {
+            if (channel.type === 0) { // Text channel
+              const permissions = channel.permissionsFor(client.user);
+              if (permissions && permissions.has('SendMessages') && permissions.has('EmbedLinks')) {
+                targetChannel = channel;
+                break;
+              }
+            }
+          }
+        }
+
+        if (targetChannel) {
+          const embed = {
+            color: 0x00ff88,
+            title: '🚀 Bot erfolgreich neu gestartet',
+            description: `**Quantix Tickets Bot** wurde erfolgreich aktualisiert und ist jetzt wieder online!`,
+            fields: [
+              { name: '📦 Version', value: `v${VERSION}`, inline: true },
+              { name: '📅 Release', value: RELEASE_DATE, inline: true },
+              { name: '✨ Status', value: 'Online & Bereit', inline: true }
+            ],
+            footer: { text: 'Quantix Tickets' },
+            timestamp: new Date()
+          };
+
+          await targetChannel.send({ embeds: [embed] });
+          successCount++;
+          console.log(`✅ Nachricht gesendet an: ${fullGuild.name}`);
+        } else {
+          failCount++;
+          console.log(`⚠️ Kein geeigneter Channel gefunden für: ${fullGuild.name}`);
+        }
+      } catch (err) {
+        failCount++;
+        console.error(`❌ Fehler beim Senden an Guild ${guildId}:`, err.message);
+      }
+
+      // Rate limiting: Wait 1s between messages
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    console.log(`📢 Startup-Benachrichtigungen abgeschlossen: ${successCount} erfolgreich, ${failCount} fehlgeschlagen`);
+  } catch (err) {
+    console.error('❌ Fehler beim Senden der Startup-Benachrichtigungen:', err);
+  }
+}
 
 async function sendWelcomeMessage(guild) {
   try {
