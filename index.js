@@ -2194,7 +2194,7 @@ client.on(Events.MessageCreate, async (message) => {
       const member = message.member;
       const isAdmin = member && member.permissions.has('Administrator');
       const OWNER_IDS = ['928901974106202113', '1159182333316968530', '1415387837359984740', '1048900200497954868'];
-      const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530', '928901974106202113'];
+      const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
       const isOwner = OWNER_IDS.includes(userId);
       const isFounder = FOUNDER_IDS.includes(userId);
 

@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 // Owner and Founder IDs
 const OWNER_IDS = ['928901974106202113', '1159182333316968530', '1415387837359984740', '1048900200497954868'];
-const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530', '928901974106202113'];
+const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
 
 module.exports = {
   data: new SlashCommandBuilder()
