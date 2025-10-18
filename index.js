@@ -45,6 +45,7 @@ const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./tr
 const { VERSION, COPYRIGHT } = require('./version.config');
 const { initEmailService, sendTicketNotification, getGuildEmail } = require('./email-notifications');
 const { sendDMNotification } = require('./dm-notifications');
+const { sanitizeUsername, validateDiscordId, sanitizeString } = require('./xss-protection');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -847,8 +848,8 @@ async function createTranscript(channel, ticket, opts = {}) {
     return text
       .replace(/<@!?(\d{17,20})>/g, (_, id) => {
         const m = membersCache.get(id);
-        const tag  = m?.user?.tag || id;
-        const name = m?.displayName || tag;
+        const tag  = sanitizeUsername(m?.user?.tag || m?.user?.username || id);
+        const name = sanitizeUsername(m?.displayName || tag);
         return `@${name}`;
       })
       .replace(/<@&(\d{17,20})>/g, (_, id) => {
@@ -870,7 +871,7 @@ async function createTranscript(channel, ticket, opts = {}) {
 
   for (const m of messages) {
     const time   = new Date(m.createdTimestamp).toISOString();
-    const author = m.author ? (m.author.tag || m.author.id) : 'Unbekannt';
+    const author = sanitizeUsername(m.author ? (m.author.tag || m.author.username || m.author.id) : 'Unbekannt');
     const content = mentionToName(m.content || '').replace(/\n/g, '\\n');
     lines.push(`[${time}] ${author}: ${content}`);
     if (m.attachments.size) {
@@ -1198,7 +1199,7 @@ async function createTranscript(channel, ticket, opts = {}) {
 
     <div class="messages">
       ${messages.map(m => {
-        const author = m.author ? (m.author.tag || m.author.username || m.author.id) : 'Unbekannt';
+        const author = sanitizeUsername(m.author ? (m.author.tag || m.author.username || m.author.id) : 'Unbekannt');
         const authorInitial = author.charAt(0).toUpperCase();
         const authorId = m.author?.id;
         const authorAvatar = m.author?.avatar;
@@ -1604,8 +1605,8 @@ client.on(Events.InteractionCreate, async i => {
          saveTickets(guildId, log);
 
         const closer = await i.guild.members.fetch(i.user.id).catch(()=>null);
-        const closerTag  = closer?.user?.tag || i.user.tag || i.user.username || i.user.id;
-        const closerName = closer?.displayName || closerTag;
+        const closerTag  = sanitizeUsername(closer?.user?.tag || i.user.tag || i.user.username || i.user.id);
+        const closerName = sanitizeUsername(closer?.displayName || closerTag);
         const roleObj    = TEAM_ROLE ? await i.guild.roles.fetch(TEAM_ROLE).catch(()=>null) : null;
         const teamLabel  = roleObj ? `@${roleObj.name}` : '@Team';
 
@@ -1849,7 +1850,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
       const ticketInfo = {
         id: nr,
         topic: topic.label,
-        user: interaction.user.tag || interaction.user.username,
+        user: sanitizeUsername(interaction.user.tag || interaction.user.username || interaction.user.id),
         timestamp: Date.now(),
         formData: formData || {}
       };
@@ -1865,8 +1866,8 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     const ticketInfo = {
       id: nr,
       topic: topic.label,
-      user: interaction.user.tag || interaction.user.username,
-      guildName: interaction.guild.name,
+      user: sanitizeUsername(interaction.user.tag || interaction.user.username || interaction.user.id),
+      guildName: sanitizeString(interaction.guild.name, 100),
       timestamp: Date.now(),
       formData: formData || {}
     };
@@ -2189,8 +2190,8 @@ client.on(Events.MessageCreate, async (message) => {
     const isAdded = ticket.addedUsers && ticket.addedUsers.includes(authorId);
 
     if(!isCreator && !isClaimer && !isAdded){
-      const messageContent = message.content || '[Keine Nachricht]';
-      const messageAuthor = message.author.tag || message.author.username;
+      const messageContent = sanitizeString(message.content || '[Keine Nachricht]', 500);
+      const messageAuthor = sanitizeUsername(message.author.tag || message.author.username || message.author.id);
 
       await message.delete().catch(()=>{});
 

@@ -23,6 +23,8 @@ const {
   sanitizeColor,
   sanitizeNumber,
   sanitizeString,
+  sanitizeUsername,
+  validateDiscordId,
   sanitizeJson,
   cspMiddleware,
   sanitizeBodyMiddleware,
@@ -148,7 +150,7 @@ module.exports = (client)=>{
         .setFooter({ text: COPYRIGHT });
 
       if(user){
-        embed.setAuthor({ name: `${user.username}`, iconURL: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : undefined });
+        embed.setAuthor({ name: sanitizeUsername(user.username || user.tag || user.id), iconURL: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : undefined });
       }
 
       // Send to all configured log channels
@@ -889,13 +891,13 @@ module.exports = (client)=>{
 
       const feedback = {
         id: Date.now().toString(),
-        name: name.trim(),
-        email: email ? email.trim() : '',
-        type: type,
+        name: sanitizeString(name.trim(), 100),
+        email: email ? sanitizeEmail(email.trim()) : '',
+        type: sanitizeString(type, 50),
         rating: ratingNum,
-        message: message.trim(),
-        userId: req.user.id,
-        username: req.user.username,
+        message: sanitizeString(message.trim(), 2000),
+        userId: validateDiscordId(req.user.id) || req.user.id,
+        username: sanitizeUsername(req.user.username || req.user.tag || req.user.id),
         avatar: req.user.avatar ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png` : null,
         timestamp: new Date().toISOString(),
         ip: req.ip || req.connection.remoteAddress
@@ -1037,7 +1039,7 @@ module.exports = (client)=>{
   router.post('/select-server', async (req,res)=>{
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
-    const guildId = req.body.guildId;
+    const guildId = validateDiscordId(req.body.guildId);
     if(!guildId) return res.redirect('/select-server');
 
     const ADMIN = 0x8n;
@@ -1999,24 +2001,35 @@ module.exports = (client)=>{
         cfg.dmNotificationUsers = [];
       }
 
-      const labelInputs = [].concat(req.body.label||[]);
-      const valueInputs = [].concat(req.body.value||[]);
-      const emojiInputs = [].concat(req.body.emoji||[]);
-      let tableTopics = [];
-      for(let i=0;i<labelInputs.length;i++){
-        const L=(labelInputs[i]||'').trim();
-        if(!L) continue;
-        const V=(valueInputs[i]||'').trim() || L.toLowerCase().replace(/\s+/g,'-');
-        const E=(emojiInputs[i]||'').trim();
-        tableTopics.push({ label:L, value:V, emoji:E||undefined });
+      // Process topics from individual card inputs (like form fields)
+      const topics = [];
+      let topicIndex = 0;
+      while(true) {
+        const labelKey = `topic_label_${topicIndex}`;
+        const valueKey = `topic_value_${topicIndex}`;
+        const emojiKey = `topic_emoji_${topicIndex}`;
+
+        // Check if topic exists
+        if(!Object.prototype.hasOwnProperty.call(req.body, labelKey)) {
+          break;
+        }
+
+        const label = (req.body[labelKey] || '').trim();
+        const value = (req.body[valueKey] || '').trim();
+        const emoji = (req.body[emojiKey] || '').trim();
+
+        if(label && value) {
+          topics.push({
+            label: label,
+            value: value,
+            emoji: emoji || '📌'
+          });
+        }
+
+        topicIndex++;
       }
-      if(tableTopics.length>0){
-        cfg.topics = tableTopics;
-      } else {
-        const rawJson=(req.body.topicsJson||'').trim();
-        if(rawJson){ try{ const parsed=JSON.parse(rawJson); if(Array.isArray(parsed)) cfg.topics=parsed; }catch{} }
-        if(!Array.isArray(cfg.topics)) cfg.topics = [];
-      }
+
+      cfg.topics = topics;
 
       // Process form fields from individual inputs
       const formFields = [];
@@ -2328,13 +2341,13 @@ module.exports = (client)=>{
       try {
         const m = await guild.members.fetch(id);
         map[id] = {
-          tag: m.user.tag,
-          username: m.user.username,
-          nickname: m.nickname || null,
-          display: m.displayName
+          tag: sanitizeUsername(m.user.tag || m.user.username || id),
+          username: sanitizeUsername(m.user.username || id),
+          nickname: m.nickname ? sanitizeUsername(m.nickname) : null,
+          display: sanitizeUsername(m.displayName || m.user.username || id)
         };
       } catch {
-        map[id] = { tag:id, username:id, nickname:null, display:id };
+        map[id] = { tag: sanitizeUsername(id), username: sanitizeUsername(id), nickname: null, display: sanitizeUsername(id) };
       }
     }
     return map;
@@ -2438,10 +2451,10 @@ module.exports = (client)=>{
       // User IDs zu Benutzernamen auflösen
       const topClaimersWithNames = [];
       for (const [userId, count] of Object.entries(claimerCounts)) {
-        let username = userId; // Fallback auf User ID
+        let username = sanitizeUsername(userId); // Fallback auf User ID
         try {
           const member = await guild.members.fetch(userId);
-          username = member.user.username || member.user.tag || userId;
+          username = sanitizeUsername(member.user.username || member.user.tag || userId);
         } catch (err) {
           console.log(`Konnte User ${userId} nicht fetchen`);
         }
@@ -2727,7 +2740,7 @@ module.exports = (client)=>{
   <div class="container">
     <div class="header">
       <div class="status-badge">${statusEmoji} ${statusText}</div>
-      <h1 class="bot-name">${user ? user.username : 'Quantix Tickets Bot'}</h1>
+      <h1 class="bot-name">${user ? sanitizeUsername(user.username || user.tag || 'Quantix Tickets Bot') : 'Quantix Tickets Bot'}</h1>
       <p class="version">Version ${VERSION}</p>
     </div>
 
@@ -3200,6 +3213,54 @@ module.exports = (client)=>{
     }
   });
 
+  // API endpoint for live stats (Owner Only)
+  router.get('/api/owner/stats', isOwner, async (req, res) => {
+    try {
+      const allGuilds = await client.guilds.fetch();
+      const configFiles = fs.readdirSync('./configs').filter(f =>
+        f.endsWith('.json') && !f.includes('_tickets') && !f.includes('_counter')
+      );
+
+      let totalTickets = 0;
+
+      for (const file of configFiles) {
+        try {
+          const guildId = file.replace('.json', '');
+          try {
+            const tickets = JSON.parse(fs.readFileSync(`./configs/${guildId}_tickets.json`, 'utf8'));
+            totalTickets += tickets.length || 0;
+          } catch(err) {}
+        } catch(err) {}
+      }
+
+      // Calculate uptime
+      const uptimeMs = client.uptime;
+      const days = Math.floor(uptimeMs / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((uptimeMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((uptimeMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((uptimeMs % (1000 * 60)) / 1000);
+
+      let uptimeString = '';
+      if (days > 0) uptimeString += `${days}d `;
+      if (hours > 0) uptimeString += `${hours}h `;
+      if (minutes > 0) uptimeString += `${minutes}m `;
+      uptimeString += `${seconds}s`;
+
+      res.json({
+        success: true,
+        stats: {
+          totalGuilds: allGuilds.size,
+          totalTickets: totalTickets,
+          botUptime: uptimeString.trim(),
+          version: VERSION
+        }
+      });
+    } catch(err) {
+      console.error('API Stats Error:', err);
+      res.status(500).json({ success: false, error: 'Failed to fetch stats' });
+    }
+  });
+
   // Delete Feedback (Owner Only)
   router.post('/owner/delete-feedback/:id', isOwner, async (req, res) => {
     try {
@@ -3232,7 +3293,9 @@ module.exports = (client)=>{
   // Delete server data route (Owner only) - Initiates 24h deletion process
   router.post('/owner/delete-server-data/:guildId', isOwner, async (req, res) => {
     try {
-      const guildId = req.params.guildId;
+      const guildId = validateDiscordId(req.params.guildId);
+      if (!guildId) return res.redirect('/owner?error=invalid-guild-id');
+
       const guild = await client.guilds.fetch(guildId).catch(() => null);
 
       if (!guild) {
@@ -3353,7 +3416,7 @@ module.exports = (client)=>{
         result = activateLifetimePremium(serverId, tier, guildOwner.id);
 
         if (result.success) {
-          console.log(`♾️ Lifetime ${tier} Premium activated for ${guild.name} (${serverId}) by ${req.user.username}`);
+          console.log(`♾️ Lifetime ${tier} Premium activated for ${sanitizeString(guild.name, 100)} (${serverId}) by ${sanitizeUsername(req.user.username || req.user.id)}`);
           return res.redirect('/owner?success=premium-activated');
         }
       } else if (action === 'betatester') {
@@ -3363,7 +3426,7 @@ module.exports = (client)=>{
         result = activateBetatester(serverId, duration, guildOwner.id);
 
         if (result.success) {
-          console.log(`🧪 Betatester activated for ${guild.name} (${serverId}) for ${duration} days by ${req.user.username}`);
+          console.log(`🧪 Betatester activated for ${sanitizeString(guild.name, 100)} (${serverId}) for ${duration} days by ${sanitizeUsername(req.user.username || req.user.id)}`);
           return res.redirect('/owner?success=premium-activated');
         }
       } else if (action === 'remove') {
@@ -3379,7 +3442,7 @@ module.exports = (client)=>{
         }
 
         if (result.success) {
-          console.log(`🚫 Premium removed for ${guild.name} (${serverId}) by ${req.user.username}`);
+          console.log(`🚫 Premium removed for ${sanitizeString(guild.name, 100)} (${serverId}) by ${sanitizeUsername(req.user.username || req.user.id)}`);
           return res.redirect('/owner?success=premium-removed');
         }
       }
@@ -3523,7 +3586,9 @@ module.exports = (client)=>{
         return res.status(403).send('Keine Berechtigung für diese Aktion');
       }
 
-      const guildId = req.params.guildId;
+      const guildId = validateDiscordId(req.params.guildId);
+      if (!guildId) return res.redirect('/founder?error=invalid-guild-id');
+
       const blacklist = loadBlacklist();
 
       if (!blacklist.guilds.hasOwnProperty(guildId)) {
@@ -3533,12 +3598,12 @@ module.exports = (client)=>{
 
         // Add to blacklist with name
         blacklist.guilds[guildId] = {
-          name: guildName,
+          name: sanitizeString(guildName, 100),
           blockedAt: new Date().toISOString(),
-          blockedBy: req.user.username
+          blockedBy: sanitizeUsername(req.user.username || req.user.id)
         };
         saveBlacklist(blacklist);
-        console.log(`🚫 Server ${guildName} (${guildId}) wurde von ${req.user.username} blockiert`);
+        console.log(`🚫 Server ${sanitizeString(guildName, 100)} (${guildId}) wurde von ${sanitizeUsername(req.user.username || req.user.id)} blockiert`);
 
         // Leave the server after blocking
         if (guild) {
@@ -3563,14 +3628,16 @@ module.exports = (client)=>{
         return res.status(403).send('Keine Berechtigung für diese Aktion');
       }
 
-      const guildId = req.params.guildId;
+      const guildId = validateDiscordId(req.params.guildId);
+      if (!guildId) return res.redirect('/founder?error=invalid-guild-id');
+
       const blacklist = loadBlacklist();
 
       if (blacklist.guilds.hasOwnProperty(guildId)) {
-        const serverName = blacklist.guilds[guildId].name;
+        const serverName = sanitizeString(blacklist.guilds[guildId].name, 100);
         delete blacklist.guilds[guildId];
         saveBlacklist(blacklist);
-        console.log(`✅ Server ${serverName} (${guildId}) wurde von ${req.user.username} entsperrt`);
+        console.log(`✅ Server ${serverName} (${guildId}) wurde von ${sanitizeUsername(req.user.username || req.user.id)} entsperrt`);
       }
 
       res.redirect('/founder');
@@ -3589,13 +3656,15 @@ module.exports = (client)=>{
         return res.status(403).send('Keine Berechtigung für diese Aktion');
       }
 
-      const guildId = req.params.guildId;
+      const guildId = validateDiscordId(req.params.guildId);
+      if (!guildId) return res.redirect('/founder?error=invalid-guild-id');
+
       const guild = await client.guilds.fetch(guildId).catch(() => null);
 
       if (guild) {
-        const guildName = guild.name;
+        const guildName = sanitizeString(guild.name, 100);
         await guild.leave();
-        console.log(`👋 Bot wurde von ${req.user.username} vom Server ${guildName} (${guildId}) gekickt`);
+        console.log(`👋 Bot wurde von ${sanitizeUsername(req.user.username || req.user.id)} vom Server ${guildName} (${guildId}) gekickt`);
       }
 
       res.redirect('/founder');

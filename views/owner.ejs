@@ -221,6 +221,12 @@
       display: flex;
       align-items: center;
       gap: 1rem;
+      min-width: 0;
+    }
+
+    .guild-info > div {
+      min-width: 0;
+      flex: 1;
     }
 
     .guild-icon {
@@ -229,6 +235,7 @@
       border-radius: 50%;
       border: 2px solid var(--glass-border);
       object-fit: cover;
+      flex-shrink: 0;
     }
 
     .guild-icon-placeholder {
@@ -242,11 +249,16 @@
       font-weight: 700;
       color: #000;
       font-size: 1.2rem;
+      flex-shrink: 0;
     }
 
     .guild-name {
       font-weight: 600;
       font-size: 1.1rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 250px;
     }
 
     .guild-id {
@@ -256,7 +268,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 200px;
+      max-width: 250px;
     }
 
     .badge {
@@ -719,25 +731,25 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon">🌐</div>
-        <div class="stat-value"><%= totalGuilds %></div>
+        <div class="stat-value" id="stat-guilds"><%= totalGuilds %></div>
         <div class="stat-label">Gesamt Server</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon">🎫</div>
-        <div class="stat-value"><%= totalTickets %></div>
+        <div class="stat-value" id="stat-tickets"><%= totalTickets %></div>
         <div class="stat-label">Gesamt Tickets</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon">⏱️</div>
-        <div class="stat-value"><%= botUptime %></div>
+        <div class="stat-value" id="stat-uptime"><%= botUptime %></div>
         <div class="stat-label">Bot Uptime</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon">🚀</div>
-        <div class="stat-value"><%= version %></div>
+        <div class="stat-value" id="stat-version"><%= version %></div>
         <div class="stat-label">Version</div>
       </div>
     </div>
@@ -1397,6 +1409,75 @@
         }, 100);
       });
     }
+
+    // Live Stats Auto-Refresh
+    let statsUpdateInterval = null;
+    let lastStats = {
+      totalGuilds: null,
+      totalTickets: null,
+      botUptime: null,
+      version: null
+    };
+
+    async function fetchLiveStats() {
+      try {
+        const response = await fetch('/api/owner/stats');
+        if (!response.ok) throw new Error('Failed to fetch stats');
+
+        const data = await response.json();
+        if (data.success) {
+          updateStatsDisplay(data.stats);
+        }
+      } catch (error) {
+        console.error('Error fetching live stats:', error);
+      }
+    }
+
+    function updateStatsDisplay(stats) {
+      // Update each stat with smooth transition if value changed
+      updateStatElement('stat-guilds', stats.totalGuilds, lastStats.totalGuilds);
+      updateStatElement('stat-tickets', stats.totalTickets, lastStats.totalTickets);
+      updateStatElement('stat-uptime', stats.botUptime, lastStats.botUptime);
+      updateStatElement('stat-version', stats.version, lastStats.version);
+
+      // Store current stats as last stats
+      lastStats = { ...stats };
+    }
+
+    function updateStatElement(elementId, newValue, oldValue) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+
+      // Only animate if value changed
+      if (newValue !== oldValue && oldValue !== null) {
+        element.style.transition = 'opacity 0.3s ease';
+        element.style.opacity = '0.5';
+
+        setTimeout(() => {
+          element.textContent = newValue;
+          element.style.opacity = '1';
+        }, 300);
+      } else if (oldValue === null) {
+        // First load, no animation
+        element.textContent = newValue;
+      }
+    }
+
+    // Start auto-refresh when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      // Initial fetch
+      fetchLiveStats();
+
+      // Set up interval to fetch every 5 seconds
+      statsUpdateInterval = setInterval(fetchLiveStats, 5000);
+    });
+
+    // Clean up interval when page unloads
+    window.addEventListener('beforeunload', () => {
+      if (statsUpdateInterval) {
+        clearInterval(statsUpdateInterval);
+      }
+    });
   </script>
 </body>
 </html>

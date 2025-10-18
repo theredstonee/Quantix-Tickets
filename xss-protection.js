@@ -121,6 +121,53 @@ function sanitizeString(str, maxLength = 2000) {
   return cleaned.slice(0, maxLength).trim();
 }
 
+// Sanitize Discord username/tag (protection against overflow and XSS)
+function sanitizeUsername(username, maxLength = 100) {
+  if (!username || typeof username !== 'string') return 'Unknown User';
+
+  // Remove control characters and potentially malicious content
+  let cleaned = username.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+  // Remove any HTML tags
+  cleaned = cleaned.replace(/<[^>]*>/g, '');
+
+  // Remove excessive whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+  // Limit length (Discord username max 32, tag max 37, but we allow 100 for safety)
+  if (cleaned.length > maxLength) {
+    cleaned = cleaned.slice(0, maxLength);
+  }
+
+  // If empty after sanitization, return fallback
+  if (!cleaned || cleaned.length === 0) {
+    return 'Unknown User';
+  }
+
+  // Escape HTML entities for safe display
+  return cleaned
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// Validate and sanitize Discord ID (strict validation)
+function validateDiscordId(id) {
+  if (!id) return null;
+
+  // Convert to string if needed
+  const idStr = String(id).trim();
+
+  // Discord IDs must be 17-20 digits
+  if (!/^\d{17,20}$/.test(idStr)) {
+    return null;
+  }
+
+  return idStr;
+}
+
 // Sanitize JSON
 function sanitizeJson(jsonString) {
   if (!jsonString || typeof jsonString !== 'string') return null;
@@ -262,6 +309,8 @@ module.exports = {
   sanitizeColor,
   sanitizeNumber,
   sanitizeString,
+  sanitizeUsername,
+  validateDiscordId,
   sanitizeJson,
   cspMiddleware,
   sanitizeBodyMiddleware,

@@ -2041,50 +2041,69 @@
                 </div>
               </div>
               <div class="card-body">
-                <div class="help-text" style="margin-bottom: 1.5rem;">
-                  <i class="fas fa-info-circle"></i>
-                  <span>
-                    <%= lang === 'de'
-                      ? 'JSON-Format: Array von Objekten mit "label", "value" und "emoji".'
-                      : 'JSON format: Array of objects with "label", "value" and "emoji".'
-                    %>
-                  </span>
-                </div>
+                <div id="topicsList">
+                  <% (cfg.topics || []).forEach((topic, index) => { %>
+                  <div class="form-field-item" data-index="<%= index %>">
+                    <div class="form-field-header">
+                      <span class="form-field-number"><%= index + 1 %></span>
+                      <button type="button" class="btn-icon-danger" onclick="removeTopic(this)">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
 
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-code"></i>
-                    <span><%= t.web.topics_json %></span>
-                  </div>
-                  <textarea
-                    name="topicsJson"
-                    id="topicsJson"
-                    rows="14"
-                    placeholder='[{"label": "Support", "value": "support", "emoji": "❓"}]'
-                    oninput="updateTopicsPreview()"
-                  ><%= JSON.stringify(cfg.topics || [], null, 2) %></textarea>
-                </div>
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-tag"></i>
+                        <span><%= lang === 'de' ? 'Themen-Name' : 'Topic Name' %></span>
+                      </div>
+                      <input
+                        type="text"
+                        name="topic_label_<%= index %>"
+                        value="<%= topic.label || '' %>"
+                        placeholder="<%= lang === 'de' ? 'z. B. Support' : 'e.g. Support' %>"
+                        required>
+                    </div>
 
-                <!-- Live Preview -->
-                <% if (cfg.topics && cfg.topics.length > 0) { %>
-                <div class="preview-card">
-                  <div class="preview-title">
-                    <i class="fas fa-eye"></i>
-                    <%= lang === 'de' ? 'Live-Vorschau' : 'Live Preview' %>
-                  </div>
-                  <div class="topics-list" id="topicsPreview">
-                    <% cfg.topics.forEach(topic => { %>
-                    <div class="topic-item">
-                      <div class="topic-emoji"><%= topic.emoji || '📌' %></div>
-                      <div class="topic-details">
-                        <div class="topic-label"><%= topic.label %></div>
-                        <div class="topic-value"><%= topic.value %></div>
+                    <div class="grid grid-2">
+                      <div class="form-group">
+                        <div class="form-label">
+                          <i class="fas fa-code"></i>
+                          <span><%= lang === 'de' ? 'Interner Wert' : 'Internal Value' %></span>
+                        </div>
+                        <input
+                          type="text"
+                          name="topic_value_<%= index %>"
+                          value="<%= topic.value || '' %>"
+                          placeholder="<%= lang === 'de' ? 'z. B. support' : 'e.g. support' %>"
+                          required>
+                        <div class="help-text">
+                          <i class="fas fa-info-circle"></i>
+                          <span><%= lang === 'de' ? 'Nur Kleinbuchstaben, keine Leerzeichen' : 'Lowercase only, no spaces' %></span>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <div class="form-label">
+                          <i class="fas fa-smile"></i>
+                          <span><%= lang === 'de' ? 'Emoji' : 'Emoji' %></span>
+                        </div>
+                        <input
+                          type="text"
+                          name="topic_emoji_<%= index %>"
+                          value="<%= topic.emoji || '' %>"
+                          placeholder="❓"
+                          maxlength="2"
+                          required>
                       </div>
                     </div>
-                    <% }) %>
                   </div>
+                  <% }); %>
                 </div>
-                <% } %>
+
+                <button type="button" class="btn btn-success" onclick="addTopic()" style="width: 100%; margin-top: 1rem;">
+                  <i class="fas fa-plus"></i>
+                  <%= lang === 'de' ? 'Neues Thema hinzufügen' : 'Add New Topic' %>
+                </button>
               </div>
             </div>
           </div>
@@ -3016,6 +3035,97 @@
         field.querySelectorAll('input, select, textarea').forEach(input => {
           const name = input.getAttribute('name');
           if (name && name.startsWith('formField_')) {
+            const parts = name.split('_');
+            parts[parts.length - 1] = index;
+            input.setAttribute('name', parts.join('_'));
+          }
+        });
+      });
+    }
+
+    // Topics Management
+    function addTopic() {
+      const container = document.getElementById('topicsList');
+      const currentTopics = container.querySelectorAll('.form-field-item');
+      const newIndex = currentTopics.length;
+
+      const topicHtml = `
+        <div class="form-field-item" data-index="${newIndex}">
+          <div class="form-field-header">
+            <span class="form-field-number">${newIndex + 1}</span>
+            <button type="button" class="btn-icon-danger" onclick="removeTopic(this)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">
+              <i class="fas fa-tag"></i>
+              <span><%= lang === 'de' ? 'Themen-Name' : 'Topic Name' %></span>
+            </div>
+            <input
+              type="text"
+              name="topic_label_${newIndex}"
+              placeholder="<%= lang === 'de' ? 'z. B. Support' : 'e.g. Support' %>"
+              required>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <div class="form-label">
+                <i class="fas fa-code"></i>
+                <span><%= lang === 'de' ? 'Interner Wert' : 'Internal Value' %></span>
+              </div>
+              <input
+                type="text"
+                name="topic_value_${newIndex}"
+                placeholder="<%= lang === 'de' ? 'z. B. support' : 'e.g. support' %>"
+                required>
+              <div class="help-text">
+                <i class="fas fa-info-circle"></i>
+                <span><%= lang === 'de' ? 'Nur Kleinbuchstaben, keine Leerzeichen' : 'Lowercase only, no spaces' %></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">
+                <i class="fas fa-smile"></i>
+                <span><%= lang === 'de' ? 'Emoji' : 'Emoji' %></span>
+              </div>
+              <input
+                type="text"
+                name="topic_emoji_${newIndex}"
+                placeholder="❓"
+                maxlength="2"
+                required>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.insertAdjacentHTML('beforeend', topicHtml);
+      updateTopicNumbers();
+    }
+
+    function removeTopic(button) {
+      const topicItem = button.closest('.form-field-item');
+      topicItem.remove();
+      updateTopicNumbers();
+    }
+
+    function updateTopicNumbers() {
+      const topics = document.querySelectorAll('#topicsList .form-field-item');
+      topics.forEach((topic, index) => {
+        topic.setAttribute('data-index', index);
+        const numberSpan = topic.querySelector('.form-field-number');
+        if (numberSpan) {
+          numberSpan.textContent = index + 1;
+        }
+
+        // Update input names
+        topic.querySelectorAll('input').forEach(input => {
+          const name = input.getAttribute('name');
+          if (name && name.startsWith('topic_')) {
             const parts = name.split('_');
             parts[parts.length - 1] = index;
             input.setAttribute('name', parts.join('_'));
