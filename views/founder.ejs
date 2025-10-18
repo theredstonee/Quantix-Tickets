@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Founder Panel - Quantix Tickets</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --border-color: #1a3a2a;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --glass-bg: rgba(15, 21, 16, 0.7);
+      --glass-border: rgba(0, 255, 136, 0.3);
+      --shadow-color: rgba(0, 255, 136, 0.2);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      padding: 2rem;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.03;
+      animation: bgMove 20s linear infinite;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      padding: 1rem 1.5rem;
+      border-radius: 1rem;
+      border: 2px solid var(--glass-border);
+    }
+
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-color);
+    }
+
+    .section {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px var(--shadow-color);
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .guilds-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+    }
+
+    .guilds-table thead {
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    .guilds-table th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--glass-border);
+    }
+
+    .guilds-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .guilds-table tr:hover {
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .guild-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .guild-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid var(--glass-border);
+      object-fit: cover;
+    }
+
+    .guild-icon-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #000;
+      font-size: 1.2rem;
+    }
+
+    .guild-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .guild-id {
+      font-size: 0.85rem;
+      opacity: 0.6;
+      font-family: 'Courier New', monospace;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-blocked {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .badge-active {
+      background: rgba(0, 255, 136, 0.2);
+      color: var(--accent-color);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: var(--accent-color);
+      color: #000;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    .search-box {
+      margin-bottom: 1.5rem;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 1rem;
+      background: rgba(0, 255, 136, 0.05);
+      border: 2px solid var(--glass-border);
+      border-radius: 0.75rem;
+      color: var(--text-color);
+      font-size: 1rem;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      z-index: 9999;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px var(--shadow-color);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-icon {
+      font-size: 4rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-title {
+      font-size: 1.8rem;
+      color: var(--accent-color);
+      margin-bottom: 1rem;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .modal-message {
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-btn-confirm {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .modal-btn-confirm:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(231, 76, 60, 0.3);
+    }
+
+    .modal-btn-cancel {
+      background: transparent;
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .modal-btn-cancel:hover {
+      background: var(--accent-color);
+      color: #000;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .guilds-table {
+        display: block;
+        overflow-x: auto;
+      }
+
+      .modal-content {
+        max-width: 95%;
+        margin: 1rem;
+      }
+
+      .modal-buttons {
+        flex-direction: column;
+      }
+
+      .modal-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>
+        <i class="fas fa-user-shield"></i>
+        Founder Panel
+      </h1>
+      <div class="user-info">
+        <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" alt="Avatar" class="user-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+        <div>
+          <div style="font-weight: 600;"><%= user.username %></div>
+          <div style="font-size: 0.85rem; opacity: 0.7;">Founder</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">
+        <i class="fas fa-server"></i>
+        Server Management (<%= guilds.length %>)
+      </h2>
+
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 Server suchen (Name oder ID)...">
+      </div>
+
+      <table class="guilds-table">
+        <thead>
+          <tr>
+            <th>Server</th>
+            <th>Mitglieder</th>
+            <th>Status</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="guildsTable">
+          <% guilds.forEach(guild => { %>
+          <tr>
+            <td>
+              <div class="guild-info">
+                <% if (guild.icon) { %>
+                  <img src="<%= guild.icon %>" alt="<%= guild.name %>" class="guild-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                  <div class="guild-icon-placeholder" style="display: none;"><%= guild.name[0] %></div>
+                <% } else { %>
+                  <div class="guild-icon-placeholder"><%= guild.name[0] %></div>
+                <% } %>
+                <div>
+                  <div class="guild-name"><%= guild.name %></div>
+                  <div class="guild-id"><%= guild.id %></div>
+                </div>
+              </div>
+            </td>
+            <td><strong><%= guild.memberCount.toLocaleString() %></strong></td>
+            <td>
+              <% if (guild.blocked) { %>
+                <span class="badge badge-blocked"><i class="fas fa-ban"></i> Blockiert</span>
+              <% } else { %>
+                <span class="badge badge-active"><i class="fas fa-check"></i> Aktiv</span>
+              <% } %>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <% if (guild.blocked) { %>
+                  <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--accent-color); color: #000;" onclick="showUnblockModal('<%= guild.id %>', '<%= guild.name %>')">
+                    <i class="fas fa-check-circle"></i> Entsperren
+                  </button>
+                <% } else { %>
+                  <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #f39c12;" onclick="showBlockModal('<%= guild.id %>', '<%= guild.name %>')">
+                    <i class="fas fa-ban"></i> Blockieren
+                  </button>
+                  <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e67e22;" onclick="showKickModal('<%= guild.id %>', '<%= guild.name %>')">
+                    <i class="fas fa-door-open"></i> Kicken
+                  </button>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 3rem;">
+      <a href="/" class="btn btn-secondary">
+        <i class="fas fa-home"></i> Zurück zur Startseite
+      </a>
+    </div>
+  </div>
+
+  <!-- Block Server Modal -->
+  <div class="modal-overlay" id="blockModal">
+    <div class="modal-content">
+      <div class="modal-icon" style="color: #f39c12;">
+        <i class="fas fa-ban"></i>
+      </div>
+      <h3 class="modal-title">Server blockieren?</h3>
+      <p class="modal-message">
+        Möchtest du <strong id="blockServerName"></strong> wirklich blockieren?
+        <br><br>
+        <span style="opacity: 0.7; font-size: 0.95rem;">
+          Der Bot kann diesem Server nicht mehr beitreten:
+          <br>• Automatisches Verlassen beim Beitritt
+          <br>• Server wird auf Blacklist gesetzt
+          <br>• Kann später entsperrt werden
+        </span>
+      </p>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeBlockModal()">
+          <i class="fas fa-times"></i> Abbrechen
+        </button>
+        <button class="modal-btn modal-btn-confirm" style="background: #f39c12;" onclick="confirmBlock()">
+          <i class="fas fa-ban"></i> Blockieren
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unblock Server Modal -->
+  <div class="modal-overlay" id="unblockModal">
+    <div class="modal-content">
+      <div class="modal-icon" style="color: var(--accent-color);">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h3 class="modal-title">Server entsperren?</h3>
+      <p class="modal-message">
+        Möchtest du <strong id="unblockServerName"></strong> wirklich entsperren?
+        <br><br>
+        <span style="opacity: 0.7; font-size: 0.95rem;">
+          Der Bot kann diesem Server wieder beitreten:
+          <br>• Server wird von Blacklist entfernt
+          <br>• Normaler Beitritt wieder möglich
+        </span>
+      </p>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeUnblockModal()">
+          <i class="fas fa-times"></i> Abbrechen
+        </button>
+        <button class="modal-btn modal-btn-confirm" style="background: var(--accent-color); color: #000;" onclick="confirmUnblock()">
+          <i class="fas fa-check-circle"></i> Entsperren
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kick Server Modal -->
+  <div class="modal-overlay" id="kickModal">
+    <div class="modal-content">
+      <div class="modal-icon" style="color: #e67e22;">
+        <i class="fas fa-door-open"></i>
+      </div>
+      <h3 class="modal-title">Bot vom Server kicken?</h3>
+      <p class="modal-message">
+        Möchtest du den Bot wirklich von <strong id="kickServerName"></strong> entfernen?
+        <br><br>
+        <span style="opacity: 0.7; font-size: 0.95rem;">
+          Der Bot wird sofort vom Server entfernt:
+          <br>• Bot verlässt den Server
+          <br>• Daten bleiben erhalten
+          <br>• Kann wieder eingeladen werden
+        </span>
+      </p>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeKickModal()">
+          <i class="fas fa-times"></i> Abbrechen
+        </button>
+        <button class="modal-btn modal-btn-confirm" style="background: #e67e22;" onclick="confirmKick()">
+          <i class="fas fa-door-open"></i> Kicken
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentGuildId = null;
+    let currentGuildName = null;
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const guildsTable = document.getElementById('guildsTable');
+    const rows = Array.from(guildsTable.getElementsByTagName('tr'));
+
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    });
+
+    // Block Modal
+    function showBlockModal(guildId, guildName) {
+      currentGuildId = guildId;
+      currentGuildName = guildName;
+      document.getElementById('blockServerName').textContent = guildName;
+      document.getElementById('blockModal').classList.add('active');
+    }
+
+    function closeBlockModal() {
+      document.getElementById('blockModal').classList.remove('active');
+      currentGuildId = null;
+      currentGuildName = null;
+    }
+
+    function confirmBlock() {
+      if (currentGuildId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/founder/block-server/' + currentGuildId;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Unblock Modal
+    function showUnblockModal(guildId, guildName) {
+      currentGuildId = guildId;
+      currentGuildName = guildName;
+      document.getElementById('unblockServerName').textContent = guildName;
+      document.getElementById('unblockModal').classList.add('active');
+    }
+
+    function closeUnblockModal() {
+      document.getElementById('unblockModal').classList.remove('active');
+      currentGuildId = null;
+      currentGuildName = null;
+    }
+
+    function confirmUnblock() {
+      if (currentGuildId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/founder/unblock-server/' + currentGuildId;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Kick Modal
+    function showKickModal(guildId, guildName) {
+      currentGuildId = guildId;
+      currentGuildName = guildName;
+      document.getElementById('kickServerName').textContent = guildName;
+      document.getElementById('kickModal').classList.add('active');
+    }
+
+    function closeKickModal() {
+      document.getElementById('kickModal').classList.remove('active');
+      currentGuildId = null;
+      currentGuildName = null;
+    }
+
+    function confirmKick() {
+      if (currentGuildId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/founder/kick-server/' + currentGuildId;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeBlockModal();
+          closeUnblockModal();
+          closeKickModal();
+        }
+      });
+    });
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeBlockModal();
+        closeUnblockModal();
+        closeKickModal();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -599,6 +599,21 @@ async function sendWelcomeMessage(guild) {
 client.on(Events.GuildCreate, async (guild) => {
   console.log(`🆕 Bot joined new guild: ${guild.name} (${guild.id})`);
 
+  // Check if server is blacklisted
+  try {
+    const BLACKLIST_FILE = './server-blacklist.json';
+    if (fs.existsSync(BLACKLIST_FILE)) {
+      const blacklist = JSON.parse(fs.readFileSync(BLACKLIST_FILE, 'utf8'));
+      if (blacklist.guilds && blacklist.guilds.includes(guild.id)) {
+        console.log(`🚫 Server ${guild.name} (${guild.id}) is blacklisted - leaving immediately`);
+        await guild.leave();
+        return;
+      }
+    }
+  } catch (err) {
+    console.error('❌ Error checking blacklist:', err);
+  }
+
   try {
     // Deploy commands
     loadCommands();

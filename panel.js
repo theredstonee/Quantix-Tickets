@@ -24,7 +24,9 @@ const {
   sanitizeNumber,
   sanitizeString,
   sanitizeJson,
-  cspMiddleware
+  cspMiddleware,
+  sanitizeBodyMiddleware,
+  xssRateLimitMiddleware
 } = require('./xss-protection');
 
 const window = new JSDOM('').window;
@@ -152,6 +154,10 @@ module.exports = (client)=>{
 
   router.use(cookieParser());
   router.use(cspMiddleware());
+  router.use(xssRateLimitMiddleware);
+  router.use(express.json({ limit: '1mb' }));
+  router.use(express.urlencoded({ extended: true, limit: '1mb' }));
+  router.use(sanitizeBodyMiddleware);
   router.use(session({
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
@@ -267,6 +273,20 @@ module.exports = (client)=>{
   }
 
   // Middleware für Zugriff mit Admin ODER Team-Rolle
+  // Founder-only middleware (restricted to 2 specific IDs)
+  function isFounder(req,res,next){
+    if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
+
+    const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
+    const userId = req.user.id;
+
+    if(!FOUNDER_IDS.includes(userId)) {
+      return res.status(403).send('Access Denied: Only founders can access this page.');
+    }
+
+    next();
+  }
+
   async function isAuthOrTeam(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
@@ -2826,6 +2846,132 @@ module.exports = (client)=>{
     } catch(err) {
       console.error('Premium Management Error:', err);
       res.redirect('/owner?error=premium-update-failed');
+    }
+  });
+
+  // ==================== FOUNDER ROUTES ====================
+  // Blacklist file handling
+  const BLACKLIST_FILE = './server-blacklist.json';
+
+  function loadBlacklist() {
+    try {
+      if (fs.existsSync(BLACKLIST_FILE)) {
+        const data = fs.readFileSync(BLACKLIST_FILE, 'utf8');
+        return JSON.parse(data);
+      }
+    } catch (err) {
+      console.error('Error loading blacklist:', err);
+    }
+    return { guilds: [] };
+  }
+
+  function saveBlacklist(blacklist) {
+    try {
+      fs.writeFileSync(BLACKLIST_FILE, JSON.stringify(blacklist, null, 2));
+      return true;
+    } catch (err) {
+      console.error('Error saving blacklist:', err);
+      return false;
+    }
+  }
+
+  function isGuildBlacklisted(guildId) {
+    const blacklist = loadBlacklist();
+    return blacklist.guilds.includes(guildId);
+  }
+
+  // Founder Panel - GET Route
+  router.get('/founder', isFounder, async (req, res) => {
+    try {
+      const allGuilds = await client.guilds.fetch();
+      const blacklist = loadBlacklist();
+
+      const guildsData = [];
+
+      for (const [guildId, guild] of allGuilds) {
+        try {
+          const fullGuild = await client.guilds.fetch(guildId);
+
+          guildsData.push({
+            id: fullGuild.id,
+            name: fullGuild.name,
+            icon: fullGuild.icon ? `https://cdn.discordapp.com/icons/${fullGuild.id}/${fullGuild.icon}.png?size=256` : null,
+            memberCount: fullGuild.memberCount,
+            blocked: blacklist.guilds.includes(fullGuild.id)
+          });
+        } catch (err) {
+          console.error(`Error fetching guild ${guildId}:`, err.message);
+        }
+      }
+
+      // Sort: blocked last, then by member count
+      guildsData.sort((a, b) => {
+        if (a.blocked !== b.blocked) return a.blocked ? 1 : -1;
+        return b.memberCount - a.memberCount;
+      });
+
+      res.render('founder', {
+        user: req.user,
+        guilds: guildsData
+      });
+    } catch (err) {
+      console.error('Founder panel error:', err);
+      res.status(500).send('Error loading founder panel');
+    }
+  });
+
+  // Block Server - POST Route
+  router.post('/founder/block-server/:guildId', isFounder, async (req, res) => {
+    try {
+      const guildId = req.params.guildId;
+      const blacklist = loadBlacklist();
+
+      if (!blacklist.guilds.includes(guildId)) {
+        blacklist.guilds.push(guildId);
+        saveBlacklist(blacklist);
+        console.log(`🚫 Server ${guildId} wurde von ${req.user.username} blockiert`);
+      }
+
+      res.redirect('/founder');
+    } catch (err) {
+      console.error('Block server error:', err);
+      res.redirect('/founder?error=block-failed');
+    }
+  });
+
+  // Unblock Server - POST Route
+  router.post('/founder/unblock-server/:guildId', isFounder, async (req, res) => {
+    try {
+      const guildId = req.params.guildId;
+      const blacklist = loadBlacklist();
+
+      blacklist.guilds = blacklist.guilds.filter(id => id !== guildId);
+      saveBlacklist(blacklist);
+      console.log(`✅ Server ${guildId} wurde von ${req.user.username} entsperrt`);
+
+      res.redirect('/founder');
+    } catch (err) {
+      console.error('Unblock server error:', err);
+      res.redirect('/founder?error=unblock-failed');
+    }
+  });
+
+  // Kick from Server - POST Route
+  router.post('/founder/kick-server/:guildId', isFounder, async (req, res) => {
+    try {
+      const guildId = req.params.guildId;
+      const guild = await client.guilds.fetch(guildId).catch(() => null);
+
+      if (guild) {
+        const guildName = guild.name;
+        await guild.leave();
+        console.log(`👋 Bot wurde von ${req.user.username} vom Server ${guildName} (${guildId}) gekickt`);
+      }
+
+      res.redirect('/founder');
+    } catch (err) {
+      console.error('Kick server error:', err);
+      res.redirect('/founder?error=kick-failed');
     }
   });
 

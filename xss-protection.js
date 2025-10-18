@@ -162,6 +162,97 @@ function cspMiddleware() {
   };
 }
 
+/**
+ * Sanitize request body middleware
+ * Sanitizes all string values in req.body to prevent XSS
+ */
+function sanitizeBodyMiddleware(req, res, next) {
+  if (req.body && typeof req.body === 'object') {
+    const sanitizeObject = (obj) => {
+      if (!obj || typeof obj !== 'object') return obj;
+
+      const sanitized = {};
+
+      for (const [key, value] of Object.entries(obj)) {
+        const sanitizedKey = sanitizeString(key, 100);
+
+        if (typeof value === 'string') {
+          // Special handling for specific fields
+          if (key === 'email' || key === 'notificationEmail') {
+            sanitized[sanitizedKey] = sanitizeEmail(value);
+          } else if (key.includes('Color') || key.includes('color')) {
+            sanitized[sanitizedKey] = sanitizeColor(value);
+          } else if (key.includes('Id') || key.includes('ID') || key === 'guildId' || key === 'serverId') {
+            sanitized[sanitizedKey] = sanitizeDiscordId(value) || value;
+          } else if (key.includes('Url') || key.includes('url')) {
+            sanitized[sanitizedKey] = sanitizeUrl(value);
+          } else {
+            sanitized[sanitizedKey] = sanitizeString(value, 10000);
+          }
+        } else if (typeof value === 'number') {
+          sanitized[sanitizedKey] = sanitizeNumber(value);
+        } else if (typeof value === 'boolean') {
+          sanitized[sanitizedKey] = Boolean(value);
+        } else if (Array.isArray(value)) {
+          sanitized[sanitizedKey] = value.map(item =>
+            typeof item === 'object' ? sanitizeObject(item) : sanitizeString(String(item), 1000)
+          );
+        } else if (value && typeof value === 'object') {
+          sanitized[sanitizedKey] = sanitizeObject(value);
+        } else {
+          sanitized[sanitizedKey] = value;
+        }
+      }
+
+      return sanitized;
+    };
+
+    req.body = sanitizeObject(req.body);
+  }
+
+  next();
+}
+
+/**
+ * Rate limiting for XSS attack prevention
+ */
+const rateLimitStore = new Map();
+
+function xssRateLimitMiddleware(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+
+  if (!rateLimitStore.has(ip)) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + 60000 });
+    return next();
+  }
+
+  const record = rateLimitStore.get(ip);
+
+  if (now > record.resetTime) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + 60000 });
+    return next();
+  }
+
+  if (record.count > 100) {
+    console.log(`⚠️ Rate limit exceeded for IP: ${ip}`);
+    return res.status(429).send('Too many requests. Please try again later.');
+  }
+
+  record.count++;
+  next();
+}
+
+// Clean up rate limit store every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      rateLimitStore.delete(ip);
+    }
+  }
+}, 3600000);
+
 module.exports = {
   sanitizeHtml,
   sanitizeText,
@@ -172,5 +263,7 @@ module.exports = {
   sanitizeNumber,
   sanitizeString,
   sanitizeJson,
-  cspMiddleware
+  cspMiddleware,
+  sanitizeBodyMiddleware,
+  xssRateLimitMiddleware
 };
