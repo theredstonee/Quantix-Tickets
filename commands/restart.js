@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { t } = require('../translations');
 
-const ALLOWED_USER = '1159182333316968530';
+const ALLOWED_USERS = ['1159182333316968530', '1415387837359984740'];
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -15,7 +15,7 @@ module.exports = {
 
   async execute(interaction) {
     // Owner-only check
-    if (interaction.user.id !== ALLOWED_USER) {
+    if (!ALLOWED_USERS.includes(interaction.user.id)) {
       return interaction.reply({
         content: '❌ Only the bot owner can use this command.',
         ephemeral: true

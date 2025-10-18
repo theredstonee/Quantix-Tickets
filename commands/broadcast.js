@@ -5,7 +5,7 @@ const { getGuildLanguage } = require('../translations');
 const { COPYRIGHT } = require('../version.config');
 
 const ALLOWED_GUILD = '1291125037876904026';
-const ALLOWED_USER = '1159182333316968530';
+const ALLOWED_USERS = ['1159182333316968530', '1415387837359984740'];
 const CONFIG_DIR = path.join(__dirname, '..', 'configs');
 const CHANGELOG_PATH = path.join(__dirname, '..', 'changelog.json');
 
@@ -39,7 +39,7 @@ module.exports = {
       });
     }
 
-    if (interaction.user.id !== ALLOWED_USER) {
+    if (!ALLOWED_USERS.includes(interaction.user.id)) {
       return interaction.reply({
         content: '❌ You are not authorized to use this command.',
         ephemeral: true

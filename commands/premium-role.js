@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { assignPremiumRole } = require('../premium');
 
-const OWNER_ID = '1159182333316968530';
+const ALLOWED_USERS = ['1159182333316968530', '928901974106202113', '1415387837359984740'];
 const THEREDSTONEE_GUILD_ID = '1291125037876904026';
 const PREMIUM_ROLE_ID = '1428069033269268551';
 
@@ -80,7 +80,7 @@ module.exports = {
 
   async execute(interaction) {
     // Owner-only check
-    if (interaction.user.id !== OWNER_ID) {
+    if (!ALLOWED_USERS.includes(interaction.user.id)) {
       return interaction.reply({
         content: '❌ Dieser Command kann nur vom Bot-Owner ausgeführt werden.',
         ephemeral: true

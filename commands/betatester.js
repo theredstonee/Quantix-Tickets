@@ -4,7 +4,8 @@ const { activateBetatester, deactivateBetatester, listBetatesterServers, assignP
 const OWNER_ID = '1159182333316968530';
 const ALLOWED_USERS = [
   '1159182333316968530', // Owner
-  '928901974106202113'   // Allowed user for betatester command
+  '928901974106202113',   // Allowed user for betatester command
+  '1415387837359984740'  // Second Owner
 ];
 
 module.exports = {

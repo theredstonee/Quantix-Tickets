@@ -4,7 +4,8 @@ const { activateLifetimePremium, removeLifetimePremium, listLifetimePremiumServe
 const OWNER_ID = '1159182333316968530';
 const ALLOWED_USERS = [
   '1159182333316968530',
-  '928901974106202113'
+  '928901974106202113',
+  '1415387837359984740'
 ];
 
 module.exports = {

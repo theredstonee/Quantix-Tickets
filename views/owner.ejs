@@ -618,10 +618,19 @@
             <td><strong><%= guild.memberCount.toLocaleString() %></strong></td>
             <td><strong style="color: var(--accent-color);"><%= guild.tickets %></strong></td>
             <td>
-              <span class="badge badge-<%= guild.premium %>"><%= guild.premium %></span>
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span class="badge badge-<%= guild.premium %>"><%= guild.premium %></span>
+                <button class="btn" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; background: #667eea;" onclick="showPremiumModal('<%= guild.id %>', '<%= guild.name %>', '<%= guild.premium %>')">
+                  <i class="fas fa-crown"></i> Verwalten
+                </button>
+              </div>
               <% if (guild.premiumExpires) { %>
                 <div style="font-size: 0.75rem; opacity: 0.6; margin-top: 0.25rem;">
-                  Läuft ab: <%= new Date(guild.premiumExpires).toLocaleDateString('de-DE') %>
+                  <% if (guild.premiumLifetime) { %>
+                    ♾️ Lifetime
+                  <% } else { %>
+                    Läuft ab: <%= new Date(guild.premiumExpires).toLocaleDateString('de-DE') %>
+                  <% } %>
                 </div>
               <% } %>
             </td>
@@ -763,6 +772,77 @@
     </div>
   </div>
 
+  <!-- Premium Management Modal -->
+  <div class="modal-overlay" id="premiumModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-icon" style="color: #667eea;">
+        <i class="fas fa-crown"></i>
+      </div>
+      <h3 class="modal-title" style="color: #667eea;">Premium Verwalten</h3>
+      <p class="modal-message">
+        <strong id="premiumServerName"></strong>
+        <br>
+        <span style="font-size: 0.9rem; opacity: 0.7;">Server ID: <code id="premiumServerId"></code></span>
+        <br><br>
+        <span style="font-size: 0.95rem;">Aktueller Status: <span id="currentPremiumBadge"></span></span>
+      </p>
+
+      <div style="display: grid; gap: 1rem; margin: 1.5rem 0;">
+        <!-- Lifetime Premium -->
+        <div style="background: rgba(102, 126, 234, 0.1); border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 0.75rem; padding: 1.25rem;">
+          <h4 style="color: var(--accent-color); margin-bottom: 0.75rem; font-size: 1.1rem;">
+            ♾️ Lifetime Premium
+          </h4>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="modal-btn" style="background: #667eea; color: #fff; flex: 1;" onclick="setPremium('lifetime', 'basic')">
+              <i class="fas fa-gem"></i> Lifetime Basic
+            </button>
+            <button class="modal-btn" style="background: #764ba2; color: #fff; flex: 1;" onclick="setPremium('lifetime', 'pro')">
+              <i class="fas fa-crown"></i> Lifetime Pro
+            </button>
+          </div>
+        </div>
+
+        <!-- Betatester -->
+        <div style="background: rgba(0, 255, 136, 0.1); border: 2px solid rgba(0, 255, 136, 0.3); border-radius: 0.75rem; padding: 1.25rem;">
+          <h4 style="color: var(--accent-color); margin-bottom: 0.75rem; font-size: 1.1rem;">
+            🧪 Betatester
+          </h4>
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <select id="betaDays" style="flex: 1; padding: 0.75rem; background: rgba(0, 255, 136, 0.05); border: 2px solid var(--glass-border); border-radius: 0.5rem; color: var(--text-color); font-size: 1rem;">
+              <option value="7">7 Tage</option>
+              <option value="14">14 Tage</option>
+              <option value="30" selected>30 Tage</option>
+              <option value="60">60 Tage</option>
+              <option value="90">90 Tage</option>
+              <option value="180">180 Tage (6 Monate)</option>
+              <option value="365">365 Tage (1 Jahr)</option>
+            </select>
+            <button class="modal-btn" style="background: var(--accent-color); color: #000;" onclick="setPremium('betatester')">
+              <i class="fas fa-flask"></i> Betatester
+            </button>
+          </div>
+        </div>
+
+        <!-- Remove Premium -->
+        <div style="background: rgba(239, 68, 68, 0.1); border: 2px solid rgba(239, 68, 68, 0.3); border-radius: 0.75rem; padding: 1.25rem;">
+          <h4 style="color: #ef4444; margin-bottom: 0.75rem; font-size: 1.1rem;">
+            🚫 Premium Entfernen
+          </h4>
+          <button class="modal-btn" style="background: #e74c3c; color: #fff; width: 100%;" onclick="setPremium('remove')">
+            <i class="fas fa-times"></i> Premium Status Entfernen
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closePremiumModal()">
+          <i class="fas fa-times"></i> Schließen
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Delete Server Data Confirmation Modal -->
   <div class="modal-overlay" id="serverDeleteModal">
     <div class="modal-content">
@@ -880,6 +960,94 @@
       if (e.key === 'Escape') {
         closeDeleteModal();
         closeServerDeleteModal();
+        closePremiumModal();
+      }
+    });
+
+    // Premium Management Functions
+    let currentPremiumServerId = null;
+
+    function showPremiumModal(serverId, serverName, currentPremium) {
+      currentPremiumServerId = serverId;
+      document.getElementById('premiumServerName').textContent = serverName;
+      document.getElementById('premiumServerId').textContent = serverId;
+
+      // Set current premium badge
+      const badgeClass = `badge badge-${currentPremium}`;
+      document.getElementById('currentPremiumBadge').innerHTML = `<span class="${badgeClass}">${currentPremium}</span>`;
+
+      document.getElementById('premiumModal').classList.add('active');
+    }
+
+    function closePremiumModal() {
+      document.getElementById('premiumModal').classList.remove('active');
+      currentPremiumServerId = null;
+    }
+
+    function setPremium(type, tier) {
+      if (!currentPremiumServerId) return;
+
+      const days = document.getElementById('betaDays')?.value || 30;
+      let action = '';
+      let confirmMsg = '';
+
+      if (type === 'lifetime') {
+        action = 'lifetime';
+        confirmMsg = `Lifetime ${tier.toUpperCase()} Premium für diesen Server aktivieren?`;
+      } else if (type === 'betatester') {
+        action = 'betatester';
+        confirmMsg = `Betatester-Status für ${days} Tage aktivieren?`;
+      } else if (type === 'remove') {
+        action = 'remove';
+        confirmMsg = 'Premium-Status wirklich entfernen?';
+      }
+
+      if (!confirm(confirmMsg)) return;
+
+      // Show loading
+      showLoading('Premium wird aktualisiert...', 'Bitte warten');
+
+      // Create form and submit
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/owner/manage-premium';
+
+      const serverIdInput = document.createElement('input');
+      serverIdInput.type = 'hidden';
+      serverIdInput.name = 'serverId';
+      serverIdInput.value = currentPremiumServerId;
+      form.appendChild(serverIdInput);
+
+      const actionInput = document.createElement('input');
+      actionInput.type = 'hidden';
+      actionInput.name = 'action';
+      actionInput.value = action;
+      form.appendChild(actionInput);
+
+      if (tier) {
+        const tierInput = document.createElement('input');
+        tierInput.type = 'hidden';
+        tierInput.name = 'tier';
+        tierInput.value = tier;
+        form.appendChild(tierInput);
+      }
+
+      if (type === 'betatester') {
+        const daysInput = document.createElement('input');
+        daysInput.type = 'hidden';
+        daysInput.name = 'days';
+        daysInput.value = days;
+        form.appendChild(daysInput);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    // Close premium modal on overlay click
+    document.getElementById('premiumModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closePremiumModal();
       }
     });
 

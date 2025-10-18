@@ -206,7 +206,7 @@ module.exports = (client)=>{
   function isOwner(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
-    const OWNER_IDS = ['928901974106202113', '1159182333316968530'];
+    const OWNER_IDS = ['928901974106202113', '1159182333316968530', '1415387837359984740'];
     const userId = req.user.id;
 
     if(!OWNER_IDS.includes(userId)) {
@@ -2592,6 +2592,7 @@ module.exports = (client)=>{
             tickets: ticketCount,
             premium: premiumInfo.tier,
             premiumExpires: premiumInfo.expiresAt,
+            premiumLifetime: premiumInfo.lifetime || false,
             language: cfg.language || 'de'
           });
         } catch(err) {
@@ -2762,6 +2763,68 @@ module.exports = (client)=>{
     } catch(err) {
       console.error('Schedule deletion error:', err);
       res.redirect('/owner?error=schedule-failed');
+    }
+  });
+
+  // Premium Management (Owner Only)
+  router.post('/owner/manage-premium', isOwner, async (req, res) => {
+    try {
+      const { serverId, action, tier, days } = req.body;
+      const { activateLifetimePremium, removeLifetimePremium, activateBetatester, deactivateBetatester } = require('./premium');
+
+      if (!serverId || !action) {
+        return res.redirect('/owner?error=missing-params');
+      }
+
+      // Fetch guild info
+      const guild = await client.guilds.fetch(serverId).catch(() => null);
+      if (!guild) {
+        return res.redirect('/owner?error=guild-not-found');
+      }
+
+      let result;
+
+      if (action === 'lifetime' && tier) {
+        // Activate Lifetime Premium
+        const guildOwner = await guild.fetchOwner();
+        result = activateLifetimePremium(serverId, tier, guildOwner.id);
+
+        if (result.success) {
+          console.log(`♾️ Lifetime ${tier} Premium activated for ${guild.name} (${serverId}) by ${req.user.username}`);
+          return res.redirect('/owner?success=premium-activated');
+        }
+      } else if (action === 'betatester') {
+        // Activate Betatester
+        const duration = parseInt(days) || 30;
+        const guildOwner = await guild.fetchOwner();
+        result = activateBetatester(serverId, duration, guildOwner.id);
+
+        if (result.success) {
+          console.log(`🧪 Betatester activated for ${guild.name} (${serverId}) for ${duration} days by ${req.user.username}`);
+          return res.redirect('/owner?success=premium-activated');
+        }
+      } else if (action === 'remove') {
+        // Remove Premium
+        const premiumInfo = require('./premium').getPremiumInfo(serverId);
+
+        if (premiumInfo.lifetime) {
+          result = removeLifetimePremium(serverId);
+        } else if (premiumInfo.tier === 'beta') {
+          result = deactivateBetatester(serverId);
+        } else {
+          return res.redirect('/owner?error=cannot-remove-subscriptionunknown');
+        }
+
+        if (result.success) {
+          console.log(`🚫 Premium removed for ${guild.name} (${serverId}) by ${req.user.username}`);
+          return res.redirect('/owner?success=premium-removed');
+        }
+      }
+
+      res.redirect('/owner?error=premium-update-failed');
+    } catch(err) {
+      console.error('Premium Management Error:', err);
+      res.redirect('/owner?error=premium-update-failed');
     }
   });
 
