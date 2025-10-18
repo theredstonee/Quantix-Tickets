@@ -2367,6 +2367,14 @@
           <% } %>
 
         </div>
+
+        <!-- Save Button (Fixed) -->
+        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+        <button type="submit" class="btn btn-primary save-button-fixed">
+          <i class="fas fa-save"></i>
+          <%= t.web.save %>
+        </button>
+        <% } %>
       </form>
     </main>
   </div>
