@@ -432,7 +432,7 @@ Bei Problemen oder Feature-Wünschen:
 
 - 🌐 **Website:** [theredstonee.de](https://theredstonee.de)
 - 💬 **Discord Server:** [dc.theredstonee.de](https://dc.theredstonee.de)
-- 🎫 **Ticket Panel:** [trstickets.theredstonee.de](https://trstickets.theredstonee.de)
+- 🎫 **Ticket Panel:** [tickets.quantix-bot.de](https://tickets.quantix-bot.de)
 - 📊 **Status Page:** [status.theredstonee.de](https://status.theredstonee.de)
 - 💻 **GitHub:** [github.com/TheRedstoneE/TRS-Tickets-Bot](https://github.com/TheRedstoneE/TRS-Tickets-Bot)
 

@@ -8,7 +8,7 @@ module.exports = {
   async execute(interaction) {
     const BASE_URL = process.env.PUBLIC_BASE_URL
       ? process.env.PUBLIC_BASE_URL.replace(/\/$/, '')
-      : 'https://trstickets.theredstonee.de';
+      : 'https://tickets.quantix-bot.de';
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
