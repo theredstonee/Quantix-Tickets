@@ -131,10 +131,15 @@ module.exports = (client)=>{
   async function logEvent(guildId, text, user){
     try {
       const cfg = readCfg(guildId);
-      if(!cfg.logChannelId) return;
+
+      // Support both single ID and array of IDs
+      const logChannelIds = Array.isArray(cfg.logChannelId)
+        ? cfg.logChannelId
+        : (cfg.logChannelId ? [cfg.logChannelId] : []);
+
+      if(logChannelIds.length === 0) return;
+
       const guild = await client.guilds.fetch(guildId);
-      const ch = await guild.channels.fetch(cfg.logChannelId);
-      if(!ch) return;
 
       const embed = new EmbedBuilder()
         .setDescription(text)
@@ -146,7 +151,15 @@ module.exports = (client)=>{
         embed.setAuthor({ name: `${user.username}`, iconURL: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : undefined });
       }
 
-      await ch.send({ embeds: [embed] });
+      // Send to all configured log channels
+      for(const channelId of logChannelIds){
+        try {
+          const ch = await guild.channels.fetch(channelId);
+          if(ch) await ch.send({ embeds: [embed] });
+        } catch(err) {
+          console.error(`Log-Channel ${channelId} nicht gefunden:`, err.message);
+        }
+      }
     } catch(err) {
       console.error('Log Error:', err);
     }
