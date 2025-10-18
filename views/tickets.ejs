@@ -226,6 +226,9 @@
       font-weight: 600;
       margin-bottom: 0.5rem;
       color: var(--text-color);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .ticket-card-info {
@@ -234,6 +237,12 @@
       gap: 0.5rem;
       font-size: 0.85rem;
       opacity: 0.8;
+    }
+
+    .ticket-card-info > div {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .ticket-card-status {
@@ -409,9 +418,9 @@
     thead th{white-space:nowrap;cursor:pointer;user-select:none;padding:.8rem 1rem;font-size:.75rem;letter-spacing:.5px;text-transform:uppercase}
     thead th.sortAsc:after{content:" \25B2"}
     thead th.sortDesc:after{content:" \25BC"}
-    tbody td{padding:.8rem 1rem;vertical-align:middle;border-top:1px solid #e5e8ec}
+    tbody td{padding:.8rem 1rem;vertical-align:middle;border-top:1px solid #e5e8ec;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     tbody tr:hover{background:#f6f8fb}
-    .badge{background:#e3e7ec;font-family:monospace;font-size:.65rem;padding:.2rem .45rem;border-radius:.4rem;display:inline-block}
+    .badge{background:#e3e7ec;font-family:monospace;font-size:.65rem;padding:.2rem .45rem;border-radius:.4rem;display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .status-offen{color:#2bd94a;font-weight:600}
     .status-geschlossen{color:#d92b2b;font-weight:600}
     .prio-dot{font-size:1rem}

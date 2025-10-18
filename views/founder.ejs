@@ -90,6 +90,19 @@
       height: 48px;
       border-radius: 50%;
       border: 2px solid var(--accent-color);
+      flex-shrink: 0;
+    }
+
+    .user-info > div {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .user-info > div > div {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .section {
