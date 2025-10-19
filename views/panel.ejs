@@ -2596,14 +2596,15 @@
                 <div class="btn-group" style="margin-top: 1.5rem;">
                   <button
                     type="button"
+                    id="sendPanelBtn"
                     class="btn btn-success"
-                    onclick="sendPanel()"
-                    <% if (!cfg.panelChannelId) { %>disabled<% } %>>
+                    onclick="sendPanel()">
                     <i class="fas fa-paper-plane"></i>
                     <%= t.web.send_panel %>
                   </button>
                   <button
                     type="button"
+                    id="editPanelBtn"
                     class="btn btn-warning"
                     onclick="editPanel()"
                     <% if (!cfg.panelMessageId) { %>disabled<% } %>>
@@ -2849,6 +2850,20 @@
         if (btn) {
           btn.click();
         }
+      }
+
+      // Enable/Disable "Panel senden" button based on channel selection
+      const panelChannelSelect = document.querySelector('select[name="panelChannelId"]');
+      const sendPanelBtn = document.getElementById('sendPanelBtn');
+
+      if (panelChannelSelect && sendPanelBtn) {
+        // Initial state
+        sendPanelBtn.disabled = !panelChannelSelect.value;
+
+        // Listen for changes
+        panelChannelSelect.addEventListener('change', function() {
+          sendPanelBtn.disabled = !this.value;
+        });
       }
     });
 
