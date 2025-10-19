@@ -44,6 +44,12 @@ module.exports = {
               description: 'Zeigt diese Command-Liste',
               permission: 'Alle',
               canUse: true
+            },
+            {
+              name: '/forward',
+              description: 'Leitet ein Ticket an ein anderes Team-Mitglied weiter (Pro Feature)',
+              permission: 'Claimer',
+              canUse: true
             }
           ]
         },

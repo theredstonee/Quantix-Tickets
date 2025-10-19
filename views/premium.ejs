@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<%= lang || 'de' %>">
+<html lang="<%= lang || 'de' %>" data-theme="light">
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SLMX16ZJ6Y"></script>
@@ -7,47 +7,107 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-SLMX16ZJ6Y');
   </script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Premium - Quantix Tickets Bot</title>
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
   <link rel="shortcut icon" href="/images/favicon.png">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
   <style>
+    /* ===== CSS Variables for Light & Dark Mode ===== */
+    :root {
+      --bg-color: #f0f9ff;
+      --text-color: #1a1a2e;
+      --text-secondary: #666;
+      --border-color: #bdd7ee;
+      --accent-color: #0ea5e9;
+      --accent-hover: #0284c7;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --hero-gradient-start: #0ee9e5;
+      --hero-gradient-end: #0284c7;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(14, 165, 233, 0.3);
+      --shadow-color: rgba(14, 165, 233, 0.2);
+      --success-color: #00ff88;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --text-secondary: #999;
+      --border-color: #1a3a2a;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --card-bg: rgba(15, 21, 16, 0.9);
+      --hero-gradient-start: #0f1510;
+      --hero-gradient-end: #1a3a2a;
+      --glass-bg: rgba(15, 21, 16, 0.7);
+      --glass-border: rgba(0, 255, 136, 0.3);
+      --shadow-color: rgba(0, 255, 136, 0.2);
+      --success-color: #00ff88;
+      --warning-color: #f39c12;
+      --danger-color: #ff4444;
+    }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       min-height: 100vh;
       padding: 40px 20px;
       position: relative;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* Animated Background Pattern */
-    body::before {
-      content: '';
+    /* ===== Animated Dot Pattern Background ===== */
+    .animated-bg {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 0;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      z-index: -1;
+      background: linear-gradient(135deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%);
+      opacity: 0.05;
+      transition: opacity 0.3s ease;
+    }
+
+    [data-theme="dark"] .animated-bg {
+      opacity: 0.15;
+    }
+
+    .animated-bg::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
       background-size: 50px 50px;
-      opacity: 0.3;
       animation: bgMove 20s linear infinite;
-      pointer-events: none;
+      opacity: 0.3;
     }
 
     @keyframes bgMove {
@@ -55,103 +115,302 @@
       100% { transform: translate(50px, 50px); }
     }
 
+    /* ===== Theme Toggle Button ===== */
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px var(--shadow-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px var(--shadow-color);
+    }
+
+    .theme-toggle i {
+      font-size: 1.2rem;
+    }
+
+    /* ===== Container ===== */
     .container {
       position: relative;
       z-index: 1;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
+      padding-top: 40px;
     }
 
+    /* ===== Header Section ===== */
     .header {
       text-align: center;
-      color: white;
       margin-bottom: 60px;
+      animation: fadeInDown 0.8s ease;
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .header h1 {
-      font-size: 3rem;
-      margin-bottom: 10px;
+      font-size: 3.5rem;
+      margin-bottom: 15px;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 800;
     }
 
     .header p {
-      font-size: 1.2rem;
-      opacity: 0.9;
+      font-size: 1.3rem;
+      color: var(--text-secondary);
+      font-weight: 400;
     }
 
+    /* ===== Current Plan Box ===== */
     .current-plan {
-      background: rgba(255, 255, 255, 0.15);
+      background: var(--glass-bg);
       backdrop-filter: blur(15px);
       -webkit-backdrop-filter: blur(15px);
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 40px;
-      color: white;
+      border: 2px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 50px;
       text-align: center;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 32px var(--shadow-color);
       transition: all 0.3s ease;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .current-plan:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+      transform: translateY(-5px);
+      box-shadow: 0 12px 48px var(--shadow-color);
     }
 
     .current-plan h2 {
-      font-size: 1.5rem;
-      margin-bottom: 10px;
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      color: var(--text-color);
     }
 
     .current-plan .badge {
       display: inline-block;
-      padding: 8px 20px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 20px;
+      padding: 10px 25px;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      color: white;
+      border-radius: 30px;
       font-weight: bold;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 15px var(--shadow-color);
     }
 
+    .current-plan p {
+      margin-top: 15px;
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    .current-plan .action-buttons {
+      margin-top: 25px;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .current-plan .btn-action {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .current-plan .btn-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+    }
+
+    .btn-downgrade {
+      background: linear-gradient(135deg, var(--warning-color), #e67e22);
+      color: white;
+    }
+
+    .btn-cancel {
+      background: linear-gradient(135deg, var(--danger-color), #c0392b);
+      color: white;
+    }
+
+    /* ===== Billing Period Toggle ===== */
+    .billing-toggle {
+      text-align: center;
+      margin-bottom: 50px;
+      animation: fadeIn 1.2s ease;
+    }
+
+    .billing-toggle h3 {
+      color: var(--text-color);
+      margin-bottom: 25px;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .toggle-buttons {
+      display: inline-flex;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 8px;
+      gap: 8px;
+      box-shadow: 0 4px 20px var(--shadow-color);
+    }
+
+    .toggle-btn {
+      padding: 14px 35px;
+      border: none;
+      background: transparent;
+      color: var(--text-color);
+      font-size: 1.05rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .toggle-btn.active {
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      color: white;
+      box-shadow: 0 4px 20px var(--shadow-color);
+    }
+
+    .toggle-btn:not(.active):hover {
+      background: var(--glass-border);
+    }
+
+    .savings-badge {
+      display: inline-block;
+      background: var(--success-color);
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-left: 8px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* ===== Pricing Cards Grid ===== */
     .pricing-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 30px;
-      margin-bottom: 40px;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 35px;
+      margin-bottom: 50px;
+      animation: fadeInUp 1s ease;
     }
 
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== Individual Pricing Card ===== */
     .pricing-card {
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--glass-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 20px;
-      padding: 40px 30px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      border: 2px solid var(--glass-border);
+      border-radius: 25px;
+      padding: 45px 35px;
+      box-shadow: 0 10px 40px var(--shadow-color);
       position: relative;
-      transition: all 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      overflow: hidden;
+    }
+
+    .pricing-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
 
     .pricing-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
-      border-color: rgba(14, 165, 233, 0.5);
+      transform: translateY(-15px) scale(1.02);
+      box-shadow: 0 20px 60px var(--shadow-color);
+      border-color: var(--accent-color);
+    }
+
+    .pricing-card:hover::before {
+      opacity: 1;
     }
 
     .pricing-card.popular {
-      border: 3px solid #0ea5e9;
+      border: 3px solid var(--accent-color);
       transform: scale(1.05);
+      box-shadow: 0 15px 50px var(--shadow-color);
     }
 
-    .pricing-card.popular::before {
+    .pricing-card.popular::after {
       content: '⭐ BELIEBT';
       position: absolute;
       top: -15px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #0ea5e9;
+      right: 20px;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
       color: white;
-      padding: 5px 20px;
+      padding: 6px 20px;
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: bold;
+      box-shadow: 0 4px 15px var(--shadow-color);
     }
 
     .pricing-card.current {
@@ -159,43 +418,70 @@
       pointer-events: none;
     }
 
+    .tier-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      display: block;
+      text-align: center;
+      filter: drop-shadow(0 4px 10px var(--shadow-color));
+    }
+
     .tier-name {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #333;
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 15px;
+      color: var(--text-color);
+      text-align: center;
     }
 
     .tier-price {
-      font-size: 3rem;
-      font-weight: bold;
-      color: #0ea5e9;
-      margin-bottom: 5px;
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: var(--accent-color);
+      margin-bottom: 10px;
+      text-align: center;
+      line-height: 1;
     }
 
-    .tier-price span {
-      font-size: 1.2rem;
-      color: #666;
+    .tier-price .currency {
+      font-size: 2rem;
+      vertical-align: super;
+    }
+
+    .price-period {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      font-weight: normal;
     }
 
     .tier-description {
-      color: #666;
-      margin-bottom: 30px;
-      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 35px;
+      font-size: 1rem;
+      text-align: center;
+      font-weight: 500;
     }
 
+    /* ===== Features List ===== */
     .features-list {
       list-style: none;
-      margin-bottom: 30px;
+      margin-bottom: 35px;
     }
 
     .features-list li {
-      padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
-      color: #555;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--glass-border);
+      color: var(--text-color);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .features-list li:hover {
+      padding-left: 10px;
+      color: var(--accent-color);
     }
 
     .features-list li:last-child {
@@ -204,105 +490,153 @@
 
     .features-list li::before {
       content: '✓';
-      display: inline-block;
-      width: 25px;
-      height: 25px;
-      background: #0ea5e9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
       color: white;
       border-radius: 50%;
-      text-align: center;
-      line-height: 25px;
       font-weight: bold;
       flex-shrink: 0;
+      box-shadow: 0 2px 10px var(--shadow-color);
     }
 
+    .features-list li strong {
+      color: var(--accent-color);
+      font-weight: 700;
+    }
+
+    /* ===== Buttons ===== */
     .btn-purchase {
       width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      padding: 18px;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
       color: white;
       border: none;
-      border-radius: 10px;
-      font-size: 1.1rem;
+      border-radius: 12px;
+      font-size: 1.2rem;
       font-weight: bold;
       cursor: pointer;
-      transition: transform 0.2s ease;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 25px var(--shadow-color);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-purchase::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .btn-purchase:hover::before {
+      width: 300px;
+      height: 300px;
     }
 
     .btn-purchase:hover {
-      transform: scale(1.05);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 40px var(--shadow-color);
+    }
+
+    .btn-purchase:active {
+      transform: translateY(-1px);
     }
 
     .btn-purchase:disabled {
-      background: #ccc;
+      background: linear-gradient(135deg, #ccc, #999);
       cursor: not-allowed;
       transform: none;
+      box-shadow: none;
     }
 
-    .btn-back {
-      display: inline-block;
-      padding: 12px 30px;
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      text-decoration: none;
-      border-radius: 10px;
-      margin-top: 20px;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    .btn-back:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
-    }
-
-    .back-link {
-      text-align: center;
-      margin-top: 40px;
-    }
-
+    .current-badge,
     .free-badge {
       display: inline-block;
-      background: #4CAF50;
-      color: white;
-      padding: 5px 15px;
-      border-radius: 5px;
-      font-size: 0.9rem;
-      margin-top: 10px;
+      padding: 12px 25px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
 
     .current-badge {
-      display: inline-block;
-      background: #2196F3;
+      background: linear-gradient(135deg, #2196F3, #1976D2);
       color: white;
-      padding: 5px 15px;
-      border-radius: 5px;
-      font-size: 0.9rem;
-      margin-top: 10px;
     }
 
-    @media (max-width: 768px) {
-      .header h1 {
-        font-size: 2rem;
-      }
-
-      .pricing-card.popular {
-        transform: scale(1);
-      }
+    .free-badge {
+      background: linear-gradient(135deg, #4CAF50, #388E3C);
+      color: white;
     }
 
-    /* Loading Overlay */
+    /* ===== Back Link Section ===== */
+    .back-link {
+      text-align: center;
+      margin-top: 50px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeIn 1.5s ease;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px 35px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      color: var(--text-color);
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1.05rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px var(--shadow-color);
+    }
+
+    .btn-back:hover {
+      background: var(--accent-color);
+      color: white;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px var(--shadow-color);
+      border-color: var(--accent-color);
+    }
+
+    .btn-discord {
+      background: linear-gradient(135deg, #5865F2, #4752C4);
+      border-color: rgba(88, 101, 242, 0.5);
+      color: white;
+    }
+
+    .btn-discord:hover {
+      background: linear-gradient(135deg, #4752C4, #3C45A5);
+      color: white;
+    }
+
+    /* ===== Loading Overlay ===== */
     .loading-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.95);
+      background: rgba(0, 0, 0, 0.95);
       display: none;
       justify-content: center;
       align-items: center;
@@ -317,35 +651,25 @@
 
     .loading-content {
       text-align: center;
-      background: rgba(255,255,255,0.05);
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       padding: 3rem;
-      border-radius: 20px;
-      border: 1px solid rgba(14, 165, 233, 0.3);
-      max-width: 400px;
+      border-radius: 25px;
+      border: 2px solid var(--glass-border);
+      max-width: 450px;
       width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     }
 
     .loading-spinner {
-      width: 60px;
-      height: 60px;
-      border: 6px solid rgba(14, 165, 233, 0.1);
-      border-top: 6px solid #0ea5e9;
+      width: 70px;
+      height: 70px;
+      border: 8px solid rgba(14, 165, 233, 0.1);
+      border-top: 8px solid var(--accent-color);
       border-radius: 50%;
       animation: loadingSpin 1s linear infinite;
       margin: 0 auto 2rem;
-    }
-
-    .loading-text {
-      font-size: 1.3rem;
-      color: #0ea5e9;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .loading-subtext {
-      font-size: 0.9rem;
-      opacity: 0.7;
-      color: white;
     }
 
     @keyframes loadingSpin {
@@ -353,83 +677,110 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Billing Period Toggle */
-    .billing-toggle {
-      text-align: center;
-      margin-bottom: 40px;
+    .loading-text {
+      font-size: 1.5rem;
+      color: var(--accent-color);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
     }
 
-    .billing-toggle h3 {
-      color: white;
-      margin-bottom: 20px;
-      font-size: 1.3rem;
-    }
-
-    .toggle-buttons {
-      display: inline-flex;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 50px;
-      padding: 5px;
-      gap: 5px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    .toggle-btn {
-      padding: 12px 30px;
-      border: none;
-      background: transparent;
-      color: white;
+    .loading-subtext {
       font-size: 1rem;
-      font-weight: 600;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
+      opacity: 0.8;
+      color: var(--text-secondary);
     }
 
-    .toggle-btn.active {
-      background: white;
-      color: #0ea5e9;
-      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
-    }
-
-    .toggle-btn:not(.active):hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .savings-badge {
-      display: inline-block;
-      background: #00ff88;
-      color: #000;
-      padding: 4px 12px;
-      border-radius: 15px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-left: 10px;
-    }
-
-    .price-period {
-      font-size: 1rem;
-      color: #999;
-      font-weight: normal;
-    }
-
+    /* ===== Responsive Design ===== */
     @media (max-width: 768px) {
+      body {
+        padding: 20px 15px;
+      }
+
+      .container {
+        padding-top: 20px;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+      }
+
+      .pricing-card.popular {
+        transform: scale(1);
+      }
+
+      .pricing-card:hover {
+        transform: translateY(-10px);
+      }
+
+      .pricing-cards {
+        grid-template-columns: 1fr;
+        gap: 25px;
+      }
+
       .toggle-buttons {
         flex-direction: column;
         width: 100%;
-        max-width: 300px;
+        max-width: 320px;
       }
 
       .toggle-btn {
         width: 100%;
       }
+
+      .theme-toggle {
+        top: 15px;
+        right: 15px;
+        padding: 10px 18px;
+      }
+
+      .tier-price {
+        font-size: 3rem;
+      }
+
+      .back-link {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .btn-back {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .pricing-card {
+        padding: 35px 25px;
+      }
+
+      .tier-name {
+        font-size: 1.8rem;
+      }
+
+      .tier-price {
+        font-size: 2.5rem;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Animated Background -->
+  <div class="animated-bg"></div>
+
+  <!-- Theme Toggle Button -->
+  <div class="theme-toggle" onclick="toggleTheme()">
+    <i class="fas fa-moon" id="theme-icon"></i>
+    <span id="theme-text">Dark Mode</span>
+  </div>
+
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-content">
@@ -440,32 +791,34 @@
   </div>
 
   <div class="container">
+    <!-- Header Section -->
     <div class="header">
       <h1>💎 Premium Upgrade</h1>
       <p>Schalte exklusive Features frei und unterstütze die Entwicklung!</p>
     </div>
 
+    <!-- Current Plan Box -->
     <% if (currentTier !== 'none') { %>
     <div class="current-plan">
-      <h2>Dein aktueller Plan</h2>
+      <h2>✨ Dein aktueller Plan</h2>
       <div class="badge"><%= currentTierName %></div>
       <% if (expiresAt) { %>
-        <p style="margin-top: 10px; font-size: 0.9rem;">
+        <p>
           Verlängert sich automatisch am <%= new Date(expiresAt).toLocaleDateString('de-DE') %>
         </p>
       <% } %>
 
-      <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+      <div class="action-buttons">
         <% if (currentTier === 'pro') { %>
           <form action="/downgrade-premium" method="POST" style="margin: 0;">
-            <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); width: auto; padding: 12px 30px; font-size: 1rem;" onclick="return confirm('Möchtest du wirklich von Pro zu Basic downgraden? Du verlierst Zugriff auf Pro-Features.');">
+            <button type="submit" class="btn-action btn-downgrade" onclick="return confirm('Möchtest du wirklich von Pro zu Basic downgraden? Du verlierst Zugriff auf Pro-Features.');">
               ⬇️ Zu Basic downgraden
             </button>
           </form>
         <% } %>
 
         <form action="/cancel-premium" method="POST" style="margin: 0;">
-          <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); width: auto; padding: 12px 30px; font-size: 1rem;" onclick="return confirm('Möchtest du dein Premium-Abo wirklich kündigen? Du verlierst alle Premium-Features.');">
+          <button type="submit" class="btn-action btn-cancel" onclick="return confirm('Möchtest du dein Premium-Abo wirklich kündigen? Du verlierst alle Premium-Features.');">
             🚫 Premium kündigen
           </button>
         </form>
@@ -475,7 +828,7 @@
 
     <!-- Billing Period Toggle -->
     <div class="billing-toggle">
-      <h3>Abrechnungszeitraum wählen</h3>
+      <h3>💳 Abrechnungszeitraum wählen</h3>
       <div class="toggle-buttons">
         <button type="button" class="toggle-btn active" id="toggle-monthly" onclick="toggleBillingPeriod('monthly')">
           Monatlich
@@ -486,11 +839,16 @@
       </div>
     </div>
 
+    <!-- Pricing Cards -->
     <div class="pricing-cards">
       <!-- Free Tier -->
       <div class="pricing-card <%= currentTier === 'none' ? 'current' : '' %>">
+        <span class="tier-icon">🆓</span>
         <div class="tier-name">Free</div>
-        <div class="tier-price">€0<span>/Monat</span></div>
+        <div class="tier-price">
+          <span class="currency">€</span>0
+          <div class="price-period">/Monat</div>
+        </div>
         <div class="tier-description">Für kleine Server zum Testen</div>
 
         <ul class="features-list">
@@ -510,11 +868,11 @@
 
       <!-- Basic Tier -->
       <div class="pricing-card <%= currentTier === 'basic' ? 'current' : '' %>">
+        <span class="tier-icon">⭐</span>
         <div class="tier-name">Premium Basic</div>
         <div class="tier-price">
-          <span class="price-monthly">€2.99</span>
-          <span class="price-yearly" style="display: none;">€29.99</span>
-          <span class="price-period">/Monat</span>
+          <span class="currency">€</span><span class="price-monthly">2.99</span><span class="price-yearly" style="display: none;">29.99</span>
+          <div class="price-period">/Monat</div>
         </div>
         <div class="tier-description">Perfekt für aktive Server</div>
 
@@ -531,7 +889,7 @@
           <div class="current-badge">✓ Aktueller Plan</div>
         <% } else if (currentTier === 'pro') { %>
           <form action="/downgrade-premium" method="POST">
-            <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);" onclick="return confirm('Möchtest du wirklich von Pro zu Basic downgraden?');">
+            <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #f39c12, #e67e22);" onclick="return confirm('Möchtest du wirklich von Pro zu Basic downgraden?');">
               ⬇️ Zu Basic downgraden
             </button>
           </form>
@@ -540,18 +898,18 @@
             <input type="hidden" name="tier" value="basic">
             <input type="hidden" name="guildId" value="<%= guildId %>">
             <input type="hidden" name="billingPeriod" value="monthly" class="billing-period-input">
-            <button type="submit" class="btn-purchase">Jetzt upgraden</button>
+            <button type="submit" class="btn-purchase">🚀 Jetzt upgraden</button>
           </form>
         <% } %>
       </div>
 
       <!-- Pro Tier -->
       <div class="pricing-card popular <%= currentTier === 'pro' ? 'current' : '' %>">
+        <span class="tier-icon">🏆</span>
         <div class="tier-name">Premium Pro</div>
         <div class="tier-price">
-          <span class="price-monthly">€4.99</span>
-          <span class="price-yearly" style="display: none;">€49.99</span>
-          <span class="price-period">/Monat</span>
+          <span class="currency">€</span><span class="price-monthly">4.99</span><span class="price-yearly" style="display: none;">49.99</span>
+          <div class="price-period">/Monat</div>
         </div>
         <div class="tier-description">Für professionelle Teams</div>
 
@@ -571,25 +929,59 @@
             <input type="hidden" name="tier" value="pro">
             <input type="hidden" name="guildId" value="<%= guildId %>">
             <input type="hidden" name="billingPeriod" value="monthly" class="billing-period-input">
-            <button type="submit" class="btn-purchase">Jetzt upgraden</button>
+            <button type="submit" class="btn-purchase">🚀 Jetzt upgraden</button>
           </form>
         <% } %>
       </div>
     </div>
 
-    <div class="back-link" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-      <a href="/panel?guild=<%= guildId %>" class="btn-back">← Zurück zum Dashboard</a>
-      <a href="https://discord.com/invite/mnYbnpyyBS" target="_blank" class="btn-back" style="background: #5865F2; border-color: rgba(88, 101, 242, 0.5);">
+    <!-- Back Links -->
+    <div class="back-link">
+      <a href="/panel?guild=<%= guildId %>" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Zurück zum Dashboard
+      </a>
+      <a href="https://discord.com/invite/mnYbnpyyBS" target="_blank" rel="noopener noreferrer" class="btn-back btn-discord">
         <i class="fab fa-discord"></i> Support Server
       </a>
     </div>
   </div>
 
   <script>
-    // Global billing period state
+    // ===== Theme Management =====
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+
+      updateThemeButton(newTheme);
+    }
+
+    function updateThemeButton(theme) {
+      const icon = document.getElementById('theme-icon');
+      const text = document.getElementById('theme-text');
+
+      if (theme === 'dark') {
+        icon.className = 'fas fa-sun';
+        text.textContent = 'Light Mode';
+      } else {
+        icon.className = 'fas fa-moon';
+        text.textContent = 'Dark Mode';
+      }
+    }
+
+    // Load saved theme on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeButton(savedTheme);
+    });
+
+    // ===== Billing Period Toggle =====
     let currentBillingPeriod = 'monthly';
 
-    // Toggle billing period function
     function toggleBillingPeriod(period) {
       currentBillingPeriod = period;
 
@@ -618,7 +1010,7 @@
       console.log(`Billing period changed to: ${period}`);
     }
 
-    // Loading Overlay Functions
+    // ===== Loading Overlay Functions =====
     function showLoading(text) {
       const overlay = document.getElementById('loadingOverlay');
       const loadingText = document.getElementById('loadingText');
@@ -649,9 +1041,12 @@
     });
 
     // Loading animation for back button
-    const backBtn = document.querySelector('.btn-back');
-    if (backBtn) {
-      backBtn.addEventListener('click', function(e) {
+    const backBtns = document.querySelectorAll('.btn-back');
+    backBtns.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        // Don't prevent default for external links
+        if (this.hasAttribute('target')) return;
+
         e.preventDefault();
         const href = this.getAttribute('href');
 
@@ -659,9 +1054,9 @@
 
         setTimeout(() => {
           window.location.href = href;
-        }, 100);
+        }, 300);
       });
-    }
+    });
   </script>
   <script src="/js/auth-session.js"></script>
 </body>
