@@ -2654,14 +2654,21 @@
 
         const data = await response.json();
         console.log('[Uptime] Response data:', data);
+        console.log('[Uptime] data.success:', data.success);
+        console.log('[Uptime] data.uptime:', data.uptime);
+        console.log('[Uptime] data.status:', data.status);
 
         if (data.success && data.uptime) {
           // Use real 30-day uptime from UptimeRobot
-          const uptimePercent = data.uptime.day30 || 0;
+          const uptimePercent = parseFloat(data.uptime.day30) || 0;
+
+          console.log('[Uptime] Raw day30 value:', data.uptime.day30);
+          console.log('[Uptime] Parsed uptimePercent:', uptimePercent);
 
           // Display with 1 decimal place
-          document.getElementById('uptime-display').textContent = uptimePercent.toFixed(1);
-          console.log('[Uptime] Displayed:', uptimePercent.toFixed(1) + '%');
+          const displayValue = uptimePercent.toFixed(1);
+          document.getElementById('uptime-display').textContent = displayValue;
+          console.log('[Uptime] ✅ Displayed:', displayValue + '%');
 
           // Update status indicator if exists
           const statusEl = document.getElementById('uptime-status');
@@ -2679,7 +2686,7 @@
           }
         } else {
           // Fallback to default if UptimeRobot is not configured
-          console.warn('[Uptime] UptimeRobot not configured or error:', data.error || 'No success flag');
+          console.warn('[Uptime] ⚠️ UptimeRobot not configured or error:', data.error || 'No success flag');
           document.getElementById('uptime-display').textContent = '99.5';
 
           const statusEl = document.getElementById('uptime-status');
@@ -2689,7 +2696,7 @@
           }
         }
       } catch (err) {
-        console.error('[Uptime] Failed to load uptime:', err);
+        console.error('[Uptime] ❌ Failed to load uptime:', err);
         // Fallback to default value
         document.getElementById('uptime-display').textContent = '99.5';
 
