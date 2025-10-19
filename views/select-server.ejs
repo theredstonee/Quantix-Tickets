@@ -712,7 +712,7 @@
     <a href="/">
       <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : lang === 'zh' ? '返回首页' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Zur Startseite' %>
     </a>
-    <a href="/tickets" style="background: linear-gradient(135deg, #00ff88 0%, #00dd77 100%); color: #000; box-shadow: 0 4px 12px rgba(0,255,136,0.3);">
+    <a href="/my-tickets" id="myTicketsBtn" style="background: linear-gradient(135deg, #00ff88 0%, #00dd77 100%); color: #000; box-shadow: 0 4px 12px rgba(0,255,136,0.3);">
       <i class="fas fa-ticket-alt"></i> <%= lang === 'de' ? 'Meine Tickets' : lang === 'en' ? 'My Tickets' : lang === 'he' ? 'הכרטיסים שלי' : lang === 'ja' ? 'マイチケット' : lang === 'ru' ? 'Мои тикеты' : lang === 'pt' ? 'Meus Tickets' : lang === 'es' ? 'Mis Tickets' : lang === 'id' ? 'Tiket Saya' : lang === 'zh' ? '我的工单' : lang === 'ar' ? 'تذاكري' : 'Meine Tickets' %>
     </a>
     <a href="https://discord.com/invite/mnYbnpyyBS" target="_blank" style="background: #5865F2; color: white;">
@@ -1041,8 +1041,8 @@
 
         // Show loading overlay
         const loadingOverlay = document.getElementById('loadingOverlay');
-        const loadingText = document.getElementById('loadingText');
-        const loadingSubtext = document.getElementById('loadingSubtext');
+        const loadingText = loadingOverlay.querySelector('.loading-text');
+        const loadingSubtext = loadingOverlay.querySelector('.loading-subtext');
 
         // Founder Panel specific loading messages
         const messages = {
@@ -1066,6 +1066,45 @@
         if (loadingOverlay) loadingOverlay.classList.add('show');
 
         this.classList.add('loading');
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 300);
+      });
+    }
+
+    // Meine Tickets Button Loading Animation
+    const myTicketsBtn = document.getElementById('myTicketsBtn');
+    if (myTicketsBtn) {
+      myTicketsBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
+        // Show loading overlay
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = loadingOverlay.querySelector('.loading-text');
+        const loadingSubtext = loadingOverlay.querySelector('.loading-subtext');
+
+        // My Tickets specific loading messages
+        const messages = {
+          de: { text: 'Lade deine Tickets...', subtext: 'Bitte warten' },
+          en: { text: 'Loading your tickets...', subtext: 'Please wait' },
+          he: { text: 'טוען את הכרטיסים שלך...', subtext: 'אנא המתן' },
+          ja: { text: 'チケットを読み込み中...', subtext: 'お待ちください' },
+          ru: { text: 'Загрузка ваших тикетов...', subtext: 'Пожалуйста, подождите' },
+          pt: { text: 'Carregando seus tickets...', subtext: 'Por favor, aguarde' },
+          es: { text: 'Cargando tus tickets...', subtext: 'Por favor, espere' },
+          id: { text: 'Memuat tiket Anda...', subtext: 'Mohon tunggu' },
+          zh: { text: '正在加载您的工单...', subtext: '请稍候' },
+          ar: { text: 'تحميل تذاكرك...', subtext: 'يرجى الانتظار' }
+        };
+
+        const lang = '<%= lang %>' || 'de';
+        const message = messages[lang] || messages.de;
+
+        if (loadingText) loadingText.textContent = message.text;
+        if (loadingSubtext) loadingSubtext.textContent = message.subtext;
+        if (loadingOverlay) loadingOverlay.classList.add('show');
 
         setTimeout(() => {
           window.location.href = href;
