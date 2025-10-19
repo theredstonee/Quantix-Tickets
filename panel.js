@@ -3823,19 +3823,57 @@ module.exports = (client)=>{
           try {
             const user = await client.users.fetch(userId);
             if (user) {
-              const { EmbedBuilder } = require('discord.js');
-              const unblockEmbed = new EmbedBuilder()
-                .setTitle('✅ Quantix Tickets - Temporäre Sperre abgelaufen')
-                .setDescription(
-                  `**Deine temporäre Sperre ist abgelaufen.**\n\n` +
-                  `Du kannst dich jetzt wieder am Dashboard anmelden und den Bot nutzen.\n\n` +
-                  `Viel Erfolg mit deinem Ticket-System! 🎫`
-                )
-                .setColor(0x00ff88)
-                .setTimestamp()
-                .setFooter({ text: 'Quantix Tickets © 2025' });
+              const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-              await user.send({ embeds: [unblockEmbed] });
+              const unblockDate = new Date().toLocaleString('de-DE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+
+              let description = `Deine temporäre Sperre ist **automatisch abgelaufen** und dein Zugang zu **Quantix Tickets** wurde wiederhergestellt.\n\n`;
+
+              description += `**✅ Du hast jetzt wieder Zugriff auf:**\n`;
+              description += `• Dashboard-Login\n`;
+              description += `• Alle Panel-Funktionen\n`;
+              description += `• Server-Verwaltung\n\n`;
+
+              description += `**🎫 Nächste Schritte:**\n`;
+              description += `Du kannst dich jetzt wieder am Dashboard anmelden und dein Ticket-System verwalten.\n\n`;
+
+              description += `**⚠️ Wichtig:**\n`;
+              description += `Bitte beachte die Nutzungsbedingungen, um zukünftige Sperrungen zu vermeiden.\n\n`;
+
+              description += `Viel Erfolg mit deinem Ticket-System!`;
+
+              const unblockEmbed = new EmbedBuilder()
+                .setTitle('✅ Temporäre Sperre abgelaufen')
+                .setDescription(description)
+                .setColor(0x00ff88)
+                .addFields(
+                  { name: '🕒 Automatisch entsperrt am', value: unblockDate, inline: false }
+                )
+                .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
+                .setTimestamp()
+                .setFooter({ text: 'Quantix Tickets © 2025 • Automatische Benachrichtigung' });
+
+              // Dashboard & Support Buttons
+              const buttonRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                  .setURL(process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de')
+                  .setStyle(ButtonStyle.Link)
+                  .setLabel('Zum Dashboard')
+                  .setEmoji('🎫'),
+                new ButtonBuilder()
+                  .setURL('https://discord.com/invite/mnYbnpyyBS')
+                  .setStyle(ButtonStyle.Link)
+                  .setLabel('Support')
+                  .setEmoji('🛟')
+              );
+
+              await user.send({ embeds: [unblockEmbed], components: [buttonRow] });
               console.log(`📧 Auto-unblock notification sent to ${userBan.username} (${userId})`);
             }
           } catch (dmErr) {
@@ -4282,12 +4320,28 @@ module.exports = (client)=>{
         try {
           const user = await client.users.fetch(userId);
           if (user) {
-            const { EmbedBuilder } = require('discord.js');
+            const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-            let description = `**Dein Zugang zu Quantix Tickets wurde gesperrt.**\n\n**Grund:**\n${blockReason}\n\n`;
+            const blockedDate = new Date().toLocaleString('de-DE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
 
+            let description = `Dein Zugang zu **Quantix Tickets** wurde gesperrt.\n\n`;
+
+            // Reason field
+            description += `**📋 Grund:**\n> ${blockReason}\n\n`;
+
+            // Duration field
             if (isPermanent) {
-              description += `**Dauer:** Permanent\n\nDu kannst dich nicht mehr am Dashboard anmelden. Bei Fragen wende dich an den Support-Server.`;
+              description += `**⏰ Dauer:**\n> Permanent\n\n`;
+              description += `**❌ Konsequenzen:**\n`;
+              description += `• Du kannst dich nicht mehr am Dashboard anmelden\n`;
+              description += `• Alle aktiven Sessions wurden beendet\n`;
+              description += `• Der Zugriff wurde dauerhaft gesperrt\n\n`;
             } else {
               const expiryDate = new Date(expiresAt).toLocaleString('de-DE', {
                 day: '2-digit',
@@ -4296,17 +4350,40 @@ module.exports = (client)=>{
                 hour: '2-digit',
                 minute: '2-digit'
               });
-              description += `**Dauer:** Temporär (${duration} Tag${duration === '1' ? '' : 'e'})\n**Läuft ab am:** ${expiryDate}\n\nDu kannst dich bis zum Ablaufdatum nicht am Dashboard anmelden.`;
+              const daysText = duration === '1' ? '1 Tag' : `${duration} Tage`;
+              description += `**⏰ Dauer:**\n> Temporär - ${daysText}\n\n`;
+              description += `**📅 Läuft ab am:**\n> ${expiryDate}\n\n`;
+              description += `**❌ Konsequenzen:**\n`;
+              description += `• Du kannst dich bis zum Ablauf nicht am Dashboard anmelden\n`;
+              description += `• Alle aktiven Sessions wurden beendet\n`;
+              description += `• Nach Ablauf wird der Zugriff automatisch wiederhergestellt\n\n`;
             }
 
+            description += `**📞 Support:**\n`;
+            description += `Bei Fragen oder Einspruch wende dich an unseren Support-Server.`;
+
             const blockEmbed = new EmbedBuilder()
-              .setTitle('🚫 Quantix Tickets - Zugang gesperrt')
+              .setTitle('🚫 Zugang gesperrt')
               .setDescription(description)
               .setColor(0xe74c3c)
+              .addFields(
+                { name: '🕒 Gesperrt am', value: blockedDate, inline: true },
+                { name: '👤 Gesperrt von', value: sanitizeUsername(req.user.username || req.user.id), inline: true }
+              )
+              .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
               .setTimestamp()
-              .setFooter({ text: 'Quantix Tickets © 2025' });
+              .setFooter({ text: 'Quantix Tickets © 2025 • Automatische Benachrichtigung' });
 
-            await user.send({ embeds: [blockEmbed] });
+            // Support Server Button
+            const buttonRow = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setURL('https://discord.com/invite/mnYbnpyyBS')
+                .setStyle(ButtonStyle.Link)
+                .setLabel('Support Server')
+                .setEmoji('🛟')
+            );
+
+            await user.send({ embeds: [blockEmbed], components: [buttonRow] });
             console.log(`📧 ${isPermanent ? 'Permanent' : 'Temporary'} block notification sent to ${username} (${userId})`);
           }
         } catch (dmErr) {
@@ -4355,19 +4432,55 @@ module.exports = (client)=>{
         try {
           const user = await client.users.fetch(userId);
           if (user) {
-            const { EmbedBuilder } = require('discord.js');
-            const unblockEmbed = new EmbedBuilder()
-              .setTitle('✅ Quantix Tickets - Zugang wiederhergestellt')
-              .setDescription(
-                `**Dein Zugang zu Quantix Tickets wurde wiederhergestellt.**\n\n` +
-                `Du kannst dich jetzt wieder am Dashboard anmelden und den Bot nutzen.\n\n` +
-                `Viel Erfolg mit deinem Ticket-System! 🎫`
-              )
-              .setColor(0x00ff88)
-              .setTimestamp()
-              .setFooter({ text: 'Quantix Tickets © 2025' });
+            const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-            await user.send({ embeds: [unblockEmbed] });
+            const unblockDate = new Date().toLocaleString('de-DE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+
+            let description = `Deine Sperre wurde aufgehoben und dein Zugang zu **Quantix Tickets** wurde wiederhergestellt.\n\n`;
+
+            description += `**✅ Du hast jetzt wieder Zugriff auf:**\n`;
+            description += `• Dashboard-Login\n`;
+            description += `• Alle Panel-Funktionen\n`;
+            description += `• Server-Verwaltung\n\n`;
+
+            description += `**🎫 Nächste Schritte:**\n`;
+            description += `Du kannst dich jetzt wieder am Dashboard anmelden und dein Ticket-System verwalten.\n\n`;
+
+            description += `Viel Erfolg mit deinem Ticket-System!`;
+
+            const unblockEmbed = new EmbedBuilder()
+              .setTitle('✅ Zugang wiederhergestellt')
+              .setDescription(description)
+              .setColor(0x00ff88)
+              .addFields(
+                { name: '🕒 Entsperrt am', value: unblockDate, inline: true },
+                { name: '👤 Entsperrt von', value: sanitizeUsername(req.user.username || req.user.id), inline: true }
+              )
+              .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
+              .setTimestamp()
+              .setFooter({ text: 'Quantix Tickets © 2025 • Automatische Benachrichtigung' });
+
+            // Dashboard & Support Buttons
+            const buttonRow = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setURL(process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de')
+                .setStyle(ButtonStyle.Link)
+                .setLabel('Zum Dashboard')
+                .setEmoji('🎫'),
+              new ButtonBuilder()
+                .setURL('https://discord.com/invite/mnYbnpyyBS')
+                .setStyle(ButtonStyle.Link)
+                .setLabel('Support')
+                .setEmoji('🛟')
+            );
+
+            await user.send({ embeds: [unblockEmbed], components: [buttonRow] });
             console.log(`📧 Unblock notification sent to ${username} (${userId})`);
           }
         } catch (dmErr) {
