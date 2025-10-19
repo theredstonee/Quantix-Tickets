@@ -3004,6 +3004,15 @@
 
     // Send Panel
     async function sendPanel() {
+      // Get selected channel ID
+      const channelSelect = document.querySelector('select[name="panelChannelId"]');
+      const channelId = channelSelect ? channelSelect.value : '';
+
+      if (!channelId) {
+        alert("<%= lang === 'de' ? 'Bitte wähle einen Channel aus!' : 'Please select a channel!' %>");
+        return;
+      }
+
       const title = "<%= lang === 'de' ? 'Panel senden?' : 'Send Panel?' %>";
       const message = "<%= lang === 'de' ? 'Möchtest du die Panel-Nachricht jetzt senden?' : 'Do you want to send the panel message now?' %>";
 
@@ -3015,6 +3024,14 @@
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = '/panel/send';
+
+      // Add channelId as hidden input
+      const channelInput = document.createElement('input');
+      channelInput.type = 'hidden';
+      channelInput.name = 'channelId';
+      channelInput.value = channelId;
+      form.appendChild(channelInput);
+
       document.body.appendChild(form);
       form.submit();
     }
