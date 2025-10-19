@@ -167,16 +167,17 @@
     "operatedBy": "Dioperasikan oleh"
   },
   "logs": {
-    "ticketCreated": "Tiket dibuat",
-    "ticketClosed": "Tiket ditutup",
-    "ticketDeleted": "Tiket dihapus",
-    "ticketClaimed": "Tiket diklaim",
-    "ticketUnclaimed": "Tiket tidak diklaim",
-    "priorityChanged": "Prioritas diubah",
-    "userAdded": "Pengguna ditambahkan",
-    "userRemoved": "Pengguna dihapus",
-    "closeRequested": "Penutupan diminta",
-    "transcriptCreated": "Transkrip dibuat"
+    "ticket_created": "🆕 Tiket #{id} dibuat oleh {user} ({topic})",
+    "ticket_closed": "🔒 Tiket #{id} ditutup oleh {user}",
+    "ticket_claimed": "✅ Klaim Tiket #{id} oleh {user}",
+    "ticket_unclaimed": "🔄 Batalkan Klaim Tiket #{id} oleh {user}",
+    "user_added": "➕ Pengguna {user} ditambahkan ke Tiket #{id}",
+    "close_requested": "❓ Permintaan Tutup Tiket #{id} dari {user}",
+    "priority_changed": "⚙️ Tiket #{id} Prioritas {direction}: {priority}",
+    "config_updated": "⚙️ **Konfigurasi diperbarui** melalui panel",
+    "panel_sent": "📤 **Pesan panel dikirim** di {channel}",
+    "panel_edited": "✏️ **Pesan panel diperbarui** di {channel}",
+    "language_changed": "🌐 **Bahasa server diubah** ke {language}"
   },
   "tos": {
     "title": "Syarat Layanan",

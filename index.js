@@ -39,7 +39,7 @@ const {
   EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle,
   PermissionsBitField, ChannelType, Events, AttachmentBuilder,
-  StringSelectMenuBuilder
+  StringSelectMenuBuilder, ActivityType
 } = require('discord.js');
 const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
 const { VERSION, COPYRIGHT } = require('./version.config');
@@ -651,11 +651,46 @@ async function executeDeletion(deletion) {
   }
 }
 
+/**
+ * Status-Rotation - wechselt alle 10 Sekunden zwischen verschiedenen Status
+ */
+function startStatusRotation() {
+  let currentStatusIndex = 0;
+
+  const updateStatus = () => {
+    const serverCount = client.guilds.cache.size;
+
+    const statuses = [
+      { name: `auf ${serverCount} Servern`, type: ActivityType.Playing },
+      { name: `v${VERSION}`, type: ActivityType.Playing },
+      { name: `Quantix Development`, type: ActivityType.Playing }
+    ];
+
+    const status = statuses[currentStatusIndex];
+
+    client.user.setPresence({
+      activities: [{ name: status.name, type: status.type }],
+      status: 'online'
+    });
+
+    currentStatusIndex = (currentStatusIndex + 1) % statuses.length;
+  };
+
+  // Setze initialen Status
+  updateStatus();
+
+  // Wechsle alle 10 Sekunden
+  setInterval(updateStatus, 10000);
+}
+
 client.once('ready', async () => {
   await deployCommands();
   await cleanupOldServerData();
   initEmailService(); // Email-Benachrichtigungen initialisieren
   console.log(`🤖 ${client.user.tag} bereit`);
+
+  // Status-Rotation starten
+  startStatusRotation();
 
   // Premium Expiry Checker - läuft jede Minute
   startPremiumExpiryChecker();
