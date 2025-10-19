@@ -321,11 +321,17 @@ router.get('/transcript/:id', isAuthenticated, isAdminOrTeam, (req, res) => {
 
 // GET /api/uptime - Get UptimeRobot statistics
 router.get('/uptime', async (req, res) => {
+  console.log('[UptimeRobot API] Uptime-Anfrage erhalten');
+
   try {
     const apiKey = process.env.UPTIMEROBOT_API_KEY;
     const monitorId = process.env.UPTIMEROBOT_MONITOR_ID; // Optional: Spezifische Monitor-ID
 
+    console.log('[UptimeRobot API] API Key vorhanden:', !!apiKey);
+    console.log('[UptimeRobot API] Monitor ID:', monitorId || 'Nicht gesetzt (alle Monitore werden abgerufen)');
+
     if (!apiKey) {
+      console.warn('[UptimeRobot API] ❌ Kein API Key konfiguriert');
       return res.json({
         error: 'UptimeRobot API Key not configured',
         uptime: null,
@@ -334,9 +340,11 @@ router.get('/uptime', async (req, res) => {
     }
 
     // Fetch data from UptimeRobot API
+    console.log('[UptimeRobot API] Starte API-Abfrage...');
     const uptimeData = await getUptimeRobotData(apiKey, monitorId);
 
     if (!uptimeData || uptimeData.stat !== 'ok') {
+      console.error('[UptimeRobot API] ❌ API-Antwort fehlgeschlagen:', uptimeData?.stat || 'keine Daten');
       return res.json({
         error: 'Failed to fetch data from UptimeRobot',
         uptime: null,
@@ -344,9 +352,12 @@ router.get('/uptime', async (req, res) => {
       });
     }
 
+    console.log('[UptimeRobot API] ✅ API-Antwort erfolgreich (stat: ok)');
+
     const monitors = uptimeData.monitors;
 
     if (!monitors || monitors.length === 0) {
+      console.warn('[UptimeRobot API] ⚠️ Keine Monitore gefunden');
       return res.json({
         error: 'No monitors found',
         uptime: null,
@@ -354,8 +365,16 @@ router.get('/uptime', async (req, res) => {
       });
     }
 
+    console.log('[UptimeRobot API] Gefundene Monitore:', monitors.length);
+
     // Get first monitor
     const monitor = monitors[0];
+    console.log('[UptimeRobot API] Monitor:', {
+      name: monitor.friendly_name,
+      url: monitor.url,
+      status: monitor.status,
+      uptime_ratios: monitor.custom_uptime_ratios
+    });
 
     // Calculate uptime percentages
     const uptimeRatios = monitor.custom_uptime_ratios || '';
@@ -363,6 +382,12 @@ router.get('/uptime', async (req, res) => {
     const uptime1Day = parseFloat(ratios[0]) || 0;
     const uptime7Days = parseFloat(ratios[1]) || 0;
     const uptime30Days = parseFloat(ratios[2]) || 0;
+
+    console.log('[UptimeRobot API] Uptime-Werte:', {
+      '1 Tag': uptime1Day + '%',
+      '7 Tage': uptime7Days + '%',
+      '30 Tage': uptime30Days + '%'
+    });
 
     // Status mapping
     const statusMap = {
@@ -374,8 +399,9 @@ router.get('/uptime', async (req, res) => {
     };
 
     const status = statusMap[monitor.status] || 'unknown';
+    console.log('[UptimeRobot API] Status:', status, `(Code: ${monitor.status})`);
 
-    res.json({
+    const response = {
       success: true,
       name: monitor.friendly_name,
       url: monitor.url,
@@ -390,10 +416,18 @@ router.get('/uptime', async (req, res) => {
         timestamp: monitor.logs[0].datetime,
         duration: monitor.logs[0].duration
       } : null
+    };
+
+    console.log('[UptimeRobot API] ✅ Antwort gesendet:', {
+      status: response.status,
+      uptime30Days: response.uptime.day30 + '%'
     });
 
+    res.json(response);
+
   } catch (err) {
-    console.error('Uptime API error:', err);
+    console.error('[UptimeRobot API] ❌ Unerwarteter Fehler:', err.message);
+    console.error('[UptimeRobot API] Stack:', err.stack);
     res.json({
       error: 'Internal server error',
       uptime: null,
@@ -410,6 +444,8 @@ router.get('/uptime', async (req, res) => {
 async function getUptimeRobotData(apiKey, monitorId = null) {
   const https = require('https');
 
+  console.log('[UptimeRobot API] Bereite HTTPS-Anfrage vor...');
+
   return new Promise((resolve, reject) => {
     const postDataObj = {
       api_key: apiKey,
@@ -422,7 +458,10 @@ async function getUptimeRobotData(apiKey, monitorId = null) {
 
     // Wenn Monitor-ID gesetzt ist, nur diesen Monitor abrufen
     if (monitorId) {
+      console.log('[UptimeRobot API] Spezifischer Monitor wird abgerufen:', monitorId);
       postDataObj.monitors = monitorId;
+    } else {
+      console.log('[UptimeRobot API] Alle Monitore werden abgerufen');
     }
 
     const postData = JSON.stringify(postDataObj);
@@ -439,7 +478,11 @@ async function getUptimeRobotData(apiKey, monitorId = null) {
       }
     };
 
+    console.log('[UptimeRobot API] Sende POST-Anfrage an:', `${options.hostname}${options.path}`);
+
     const req = https.request(options, (res) => {
+      console.log('[UptimeRobot API] HTTP Status Code:', res.statusCode);
+
       let data = '';
 
       res.on('data', (chunk) => {
@@ -447,21 +490,30 @@ async function getUptimeRobotData(apiKey, monitorId = null) {
       });
 
       res.on('end', () => {
+        console.log('[UptimeRobot API] Antwort empfangen, Größe:', data.length, 'Bytes');
         try {
           const jsonData = JSON.parse(data);
+          console.log('[UptimeRobot API] JSON erfolgreich geparst');
+          console.log('[UptimeRobot API] API Stat:', jsonData.stat);
+          console.log('[UptimeRobot API] Monitore in Antwort:', jsonData.monitors?.length || 0);
           resolve(jsonData);
         } catch (err) {
+          console.error('[UptimeRobot API] ❌ JSON-Parse-Fehler:', err.message);
+          console.error('[UptimeRobot API] Rohdaten:', data.substring(0, 200));
           reject(err);
         }
       });
     });
 
     req.on('error', (err) => {
+      console.error('[UptimeRobot API] ❌ HTTPS-Anfrage-Fehler:', err.message);
+      console.error('[UptimeRobot API] Fehlercode:', err.code);
       reject(err);
     });
 
     req.write(postData);
     req.end();
+    console.log('[UptimeRobot API] Anfrage gesendet, warte auf Antwort...');
   });
 }
 
