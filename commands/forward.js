@@ -68,17 +68,17 @@ module.exports = {
       }
 
       // Check if ticket is claimed
-      if (!ticket.claimedBy) {
+      if (!ticket.claimer || ticket.claimer === '') {
         return interaction.reply({
           content: '❌ Dieses Ticket muss zuerst geclaimed werden.',
           ephemeral: true
         });
       }
 
-      // Check if user is the claimer
-      if (ticket.claimedBy !== interaction.user.id) {
+      // Check if user is the claimer (convert both to string for comparison)
+      if (String(ticket.claimer) !== String(interaction.user.id)) {
         return interaction.reply({
-          content: '❌ Nur der aktuelle Claimer kann dieses Ticket weiterleiten.',
+          content: `❌ Nur der aktuelle Claimer kann dieses Ticket weiterleiten.\n\nAktueller Claimer: <@${ticket.claimer}>\nDeine ID: ${interaction.user.id}`,
           ephemeral: true
         });
       }
@@ -175,7 +175,7 @@ module.exports = {
             },
             {
               name: '👨‍💼 Aktueller Claimer',
-              value: `<@${ticket.claimedBy}>`,
+              value: `<@${ticket.claimer}>`,
               inline: true
             },
             {
@@ -270,8 +270,7 @@ module.exports = {
 
             if (buttonType === 'accept') {
               // Transfer claim to new user
-              currentTicket.claimedBy = i.user.id;
-              currentTicket.claimedAt = new Date().toISOString();
+              currentTicket.claimer = i.user.id;
               saveTickets(guildId, currentTickets);
 
               // Update channel permissions
