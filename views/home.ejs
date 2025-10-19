@@ -1982,18 +1982,79 @@
       };
     %><%= testimonialsTitle[lang] || testimonialsTitle.de %></h2>
     <p class="section-subtitle"><%
-      const testimonialsSubtitle = {
-        de: `${totalGuilds} Discord Server • ${totalTickets} Tickets bearbeitet • 4.9⭐ Bewertung`,
-        en: `${totalGuilds} Discord Servers • ${totalTickets} Tickets Processed • 4.9⭐ Rating`,
-        he: `${totalGuilds} שרתי Discord • ${totalTickets} כרטיסים שטופלו • דירוג 4.9⭐`,
-        ja: `${totalGuilds}台のDiscordサーバー • ${totalTickets}件のチケット処理済み • 4.9⭐評価`,
-        ru: `${totalGuilds} Discord серверов • ${totalTickets} тикетов обработано • Рейтинг 4.9⭐`,
-        pt: `${totalGuilds} Servidores Discord • ${totalTickets} Tickets Processados • Avaliação 4.9⭐`,
-        es: `${totalGuilds} Servidores Discord • ${totalTickets} Tickets Procesados • Calificación 4.9⭐`,
-        id: `${totalGuilds} Server Discord • ${totalTickets} Tiket Diproses • Rating 4.9⭐`,
-        ar: `${totalGuilds} خادم Discord • ${totalTickets} تذكرة معالجة • تقييم 4.9⭐`
+      const ratingText = averageRating > 0 ? `${averageRating}⭐` : '';
+      const ratingLabel = {
+        de: 'Bewertung',
+        en: 'Rating',
+        he: 'דירוג',
+        ja: '評価',
+        ru: 'Рейтинг',
+        pt: 'Avaliação',
+        es: 'Calificación',
+        id: 'Rating',
+        ar: 'تقييم'
       };
-    %><%= testimonialsSubtitle[lang] || testimonialsSubtitle.de %></p>
+      const noRatingText = {
+        de: 'Noch keine Bewertungen',
+        en: 'No ratings yet',
+        he: 'אין דירוגים עדיין',
+        ja: 'まだ評価はありません',
+        ru: 'Пока нет оценок',
+        pt: 'Ainda sem avaliações',
+        es: 'Aún sin calificaciones',
+        id: 'Belum ada rating',
+        ar: 'لا توجد تقييمات بعد'
+      };
+
+      let subtitle = `${totalGuilds} Discord Server • ${totalTickets} Tickets`;
+
+      if (lang === 'de') {
+        subtitle += ` bearbeitet`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingText} ${ratingLabel.de} (${totalRatings})`;
+        }
+      } else if (lang === 'en') {
+        subtitle += ` Processed`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingText} ${ratingLabel.en} (${totalRatings})`;
+        }
+      } else if (lang === 'he') {
+        subtitle = `${totalGuilds} שרתי Discord • ${totalTickets} כרטיסים שטופלו`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.he} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'ja') {
+        subtitle = `${totalGuilds}台のDiscordサーバー • ${totalTickets}件のチケット処理済み`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingText} ${ratingLabel.ja} (${totalRatings})`;
+        }
+      } else if (lang === 'ru') {
+        subtitle = `${totalGuilds} Discord серверов • ${totalTickets} тикетов обработано`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.ru} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'pt') {
+        subtitle = `${totalGuilds} Servidores Discord • ${totalTickets} Tickets Processados`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.pt} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'es') {
+        subtitle = `${totalGuilds} Servidores Discord • ${totalTickets} Tickets Procesados`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.es} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'id') {
+        subtitle = `${totalGuilds} Server Discord • ${totalTickets} Tiket Diproses`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.id} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'ar') {
+        subtitle = `${totalGuilds} خادم Discord • ${totalTickets} تذكرة معالجة`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.ar} ${ratingText} (${totalRatings})`;
+        }
+      }
+    %><%= subtitle %></p>
 
     <div class="testimonials-grid">
       <% if (feedbacks && feedbacks.length > 0) { %>

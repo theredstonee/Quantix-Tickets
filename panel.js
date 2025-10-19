@@ -847,12 +847,24 @@ module.exports = (client)=>{
 
     // Load feedbacks
     let feedbacks = [];
+    let averageRating = 0;
+    let totalRatings = 0;
+
     try {
       const feedbackFile = './feedback.json';
       if (fs.existsSync(feedbackFile)) {
-        feedbacks = JSON.parse(fs.readFileSync(feedbackFile, 'utf8'));
-        // Sort by timestamp (newest first) and limit to 6
-        feedbacks = feedbacks
+        const allFeedbacks = JSON.parse(fs.readFileSync(feedbackFile, 'utf8'));
+
+        // Calculate average rating (only from general feedbacks with rating > 0)
+        const ratedFeedbacks = allFeedbacks.filter(f => f.type === 'general' && f.rating && f.rating > 0);
+        if (ratedFeedbacks.length > 0) {
+          const totalRating = ratedFeedbacks.reduce((sum, f) => sum + f.rating, 0);
+          averageRating = (totalRating / ratedFeedbacks.length).toFixed(1);
+          totalRatings = ratedFeedbacks.length;
+        }
+
+        // Sort by timestamp (newest first) and limit to 6 for display
+        feedbacks = allFeedbacks
           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
           .slice(0, 6);
       }
@@ -867,7 +879,9 @@ module.exports = (client)=>{
       isAuthenticated: isAuthenticated,
       totalGuilds: totalGuilds || 150,
       totalTickets: totalTickets || 5000,
-      feedbacks: feedbacks
+      feedbacks: feedbacks,
+      averageRating: averageRating,
+      totalRatings: totalRatings
     });
   });
 
@@ -935,13 +949,20 @@ module.exports = (client)=>{
       const { name, email, type, message, rating } = req.body;
 
       // Validation (email is now optional)
-      if (!name || !type || !message || !rating) {
+      if (!name || !type || !message) {
         return res.redirect('/feedback?error=true');
       }
 
-      const ratingNum = parseInt(rating);
-      if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
-        return res.redirect('/feedback?error=true');
+      // Rating validation (only for general feedback)
+      let ratingNum = 0;
+      if (type === 'general') {
+        ratingNum = parseInt(rating);
+        if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+          return res.redirect('/feedback?error=true');
+        }
+      } else {
+        // For non-general feedback, rating is 0
+        ratingNum = 0;
       }
 
       const feedback = {

@@ -577,7 +577,7 @@
             ar: 'النوع'
           };
         %><%= typeLabel[lang] || typeLabel.de %> *</label>
-        <select name="type" required>
+        <select name="type" id="feedbackType" required>
           <option value=""><%
             const selectOption = {
               de: '-- Bitte wählen --',
@@ -659,7 +659,7 @@
         </select>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" id="ratingGroup" style="display: none;">
         <label><%
           const ratingLabel = {
             de: 'Bewertung',
@@ -680,7 +680,7 @@
           <i class="far fa-star" data-rating="4"></i>
           <i class="far fa-star" data-rating="5"></i>
         </div>
-        <input type="hidden" name="rating" id="ratingInput" value="" required>
+        <input type="hidden" name="rating" id="ratingInput" value="">
       </div>
 
       <div class="form-group">
@@ -761,9 +761,26 @@
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeIcon(savedTheme);
 
+    // Show/hide rating based on feedback type
+    const feedbackTypeSelect = document.getElementById('feedbackType');
+    const ratingGroup = document.getElementById('ratingGroup');
+    const ratingInput = document.getElementById('ratingInput');
+
+    feedbackTypeSelect.addEventListener('change', function() {
+      if (this.value === 'general') {
+        ratingGroup.style.display = 'block';
+        ratingInput.setAttribute('required', 'required');
+      } else {
+        ratingGroup.style.display = 'none';
+        ratingInput.removeAttribute('required');
+        ratingInput.value = '0'; // Set to 0 for non-general feedback
+        selectedRating = 0;
+        updateStars(0);
+      }
+    });
+
     // Star Rating System
     const stars = document.querySelectorAll('.star-rating i');
-    const ratingInput = document.getElementById('ratingInput');
     let selectedRating = 0;
 
     stars.forEach(star => {
@@ -799,38 +816,41 @@
       const typeInput = this.querySelector('select[name="type"]');
       const messageInput = this.querySelector('textarea[name="message"]');
 
-      if (!nameInput.value.trim() || !typeInput.value || !messageInput.value.trim() || !ratingInput.value || ratingInput.value === '0') {
+      // Basic validation
+      if (!nameInput.value.trim() || !typeInput.value || !messageInput.value.trim()) {
         e.preventDefault();
+        alert('<%
+          const requiredMsg = {
+            de: "Bitte fülle alle Pflichtfelder aus!",
+            en: "Please fill in all required fields!",
+            he: "אנא מלא את כל השדות הנדרשים!",
+            ja: "すべての必須フィールドに入力してください！",
+            ru: "Пожалуйста, заполните все обязательные поля!",
+            pt: "Por favor, preencha todos os campos obrigatórios!",
+            es: "¡Por favor, completa todos los campos obligatorios!",
+            id: "Silakan isi semua kolom yang wajib!",
+            ar: "يرجى ملء جميع الحقول المطلوبة!"
+          };
+        %><%= requiredMsg[lang] || requiredMsg.de %>');
+        return;
+      }
 
-        if (!ratingInput.value || ratingInput.value === '0') {
-          alert('<%
-            const alertMsg = {
-              de: "Bitte gib eine Bewertung ab!",
-              en: "Please select a rating!",
-              he: "אנא בחר דירוג!",
-              ja: "評価を選択してください！",
-              ru: "Пожалуйста, выберите рейтинг!",
-              pt: "Por favor, selecione uma avaliação!",
-              es: "¡Por favor, selecciona una calificación!",
-              id: "Silakan pilih penilaian!",
-              ar: "الرجاء اختيار تقييم!"
-            };
-          %><%= alertMsg[lang] || alertMsg.de %>');
-        } else {
-          alert('<%
-            const requiredMsg = {
-              de: "Bitte fülle alle Pflichtfelder aus!",
-              en: "Please fill in all required fields!",
-              he: "אנא מלא את כל השדות הנדרשים!",
-              ja: "すべての必須フィールドに入力してください！",
-              ru: "Пожалуйста, заполните все обязательные поля!",
-              pt: "Por favor, preencha todos os campos obrigatórios!",
-              es: "¡Por favor, completa todos los campos obligatorios!",
-              id: "Silakan isi semua kolom yang wajib!",
-              ar: "يرجى ملء جميع الحقول المطلوبة!"
-            };
-          %><%= requiredMsg[lang] || requiredMsg.de %>');
-        }
+      // Rating validation (only for general feedback)
+      if (typeInput.value === 'general' && (!ratingInput.value || ratingInput.value === '0')) {
+        e.preventDefault();
+        alert('<%
+          const alertMsg = {
+            de: "Bitte gib eine Bewertung ab!",
+            en: "Please select a rating!",
+            he: "אנא בחר דירוג!",
+            ja: "評価を選択してください！",
+            ru: "Пожалуйста, выберите рейтинг!",
+            pt: "Por favor, selecione uma avaliação!",
+            es: "¡Por favor, selecciona una calificación!",
+            id: "Silakan pilih penilaian!",
+            ar: "الرجاء اختيار تقييم!"
+          };
+        %><%= alertMsg[lang] || alertMsg.de %>');
       }
     });
 
