@@ -75,6 +75,91 @@
       margin: 0 auto;
     }
 
+    .nav-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-buttons a {
+      padding: 0.6rem 1.2rem;
+      background: var(--accent-color);
+      color: #000;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 2px solid transparent;
+    }
+
+    .nav-buttons a:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--shadow-color);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .loading-overlay.show {
+      display: flex;
+    }
+
+    .loading-content {
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      padding: 3rem;
+      border-radius: 20px;
+      border: 1px solid rgba(0,255,136,0.2);
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(0,255,136,0.1);
+      border-top: 6px solid var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 2rem;
+    }
+
+    .loading-text {
+      font-size: 1.3rem;
+      color: var(--accent-color);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .loading-subtext {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     h1 {
       color: var(--accent-color);
       margin-bottom: 2rem;
@@ -271,6 +356,15 @@
       Meine Tickets
     </h1>
 
+    <div class="nav-buttons">
+      <a href="/" id="homeBtn">
+        <i class="fas fa-home"></i> Zur Startseite
+      </a>
+      <a href="/select-server" id="selectServerBtn" style="background: linear-gradient(135deg, #00ff88 0%, #00dd77 100%); color: #000; box-shadow: 0 4px 12px rgba(0,255,136,0.3);">
+        <i class="fas fa-server"></i> Server auswählen
+      </a>
+    </div>
+
     <div class="stats">
       <div class="stat-card">
         <div class="stat-label">Gesamt</div>
@@ -360,6 +454,58 @@
         container.appendChild(card);
       });
     }
+
+    // Loading animation for Select Server button
+    const selectServerBtn = document.getElementById('selectServerBtn');
+    if (selectServerBtn) {
+      selectServerBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
+        // Show loading overlay
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = loadingOverlay.querySelector('.loading-text');
+        const loadingSubtext = loadingOverlay.querySelector('.loading-subtext');
+
+        loadingText.textContent = 'Lade Server-Auswahl...';
+        loadingSubtext.textContent = 'Bitte warten';
+        loadingOverlay.classList.add('show');
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 300);
+      });
+    }
+
+    // Loading animation for Home button
+    const homeBtn = document.getElementById('homeBtn');
+    if (homeBtn) {
+      homeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = loadingOverlay.querySelector('.loading-text');
+        const loadingSubtext = loadingOverlay.querySelector('.loading-subtext');
+
+        loadingText.textContent = 'Zur Startseite...';
+        loadingSubtext.textContent = 'Bitte warten';
+        loadingOverlay.classList.add('show');
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
+      });
+    }
   </script>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Lädt...</div>
+      <div class="loading-subtext">Bitte warten</div>
+    </div>
+  </div>
 </body>
 </html>
