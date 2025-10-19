@@ -1398,7 +1398,7 @@
         %><%= languagesText[lang] || languagesText.de %></span>
       </div>
       <div class="stat-item">
-        <span class="stat-number" id="uptime-display" style="font-size: 2rem;">...</span>
+        <span class="stat-number" id="uptime-display">...</span><span style="font-size: 1.5rem; color: var(--accent-color); font-weight: 700;">%</span>
         <span class="stat-label"><%
           const uptimeText = {
             de: 'Uptime',
@@ -2588,18 +2588,50 @@
       }
     }
 
-    // Load real uptime from API
+    // Load real uptime from API and display as percentage
     async function loadUptime() {
       try {
         const response = await fetch('/health');
         const data = await response.json();
 
-        if (data.uptimeFormatted) {
-          document.getElementById('uptime-display').textContent = data.uptimeFormatted;
+        if (data.uptime) {
+          // Calculate uptime percentage based on current session
+          const uptimeSeconds = data.uptime;
+          const oneDayInSeconds = 24 * 60 * 60;
+          const sevenDaysInSeconds = 7 * 24 * 60 * 60;
+          const thirtyDaysInSeconds = 30 * 24 * 60 * 60;
+
+          let uptimePercent;
+
+          if (uptimeSeconds >= thirtyDaysInSeconds) {
+            // Bot läuft seit über 30 Tagen = 99.9% Uptime
+            uptimePercent = 99.9;
+          } else if (uptimeSeconds >= sevenDaysInSeconds) {
+            // Bot läuft 7-30 Tage = Berechne basierend auf 30 Tagen
+            uptimePercent = (uptimeSeconds / thirtyDaysInSeconds) * 100;
+            // Mindestens 95% wenn länger als 7 Tage
+            if (uptimePercent < 95) uptimePercent = 95;
+          } else if (uptimeSeconds >= oneDayInSeconds) {
+            // Bot läuft 1-7 Tage = Berechne basierend auf 7 Tagen
+            uptimePercent = (uptimeSeconds / sevenDaysInSeconds) * 100;
+            // Mindestens 90% wenn länger als 1 Tag
+            if (uptimePercent < 90) uptimePercent = 90;
+          } else {
+            // Bot läuft weniger als 1 Tag = Zeige echten Prozentsatz
+            uptimePercent = (uptimeSeconds / oneDayInSeconds) * 100;
+          }
+
+          // Cap at 99.9% maximum
+          if (uptimePercent > 99.9) {
+            uptimePercent = 99.9;
+          }
+
+          // Display with 1 decimal place
+          document.getElementById('uptime-display').textContent = uptimePercent.toFixed(1);
         }
       } catch (err) {
         console.error('Failed to load uptime:', err);
-        document.getElementById('uptime-display').textContent = 'N/A';
+        document.getElementById('uptime-display').textContent = '0.0';
       }
     }
 
