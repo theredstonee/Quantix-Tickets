@@ -14,7 +14,28 @@
     "status": "ステータス",
     "created_by": "作成者",
     "claimed_by": "担当者",
-    "no_form": "フォームフィールドなし"
+    "no_form": "フォームフィールドなし",
+    "limit_reached": "❌ すでに{max}件の許可されたチケットのうち{current}件が開いています。新しいチケットを作成する前に、既存のチケットをクローズしてください。",
+    "status_changed": "🔔 チケットのステータスが変更されました",
+    "closed_notification": "チケットがクローズされました"
+  },
+  "autoClose": {
+    "warning_title": "非アクティブ警告",
+    "warning_description": "このチケットはしばらく更新されておらず、さらなる活動がない場合は**{days}日**で自動的にクローズされます。",
+    "prevent_title": "自動クローズを防ぐ方法",
+    "prevent_description": "このチャンネルでメッセージを送信するだけで、チケットをアクティブに保つことができます。",
+    "closed_title": "チケットが自動的にクローズされました",
+    "closed_description": "このチケットは非アクティブのため自動的にクローズされました。",
+    "reason_inactivity": "アクティビティなし"
+  },
+  "faq": {
+    "title": "よくある質問",
+    "description": "チケットを作成する前に、これらのよくある質問をご覧ください",
+    "problem_solved": "問題解決",
+    "create_ticket": "それでもチケットを作成",
+    "solved_title": "問題解決",
+    "solved_description": "素晴らしい！お役に立てて嬉しいです。\n\n後で助けが必要な場合は、いつでもチケットを作成できます。",
+    "no_faqs": "一致するFAQエントリが見つかりません"
   },
   "buttons": {
     "close": "クローズ",
@@ -293,5 +314,54 @@
     "category_limit_unlimited": "♾️ 無制限",
     "category_limit_hint": "💡 プレミアムベーシック：7カテゴリー | プレミアムプロ：無制限",
     "manage_subscription": "プレミアムサブスクリプションを管理 →"
+  },
+  "customBranding": {
+    "title": "カスタムブランディング",
+    "description": "チケット埋め込みの色とテキストをブランドに合わせてカスタマイズします。",
+    "primary_color": "プライマリカラー",
+    "success_color": "成功カラー",
+    "error_color": "エラーカラー",
+    "warning_color": "警告カラー",
+    "claim_button": "クレームボタンテキスト",
+    "close_button": "閉じるボタンテキスト",
+    "unclaim_button": "クレーム解除ボタンテキスト",
+    "reopen_button": "再オープンボタンテキスト",
+    "feature_locked": "カスタムブランディングはプレミアムプロでのみ利用可能です。"
+  },
+  "vip": {
+    "title": "VIPユーザーシステム",
+    "description": "最優先のVIPユーザーを管理",
+    "user_added": "VIPユーザーが追加されました",
+    "user_removed": "VIPユーザーが削除されました",
+    "user_already_vip": "すでにVIPユーザーです！",
+    "user_not_vip": "VIPユーザーではありません！",
+    "no_vip_users": "VIPユーザーが設定されていません。",
+    "vip_list": "VIPユーザーリスト",
+    "vip_total": "VIPユーザー合計",
+    "vip_role_set": "VIPロールが設定されました",
+    "vip_role_description": "VIPロールが次に設定されました",
+    "vip_assigned": "割り当て済み",
+    "vip_priority": "優先度",
+    "vip_highest": "VIP（最高）",
+    "feature_locked": "VIPシステムは特定のサーバーでのみ利用可能です。",
+    "vip_ticket_prefix": "✨vip-"
+  },
+  "department": {
+    "title": "部門",
+    "description": "チケットシステムのさまざまな部門を管理",
+    "forwarded": "チケット転送済み",
+    "forwarded_description": "このチケットは**{department}**に転送されました。",
+    "previous_department": "前の部門",
+    "new_department": "新しい部門",
+    "forwarded_by": "転送者",
+    "no_departments": "部門が設定されていません！管理者は最初にパネルで部門を作成する必要があります。",
+    "no_other_departments": "他の部門がありません。",
+    "not_in_ticket": "このコマンドはチケットチャンネルでのみ使用できます。",
+    "select_department": "部門を選択",
+    "forward_ticket": "チケット転送",
+    "forward_success": "**{department}**にチケットを正常に転送しました！",
+    "new_ticket_forwarded": "新しいチケットがあなたの部門に転送されました！",
+    "no_team": "チームなし",
+    "feature_locked": "マルチ部門サポートはプレミアムベーシック+でのみ利用可能です。"
   }
 }

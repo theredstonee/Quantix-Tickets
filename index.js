@@ -46,6 +46,10 @@ const { VERSION, COPYRIGHT } = require('./version.config');
 const { initEmailService, sendTicketNotification, getGuildEmail } = require('./email-notifications');
 const { sendDMNotification } = require('./dm-notifications');
 const { sanitizeUsername, validateDiscordId, sanitizeString } = require('./xss-protection');
+const { startAutoCloseService } = require('./auto-close-service');
+const { handleTagAdd, handleTagRemove } = require('./tag-handler');
+const { handleTemplateUse } = require('./template-handler');
+const { handleDepartmentForward } = require('./department-handler');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -190,6 +194,18 @@ function readCfg(guildId){
         },
         githubCommitsEnabled: true,
         githubWebhookChannelId: null,
+        maxTicketsPerUser: 3,
+        notifyUserOnStatusChange: true,
+        autoClose: {
+          enabled: false,
+          inactiveDays: 7,
+          warningDays: 2,
+          excludePriority: []
+        },
+        autoResponses: {
+          enabled: true,
+          responses: []
+        },
         ticketEmbed: {
           title: '🎫 Ticket #{ticketNumber}',
           description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
@@ -729,6 +745,9 @@ client.once('ready', async () => {
   // Premium Expiry Checker - läuft jede Minute
   startPremiumExpiryChecker();
 
+  // Auto-Close Service starten (Premium Pro Feature)
+  startAutoCloseService(client);
+
   // Pending Deletions Checker - läuft jede Minute
   startPendingDeletionsChecker();
 
@@ -1029,10 +1048,11 @@ function buildTicketEmbed(cfg, i, topic, nr){
   return e;
 }
 
-function buildChannelName(ticketNumber, priorityIndex){
+function buildChannelName(ticketNumber, priorityIndex, isVIP = false){
   const num = ticketNumber.toString().padStart(5,'0');
   const st  = PRIORITY_STATES[priorityIndex] || PRIORITY_STATES[0];
-  return `${PREFIX}${st.dot}ticket-${num}`;
+  const vipPrefix = isVIP ? '✨vip-' : '';
+  return `${PREFIX}${vipPrefix}${st.dot}ticket-${num}`;
 }
 const renameQueue = new Map();
 const RENAME_MIN_INTERVAL_MS = 3000;
@@ -1657,6 +1677,62 @@ client.on(Events.InteractionCreate, async i => {
       const topic = cfg.topics?.find(t=>t.value===i.values[0]);
       if(!topic) return i.reply({content:'Unbekanntes Thema',ephemeral:true});
 
+      // Check for FAQ/Auto-Responses (Free Feature)
+      if(cfg.autoResponses && cfg.autoResponses.enabled && cfg.autoResponses.responses && cfg.autoResponses.responses.length > 0) {
+        const relevantFAQs = cfg.autoResponses.responses.filter(faq => {
+          // Match by topic value/label
+          const topicMatch = faq.keywords.some(keyword =>
+            topic.value.toLowerCase().includes(keyword) ||
+            topic.label.toLowerCase().includes(keyword)
+          );
+          return topicMatch;
+        });
+
+        if(relevantFAQs.length > 0) {
+          // Show FAQ before creating ticket
+          const faqEmbed = new EmbedBuilder()
+            .setColor(0x00ff88)
+            .setTitle('💡 Häufig gestellte Fragen')
+            .setDescription(
+              `Bevor du ein Ticket erstellst, schau dir diese häufig gestellten Fragen an:\n\n` +
+              `**Thema:** ${topic.label}\n\n` +
+              `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+            );
+
+          relevantFAQs.slice(0, 5).forEach((faq, index) => {
+            faqEmbed.addFields({
+              name: `${index + 1}. ${faq.question}`,
+              value: faq.answer.substring(0, 1024),
+              inline: false
+            });
+          });
+
+          faqEmbed.setFooter({
+            text: 'Quantix Tickets • FAQ System',
+            iconURL: i.guild.iconURL({ size: 64 })
+          });
+
+          const faqButtons = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId(`faq_solved:${topic.value}`)
+              .setLabel('Problem gelöst')
+              .setStyle(ButtonStyle.Success)
+              .setEmoji('✅'),
+            new ButtonBuilder()
+              .setCustomId(`faq_create:${topic.value}`)
+              .setLabel('Trotzdem Ticket erstellen')
+              .setStyle(ButtonStyle.Primary)
+              .setEmoji('🎫')
+          );
+
+          return i.reply({
+            embeds: [faqEmbed],
+            components: [faqButtons],
+            ephemeral: true
+          });
+        }
+      }
+
       const formFields = getFormFieldsForTopic(cfg, topic.value);
 
       const resetPanelMessage = async () => {
@@ -1707,6 +1783,25 @@ client.on(Events.InteractionCreate, async i => {
       return await createTicketChannel(i, topic, {}, cfg);
     }
 
+    // Tag System Menu Handlers
+    if(i.isStringSelectMenu() && i.customId === 'tag_add_select') {
+      return await handleTagAdd(i);
+    }
+
+    if(i.isStringSelectMenu() && i.customId === 'tag_remove_select') {
+      return await handleTagRemove(i);
+    }
+
+    // Template System Menu Handler
+    if(i.isStringSelectMenu() && i.customId === 'template_use_select') {
+      return await handleTemplateUse(i);
+    }
+
+    // Department System Menu Handler
+    if(i.isStringSelectMenu() && i.customId === 'department_forward_select') {
+      return await handleDepartmentForward(i);
+    }
+
     if(i.isModalSubmit() && i.customId.startsWith('modal_newticket:')){
       const topicValue = i.customId.split(':')[1];
       const topic = cfg.topics?.find(t=>t.value===topicValue);
@@ -1745,6 +1840,71 @@ client.on(Events.InteractionCreate, async i => {
     }
 
     if(i.isButton()){
+      // FAQ Button Handlers
+      if(i.customId.startsWith('faq_solved:')){
+        const successEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('✅ Problem gelöst')
+          .setDescription(
+            'Großartig! Wir freuen uns, dass wir dir helfen konnten.\n\n' +
+            'Falls du später noch Hilfe benötigst, kannst du jederzeit ein Ticket erstellen.'
+          )
+          .setFooter({ text: 'Quantix Tickets • FAQ System' })
+          .setTimestamp();
+
+        await i.update({ embeds: [successEmbed], components: [] });
+        return;
+      }
+
+      if(i.customId.startsWith('faq_create:')){
+        const topicValue = i.customId.split(':')[1];
+        const topic = cfg.topics?.find(t=>t.value===topicValue);
+
+        if(!topic) {
+          return i.update({
+            content: '❌ Ungültiges Thema. Bitte wähle ein Thema aus dem Panel.',
+            embeds: [],
+            components: []
+          });
+        }
+
+        const formFields = getFormFieldsForTopic(cfg, topic.value);
+
+        if(formFields.length){
+          // Show modal with form fields
+          const modal = new ModalBuilder()
+            .setCustomId(`modal_newticket:${topic.value}`)
+            .setTitle(`Ticket: ${topic.label}`.substring(0,45));
+
+          formFields.forEach((f,idx)=>{
+            const nf = normalizeField(f,idx);
+            const inputBuilder = new TextInputBuilder()
+              .setCustomId(nf.id)
+              .setLabel(nf.label)
+              .setRequired(nf.required)
+              .setStyle(nf.style);
+
+            let placeholder = nf.placeholder;
+            if (nf.isNumber) {
+              placeholder = placeholder ? `${placeholder} (Nur Zahlen)` : 'Nur Zahlen erlaubt';
+            }
+            if (placeholder) {
+              inputBuilder.setPlaceholder(placeholder.substring(0, 100));
+            }
+
+            modal.addComponents(new ActionRowBuilder().addComponents(inputBuilder));
+          });
+
+          await i.update({ embeds: [], components: [] });
+          return i.showModal(modal);
+        }
+
+        // No form fields, create ticket directly
+        await i.update({ content: '🎫 Ticket wird erstellt...', embeds: [], components: [] });
+        await i.deferUpdate();
+        return await createTicketChannel(i, topic, {}, cfg);
+      }
+
       if(i.customId.startsWith('github_toggle:')){
         const guildId = i.customId.split(':')[1];
         if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
@@ -1988,7 +2148,39 @@ client.on(Events.InteractionCreate, async i => {
         case 'team_close':
         case 'close': {
          ticket.status = 'geschlossen';
+         ticket.closedAt = Date.now();
+         if(!ticket.statusHistory) ticket.statusHistory = [];
+         ticket.statusHistory.push({
+           status: 'geschlossen',
+           timestamp: Date.now(),
+           userId: i.user.id
+         });
          saveTickets(guildId, log);
+
+         // Send DM notification to ticket creator if enabled
+         if(cfg.notifyUserOnStatusChange !== false){
+           try {
+             const creator = await client.users.fetch(ticket.userId).catch(()=>null);
+             if(creator){
+               const dmEmbed = new EmbedBuilder()
+                 .setColor(0xff4444)
+                 .setTitle('🔐 Ticket geschlossen')
+                 .setDescription(
+                   `Dein Ticket wurde geschlossen.\n\n` +
+                   `**Server:** ${i.guild.name}\n` +
+                   `**Ticket:** #${String(ticket.id).padStart(5, '0')}\n` +
+                   `**Thema:** ${ticket.topic}\n` +
+                   `**Geschlossen von:** ${i.user.tag}`
+                 )
+                 .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+                 .setTimestamp();
+
+               await creator.send({ embeds: [dmEmbed] }).catch(()=>{});
+             }
+           } catch(dmErr){
+             console.error('DM notification error on ticket close:', dmErr);
+           }
+         }
 
         const closer = await i.guild.members.fetch(i.user.id).catch(()=>null);
         const closerTag  = sanitizeUsername(closer?.user?.tag || i.user.tag || i.user.username || i.user.id);
@@ -2278,20 +2470,77 @@ client.on(Events.InteractionCreate, async i => {
   }
 });
 
+function getUserOpenTickets(guildId, userId){
+  const ticketsPath = getTicketsPath(guildId);
+  if(!fs.existsSync(ticketsPath)) return [];
+  const allTickets = safeRead(ticketsPath, []);
+  return allTickets.filter(t => t.userId === userId && t.status === 'offen');
+}
+
+function canUserCreateTicket(guildId, userId){
+  const cfg = readCfg(guildId);
+  const maxTickets = cfg.maxTicketsPerUser || 0;
+  if(maxTickets === 0) return { allowed: true };
+
+  const openTickets = getUserOpenTickets(guildId, userId);
+  if(openTickets.length >= maxTickets){
+    return {
+      allowed: false,
+      current: openTickets.length,
+      max: maxTickets
+    };
+  }
+  return { allowed: true, current: openTickets.length, max: maxTickets };
+}
+
 async function createTicketChannel(interaction, topic, formData, cfg){
   const guildId = interaction.guild.id;
+  const userId = interaction.user.id;
+
+  // Check VIP status (only for VIP Server 1403053662825222388)
+  const VIP_SERVER_ID = '1403053662825222388';
+  const isVIP = guildId === VIP_SERVER_ID && cfg.vipUsers && cfg.vipUsers.includes(userId);
+
+  // Check ticket limit
+  const limitCheck = canUserCreateTicket(guildId, userId);
+  if(!limitCheck.allowed){
+    const lang = getGuildLanguage(guildId);
+    const errorMsg = t(guildId, 'ticket.limit_reached', {
+      current: limitCheck.current,
+      max: limitCheck.max
+    });
+    await interaction.reply({ content: errorMsg, ephemeral: true });
+    return;
+  }
+
   const nr = nextTicket(guildId);
 
   let parentId = null;
-  const categoryIds = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
-  if(categoryIds.length > 0 && categoryIds[0]){
+
+  // VIP users get their own category if configured
+  if(isVIP && cfg.vipCategoryId){
     try {
-      const category = await interaction.guild.channels.fetch(categoryIds[0].trim());
-      if(category && category.type === ChannelType.GuildCategory){
-        parentId = category.id;
+      const vipCategory = await interaction.guild.channels.fetch(cfg.vipCategoryId.trim());
+      if(vipCategory && vipCategory.type === ChannelType.GuildCategory){
+        parentId = vipCategory.id;
       }
     } catch {
-      console.error('Kategorie nicht gefunden:', categoryIds[0]);
+      console.error('VIP-Kategorie nicht gefunden:', cfg.vipCategoryId);
+    }
+  }
+
+  // Fallback to normal category
+  if(!parentId){
+    const categoryIds = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
+    if(categoryIds.length > 0 && categoryIds[0]){
+      try {
+        const category = await interaction.guild.channels.fetch(categoryIds[0].trim());
+        if(category && category.type === ChannelType.GuildCategory){
+          parentId = category.id;
+        }
+      } catch {
+        console.error('Kategorie nicht gefunden:', categoryIds[0]);
+      }
     }
   }
 
@@ -2323,7 +2572,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   }
 
   const ch = await interaction.guild.channels.create({
-    name: buildChannelName(nr,0),
+    name: buildChannelName(nr, 0, isVIP),
     type: ChannelType.GuildText,
     parent: parentId,
     permissionOverwrites: permOverwrites
@@ -2363,7 +2612,24 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   const ticketsPath = getTicketsPath(guildId);
   if(!fs.existsSync(ticketsPath)) safeWrite(ticketsPath, []);
   const log = safeRead(ticketsPath, []);
-  log.push({ id:nr, channelId:ch.id, userId:interaction.user.id, topic:topic.value, status:'offen', priority:0, timestamp:Date.now(), formData, addedUsers:[] });
+  log.push({
+    id:nr,
+    channelId:ch.id,
+    userId:interaction.user.id,
+    topic:topic.value,
+    status:'offen',
+    priority:0,
+    timestamp:Date.now(),
+    formData,
+    addedUsers:[],
+    notes: [],
+    isVIP: isVIP || false,
+    statusHistory: [{
+      status: 'offen',
+      timestamp: Date.now(),
+      userId: interaction.user.id
+    }]
+  });
   safeWrite(ticketsPath, log);
   logEvent(interaction.guild, t(guildId, 'logs.ticket_created', { id: nr, user: `<@${interaction.user.id}>`, topic: topic.label }));
 
@@ -2591,6 +2857,30 @@ client.on(Events.MessageCreate, async (message) => {
               description: 'Leitet ein Ticket an ein anderes Team-Mitglied weiter (Pro Feature)',
               permission: 'Claimer',
               canUse: true
+            },
+            {
+              name: '/tag',
+              description: 'Verwaltet Tags für Tickets (Basic+ Feature)',
+              permission: 'Team',
+              canUse: true
+            },
+            {
+              name: '/template',
+              description: 'Verwendet vordefinierte Antwort-Vorlagen (Basic+ Feature)',
+              permission: 'Team',
+              canUse: true
+            },
+            {
+              name: '/department',
+              description: 'Verwaltet Abteilungen und leitet Tickets weiter (Basic+ Feature)',
+              permission: 'Team',
+              canUse: true
+            },
+            {
+              name: '/vip',
+              description: 'Verwaltet VIP-User (Nur auf bestimmten Servern)',
+              permission: 'Administrator',
+              canUse: isAdmin
             }
           ]
         },
@@ -2720,7 +3010,8 @@ client.on(Events.MessageCreate, async (message) => {
                           cmd.permission === 'Administrator' ? '⚙️' :
                           cmd.permission === 'Owner' ? '👑' :
                           cmd.permission === 'Founder' ? '⭐' :
-                          cmd.permission === 'Claimer' ? '🎫' : '🔒';
+                          cmd.permission === 'Claimer' ? '🎫' :
+                          cmd.permission === 'Team' ? '👥' : '🔒';
 
           fieldValue += `${statusIcon} **${cmd.name}**\n`;
           fieldValue += `   └ 📝 ${cmd.description}\n`;

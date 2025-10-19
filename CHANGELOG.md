@@ -1,5 +1,96 @@
 # Changelog
 
+## [1.2.0] - 2025-10-19
+
+### 🎉 Major Premium Features Release
+
+Dieses Update bringt zahlreiche neue Premium-Features für Basic+ und Pro-Tier, sowie umfassende Analytics-Funktionen.
+
+### Added
+
+#### 🏷️ **Tag/Label System** (Basic+ Feature)
+- Tickets können mit benutzerdefinierten Tags versehen werden (z.B. "Bug", "Dringend", "In Bearbeitung")
+- `/tag add` - Tags zu Tickets hinzufügen
+- `/tag remove` - Tags von Tickets entfernen
+- `/tag list` - Alle verfügbaren Tags anzeigen
+- Farb-kodierte Labels für bessere Übersicht im Dashboard
+- Filterung nach Tags in der Ticket-Übersicht
+- Panel-UI für Tag-Verwaltung mit Emoji, Name und Farbe
+- Vollständige Integration in Ticket-Cards und Table-View
+
+#### 📝 **Ticket-Vorlagen System** (Basic+ Feature)
+- Admins können vordefinierte Antworten erstellen
+- `/template use` - Vorlage in Ticket senden
+- `/template list` - Alle Vorlagen anzeigen
+- Schnellantworten per Dropdown-Menü
+- Markdown-Formatierung wird unterstützt
+- Custom Embed-Farben pro Vorlage
+- Panel-UI für Vorlagen-Verwaltung
+- Spart Zeit bei wiederkehrenden Fragen
+
+#### 🎨 **Custom Branding** (Pro Feature)
+- Eigene Embed-Farben für Tickets
+- Custom Button-Texte (Claimen, Schließen, Unclaimen, Erneut öffnen)
+- 4 anpassbare Farben: Primary, Success, Error, Warning
+- Panel-UI mit Color-Pickern für einfache Anpassung
+- Vollständige Integration in alle Ticket-Embeds
+
+#### ✨ **VIP-User System** (Server-spezifisch)
+- Nur verfügbar auf Server ID: 1403053662825222388
+- `/vip add` - VIP-User hinzufügen
+- `/vip remove` - VIP-User entfernen
+- `/vip list` - Alle VIP-User anzeigen
+- `/vip role` - VIP-Rolle festlegen
+- VIP-User bekommen höchste Priorität
+- Separate VIP-Queue möglich
+- Channel-Namen mit ✨vip- Prefix
+- Automatische Rollen-Zuweisung
+
+#### 🏢 **Multi-Department Support** (Basic+ Feature)
+- Verschiedene Abteilungen (Sales, Support, Billing) erstellen
+- `/department forward` - Tickets zwischen Abteilungen weiterleiten
+- `/department list` - Alle Abteilungen anzeigen
+- Separate Teams pro Abteilung
+- Automatische Berechtigungswechsel beim Weiterleiten
+- Panel-UI für Abteilungs-Verwaltung mit Emoji, Name, Beschreibung und Team-Rolle
+- Notification beim Weiterleiten mit vollständiger Historie
+
+#### 📊 **Heatmap & Insights** (Basic+ Feature)
+- Wann werden die meisten Tickets erstellt? (Stundenweise + Wochentag)
+- Welche Topics sind am häufigsten?
+- Durchschnittliche Lösungszeit pro Topic mit Performance-Rating
+- 30-Tage Trend-Analyse
+- Visualisierung mit Bar-Charts und Tabellen
+- Integriert im Analytics-Dashboard
+
+#### 📈 **Erweiterte Reports** (Pro Feature)
+- CSV Export von Tickets mit allen Details
+- CSV Export von Statistiken
+- UTF-8 BOM für Excel-Kompatibilität
+- Filterung nach Zeitraum, Status, Priorität
+- Lösungszeit-Tracking in Stunden
+- Export-Buttons im Analytics-Dashboard
+
+#### 🌍 **Übersetzungen**
+- Alle neuen Features vollständig übersetzt in 9 Sprachen
+- Sprachen: Deutsch, Englisch, Hebräisch, Japanisch, Russisch, Portugiesisch, Spanisch, Indonesisch, Arabisch
+- Custom Branding, VIP-System, Department-System vollständig lokalisiert
+
+### Changed
+- Analytics-Dashboard erweitert mit 8 neuen Visualisierungen
+- Premium-System erweitert mit 8 neuen Feature-Flags
+- Panel-UI erheblich erweitert (Premium-Tab um ~800 Zeilen gewachsen)
+- Ticket-Dashboard unterstützt jetzt Tag-Filterung
+
+### Technical
+- Neue Handler-Dateien: `tag-handler.js`, `template-handler.js`, `department-handler.js`
+- Neue Utility-Dateien: `insights-analytics.js`, `export-utils.js`
+- Neue Commands: `/tag`, `/template`, `/department`, `/vip`
+- Erweiterte Panel-Backend-Logik für alle neuen Features
+- XSS-Protection für alle User-Inputs
+
+---
+
 ## [1.0.4] - 2025-10-19
 
 ### Added

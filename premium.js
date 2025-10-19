@@ -39,7 +39,12 @@ function getDefaultConfig() {
         emailNotifications: false,
         dmNotifications: false,
         unlimitedCategories: false,
-        maxCategories: 5
+        maxCategories: 5,
+        customTags: false,
+        templates: false,
+        slaTimer: false,
+        ratingSystem: false,
+        autoAssignment: false
       }
     }
   };
@@ -60,7 +65,15 @@ const PREMIUM_TIERS = {
       emailNotifications: false,
       dmNotifications: false,
       unlimitedCategories: false,
-      maxCategories: 5
+      maxCategories: 5,
+      customTags: false,
+      templates: false,
+      slaTimer: false,
+      ratingSystem: false,
+      autoAssignment: false,
+      customBranding: false,
+      vipSystem: false,
+      multiDepartment: false
     }
   },
   basic: {
@@ -76,7 +89,15 @@ const PREMIUM_TIERS = {
       emailNotifications: false,
       dmNotifications: false,
       unlimitedCategories: false,
-      maxCategories: 7
+      maxCategories: 7,
+      customTags: true,
+      templates: true,
+      slaTimer: true,
+      ratingSystem: false,
+      autoAssignment: false,
+      customBranding: false,
+      vipSystem: false,
+      multiDepartment: true
     }
   },
   pro: {
@@ -92,7 +113,15 @@ const PREMIUM_TIERS = {
       emailNotifications: true,
       dmNotifications: true,
       unlimitedCategories: true,
-      maxCategories: 999
+      maxCategories: 999,
+      customTags: true,
+      templates: true,
+      slaTimer: true,
+      ratingSystem: true,
+      autoAssignment: true,
+      customBranding: true,
+      vipSystem: false,
+      multiDepartment: true
     }
   },
   beta: {
@@ -108,7 +137,15 @@ const PREMIUM_TIERS = {
       emailNotifications: true,
       dmNotifications: true,
       unlimitedCategories: true,
-      maxCategories: 999
+      maxCategories: 999,
+      customTags: true,
+      templates: true,
+      slaTimer: true,
+      ratingSystem: true,
+      autoAssignment: true,
+      customBranding: true,
+      vipSystem: false,
+      multiDepartment: true
     }
   }
 };

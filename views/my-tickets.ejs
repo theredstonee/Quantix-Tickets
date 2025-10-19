@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <!-- Theme Manager - Load before anything else -->
+  <script src="/js/theme-manager.js"></script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SLMX16ZJ6Y"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-SLMX16ZJ6Y');
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Meine Tickets - Quantix Tickets</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="shortcut icon" href="/images/favicon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #f0f8ff;
+      --text-color: #1a1a2e;
+      --border-color: #bdd7ee;
+      --accent-color: #0ea5e9;
+      --accent-hover: #0284c7;
+      --glass-bg: rgba(240, 248, 255, 0.7);
+      --glass-border: rgba(14, 165, 233, 0.3);
+      --shadow-color: rgba(14, 165, 233, 0.15);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0a0a0a;
+      --text-color: #00ff88;
+      --border-color: #1a3a2a;
+      --accent-color: #00ff88;
+      --accent-hover: #00dd77;
+      --glass-bg: rgba(15, 21, 16, 0.7);
+      --glass-border: rgba(0, 255, 136, 0.3);
+      --shadow-color: rgba(0, 255, 136, 0.2);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      padding: 2rem;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.03;
+      animation: bgMove 20s linear infinite;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: var(--accent-color);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 16px var(--shadow-color);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .ticket-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 16px var(--shadow-color);
+      transition: all 0.3s ease;
+    }
+
+    .ticket-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--shadow-color);
+    }
+
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .ticket-id {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .priority-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .priority-0 {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+      border: 1px solid #22c55e;
+    }
+
+    .priority-1 {
+      background: rgba(251, 146, 60, 0.2);
+      color: #fb923c;
+      border: 1px solid #fb923c;
+    }
+
+    .priority-2 {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid #ef4444;
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-offen {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+      border: 1px solid #22c55e;
+    }
+
+    .status-geschlossen {
+      background: rgba(107, 114, 128, 0.2);
+      color: #6b7280;
+      border: 1px solid #6b7280;
+    }
+
+    .ticket-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .info-label {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    .info-value {
+      font-weight: 500;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      color: var(--accent-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 16px var(--shadow-color);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px var(--shadow-color);
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: var(--accent-color);
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .ticket-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .ticket-info {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+  </button>
+
+  <div class="container">
+    <h1>
+      <i class="fas fa-ticket-alt"></i>
+      Meine Tickets
+    </h1>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Gesamt</div>
+        <div class="stat-value" id="totalCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Offen</div>
+        <div class="stat-value" id="openCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Geschlossen</div>
+        <div class="stat-value" id="closedCount">0</div>
+      </div>
+    </div>
+
+    <div id="ticketsContainer"></div>
+  </div>
+
+  <script>
+    const tickets = JSON.parse('<%- tickets %>');
+    const guildMap = JSON.parse('<%- guildMap %>');
+
+    // Calculate stats
+    const openTickets = tickets.filter(t => t.status === 'offen');
+    const closedTickets = tickets.filter(t => t.status === 'geschlossen');
+
+    document.getElementById('totalCount').textContent = tickets.length;
+    document.getElementById('openCount').textContent = openTickets.length;
+    document.getElementById('closedCount').textContent = closedTickets.length;
+
+    // Render tickets
+    const container = document.getElementById('ticketsContainer');
+
+    if (tickets.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-inbox"></i>
+          <h2>Keine Tickets vorhanden</h2>
+          <p>Du hast noch keine Tickets erstellt.</p>
+        </div>
+      `;
+    } else {
+      tickets.forEach(ticket => {
+        const priorityLabels = ['Niedrig', 'Mittel', 'Hoch'];
+        const priorityLabel = priorityLabels[ticket.priority || 0];
+        const priorityClass = `priority-${ticket.priority || 0}`;
+        const statusClass = `status-${ticket.status || 'geschlossen'}`;
+        const statusLabel = ticket.status === 'offen' ? 'Offen' : 'Geschlossen';
+
+        const timestamp = new Date(ticket.timestamp).toLocaleString('de-DE');
+        const closedTime = ticket.closedAt ? new Date(ticket.closedAt).toLocaleString('de-DE') : '—';
+
+        const ticketId = String(ticket.id).padStart(5, '0');
+        const guildInfo = guildMap[ticket.guildId];
+
+        const card = document.createElement('div');
+        card.className = 'ticket-card';
+        card.innerHTML = `
+          <div class="ticket-header">
+            <div class="ticket-id">#${ticketId}</div>
+            <div style="display: flex; gap: 0.5rem;">
+              <span class="priority-badge ${priorityClass}">${priorityLabel}</span>
+              <span class="status-badge ${statusClass}">${statusLabel}</span>
+            </div>
+          </div>
+          <div class="ticket-info">
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-server"></i> Server</div>
+              <div class="info-value">${guildInfo ? guildInfo.name : 'Unbekannt'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-tag"></i> Thema</div>
+              <div class="info-value">${ticket.topic || '—'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-clock"></i> Erstellt</div>
+              <div class="info-value">${timestamp}</div>
+            </div>
+            ${ticket.closedAt ? `
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-check"></i> Geschlossen</div>
+              <div class="info-value">${closedTime}</div>
+            </div>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>

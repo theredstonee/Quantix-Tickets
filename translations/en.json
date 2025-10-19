@@ -14,7 +14,28 @@
     "status": "Status",
     "created_by": "Created by",
     "claimed_by": "Claimed by",
-    "no_form": "No form fields"
+    "no_form": "No form fields",
+    "limit_reached": "❌ You already have {current} of {max} allowed tickets open. Please close an existing ticket before creating a new one.",
+    "status_changed": "🔔 Ticket status has been changed",
+    "closed_notification": "Your ticket has been closed"
+  },
+  "autoClose": {
+    "warning_title": "Inactivity Warning",
+    "warning_description": "This ticket has not been updated for a while and will be automatically closed in **{days} days** if there is no further activity.",
+    "prevent_title": "How to prevent auto-close",
+    "prevent_description": "Simply send a message in this channel to keep the ticket active.",
+    "closed_title": "Ticket automatically closed",
+    "closed_description": "This ticket was automatically closed due to inactivity.",
+    "reason_inactivity": "No activity"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "description": "Before creating a ticket, take a look at these frequently asked questions",
+    "problem_solved": "Problem solved",
+    "create_ticket": "Create ticket anyway",
+    "solved_title": "Problem solved",
+    "solved_description": "Great! We're glad we could help you.\n\nIf you need help later, you can always create a ticket.",
+    "no_faqs": "No matching FAQ entries found"
   },
   "buttons": {
     "close": "Close",
@@ -269,5 +290,54 @@
     "category_limit_unlimited": "♾️ Unlimited",
     "category_limit_hint": "💡 With Premium Basic: 7 categories | With Premium Pro: Unlimited",
     "manage_subscription": "Manage your Premium subscription →"
+  },
+  "customBranding": {
+    "title": "Custom Branding",
+    "description": "Customize the colors and texts of your ticket embeds to match your brand.",
+    "primary_color": "Primary Color",
+    "success_color": "Success Color",
+    "error_color": "Error Color",
+    "warning_color": "Warning Color",
+    "claim_button": "Claim Button Text",
+    "close_button": "Close Button Text",
+    "unclaim_button": "Unclaim Button Text",
+    "reopen_button": "Reopen Button Text",
+    "feature_locked": "Custom Branding is only available with Premium Pro."
+  },
+  "vip": {
+    "title": "VIP User System",
+    "description": "Manage VIP users with highest priority",
+    "user_added": "VIP user added",
+    "user_removed": "VIP user removed",
+    "user_already_vip": "is already a VIP user!",
+    "user_not_vip": "is not a VIP user!",
+    "no_vip_users": "No VIP users configured.",
+    "vip_list": "VIP User List",
+    "vip_total": "VIP users total",
+    "vip_role_set": "VIP role configured",
+    "vip_role_description": "The VIP role has been set to",
+    "vip_assigned": "Assigned",
+    "vip_priority": "Priority",
+    "vip_highest": "VIP (Highest)",
+    "feature_locked": "VIP System is only available on specific servers.",
+    "vip_ticket_prefix": "✨vip-"
+  },
+  "department": {
+    "title": "Departments",
+    "description": "Manage different departments for your ticket system",
+    "forwarded": "Ticket forwarded",
+    "forwarded_description": "This ticket has been forwarded to **{department}**.",
+    "previous_department": "Previous Department",
+    "new_department": "New Department",
+    "forwarded_by": "Forwarded by",
+    "no_departments": "No departments configured! An admin must first create departments in the panel.",
+    "no_other_departments": "No other departments available.",
+    "not_in_ticket": "This command can only be used in a ticket channel.",
+    "select_department": "Select a department",
+    "forward_ticket": "Forward ticket",
+    "forward_success": "Ticket successfully forwarded to **{department}**!",
+    "new_ticket_forwarded": "New ticket has been forwarded to your department!",
+    "no_team": "No Team",
+    "feature_locked": "Multi-Department Support is only available with Premium Basic+."
   }
 }

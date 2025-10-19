@@ -860,6 +860,7 @@
   <script>
     window.__TICKETS = <%- tickets %>;
     window.__MEMBERS = <%- memberMap %>;
+    window.__CUSTOM_TAGS = <%- customTags %>;
     window.GUILD_ID  = '<%= guildId %>';
   </script>
 
@@ -894,6 +895,14 @@
           <option value="0">🟢 Grün (Niedrig)</option>
           <option value="1">🟠 Orange (Mittel)</option>
           <option value="2">🔴 Rot (Hoch)</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="tagFilter">🏷️ Tag</label>
+        <select id="tagFilter">
+          <option value="alle">Alle Tags</option>
+          <!-- Will be populated dynamically -->
         </select>
       </div>
     </div>
@@ -961,6 +970,7 @@
 <script>
   const ticketsRaw = window.__TICKETS || [];
   const memberMap = window.__MEMBERS || {}; // { id: { display, tag, nickname, username } }
+  const customTags = window.__CUSTOM_TAGS || [];
   const GUILD_ID = window.GUILD_ID || '';
 
   let tickets = ticketsRaw.slice();
@@ -969,6 +979,7 @@
   let statusFilter = 'alle';
   let claimFilter = 'alle';
   let prioFilter = 'alle';
+  let tagFilter = 'alle';
 
   const tbody = document.querySelector('#ticketsTable tbody');
   const dots = ['🟢','🟠','🔴'];
@@ -981,12 +992,31 @@
   }
   function fmt(ts){ const d=new Date(ts); return d.toLocaleDateString('de-DE',{day:'numeric',month:'numeric',year:'numeric'})+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
 
+  function renderTags(ticketTags){
+    if(!ticketTags || ticketTags.length === 0) return '';
+    return ticketTags.map(tagId => {
+      const tag = customTags.find(t => t.id === tagId);
+      if(!tag) return '';
+      const color = tag.color || '#00ff88';
+      return `<span class="tag-badge" style="background: ${color}; color: ${getBrightness(color) > 128 ? '#000' : '#fff'}; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-right: 4px; display: inline-block;">${tag.emoji || '🏷️'} ${tag.label}</span>`;
+    }).join('');
+  }
+
+  function getBrightness(hexColor){
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000;
+  }
+
   function apply(){
     let list = tickets.slice();
     if(statusFilter!=='alle') list = list.filter(t=>t.status===statusFilter);
     if(claimFilter==='claimed') list = list.filter(t=>!!t.claimer);
     if(claimFilter==='unclaimed') list = list.filter(t=>!t.claimer);
     if(prioFilter!=='alle') list = list.filter(t=>(t.priority||0)==+prioFilter);
+    if(tagFilter!=='alle') list = list.filter(t=> t.tags && t.tags.includes(tagFilter));
     const q = document.getElementById('search').value.trim().toLowerCase();
     if(q) list = list.filter(t=> (
       String(t.id).includes(q) ||
@@ -1023,11 +1053,12 @@
         const entries = Object.entries(t.formData).map(([k,v])=>`<dt>${esc(k)}:</dt><dd>${esc(v||'—')}</dd>`).join('');
         formDataHtml = `<dl class="form-data" id="fd-${t.id}">${entries}</dl>`;
       }
+      const tagsHtml = renderTags(t.tags);
       return `<tr data-status="${t.status}" data-claimed="${t.claimer? 'yes':'no'}" data-prio="${pr}">
         <td class="nowrap"><span class="badge">${t.id}</span></td>
         <td class="prio-dot">${dots[pr]}</td>
         <td class="status-${t.status}">${t.status}</td>
-        <td>${t.topic||''}</td>
+        <td>${t.topic||''}${tagsHtml ? `<br><div style="margin-top: 4px;">${tagsHtml}</div>` : ''}</td>
         <td><span class="badge" title="${t.userId||''}">${userName}</span></td>
         <td>${t.claimer? `<span class="badge" title="${t.claimer}">${claimerName}</span>`:''}</td>
         <td class="nowrap">${fmt(t.timestamp)}</td>
@@ -1043,6 +1074,7 @@
       const pr = t.priority||0;
       const userName = displayName(t.userId);
       const claimerName = displayName(t.claimer);
+      const tagsHtml = renderTags(t.tags);
       return `
         <div class="ticket-card" onclick="openTranscriptModal(${t.id})">
           <div class="ticket-card-header">
@@ -1050,6 +1082,7 @@
             <div class="ticket-card-priority">${dots[pr]}</div>
           </div>
           <div class="ticket-card-topic">${t.topic||'Kein Thema'}</div>
+          ${tagsHtml ? `<div style="margin: 8px 0;">${tagsHtml}</div>` : ''}
           <div class="ticket-card-info">
             <div><strong>Status:</strong> <span class="ticket-card-status ${t.status}">${t.status}</span></div>
             <div><strong>User:</strong> ${userName}</div>
@@ -1093,6 +1126,11 @@
     apply();
   });
 
+  document.getElementById('tagFilter').addEventListener('change', e => {
+    tagFilter = e.target.value;
+    apply();
+  });
+
   document.getElementById('search').addEventListener('input', apply);
   document.getElementById('refreshBtn').addEventListener('click', reloadData);
 
@@ -1103,6 +1141,20 @@
   async function reloadData(){
     try { const r = await fetch('/tickets/data?_=' + Date.now()); if(!r.ok) return; tickets = await r.json(); setTimes(); apply(); } catch{}
   }
+
+  // Populate tag filter dropdown
+  function populateTagFilter() {
+    const tagFilterSelect = document.getElementById('tagFilter');
+    if(customTags && customTags.length > 0) {
+      customTags.forEach(tag => {
+        const option = document.createElement('option');
+        option.value = tag.id;
+        option.textContent = `${tag.emoji || '🏷️'} ${tag.label}`;
+        tagFilterSelect.appendChild(option);
+      });
+    }
+  }
+  populateTagFilter();
 
   apply();
 

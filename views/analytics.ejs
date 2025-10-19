@@ -401,6 +401,16 @@
           <i class="fab fa-discord"></i>
           Support Server
         </a>
+        <% if (isPro) { %>
+        <a href="/export/tickets/csv" class="back-btn" style="background: linear-gradient(135deg, #10b981, #059669); border-color: rgba(16, 185, 129, 0.3);" title="Alle Tickets als CSV exportieren">
+          <i class="fas fa-file-csv"></i>
+          Export Tickets (CSV)
+        </a>
+        <a href="/export/stats/csv" class="back-btn" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border-color: rgba(99, 102, 241, 0.3);" title="Statistiken als CSV exportieren">
+          <i class="fas fa-chart-bar"></i>
+          Export Stats (CSV)
+        </a>
+        <% } %>
       </div>
     </div>
 
@@ -547,6 +557,190 @@
         </div>
       </div>
     </div>
+
+    <!-- HEATMAP & INSIGHTS (Basic+ Feature) -->
+    <% if (insights) { %>
+
+    <!-- Hourly Activity Heatmap -->
+    <div class="chart-container">
+      <h2 class="chart-title">🕐 Ticket-Erstellung nach Uhrzeit</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        Wann werden die meisten Tickets erstellt? (24-Stunden-Format)
+      </p>
+      <div class="bar-chart">
+        <%
+        const maxHourlyCount = Math.max(...insights.hourlyHeatmap) || 1;
+        insights.hourlyHeatmap.forEach((count, hour) => {
+          const percentage = (count / maxHourlyCount) * 100;
+          const hourLabel = hour.toString().padStart(2, '0') + ':00';
+        %>
+        <div class="bar-item" style="margin-bottom: 0.5rem;">
+          <div class="bar-label" style="min-width: 60px;"><%= hourLabel %></div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: <%= percentage %>%; background: linear-gradient(90deg, #0ea5e9, #0284c7);"><%= count %></div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Daily Activity Heatmap -->
+    <div class="chart-container">
+      <h2 class="chart-title">📅 Ticket-Erstellung nach Wochentag</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        An welchen Wochentagen kommen die meisten Tickets?
+      </p>
+      <div class="bar-chart">
+        <%
+        const dayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+        const maxDailyCount = Math.max(...insights.dailyHeatmap) || 1;
+        insights.dailyHeatmap.forEach((count, dayIndex) => {
+          const percentage = (count / maxDailyCount) * 100;
+        %>
+        <div class="bar-item">
+          <div class="bar-label" style="min-width: 100px;"><%= dayNames[dayIndex] %></div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: <%= percentage %>%; background: linear-gradient(90deg, #00ff88, #00dd77);"><%= count %></div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Topic Frequency Analysis -->
+    <% if (insights.topicFrequency && insights.topicFrequency.length > 0) { %>
+    <div class="chart-container">
+      <h2 class="chart-title">🔝 Häufigste Ticket-Kategorien</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        Welche Topics werden am häufigsten genutzt?
+      </p>
+      <div class="bar-chart">
+        <%
+        const topTopics = insights.topicFrequency.slice(0, 10);
+        const maxTopicFreq = topTopics[0]?.count || 1;
+        topTopics.forEach((item) => {
+          const percentage = (item.count / maxTopicFreq) * 100;
+        %>
+        <div class="bar-item">
+          <div class="bar-label"><%= item.topic %></div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: <%= percentage %>%; background: linear-gradient(90deg, #764ba2, #667eea);"><%= item.count %></div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Average Resolution Time by Topic -->
+    <% if (insights.averageResolutionByTopic && insights.averageResolutionByTopic.length > 0) { %>
+    <div class="chart-container">
+      <h2 class="chart-title">⏱️ Durchschnittliche Lösungszeit pro Kategorie</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        Wie schnell werden Tickets in verschiedenen Kategorien gelöst? (in Stunden)
+      </p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Kategorie</th>
+              <th>Gelöste Tickets</th>
+              <th>Ø Zeit</th>
+              <th>Bewertung</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% insights.averageResolutionByTopic.slice(0, 10).forEach((item) => {
+              const hours = item.averageHours;
+              const displayTime = hours < 1
+                ? Math.round(hours * 60) + ' Min'
+                : hours < 24
+                ? Math.round(hours * 10) / 10 + ' Std'
+                : Math.round(hours / 24 * 10) / 10 + ' Tage';
+
+              // Rating based on resolution time
+              let rating = '🟢 Schnell';
+              if (hours > 24) rating = '🔴 Langsam';
+              else if (hours > 6) rating = '🟠 Mittel';
+            %>
+            <tr>
+              <td><strong><%= item.topic %></strong></td>
+              <td><%= item.count %></td>
+              <td><%= displayTime %></td>
+              <td><%= rating %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- 30-Day Trend Analysis -->
+    <% if (insights.trendAnalysis) { %>
+    <div class="chart-container">
+      <h2 class="chart-title">📈 Trend-Analyse (Letzte 30 Tage)</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        Entwicklung der Ticket-Erstellung über die Zeit
+      </p>
+      <div class="bar-chart">
+        <%
+        const trendLabels = insights.trendAnalysis.labels;
+        const trendCounts = insights.trendAnalysis.counts;
+        const maxTrendCount = Math.max(...trendCounts) || 1;
+
+        trendLabels.forEach((label, index) => {
+          const count = trendCounts[index];
+          const percentage = (count / maxTrendCount) * 100;
+        %>
+        <div class="bar-item" style="margin-bottom: 0.3rem;">
+          <div class="bar-label" style="min-width: 70px; font-size: 0.85rem;"><%= label %></div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: <%= percentage %>%; background: linear-gradient(90deg, #10b981, #059669);"><%= count %></div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Overall Insights Summary -->
+    <div class="chart-container">
+      <h2 class="chart-title">💡 Gesamtauswertung</h2>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-icon">📊</span>
+          <h3>Gesamt Tickets</h3>
+          <div class="stat-value"><%= insights.totalTickets %></div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">✅</span>
+          <h3>Geschlossen</h3>
+          <div class="stat-value"><%= insights.closedTickets %></div>
+          <small style="opacity: 0.7;"><%= insights.totalTickets > 0 ? Math.round((insights.closedTickets / insights.totalTickets) * 100) : 0 %>%</small>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">📂</span>
+          <h3>Offen</h3>
+          <div class="stat-value"><%= insights.openTickets %></div>
+          <small style="opacity: 0.7;"><%= insights.totalTickets > 0 ? Math.round((insights.openTickets / insights.totalTickets) * 100) : 0 %>%</small>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">⏱️</span>
+          <h3>Ø Lösungszeit</h3>
+          <div class="stat-value">
+            <%= insights.averageResolutionTimeHours < 1
+              ? Math.round(insights.averageResolutionTimeHours * 60) + ' Min'
+              : insights.averageResolutionTimeHours < 24
+              ? Math.round(insights.averageResolutionTimeHours * 10) / 10 + ' Std'
+              : Math.round(insights.averageResolutionTimeHours / 24 * 10) / 10 + ' Tage'
+            %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <% } %>
 
   </div>
 

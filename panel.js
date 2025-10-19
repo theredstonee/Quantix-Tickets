@@ -14,6 +14,8 @@ const { JSDOM } = require('jsdom');
 const { VERSION, COPYRIGHT } = require('./version.config');
 const { handleAutoUpdate, showUpdateLog } = require('./auto-update');
 const { isPremium, hasFeature, getPremiumTier, getPremiumInfo, activatePremium, deactivatePremium, renewPremium, downgradePremium, cancelPremium, PREMIUM_TIERS } = require('./premium');
+const { getComprehensiveInsights } = require('./insights-analytics');
+const { generateCSVExport, generateStatsCSVExport } = require('./export-utils');
 const {
   sanitizeHtml,
   sanitizeText,
@@ -2143,6 +2145,115 @@ module.exports = (client)=>{
         cfg.dmNotificationUsers = [];
       }
 
+      // Process Tags (Basic+ Feature)
+      const customTags = [];
+      let tagIndex = 0;
+      while(true) {
+        const idKey = `tag_id_${tagIndex}`;
+        const labelKey = `tag_label_${tagIndex}`;
+        const emojiKey = `tag_emoji_${tagIndex}`;
+        const colorKey = `tag_color_${tagIndex}`;
+
+        // Check if tag exists
+        if(!Object.prototype.hasOwnProperty.call(req.body, idKey)) {
+          break;
+        }
+
+        const id = sanitizeString(req.body[idKey], 100);
+        const label = sanitizeString(req.body[labelKey], 50);
+        const emoji = sanitizeString(req.body[emojiKey], 10);
+        const color = sanitizeString(req.body[colorKey], 10);
+
+        if(id && label) {
+          customTags.push({
+            id: id,
+            label: label,
+            emoji: emoji || '🏷️',
+            color: color || '#00ff88'
+          });
+        }
+
+        tagIndex++;
+      }
+
+      cfg.customTags = customTags;
+
+      // Process Templates (Basic+ Feature)
+      const templates = [];
+      let templateIndex = 0;
+      while(true) {
+        const idKey = `template_id_${templateIndex}`;
+        const nameKey = `template_name_${templateIndex}`;
+        const descriptionKey = `template_description_${templateIndex}`;
+        const contentKey = `template_content_${templateIndex}`;
+        const colorKey = `template_color_${templateIndex}`;
+
+        // Check if template exists
+        if(!Object.prototype.hasOwnProperty.call(req.body, idKey)) {
+          break;
+        }
+
+        const id = sanitizeString(req.body[idKey], 100);
+        const name = sanitizeString(req.body[nameKey], 100);
+        const description = sanitizeString(req.body[descriptionKey], 150);
+        const content = sanitizeString(req.body[contentKey], 2000);
+        const color = sanitizeString(req.body[colorKey], 10);
+
+        if(id && name && content) {
+          templates.push({
+            id: id,
+            name: name,
+            description: description || '',
+            content: content,
+            color: color || '#0ea5e9'
+          });
+        }
+
+        templateIndex++;
+      }
+
+      cfg.templates = templates;
+
+      // Process Departments (Basic+ Feature)
+      const departments = [];
+      let deptIndex = 0;
+      while(true) {
+        const idKey = `dept_id_${deptIndex}`;
+        if(!Object.prototype.hasOwnProperty.call(req.body, idKey)) break;
+
+        const id = sanitizeString(req.body[idKey], 100);
+        const name = sanitizeString(req.body[`dept_name_${deptIndex}`], 100);
+        const emoji = sanitizeString(req.body[`dept_emoji_${deptIndex}`], 10);
+        const description = sanitizeString(req.body[`dept_description_${deptIndex}`], 500);
+        const teamRole = sanitizeString(req.body[`dept_teamRole_${deptIndex}`], 20);
+
+        if(id && name) {
+          departments.push({
+            id: id,
+            name: name,
+            emoji: emoji || '📁',
+            description: description || '',
+            teamRole: teamRole || ''
+          });
+        }
+
+        deptIndex++;
+      }
+
+      cfg.departments = departments;
+
+      // Process Custom Branding (Pro Feature)
+      cfg.branding = {
+        primaryColor: sanitizeString(req.body.brandingPrimaryColor, 10) || '#0ea5e9',
+        successColor: sanitizeString(req.body.brandingSuccessColor, 10) || '#00ff88',
+        errorColor: sanitizeString(req.body.brandingErrorColor, 10) || '#ff4444',
+        warningColor: sanitizeString(req.body.brandingWarningColor, 10) || '#ff9900',
+        claimButtonText: sanitizeString(req.body.brandingClaimButtonText, 50) || 'Ticket claimen',
+        closeButtonText: sanitizeString(req.body.brandingCloseButtonText, 50) || 'Ticket schließen',
+        unclaimButtonText: sanitizeString(req.body.brandingUnclaimButtonText, 50) || 'Unclaimen',
+        reopenButtonText: sanitizeString(req.body.brandingReopenButtonText, 50) || 'Erneut öffnen'
+      };
+
       // Process topics from individual card inputs (like form fields)
       const topics = [];
       let topicIndex = 0;
@@ -2249,6 +2360,62 @@ module.exports = (client)=>{
         color:       ensureHex(take('panelColor', prevPE.color), '#5865F2'),
         footer:      sanitizeString(take('panelFooter',      prevPE.footer), 2048)
       };
+
+      // Auto-Close Configuration (Premium Pro)
+      if (!cfg.autoClose) cfg.autoClose = {};
+      cfg.autoClose.enabled = req.body.autoCloseEnabled === 'on';
+      cfg.autoClose.inactiveDays = sanitizeNumber(req.body.autoCloseInactiveDays, 1, 365) || 7;
+      cfg.autoClose.warningDays = sanitizeNumber(req.body.autoCloseWarningDays, 1, 30) || 2;
+
+      // Parse excludePriority as array
+      if (req.body.autoCloseExcludePriority) {
+        const excludeStr = Array.isArray(req.body.autoCloseExcludePriority)
+          ? req.body.autoCloseExcludePriority
+          : [req.body.autoCloseExcludePriority];
+        cfg.autoClose.excludePriority = excludeStr
+          .map(p => parseInt(p, 10))
+          .filter(p => !isNaN(p) && p >= 0 && p <= 2);
+      } else {
+        cfg.autoClose.excludePriority = [];
+      }
+
+      // Multi-Ticket Configuration
+      cfg.maxTicketsPerUser = sanitizeNumber(req.body.maxTicketsPerUser, 0, 100) || 3;
+      cfg.notifyUserOnStatusChange = req.body.notifyUserOnStatusChange !== 'off';
+
+      // Auto-Responses / FAQ Configuration (Free Feature)
+      if (!cfg.autoResponses) cfg.autoResponses = { enabled: true, responses: [] };
+      cfg.autoResponses.enabled = req.body.autoResponsesEnabled !== 'off';
+
+      // Process auto-responses
+      const autoResponses = [];
+      let arIndex = 0;
+      while(true) {
+        const questionKey = `autoResponse_question_${arIndex}`;
+        const answerKey = `autoResponse_answer_${arIndex}`;
+        const keywordsKey = `autoResponse_keywords_${arIndex}`;
+
+        if(!Object.prototype.hasOwnProperty.call(req.body, questionKey)) {
+          break;
+        }
+
+        const question = sanitizeString(req.body[questionKey], 500);
+        const answer = sanitizeString(req.body[answerKey], 2000);
+        const keywords = sanitizeString(req.body[keywordsKey], 500);
+
+        if(question && answer) {
+          autoResponses.push({
+            question: question,
+            answer: answer,
+            keywords: keywords ? keywords.split(',').map(k => k.trim().toLowerCase()).filter(k => k) : [],
+            id: `ar_${arIndex}`
+          });
+        }
+
+        arIndex++;
+      }
+
+      cfg.autoResponses.responses = autoResponses;
 
       writeCfg(guildId, cfg);
 
@@ -2505,6 +2672,7 @@ module.exports = (client)=>{
       res.render('tickets', {
         tickets: JSON.stringify(tickets),
         memberMap: JSON.stringify(memberMap),
+        customTags: JSON.stringify(cfg.customTags || []),
         guildId: guildId,
         version: VERSION,
         isAdmin: req.isAdmin // Flag ob User Admin ist oder nur Team-Mitglied
@@ -2513,6 +2681,60 @@ module.exports = (client)=>{
   });
 
   router.get('/tickets/data', isAuth, (req,res)=>{ res.json(loadTickets(req.session.selectedGuild)); });
+
+  // User's own tickets (no admin required, just authenticated)
+  router.get('/my-tickets', async (req,res)=>{
+    try {
+      // Check if user is authenticated
+      if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
+
+      const userId = req.user.id;
+      const userGuilds = req.user.guilds || [];
+
+      // Collect all user's tickets across all their servers where the bot exists
+      let allUserTickets = [];
+      const guildMap = {};
+
+      for(const guildEntry of userGuilds) {
+        try {
+          const guildId = guildEntry.id;
+          const guild = await client.guilds.fetch(guildId).catch(()=>null);
+          if(!guild) continue; // Bot not on this server
+
+          const tickets = loadTickets(guildId);
+          const userTickets = tickets.filter(t => t.userId === userId);
+
+          if(userTickets.length > 0) {
+            guildMap[guildId] = {
+              name: sanitizeString(guild.name, 100),
+              icon: guild.iconURL({ size: 64 })
+            };
+
+            userTickets.forEach(ticket => {
+              ticket.guildId = guildId;
+              ticket.guildName = guildMap[guildId].name;
+              allUserTickets.push(ticket);
+            });
+          }
+        } catch(err) {
+          console.error(`Error loading tickets for guild ${guildEntry.id}:`, err);
+        }
+      }
+
+      // Sort by timestamp (newest first)
+      allUserTickets.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      res.render('my-tickets', {
+        tickets: JSON.stringify(allUserTickets),
+        guildMap: JSON.stringify(guildMap),
+        user: req.user,
+        version: VERSION
+      });
+    } catch(e){
+      console.error('Error in /my-tickets:', e);
+      res.status(500).send('Fehler beim Laden deiner Tickets');
+    }
+  });
 
   router.get('/transcript/:id', isAuthOrTeam, (req,res)=>{
     try {
@@ -2570,11 +2792,13 @@ module.exports = (client)=>{
     try {
       const guildId = req.session.selectedGuild;
 
-      // Prüfe ob Pro Feature (Beta hat auch Zugriff)
-      const premiumInfo = getPremiumInfo(guildId);
-      if (premiumInfo.tier !== 'pro' && premiumInfo.tier !== 'beta' && guildId !== '1291125037876904026') {
-        return res.redirect('/premium?msg=analytics-requires-pro');
+      // Analytics requires at least Basic+ (Insights) - Pro unlocks advanced reports
+      if (!hasFeature(guildId, 'statistics')) {
+        return res.redirect('/premium?msg=analytics-requires-basic');
       }
+
+      const premiumInfo = getPremiumInfo(guildId);
+      const isPro = premiumInfo.tier === 'pro' || premiumInfo.tier === 'beta' || guildId === '1291125037876904026';
 
       const tickets = loadTickets(guildId);
       const guild = await client.guilds.fetch(guildId);
@@ -2649,14 +2873,73 @@ module.exports = (client)=>{
         ? Math.round(stats.last30Days.month / 30 * 10) / 10
         : 0;
 
+      // Get comprehensive insights (Basic+ Feature)
+      const timeRange = req.query.range || 'all';
+      const insights = getComprehensiveInsights(guildId, timeRange);
+
       res.render('analytics', {
         guildName: guild.name,
         stats: stats,
+        insights: insights,
+        isPro: isPro,
+        timeRange: timeRange,
         guildId: guildId
       });
     } catch(e) {
       console.error('Analytics Error:', e);
       res.status(500).send('Fehler beim Laden der Analytics');
+    }
+  });
+
+  // CSV Export Routes (Pro Feature)
+  router.get('/export/tickets/csv', isAuth, async (req, res) => {
+    try {
+      const guildId = req.session.selectedGuild;
+
+      // Check if Pro tier
+      const premiumInfo = getPremiumInfo(guildId);
+      if (premiumInfo.tier !== 'pro' && premiumInfo.tier !== 'beta' && guildId !== '1291125037876904026') {
+        return res.status(403).send('CSV Export requires Premium Pro');
+      }
+
+      const options = {
+        startDate: req.query.startDate,
+        endDate: req.query.endDate,
+        status: req.query.status,
+        priority: req.query.priority
+      };
+
+      const csvContent = generateCSVExport(guildId, options);
+      const filename = `tickets_${guildId}_${Date.now()}.csv`;
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send('\uFEFF' + csvContent); // BOM for UTF-8 Excel compatibility
+    } catch (e) {
+      console.error('CSV Export Error:', e);
+      res.status(500).send('Fehler beim CSV-Export');
+    }
+  });
+
+  router.get('/export/stats/csv', isAuth, async (req, res) => {
+    try {
+      const guildId = req.session.selectedGuild;
+
+      // Check if Pro tier
+      const premiumInfo = getPremiumInfo(guildId);
+      if (premiumInfo.tier !== 'pro' && premiumInfo.tier !== 'beta' && guildId !== '1291125037876904026') {
+        return res.status(403).send('CSV Export requires Premium Pro');
+      }
+
+      const csvContent = generateStatsCSVExport(guildId);
+      const filename = `statistics_${guildId}_${Date.now()}.csv`;
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send('\uFEFF' + csvContent); // BOM for UTF-8 Excel compatibility
+    } catch (e) {
+      console.error('CSV Export Error:', e);
+      res.status(500).send('Fehler beim CSV-Export');
     }
   });
 

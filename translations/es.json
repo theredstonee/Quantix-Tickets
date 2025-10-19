@@ -14,7 +14,28 @@
     "status": "Estado",
     "created_by": "Creado por",
     "claimed_by": "Asignado a",
-    "no_form": "Sin campos de formulario"
+    "no_form": "Sin campos de formulario",
+    "limit_reached": "❌ Ya tienes {current} de {max} tickets abiertos permitidos. Por favor, cierra un ticket existente antes de crear uno nuevo.",
+    "status_changed": "🔔 El estado del ticket ha cambiado",
+    "closed_notification": "Tu ticket ha sido cerrado"
+  },
+  "autoClose": {
+    "warning_title": "Advertencia de Inactividad",
+    "warning_description": "Este ticket no se ha actualizado durante un tiempo y se cerrará automáticamente en **{days} días** si no hay más actividad.",
+    "prevent_title": "Cómo evitar el cierre automático",
+    "prevent_description": "Simplemente envía un mensaje en este canal para mantener el ticket activo.",
+    "closed_title": "Ticket cerrado automáticamente",
+    "closed_description": "Este ticket fue cerrado automáticamente debido a la inactividad.",
+    "reason_inactivity": "Sin actividad"
+  },
+  "faq": {
+    "title": "Preguntas Frecuentes",
+    "description": "Antes de crear un ticket, echa un vistazo a estas preguntas frecuentes",
+    "problem_solved": "Problema resuelto",
+    "create_ticket": "Crear ticket de todos modos",
+    "solved_title": "Problema resuelto",
+    "solved_description": "¡Genial! Nos alegra haber podido ayudarte.\n\nSi necesitas ayuda más tarde, siempre puedes crear un ticket.",
+    "no_faqs": "No se encontraron entradas de FAQ coincidentes"
   },
   "buttons": {
     "close": "Cerrar",
@@ -295,5 +316,54 @@
     "category_limit_unlimited": "♾️ Ilimitado",
     "category_limit_hint": "💡 Con Premium Básico: 7 categorías | Con Premium Pro: Ilimitado",
     "manage_subscription": "Administrar tu suscripción Premium →"
+  },
+  "customBranding": {
+    "title": "Marca Personalizada",
+    "description": "Personaliza los colores y textos de los embeds de tus tickets para que coincidan con tu marca.",
+    "primary_color": "Color Primario",
+    "success_color": "Color de Éxito",
+    "error_color": "Color de Error",
+    "warning_color": "Color de Advertencia",
+    "claim_button": "Texto del Botón de Reclamar",
+    "close_button": "Texto del Botón de Cerrar",
+    "unclaim_button": "Texto del Botón de Desreclamar",
+    "reopen_button": "Texto del Botón de Reabrir",
+    "feature_locked": "La Marca Personalizada solo está disponible con Premium Pro."
+  },
+  "vip": {
+    "title": "Sistema de Usuarios VIP",
+    "description": "Administra usuarios VIP con máxima prioridad",
+    "user_added": "Usuario VIP agregado",
+    "user_removed": "Usuario VIP eliminado",
+    "user_already_vip": "¡ya es un usuario VIP!",
+    "user_not_vip": "¡no es un usuario VIP!",
+    "no_vip_users": "No hay usuarios VIP configurados.",
+    "vip_list": "Lista de Usuarios VIP",
+    "vip_total": "Total de usuarios VIP",
+    "vip_role_set": "Rol VIP configurado",
+    "vip_role_description": "El rol VIP se ha establecido en",
+    "vip_assigned": "Asignado",
+    "vip_priority": "Prioridad",
+    "vip_highest": "VIP (Máxima)",
+    "feature_locked": "El Sistema VIP solo está disponible en servidores específicos.",
+    "vip_ticket_prefix": "✨vip-"
+  },
+  "department": {
+    "title": "Departamentos",
+    "description": "Administra diferentes departamentos para tu sistema de tickets",
+    "forwarded": "Ticket reenviado",
+    "forwarded_description": "Este ticket ha sido reenviado a **{department}**.",
+    "previous_department": "Departamento Anterior",
+    "new_department": "Nuevo Departamento",
+    "forwarded_by": "Reenviado por",
+    "no_departments": "¡No hay departamentos configurados! Un administrador debe crear primero departamentos en el panel.",
+    "no_other_departments": "No hay otros departamentos disponibles.",
+    "not_in_ticket": "Este comando solo se puede usar en un canal de ticket.",
+    "select_department": "Selecciona un departamento",
+    "forward_ticket": "Reenviar ticket",
+    "forward_success": "¡Ticket reenviado exitosamente a **{department}**!",
+    "new_ticket_forwarded": "¡Nuevo ticket ha sido reenviado a tu departamento!",
+    "no_team": "Sin Equipo",
+    "feature_locked": "El Soporte Multi-Departamento solo está disponible con Premium Básico+."
   }
 }

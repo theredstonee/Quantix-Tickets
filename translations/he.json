@@ -14,7 +14,28 @@
     "status": "סטטוס",
     "created_by": "נוצר על ידי",
     "claimed_by": "נתפס על ידי",
-    "no_form": "אין שדות טופס"
+    "no_form": "אין שדות טופס",
+    "limit_reached": "❌ יש לך כבר {current} מתוך {max} כרטיסים פתוחים מותרים. אנא סגור כרטיס קיים לפני יצירת כרטיס חדש.",
+    "status_changed": "🔔 סטטוס הכרטיס השתנה",
+    "closed_notification": "הכרטיס שלך נסגר"
+  },
+  "autoClose": {
+    "warning_title": "אזהרת חוסר פעילות",
+    "warning_description": "כרטיס זה לא עודכן זמן מה ויסגר אוטומטית תוך **{days} ימים** אם לא תהיה פעילות נוספת.",
+    "prevent_title": "כיצד למנוע סגירה אוטומטית",
+    "prevent_description": "פשוט שלח הודעה בערוץ זה כדי לשמור על הכרטיס פעיל.",
+    "closed_title": "כרטיס נסגר אוטומטית",
+    "closed_description": "כרטיס זה נסגר אוטומטית עקב חוסר פעילות.",
+    "reason_inactivity": "אין פעילות"
+  },
+  "faq": {
+    "title": "שאלות נפוצות",
+    "description": "לפני יצירת כרטיס, עיין בשאלות הנפוצות הבאות",
+    "problem_solved": "הבעיה נפתרה",
+    "create_ticket": "צור כרטיס בכל זאת",
+    "solved_title": "הבעיה נפתרה",
+    "solved_description": "מעולה! אנחנו שמחים שיכולנו לעזור לך.\n\nאם תצטרך עזרה מאוחר יותר, תמיד תוכל ליצור כרטיס.",
+    "no_faqs": "לא נמצאו רשומות שאלות נפוצות תואמות"
   },
   "buttons": {
     "close": "סגור",
@@ -244,5 +265,54 @@
     "section_10_title": "10. יצירת קשר ובקשות פרטיות",
     "section_10_text": "לבקשות פרטיות, צור איתנו קשר:",
     "back_to_tos": "חזרה לתנאי השימוש"
+  },
+  "customBranding": {
+    "title": "מיתוג מותאם אישית",
+    "description": "התאם אישית את הצבעים והטקסטים של הטיקטים שלך כדי להתאים למותג שלך.",
+    "primary_color": "צבע ראשי",
+    "success_color": "צבע הצלחה",
+    "error_color": "צבע שגיאה",
+    "warning_color": "צבע אזהרה",
+    "claim_button": "טקסט כפתור טען",
+    "close_button": "טקסט כפתור סגור",
+    "unclaim_button": "טקסט כפתור שחרר",
+    "reopen_button": "טקסט כפתור פתח מחדש",
+    "feature_locked": "מיתוג מותאם אישית זמין רק עם Premium Pro."
+  },
+  "vip": {
+    "title": "מערכת משתמשי VIP",
+    "description": "נהל משתמשי VIP עם עדיפות גבוהה ביותר",
+    "user_added": "משתמש VIP נוסף",
+    "user_removed": "משתמש VIP הוסר",
+    "user_already_vip": "כבר משתמש VIP!",
+    "user_not_vip": "אינו משתמש VIP!",
+    "no_vip_users": "לא הוגדרו משתמשי VIP.",
+    "vip_list": "רשימת משתמשי VIP",
+    "vip_total": "סה\"כ משתמשי VIP",
+    "vip_role_set": "תפקיד VIP הוגדר",
+    "vip_role_description": "תפקיד ה-VIP הוגדר ל",
+    "vip_assigned": "הוקצה",
+    "vip_priority": "עדיפות",
+    "vip_highest": "VIP (הגבוהה ביותר)",
+    "feature_locked": "מערכת VIP זמינה רק בשרתים ספציפיים.",
+    "vip_ticket_prefix": "✨vip-"
+  },
+  "department": {
+    "title": "מחלקות",
+    "description": "נהל מחלקות שונות עבור מערכת הכרטיסים שלך",
+    "forwarded": "כרטיס הועבר",
+    "forwarded_description": "כרטיס זה הועבר ל-**{department}**.",
+    "previous_department": "מחלקה קודמת",
+    "new_department": "מחלקה חדשה",
+    "forwarded_by": "הועבר על ידי",
+    "no_departments": "לא הוגדרו מחלקות! מנהל חייב תחילה ליצור מחלקות בפאנל.",
+    "no_other_departments": "אין מחלקות אחרות זמינות.",
+    "not_in_ticket": "פקודה זו יכולה לשמש רק בערוץ כרטיס.",
+    "select_department": "בחר מחלקה",
+    "forward_ticket": "העבר כרטיס",
+    "forward_success": "כרטיס הועבר בהצלחה ל-**{department}**!",
+    "new_ticket_forwarded": "כרטיס חדש הועבר למחלקה שלך!",
+    "no_team": "אין צוות",
+    "feature_locked": "תמיכה במרובה מחלקות זמינה רק עם Premium Basic+."
   }
 }

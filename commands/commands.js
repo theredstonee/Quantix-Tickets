@@ -50,6 +50,30 @@ module.exports = {
               description: 'Leitet ein Ticket an ein anderes Team-Mitglied weiter (Pro Feature)',
               permission: 'Claimer',
               canUse: true
+            },
+            {
+              name: '/tag',
+              description: 'Verwaltet Tags für Tickets (Basic+ Feature)',
+              permission: 'Team',
+              canUse: true
+            },
+            {
+              name: '/template',
+              description: 'Verwendet vordefinierte Antwort-Vorlagen (Basic+ Feature)',
+              permission: 'Team',
+              canUse: true
+            },
+            {
+              name: '/department',
+              description: 'Verwaltet Abteilungen und leitet Tickets weiter (Basic+ Feature)',
+              permission: 'Team',
+              canUse: true
+            },
+            {
+              name: '/vip',
+              description: 'Verwaltet VIP-User (Nur auf bestimmten Servern)',
+              permission: 'Administrator',
+              canUse: isAdmin
             }
           ]
         },

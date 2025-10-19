@@ -21,6 +21,24 @@
     "closeRequested": "telah meminta untuk menutup tiket ini",
     "ticketClosed": "Tiket ditutup oleh"
   },
+  "autoClose": {
+    "warning_title": "Peringatan Tidak Aktif",
+    "warning_description": "Tiket ini belum diperbarui untuk sementara waktu dan akan ditutup secara otomatis dalam **{days} hari** jika tidak ada aktivitas lebih lanjut.",
+    "prevent_title": "Cara mencegah penutupan otomatis",
+    "prevent_description": "Cukup kirim pesan di saluran ini untuk menjaga tiket tetap aktif.",
+    "closed_title": "Tiket ditutup secara otomatis",
+    "closed_description": "Tiket ini ditutup secara otomatis karena tidak aktif.",
+    "reason_inactivity": "Tidak ada aktivitas"
+  },
+  "faq": {
+    "title": "Pertanyaan yang Sering Diajukan",
+    "description": "Sebelum membuat tiket, lihat pertanyaan yang sering diajukan ini",
+    "problem_solved": "Masalah terselesaikan",
+    "create_ticket": "Buat tiket saja",
+    "solved_title": "Masalah terselesaikan",
+    "solved_description": "Bagus! Kami senang bisa membantu Anda.\n\nJika Anda memerlukan bantuan nanti, Anda selalu dapat membuat tiket.",
+    "no_faqs": "Tidak ada entri FAQ yang cocok ditemukan"
+  },
   "buttons": {
     "close": "Tutup",
     "claim": "Klaim",
@@ -327,5 +345,54 @@
     "category_limit_unlimited": "♾️ Tidak Terbatas",
     "category_limit_hint": "💡 Dengan Premium Basic: 7 kategori | Dengan Premium Pro: Tidak Terbatas",
     "manage_subscription": "Kelola langganan Premium Anda →"
+  },
+  "customBranding": {
+    "title": "Branding Kustom",
+    "description": "Sesuaikan warna dan teks embed tiket Anda untuk mencocokkan merek Anda.",
+    "primary_color": "Warna Utama",
+    "success_color": "Warna Sukses",
+    "error_color": "Warna Error",
+    "warning_color": "Warna Peringatan",
+    "claim_button": "Teks Tombol Klaim",
+    "close_button": "Teks Tombol Tutup",
+    "unclaim_button": "Teks Tombol Lepas Klaim",
+    "reopen_button": "Teks Tombol Buka Kembali",
+    "feature_locked": "Branding Kustom hanya tersedia dengan Premium Pro."
+  },
+  "vip": {
+    "title": "Sistem Pengguna VIP",
+    "description": "Kelola pengguna VIP dengan prioritas tertinggi",
+    "user_added": "Pengguna VIP ditambahkan",
+    "user_removed": "Pengguna VIP dihapus",
+    "user_already_vip": "sudah menjadi pengguna VIP!",
+    "user_not_vip": "bukan pengguna VIP!",
+    "no_vip_users": "Tidak ada pengguna VIP yang dikonfigurasi.",
+    "vip_list": "Daftar Pengguna VIP",
+    "vip_total": "Total pengguna VIP",
+    "vip_role_set": "Peran VIP dikonfigurasi",
+    "vip_role_description": "Peran VIP telah ditetapkan ke",
+    "vip_assigned": "Ditugaskan",
+    "vip_priority": "Prioritas",
+    "vip_highest": "VIP (Tertinggi)",
+    "feature_locked": "Sistem VIP hanya tersedia di server tertentu.",
+    "vip_ticket_prefix": "✨vip-"
+  },
+  "department": {
+    "title": "Departemen",
+    "description": "Kelola berbagai departemen untuk sistem tiket Anda",
+    "forwarded": "Tiket diteruskan",
+    "forwarded_description": "Tiket ini telah diteruskan ke **{department}**.",
+    "previous_department": "Departemen Sebelumnya",
+    "new_department": "Departemen Baru",
+    "forwarded_by": "Diteruskan oleh",
+    "no_departments": "Tidak ada departemen yang dikonfigurasi! Admin harus membuat departemen terlebih dahulu di panel.",
+    "no_other_departments": "Tidak ada departemen lain yang tersedia.",
+    "not_in_ticket": "Perintah ini hanya dapat digunakan di saluran tiket.",
+    "select_department": "Pilih departemen",
+    "forward_ticket": "Teruskan tiket",
+    "forward_success": "Tiket berhasil diteruskan ke **{department}**!",
+    "new_ticket_forwarded": "Tiket baru telah diteruskan ke departemen Anda!",
+    "no_team": "Tidak Ada Tim",
+    "feature_locked": "Dukungan Multi-Departemen hanya tersedia dengan Premium Basic+."
   }
 }

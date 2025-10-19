@@ -1,6 +1,111 @@
 {
-  "currentVersion": "1.0.4",
+  "currentVersion": "1.2.0",
   "versions": [
+    {
+      "version": "1.2.0",
+      "date": "2025-10-19",
+      "changes": {
+        "de": [
+          "🎉 Major Premium Features Release",
+          "🏷️ Tag/Label System (Basic+) - Tickets mit Tags versehen & filtern",
+          "📝 Ticket-Vorlagen System (Basic+) - Schnellantworten per /template",
+          "🎨 Custom Branding (Pro) - Eigene Farben & Button-Texte",
+          "✨ VIP-User System - Höchste Priorität für VIP-User",
+          "🏢 Multi-Department Support (Basic+) - Tickets zwischen Abteilungen weiterleiten",
+          "📊 Heatmap & Insights (Basic+) - Wann werden Tickets erstellt?",
+          "📈 Erweiterte Reports (Pro) - CSV Export mit allen Details",
+          "🌍 Alle Features in 9 Sprachen verfügbar"
+        ],
+        "en": [
+          "🎉 Major Premium Features Release",
+          "🏷️ Tag/Label System (Basic+) - Tag tickets & filter by tags",
+          "📝 Ticket Templates System (Basic+) - Quick responses via /template",
+          "🎨 Custom Branding (Pro) - Custom colors & button texts",
+          "✨ VIP User System - Highest priority for VIP users",
+          "🏢 Multi-Department Support (Basic+) - Forward tickets between departments",
+          "📊 Heatmap & Insights (Basic+) - When are tickets created?",
+          "📈 Advanced Reports (Pro) - CSV export with all details",
+          "🌍 All features available in 9 languages"
+        ],
+        "he": [
+          "🎉 שחרור תכונות Premium מרכזיות",
+          "🏷️ מערכת תגים (Basic+) - סמן כרטיסים בתגים וסנן",
+          "📝 מערכת תבניות כרטיסים (Basic+) - תשובות מהירות דרך /template",
+          "🎨 מיתוג מותאם (Pro) - צבעים וטקסטים מותאמים אישית",
+          "✨ מערכת משתמשי VIP - עדיפות גבוהה ביותר למשתמשי VIP",
+          "🏢 תמיכה במרובה מחלקות (Basic+) - העבר כרטיסים בין מחלקות",
+          "📊 Heatmap & תובנות (Basic+) - מתי נוצרים כרטיסים?",
+          "📈 דוחות מתקדמים (Pro) - ייצוא CSV עם כל הפרטים",
+          "🌍 כל התכונות זמינות ב-9 שפות"
+        ],
+        "ja": [
+          "🎉 主要なプレミアム機能のリリース",
+          "🏷️ タグ/ラベルシステム (Basic+) - チケットにタグを付けてフィルタリング",
+          "📝 チケットテンプレートシステム (Basic+) - /template で素早く返信",
+          "🎨 カスタムブランディング (Pro) - カスタムカラー＆ボタンテキスト",
+          "✨ VIPユーザーシステム - VIPユーザーに最優先",
+          "🏢 マルチ部門サポート (Basic+) - 部門間でチケット転送",
+          "📊 ヒートマップ＆インサイト (Basic+) - チケットはいつ作成される？",
+          "📈 高度なレポート (Pro) - すべての詳細を含むCSVエクスポート",
+          "🌍 すべての機能が9言語で利用可能"
+        ],
+        "ru": [
+          "🎉 Релиз основных премиум-функций",
+          "🏷️ Система тегов/меток (Basic+) - Помечайте тикеты и фильтруйте",
+          "📝 Система шаблонов тикетов (Basic+) - Быстрые ответы через /template",
+          "🎨 Пользовательский брендинг (Pro) - Свои цвета и тексты кнопок",
+          "✨ Система VIP-пользователей - Наивысший приоритет для VIP",
+          "🏢 Поддержка нескольких отделов (Basic+) - Переадресация между отделами",
+          "📊 Heatmap & Инсайты (Basic+) - Когда создаются тикеты?",
+          "📈 Расширенные отчеты (Pro) - Экспорт CSV со всеми деталями",
+          "🌍 Все функции доступны на 9 языках"
+        ],
+        "pt": [
+          "🎉 Lançamento de Recursos Premium Principais",
+          "🏷️ Sistema de Tags/Etiquetas (Basic+) - Marque tickets e filtre por tags",
+          "📝 Sistema de Modelos de Tickets (Basic+) - Respostas rápidas via /template",
+          "🎨 Marca Personalizada (Pro) - Cores e textos de botão personalizados",
+          "✨ Sistema de Usuários VIP - Prioridade máxima para usuários VIP",
+          "🏢 Suporte Multi-Departamento (Basic+) - Encaminhar tickets entre departamentos",
+          "📊 Heatmap & Insights (Basic+) - Quando os tickets são criados?",
+          "📈 Relatórios Avançados (Pro) - Exportação CSV com todos os detalhes",
+          "🌍 Todos os recursos disponíveis em 9 idiomas"
+        ],
+        "es": [
+          "🎉 Lanzamiento de Características Premium Principales",
+          "🏷️ Sistema de Etiquetas (Basic+) - Etiqueta tickets y filtra por etiquetas",
+          "📝 Sistema de Plantillas de Tickets (Basic+) - Respuestas rápidas vía /template",
+          "🎨 Marca Personalizada (Pro) - Colores y textos de botón personalizados",
+          "✨ Sistema de Usuarios VIP - Máxima prioridad para usuarios VIP",
+          "🏢 Soporte Multi-Departamento (Basic+) - Reenviar tickets entre departamentos",
+          "📊 Heatmap & Insights (Basic+) - ¿Cuándo se crean los tickets?",
+          "📈 Informes Avanzados (Pro) - Exportación CSV con todos los detalles",
+          "🌍 Todas las características disponibles en 9 idiomas"
+        ],
+        "id": [
+          "🎉 Rilis Fitur Premium Utama",
+          "🏷️ Sistem Tag/Label (Basic+) - Tandai tiket & filter berdasarkan tag",
+          "📝 Sistem Template Tiket (Basic+) - Respons cepat melalui /template",
+          "🎨 Branding Kustom (Pro) - Warna & teks tombol kustom",
+          "✨ Sistem Pengguna VIP - Prioritas tertinggi untuk pengguna VIP",
+          "🏢 Dukungan Multi-Departemen (Basic+) - Teruskan tiket antar departemen",
+          "📊 Heatmap & Insights (Basic+) - Kapan tiket dibuat?",
+          "📈 Laporan Lanjutan (Pro) - Ekspor CSV dengan semua detail",
+          "🌍 Semua fitur tersedia dalam 9 bahasa"
+        ],
+        "ar": [
+          "🎉 إصدار الميزات المميزة الرئيسية",
+          "🏷️ نظام العلامات (Basic+) - ضع علامات على التذاكر وصنف حسب العلامات",
+          "📝 نظام قوالب التذاكر (Basic+) - ردود سريعة عبر /template",
+          "🎨 العلامة التجارية المخصصة (Pro) - ألوان ونصوص أزرار مخصصة",
+          "✨ نظام مستخدمي VIP - أعلى أولوية لمستخدمي VIP",
+          "🏢 دعم متعدد الأقسام (Basic+) - إعادة توجيه التذاكر بين الأقسام",
+          "📊 Heatmap & رؤى (Basic+) - متى يتم إنشاء التذاكر؟",
+          "📈 تقارير متقدمة (Pro) - تصدير CSV مع جميع التفاصيل",
+          "🌍 جميع الميزات متوفرة بـ 9 لغات"
+        ]
+      }
+    },
     {
       "version": "1.0.4",
       "date": "2025-10-19",
