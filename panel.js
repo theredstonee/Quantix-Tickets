@@ -3802,7 +3802,58 @@ module.exports = (client)=>{
    */
   function isUserBlacklisted(userId) {
     const blacklist = readUserBlacklist();
-    return !!blacklist.users[userId];
+    const userBan = blacklist.users[userId];
+
+    if (!userBan) return false;
+
+    // Check if ban is permanent
+    if (userBan.isPermanent) return true;
+
+    // Check if temporary ban has expired
+    if (userBan.expiresAt) {
+      const now = Date.now();
+      const expiryTime = new Date(userBan.expiresAt).getTime();
+
+      if (now >= expiryTime) {
+        // Ban has expired, remove it and send unblock notification
+        console.log(`⏰ Temporary ban expired for ${userBan.username} (${userId})`);
+
+        // Send auto-unblock notification
+        (async () => {
+          try {
+            const user = await client.users.fetch(userId);
+            if (user) {
+              const { EmbedBuilder } = require('discord.js');
+              const unblockEmbed = new EmbedBuilder()
+                .setTitle('✅ Quantix Tickets - Temporäre Sperre abgelaufen')
+                .setDescription(
+                  `**Deine temporäre Sperre ist abgelaufen.**\n\n` +
+                  `Du kannst dich jetzt wieder am Dashboard anmelden und den Bot nutzen.\n\n` +
+                  `Viel Erfolg mit deinem Ticket-System! 🎫`
+                )
+                .setColor(0x00ff88)
+                .setTimestamp()
+                .setFooter({ text: 'Quantix Tickets © 2025' });
+
+              await user.send({ embeds: [unblockEmbed] });
+              console.log(`📧 Auto-unblock notification sent to ${userBan.username} (${userId})`);
+            }
+          } catch (dmErr) {
+            console.log(`⚠️ Could not send auto-unblock DM to ${userBan.username} (${userId}):`, dmErr.message);
+          }
+        })();
+
+        // Remove from blacklist
+        delete blacklist.users[userId];
+        writeUserBlacklist(blacklist);
+        return false;
+      }
+
+      return true; // Ban still active
+    }
+
+    // Fallback: if no isPermanent and no expiresAt, treat as permanent
+    return true;
   }
 
   /**
@@ -3995,6 +4046,7 @@ module.exports = (client)=>{
       const usersData = [];
       for (const [userId, userData] of Object.entries(sessions.users)) {
         const isBlocked = !!userBlacklist.users[userId];
+        const banData = userBlacklist.users[userId];
         usersData.push({
           id: userId,
           username: userData.username || 'Unknown',
@@ -4004,9 +4056,11 @@ module.exports = (client)=>{
           lastLogin: userData.lastLogin,
           loginCount: userData.loginCount || 0,
           blocked: isBlocked,
-          blockReason: isBlocked ? userBlacklist.users[userId].reason : null,
-          blockedAt: isBlocked ? userBlacklist.users[userId].blockedAt : null,
-          blockedBy: isBlocked ? userBlacklist.users[userId].blockedBy : null
+          blockReason: isBlocked ? banData.reason : null,
+          blockedAt: isBlocked ? banData.blockedAt : null,
+          blockedBy: isBlocked ? banData.blockedBy : null,
+          isPermanent: isBlocked ? (banData.isPermanent !== false) : false,
+          expiresAt: isBlocked ? banData.expiresAt : null
         });
       }
 
@@ -4204,6 +4258,18 @@ module.exports = (client)=>{
       if (!userId) return res.redirect('/founder?error=invalid-user-id');
 
       const blockReason = req.body.reason ? sanitizeString(req.body.reason.trim(), 500) : 'Kein Grund angegeben';
+      const duration = req.body.duration || 'permanent'; // permanent, 1, 3, 7, 14, 30, 90
+
+      // Calculate expiration date
+      let expiresAt = null;
+      let isPermanent = true;
+      if (duration !== 'permanent') {
+        const days = parseInt(duration);
+        if (!isNaN(days) && days > 0) {
+          expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+          isPermanent = false;
+        }
+      }
 
       const blacklist = readUserBlacklist();
 
@@ -4212,11 +4278,49 @@ module.exports = (client)=>{
         const sessions = readSessions();
         const username = sessions.users[userId]?.username || `User ${userId}`;
 
+        // Send DM to user before blocking
+        try {
+          const user = await client.users.fetch(userId);
+          if (user) {
+            const { EmbedBuilder } = require('discord.js');
+
+            let description = `**Dein Zugang zu Quantix Tickets wurde gesperrt.**\n\n**Grund:**\n${blockReason}\n\n`;
+
+            if (isPermanent) {
+              description += `**Dauer:** Permanent\n\nDu kannst dich nicht mehr am Dashboard anmelden. Bei Fragen wende dich an den Support-Server.`;
+            } else {
+              const expiryDate = new Date(expiresAt).toLocaleString('de-DE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              description += `**Dauer:** Temporär (${duration} Tag${duration === '1' ? '' : 'e'})\n**Läuft ab am:** ${expiryDate}\n\nDu kannst dich bis zum Ablaufdatum nicht am Dashboard anmelden.`;
+            }
+
+            const blockEmbed = new EmbedBuilder()
+              .setTitle('🚫 Quantix Tickets - Zugang gesperrt')
+              .setDescription(description)
+              .setColor(0xe74c3c)
+              .setTimestamp()
+              .setFooter({ text: 'Quantix Tickets © 2025' });
+
+            await user.send({ embeds: [blockEmbed] });
+            console.log(`📧 ${isPermanent ? 'Permanent' : 'Temporary'} block notification sent to ${username} (${userId})`);
+          }
+        } catch (dmErr) {
+          console.log(`⚠️ Could not send DM to ${username} (${userId}):`, dmErr.message);
+          // Continue blocking even if DM fails (user might have DMs disabled)
+        }
+
         blacklist.users[userId] = {
           username: username,
           blockedAt: new Date().toISOString(),
           blockedBy: sanitizeUsername(req.user.username || req.user.id),
-          reason: blockReason
+          reason: blockReason,
+          expiresAt: expiresAt,
+          isPermanent: isPermanent
         };
 
         writeUserBlacklist(blacklist);
@@ -4246,6 +4350,31 @@ module.exports = (client)=>{
 
       if (blacklist.users[userId]) {
         const username = blacklist.users[userId].username || `User ${userId}`;
+
+        // Send DM to user about unblocking
+        try {
+          const user = await client.users.fetch(userId);
+          if (user) {
+            const { EmbedBuilder } = require('discord.js');
+            const unblockEmbed = new EmbedBuilder()
+              .setTitle('✅ Quantix Tickets - Zugang wiederhergestellt')
+              .setDescription(
+                `**Dein Zugang zu Quantix Tickets wurde wiederhergestellt.**\n\n` +
+                `Du kannst dich jetzt wieder am Dashboard anmelden und den Bot nutzen.\n\n` +
+                `Viel Erfolg mit deinem Ticket-System! 🎫`
+              )
+              .setColor(0x00ff88)
+              .setTimestamp()
+              .setFooter({ text: 'Quantix Tickets © 2025' });
+
+            await user.send({ embeds: [unblockEmbed] });
+            console.log(`📧 Unblock notification sent to ${username} (${userId})`);
+          }
+        } catch (dmErr) {
+          console.log(`⚠️ Could not send DM to ${username} (${userId}):`, dmErr.message);
+          // Continue unblocking even if DM fails
+        }
+
         delete blacklist.users[userId];
         writeUserBlacklist(blacklist);
         console.log(`✅ User unblocked: ${username} (${userId}) by ${req.user.username}`);
