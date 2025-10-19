@@ -928,8 +928,8 @@
       <div class="action-buttons">
         <% if (currentTier === 'pro') { %>
           <form action="/downgrade-premium" method="POST" style="margin: 0;">
-            <button type="submit" class="btn-action btn-downgrade" onclick="return confirm('Möchtest du wirklich von Pro zu Basic downgraden? Du verlierst Zugriff auf Pro-Features.');">
-              ⬇️ Zu Basic downgraden
+            <button type="submit" class="btn-action btn-downgrade" onclick="return confirm('Möchtest du wirklich von Pro zu Basic+ downgraden? Du verlierst Zugriff auf Pro-Features.');">
+              ⬇️ Zu Basic+ downgraden
             </button>
           </form>
         <% } %>
@@ -958,10 +958,10 @@
 
     <!-- Pricing Cards -->
     <div class="pricing-cards">
-      <!-- Free Tier -->
+      <!-- Basic Tier -->
       <div class="pricing-card <%= currentTier === 'none' ? 'current' : '' %>">
         <span class="tier-icon">🆓</span>
-        <div class="tier-name">Free</div>
+        <div class="tier-name">Basic</div>
         <div class="tier-price">
           <span class="currency">€</span>0
           <div class="price-period">/Monat</div>
@@ -985,10 +985,10 @@
         <% } %>
       </div>
 
-      <!-- Basic Tier -->
+      <!-- Basic+ Tier -->
       <div class="pricing-card <%= currentTier === 'basic' ? 'current' : '' %>">
         <span class="tier-icon">⭐</span>
-        <div class="tier-name">Premium Basic</div>
+        <div class="tier-name">Premium Basic+</div>
         <div class="tier-price">
           <span class="currency">€</span><span class="price-monthly">2.99</span><span class="price-yearly" style="display: none;">29.99</span>
           <div class="price-period">/Monat</div>
@@ -996,7 +996,7 @@
         <div class="tier-description">Perfekt für aktive Server</div>
 
         <ul class="features-list">
-          <li><strong>Alles von Free +</strong></li>
+          <li><strong>Alles von Basic +</strong></li>
           <li>7 Ticket-Kategorien (statt 5)</li>
           <li>🚫 Werbefrei im Dashboard</li>
           <li>🎨 Custom Bot-Avatar</li>
@@ -1008,8 +1008,8 @@
           <div class="current-badge">✓ Aktueller Plan</div>
         <% } else if (currentTier === 'pro') { %>
           <form action="/downgrade-premium" method="POST">
-            <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #f39c12, #e67e22);" onclick="return confirm('Möchtest du wirklich von Pro zu Basic downgraden?');">
-              ⬇️ Zu Basic downgraden
+            <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #f39c12, #e67e22);" onclick="return confirm('Möchtest du wirklich von Pro zu Basic+ downgraden?');">
+              ⬇️ Zu Basic+ downgraden
             </button>
           </form>
         <% } else { %>
@@ -1033,7 +1033,7 @@
         <div class="tier-description">Für professionelle Teams</div>
 
         <ul class="features-list">
-          <li><strong>Alles von Basic +</strong></li>
+          <li><strong>Alles von Basic+ +</strong></li>
           <li>♾️ Unbegrenzte Ticket-Kategorien</li>
           <li>⏰ Auto-Close nach X Tagen</li>
           <li>📧 Email-Benachrichtigungen</li>

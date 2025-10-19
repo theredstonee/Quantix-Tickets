@@ -53,7 +53,7 @@ module.exports = {
     // Premium Check
     if (!hasFeature(guildId, 'templates')) {
       return interaction.reply({
-        content: '❌ **Premium Basic+** Feature! Templates are only available with Premium Basic or higher.\n🔗 Upgrade: https://your-domain.com/premium',
+        content: '❌ **Premium Basic+** Feature! Templates are only available with Premium Basic+ or higher.\n🔗 Upgrade: https://your-domain.com/premium',
         ephemeral: true
       });
     }

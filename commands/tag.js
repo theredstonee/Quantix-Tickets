@@ -83,7 +83,7 @@ module.exports = {
     // Premium Check
     if (!hasFeature(guildId, 'customTags')) {
       return interaction.reply({
-        content: '❌ **Premium Basic+** Feature! Tags are only available with Premium Basic or higher.\n🔗 Upgrade: https://your-domain.com/premium',
+        content: '❌ **Premium Basic+** Feature! Tags are only available with Premium Basic+ or higher.\n🔗 Upgrade: https://your-domain.com/premium',
         ephemeral: true
       });
     }

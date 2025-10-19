@@ -2011,10 +2011,27 @@ client.on(Events.InteractionCreate, async i => {
       const isClaimer = ticket.claimer === i.user.id;
 
       if(i.customId==='request_close'){
+        // Bestimme wer die Anfrage stellt
+        const requesterType = isCreator || (ticket.addedUsers && ticket.addedUsers.includes(i.user.id)) ? 'user' : 'team';
+
+        // Speichere Schließungsanfrage im Ticket
+        if (!ticket.closeRequest) ticket.closeRequest = {};
+        ticket.closeRequest = {
+          requestedBy: i.user.id,
+          requesterType: requesterType,
+          requestedAt: Date.now(),
+          status: 'pending'
+        };
+        saveTickets(guildId, log);
+
         const requestEmbed = new EmbedBuilder()
           .setColor(0xffa500)
           .setTitle('📩 Schließungsanfrage')
-          .setDescription(`<@${i.user.id}> möchte dieses Ticket schließen lassen.`)
+          .setDescription(
+            requesterType === 'user'
+              ? `<@${i.user.id}> möchte dieses Ticket schließen lassen.\n\n**Ein Team-Mitglied oder Claimer muss bestätigen.**`
+              : `<@${i.user.id}> (Team) möchte dieses Ticket schließen.\n\n**Der Ticket-Ersteller muss bestätigen.**`
+          )
           .addFields(
             { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
             { name: '👤 Angefordert von', value: `<@${i.user.id}>`, inline: true },
@@ -2023,24 +2040,236 @@ client.on(Events.InteractionCreate, async i => {
           .setFooter({ text: 'Quantix Tickets • Schließungsanfrage' })
           .setTimestamp();
 
-        const closeButton = new ActionRowBuilder().addComponents(
+        const closeButtons = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId('team_close')
-            .setEmoji('🔐')
-            .setLabel(t(guildId, 'buttons.close'))
+            .setCustomId('approve_close_request')
+            .setEmoji('✅')
+            .setLabel('Bestätigen')
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId('deny_close_request')
+            .setEmoji('❌')
+            .setLabel('Ablehnen')
             .setStyle(ButtonStyle.Danger)
         );
 
-        await i.channel.send({ embeds: [requestEmbed], components: [closeButton] });
+        await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] });
         logEvent(i.guild, t(guildId, 'logs.close_requested', { id: ticket.id, user: `<@${i.user.id}>` }));
 
         const confirmEmbed = new EmbedBuilder()
           .setColor(0x00ff88)
-          .setDescription('✅ **Schließungsanfrage erfolgreich gesendet!**\n\nEin Team-Mitglied wird deine Anfrage prüfen.')
+          .setDescription(
+            requesterType === 'user'
+              ? '✅ **Schließungsanfrage erfolgreich gesendet!**\n\nEin Team-Mitglied wird deine Anfrage prüfen.'
+              : '✅ **Schließungsanfrage erfolgreich gesendet!**\n\nDer Ticket-Ersteller muss zustimmen.'
+          )
           .setFooter({ text: 'Quantix Tickets' })
           .setTimestamp();
 
         return i.reply({ embeds: [confirmEmbed], ephemeral: true });
+      }
+
+      // Schließungsanfrage bestätigen
+      if (i.customId === 'approve_close_request') {
+        if (!ticket.closeRequest || ticket.closeRequest.status !== 'pending') {
+          return i.reply({ content: '❌ Keine aktive Schließungsanfrage vorhanden.', ephemeral: true });
+        }
+
+        const requesterType = ticket.closeRequest.requesterType;
+        const canApprove = (requesterType === 'user' && (isTeam || isClaimer)) ||
+                          (requesterType === 'team' && isCreator);
+
+        if (!canApprove) {
+          const errorMsg = requesterType === 'user'
+            ? 'Nur Team-Mitglieder oder der Claimer können diese Anfrage bestätigen.'
+            : 'Nur der Ticket-Ersteller kann diese Anfrage bestätigen.';
+          return i.reply({ content: `❌ ${errorMsg}`, ephemeral: true });
+        }
+
+        // Schließungsanfrage genehmigt - Ticket schließen
+        ticket.closeRequest.status = 'approved';
+        ticket.closeRequest.approvedBy = i.user.id;
+        ticket.closeRequest.approvedAt = Date.now();
+        ticket.status = 'geschlossen';
+        ticket.closedAt = Date.now();
+        if (!ticket.statusHistory) ticket.statusHistory = [];
+        ticket.statusHistory.push({
+          status: 'geschlossen',
+          timestamp: Date.now(),
+          userId: i.user.id,
+          approvedCloseRequest: true
+        });
+        saveTickets(guildId, log);
+
+        // DM Benachrichtigung an Ersteller
+        if (cfg.notifyUserOnStatusChange !== false) {
+          try {
+            const creator = await client.users.fetch(ticket.userId).catch(() => null);
+            if (creator) {
+              const dmEmbed = new EmbedBuilder()
+                .setColor(0xff4444)
+                .setTitle('🔐 Ticket geschlossen')
+                .setDescription(
+                  `Dein Ticket wurde geschlossen.\n\n` +
+                  `**Server:** ${i.guild.name}\n` +
+                  `**Ticket:** #${String(ticket.id).padStart(5, '0')}\n` +
+                  `**Thema:** ${ticket.topic}\n` +
+                  `**Geschlossen durch Zustimmung von:** ${i.user.tag}`
+                )
+                .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+                .setTimestamp();
+
+              await creator.send({ embeds: [dmEmbed] }).catch(() => {});
+            }
+          } catch (dmErr) {
+            console.error('DM notification error on ticket close:', dmErr);
+          }
+        }
+
+        const closer = await i.guild.members.fetch(i.user.id).catch(() => null);
+        const closerTag = sanitizeUsername(closer?.user?.tag || i.user.tag || i.user.username || i.user.id);
+        const closerName = sanitizeUsername(closer?.displayName || closerTag);
+        const roleObj = TEAM_ROLE ? await i.guild.roles.fetch(TEAM_ROLE).catch(() => null) : null;
+        const teamLabel = roleObj ? `@${roleObj.name}` : '@Team';
+
+        await i.reply({ ephemeral: true, content: '🔐 Ticket wird geschlossen…' });
+
+        const closeEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('✅ Schließungsanfrage genehmigt')
+          .setDescription(
+            `Die Schließungsanfrage wurde von **${closerName}** genehmigt.\n\n` +
+            `Ticket wird geschlossen.\n\n` +
+            `**Angefordert von:** <@${ticket.closeRequest.requestedBy}>\n` +
+            `**Genehmigt von:** <@${i.user.id}>`
+          )
+          .addFields(
+            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+          )
+          .setFooter({ text: 'Quantix Tickets • Ticket geschlossen' })
+          .setTimestamp();
+
+        await i.channel.send({ embeds: [closeEmbed] });
+
+        let files = null;
+        try {
+          files = await createTranscript(i.channel, ticket, { resolveMentions: true });
+        } catch {}
+
+        // Transcripts senden
+        const transcriptChannelIds = Array.isArray(cfg.transcriptChannelId) && cfg.transcriptChannelId.length > 0
+          ? cfg.transcriptChannelId
+          : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : (Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : [])));
+
+        if (transcriptChannelIds.length > 0 && files) {
+          const transcriptUrl = PANEL_FIXED_URL.replace('/panel', `/transcript/${ticket.id}`);
+          const transcriptButton = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setURL(transcriptUrl)
+              .setStyle(ButtonStyle.Link)
+              .setLabel('📄 Transcript ansehen')
+          );
+
+          for (const channelId of transcriptChannelIds) {
+            try {
+              const tc = await i.guild.channels.fetch(channelId);
+              if (tc) {
+                await tc.send({
+                  content: `📁 Transcript Ticket #${ticket.id}`,
+                  files: [files.txt, files.html],
+                  components: [transcriptButton]
+                });
+              }
+            } catch (err) {
+              console.error(`Transcript-Channel ${channelId} nicht gefunden:`, err.message);
+            }
+          }
+        }
+
+        logEvent(i.guild, `🔐 Ticket **#${ticket.id}** geschlossen durch Zustimmung von ${closerTag}`);
+        setTimeout(() => i.channel.delete().catch(() => {}), 2500);
+        return;
+      }
+
+      // Schließungsanfrage ablehnen
+      if (i.customId === 'deny_close_request') {
+        if (!ticket.closeRequest || ticket.closeRequest.status !== 'pending') {
+          return i.reply({ content: '❌ Keine aktive Schließungsanfrage vorhanden.', ephemeral: true });
+        }
+
+        const requesterType = ticket.closeRequest.requesterType;
+        const canDeny = (requesterType === 'user' && (isTeam || isClaimer)) ||
+                       (requesterType === 'team' && isCreator);
+
+        if (!canDeny) {
+          const errorMsg = requesterType === 'user'
+            ? 'Nur Team-Mitglieder oder der Claimer können diese Anfrage ablehnen.'
+            : 'Nur der Ticket-Ersteller kann diese Anfrage ablehnen.';
+          return i.reply({ content: `❌ ${errorMsg}`, ephemeral: true });
+        }
+
+        // Modal für optionalen Ablehnungsgrund
+        const modal = new ModalBuilder()
+          .setCustomId('deny_close_reason_modal')
+          .setTitle('Schließungsanfrage ablehnen');
+
+        const reasonInput = new TextInputBuilder()
+          .setCustomId('deny_reason')
+          .setLabel('Grund für die Ablehnung (optional)')
+          .setPlaceholder('Warum wird die Schließungsanfrage abgelehnt?')
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(false)
+          .setMaxLength(500);
+
+        const row = new ActionRowBuilder().addComponents(reasonInput);
+        modal.addComponents(row);
+
+        await i.showModal(modal);
+        return;
+      }
+
+      // Modal-Submit für Ablehnung
+      if (i.customId === 'deny_close_reason_modal') {
+        const reason = i.fields.getTextInputValue('deny_reason') || 'Kein Grund angegeben';
+
+        ticket.closeRequest.status = 'denied';
+        ticket.closeRequest.deniedBy = i.user.id;
+        ticket.closeRequest.deniedAt = Date.now();
+        ticket.closeRequest.denyReason = reason;
+        saveTickets(guildId, log);
+
+        await i.reply({ ephemeral: true, content: '✅ Schließungsanfrage wurde abgelehnt.' });
+
+        const denyEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Schließungsanfrage abgelehnt')
+          .setDescription(
+            `Die Schließungsanfrage wurde abgelehnt.\n\n` +
+            `**Angefordert von:** <@${ticket.closeRequest.requestedBy}>\n` +
+            `**Abgelehnt von:** <@${i.user.id}>\n\n` +
+            `**Grund:**\n> ${reason}`
+          )
+          .addFields(
+            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Anfrage abgelehnt' })
+          .setTimestamp();
+
+        await i.channel.send({ embeds: [denyEmbed] });
+
+        logEvent(i.guild, `❌ Schließungsanfrage für Ticket **#${ticket.id}** von <@${i.user.id}> abgelehnt. Grund: ${reason}`);
+
+        // Lösche die Schließungsanfrage nach 5 Sekunden
+        setTimeout(() => {
+          if (ticket.closeRequest) {
+            delete ticket.closeRequest;
+            saveTickets(guildId, log);
+          }
+        }, 5000);
+
+        return;
       }
 
       if(i.customId==='unclaim'){
@@ -2145,103 +2374,6 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       switch(i.customId){
-        case 'team_close':
-        case 'close': {
-         ticket.status = 'geschlossen';
-         ticket.closedAt = Date.now();
-         if(!ticket.statusHistory) ticket.statusHistory = [];
-         ticket.statusHistory.push({
-           status: 'geschlossen',
-           timestamp: Date.now(),
-           userId: i.user.id
-         });
-         saveTickets(guildId, log);
-
-         // Send DM notification to ticket creator if enabled
-         if(cfg.notifyUserOnStatusChange !== false){
-           try {
-             const creator = await client.users.fetch(ticket.userId).catch(()=>null);
-             if(creator){
-               const dmEmbed = new EmbedBuilder()
-                 .setColor(0xff4444)
-                 .setTitle('🔐 Ticket geschlossen')
-                 .setDescription(
-                   `Dein Ticket wurde geschlossen.\n\n` +
-                   `**Server:** ${i.guild.name}\n` +
-                   `**Ticket:** #${String(ticket.id).padStart(5, '0')}\n` +
-                   `**Thema:** ${ticket.topic}\n` +
-                   `**Geschlossen von:** ${i.user.tag}`
-                 )
-                 .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
-                 .setTimestamp();
-
-               await creator.send({ embeds: [dmEmbed] }).catch(()=>{});
-             }
-           } catch(dmErr){
-             console.error('DM notification error on ticket close:', dmErr);
-           }
-         }
-
-        const closer = await i.guild.members.fetch(i.user.id).catch(()=>null);
-        const closerTag  = sanitizeUsername(closer?.user?.tag || i.user.tag || i.user.username || i.user.id);
-        const closerName = sanitizeUsername(closer?.displayName || closerTag);
-        const roleObj    = TEAM_ROLE ? await i.guild.roles.fetch(TEAM_ROLE).catch(()=>null) : null;
-        const teamLabel  = roleObj ? `@${roleObj.name}` : '@Team';
-
-        await i.reply({ ephemeral:true, content:'🔐 Ticket wird geschlossen…' });
-
-        const closeEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🔐 Ticket geschlossen')
-          .setDescription(`Dieses Ticket wurde von **${closerName}** geschlossen.\n\nVielen Dank für deine Geduld! Das Ticket wird in wenigen Sekunden gelöscht.`)
-          .addFields(
-            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-            { name: '👤 Geschlossen von', value: `<@${i.user.id}>`, inline: true },
-            { name: '🏷️ Team', value: teamLabel, inline: true },
-            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
-          )
-          .setFooter({ text: 'Quantix Tickets • Ticket geschlossen' })
-          .setTimestamp();
-
-        await i.channel.send({ embeds: [closeEmbed] });
-
-        let files = null;
-        try { files = await createTranscript(i.channel, ticket, { resolveMentions: true }); } catch {}
-
-        // Send transcripts to all configured transcript channels (or fallback to log channels)
-        const transcriptChannelIds = Array.isArray(cfg.transcriptChannelId) && cfg.transcriptChannelId.length > 0
-          ? cfg.transcriptChannelId
-          : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : (Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : [])));
-
-        if (transcriptChannelIds.length > 0 && files){
-          const transcriptUrl = PANEL_FIXED_URL.replace('/panel', `/transcript/${ticket.id}`);
-          const transcriptButton = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setURL(transcriptUrl)
-              .setStyle(ButtonStyle.Link)
-              .setLabel('📄 Transcript ansehen')
-          );
-
-          for(const channelId of transcriptChannelIds){
-            try {
-              const tc = await i.guild.channels.fetch(channelId);
-              if (tc) {
-                await tc.send({
-                  content:`📁 Transcript Ticket #${ticket.id}`,
-                  files:[files.txt, files.html],
-                  components: [transcriptButton]
-                });
-              }
-            } catch(err) {
-              console.error(`Transcript-Channel ${channelId} nicht gefunden:`, err.message);
-            }
-          }
-        }
-
-  logEvent(i.guild, t(guildId, 'logs.ticket_closed', { id: ticket.id, user: closerTag }));
-  setTimeout(()=> i.channel.delete().catch(()=>{}), 2500);
-  return;
-}
         case 'claim':
           ticket.claimer = i.user.id; saveTickets(guildId, log);
 

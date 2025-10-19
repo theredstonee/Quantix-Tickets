@@ -53,7 +53,7 @@ function getDefaultConfig() {
 // Premium Tiers Definition
 const PREMIUM_TIERS = {
   none: {
-    name: 'Free',
+    name: 'Basic',
     price: 0,
     priceId: null,
     features: {
@@ -77,7 +77,7 @@ const PREMIUM_TIERS = {
     }
   },
   basic: {
-    name: 'Premium Basic',
+    name: 'Premium Basic+',
     price: 2.99,
     priceId: 'price_basic_monthly', // Ersetze mit echter Stripe Price ID
     features: {
@@ -96,7 +96,7 @@ const PREMIUM_TIERS = {
       ratingSystem: false,
       autoAssignment: false,
       customBranding: false,
-      vipSystem: false,
+      vipSystem: true,
       multiDepartment: true
     }
   },
@@ -105,23 +105,25 @@ const PREMIUM_TIERS = {
     price: 4.99,
     priceId: 'price_pro_monthly', // Ersetze mit echter Stripe Price ID
     features: {
+      // Alle Basic+ Features
       noAds: true,
       customAvatar: true,
       statistics: true,
       prioritySupport: true,
+      customTags: true,
+      templates: true,
+      slaTimer: true,
+      vipSystem: true,
+      multiDepartment: true,
+      // Pro-exklusive Features
       autoClose: true,
       emailNotifications: true,
       dmNotifications: true,
       unlimitedCategories: true,
       maxCategories: 999,
-      customTags: true,
-      templates: true,
-      slaTimer: true,
       ratingSystem: true,
       autoAssignment: true,
-      customBranding: true,
-      vipSystem: false,
-      multiDepartment: true
+      customBranding: true
     }
   },
   beta: {
@@ -129,23 +131,25 @@ const PREMIUM_TIERS = {
     price: 0,
     priceId: null,
     features: {
+      // Alle Basic+ Features
       noAds: true,
       customAvatar: true,
       statistics: true,
       prioritySupport: true,
+      customTags: true,
+      templates: true,
+      slaTimer: true,
+      vipSystem: true,
+      multiDepartment: true,
+      // Pro-exklusive Features
       autoClose: true,
       emailNotifications: true,
       dmNotifications: true,
       unlimitedCategories: true,
       maxCategories: 999,
-      customTags: true,
-      templates: true,
-      slaTimer: true,
       ratingSystem: true,
       autoAssignment: true,
-      customBranding: true,
-      vipSystem: false,
-      multiDepartment: true
+      customBranding: true
     }
   }
 };
