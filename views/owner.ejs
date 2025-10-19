@@ -914,8 +914,18 @@
           <% pendingDeletions.forEach(deletion => { %>
           <tr>
             <td>
-              <div class="guild-name"><%= deletion.guildName %></div>
-              <div class="guild-id"><%= deletion.guildId %></div>
+              <div class="guild-info">
+                <% if (deletion.guildIcon) { %>
+                  <img src="<%= deletion.guildIcon %>" alt="<%= deletion.guildName %>" class="guild-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                  <div class="guild-icon-placeholder" style="display: none;"><%= deletion.guildName[0] %></div>
+                <% } else { %>
+                  <div class="guild-icon-placeholder"><%= deletion.guildName[0] %></div>
+                <% } %>
+                <div>
+                  <div class="guild-name"><%= deletion.guildName %></div>
+                  <div class="guild-id"><%= deletion.guildId %></div>
+                </div>
+              </div>
             </td>
             <td><%= new Date(deletion.initiatedAt).toLocaleString('de-DE') %></td>
             <td><%= new Date(deletion.executesAt).toLocaleString('de-DE') %></td>

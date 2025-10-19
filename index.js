@@ -663,7 +663,8 @@ function startStatusRotation() {
     const statuses = [
       { name: `auf ${serverCount} Servern`, type: ActivityType.Playing },
       { name: `v${VERSION}`, type: ActivityType.Playing },
-      { name: `Quantix Development`, type: ActivityType.Playing }
+      { name: `Quantix Development`, type: ActivityType.Playing },
+      { name: `!commands für Hilfe`, type: ActivityType.Playing }
     ];
 
     const status = statuses[currentStatusIndex];

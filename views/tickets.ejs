@@ -405,13 +405,53 @@
     .controls .row{display:flex;flex-wrap:wrap;gap:.55rem;align-items:center}
     #search{flex:1 1 520px;min-width:280px}
     label.inline{display:flex;align-items:center;gap:.4rem;font-size:.72rem;white-space:nowrap}
-    .chipbar{display:flex;flex-wrap:wrap;gap:.5rem}
-    .chip{background:#eef0f5;border:0;padding:.46rem 1.05rem;border-radius:999px;font-size:.7rem;font-weight:500;cursor:pointer;line-height:1;user-select:none;transition:.15s}
-    .chip.active{background:#4263eb;color:#fff;box-shadow:0 0 0 1px #4263eb}
-    .chip.prio span{display:inline-block;width:.9rem;height:.9rem;border-radius:50%;}
-    .chip.prio span.green{background:#2bd94a}
-    .chip.prio span.orange{background:#ff9900}
-    .chip.prio span.red{background:#d92b2b}
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .filter-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-color);
+      opacity: 0.8;
+    }
+
+    .filter-group select {
+      background: var(--chip-bg);
+      border: 2px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 0.5rem 2rem 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 180px;
+    }
+
+    .filter-group select:hover {
+      border-color: var(--accent-color);
+      background: var(--glass-bg);
+    }
+
+    .filter-group select:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    }
+
+    [data-theme="dark"] .filter-group select:focus {
+      box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+    }
     #refreshBar{background:#13202b;color:#fff;border-radius:8px;padding:.85rem 1.1rem;display:flex;align-items:center;justify-content:space-between;margin-top:.4rem}
     #refreshBar button{background:#1e2d3a;border:0;color:#fff;padding:.55rem 1.1rem;border-radius:6px;cursor:pointer;font-size:.75rem;display:flex;align-items:center;gap:.45rem}
     table{width:100%;font-size:.8rem;border-collapse:collapse}
@@ -826,17 +866,34 @@
       <input id="search" placeholder="Suche (ID, Topic, User, Claimer)" autocomplete="off">
       <label class="inline"><input type="checkbox" id="auto" checked> Auto-Refresh (30s)</label>
     </div>
-    <div class="row chipbar" id="statusBar">
-      <button class="chip active" data-status="alle">Alle</button>
-      <button class="chip" data-status="offen">Offen</button>
-      <button class="chip" data-status="geschlossen">Geschlossen</button>
-      <button class="chip" data-claim="alle">Claimed+Unclaimed</button>
-      <button class="chip" data-claim="claimed">Claimed</button>
-      <button class="chip" data-claim="unclaimed">Unclaimed</button>
-      <button class="chip active" data-prio="alle" id="prioAll">Prio: Alle</button>
-      <button class="chip prio" data-prio="0" title="Grün"><span class="green"></span></button>
-      <button class="chip prio" data-prio="1" title="Orange"><span class="orange"></span></button>
-      <button class="chip prio" data-prio="2" title="Rot"><span class="red"></span></button>
+    <div class="row filter-bar" id="statusBar">
+      <div class="filter-group">
+        <label for="statusFilter">Status</label>
+        <select id="statusFilter">
+          <option value="alle">Alle</option>
+          <option value="offen">Offen</option>
+          <option value="geschlossen">Geschlossen</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="claimFilter">Claim-Status</label>
+        <select id="claimFilter">
+          <option value="alle">Claimed + Unclaimed</option>
+          <option value="claimed">Claimed</option>
+          <option value="unclaimed">Unclaimed</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="prioFilter">Priorität</label>
+        <select id="prioFilter">
+          <option value="alle">Alle</option>
+          <option value="0">🟢 Grün (Niedrig)</option>
+          <option value="1">🟠 Orange (Mittel)</option>
+          <option value="2">🔴 Rot (Hoch)</option>
+        </select>
+      </div>
     </div>
     <div id="refreshBar"><button id="refreshBtn">🔄 Aktualisieren</button><span id="lastUpdate" style="font-size:.7rem;opacity:.75">Letztes Update: –</span></div>
   </section>
@@ -1018,18 +1075,21 @@
     });
   });
 
-  const statusBar = document.getElementById('statusBar');
-  statusBar.addEventListener('click', e=>{
-    const btn = e.target.closest('.chip'); if(!btn) return;
-    if(btn.dataset.status){ statusFilter = btn.dataset.status; toggleActive('status', statusFilter); }
-    if(btn.dataset.claim){ claimFilter = btn.dataset.claim; toggleActive('claim', claimFilter); }
-    if(btn.dataset.prio){ prioFilter = btn.dataset.prio; toggleActive('prio', prioFilter); }
+  // Filter dropdowns
+  document.getElementById('statusFilter').addEventListener('change', e => {
+    statusFilter = e.target.value;
     apply();
   });
-  function toggleActive(type, val){
-    document.querySelectorAll(`.chip[data-${type}]`).forEach(c=>{ c.classList.toggle('active', c.getAttribute(`data-${type}`)===val); });
-    if(type==='prio' && val!=='alle') document.getElementById('prioAll').classList.remove('active');
-  }
+
+  document.getElementById('claimFilter').addEventListener('change', e => {
+    claimFilter = e.target.value;
+    apply();
+  });
+
+  document.getElementById('prioFilter').addEventListener('change', e => {
+    prioFilter = e.target.value;
+    apply();
+  });
 
   document.getElementById('search').addEventListener('input', apply);
   document.getElementById('refreshBtn').addEventListener('click', reloadData);

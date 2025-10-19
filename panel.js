@@ -3351,12 +3351,13 @@ module.exports = (client)=>{
         const pendingFile = './pending-deletions.json';
         if (fs.existsSync(pendingFile)) {
           pendingDeletions = JSON.parse(fs.readFileSync(pendingFile, 'utf8'));
-          // Enrich with guild names
+          // Enrich with guild names and icons
           pendingDeletions = pendingDeletions.map(deletion => {
             const guild = guildsData.find(g => g.id === deletion.guildId);
             return {
               ...deletion,
-              guildName: guild ? guild.name : deletion.guildName || 'Unbekannt'
+              guildName: guild ? guild.name : deletion.guildName || 'Unbekannt',
+              guildIcon: guild ? guild.icon : null
             };
           });
         }
@@ -3954,7 +3955,7 @@ module.exports = (client)=>{
             guildsData.push({
               id: fullGuild.id,
               name: fullGuild.name,
-              icon: fullGuild.icon ? `https://cdn.discordapp.com/icons/${fullGuild.id}/${fullGuild.icon}.png?size=256` : null,
+              icon: fullGuild.iconURL({ size: 128 }),
               memberCount: fullGuild.memberCount,
               blocked: isBlocked,
               blockReason: isBlocked ? blacklist.guilds[fullGuild.id].reason : null
