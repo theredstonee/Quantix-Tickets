@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="dark">
+<html lang="de">
 <head>
+  <!-- Theme Manager - Load before anything else -->
+  <script src="/js/theme-manager.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bot Owner Panel - Quantix Tickets</title>
@@ -18,6 +20,17 @@
     }
 
     :root {
+      --bg-color: #f0f8ff;
+      --text-color: #1a1a2e;
+      --border-color: #bdd7ee;
+      --accent-color: #0ea5e9;
+      --accent-hover: #0284c7;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(14, 165, 233, 0.3);
+      --shadow-color: rgba(14, 165, 233, 0.15);
+    }
+
+    [data-theme="dark"] {
       --bg-color: #0a0a0a;
       --text-color: #00ff88;
       --border-color: #1a3a2a;
@@ -628,11 +641,16 @@
         <i class="fas fa-crown"></i>
         Bot Owner Panel
       </h1>
-      <div class="user-info">
-        <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" alt="Avatar" class="user-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-        <div>
-          <div style="font-weight: 600;"><%= user.username %></div>
-          <div style="font-size: 0.85rem; opacity: 0.7;">Bot Owner</div>
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn" style="padding: 0.75rem; background: var(--glass-bg); border: 2px solid var(--glass-border); color: var(--text-color);" id="themeToggle" title="Toggle Dark/Light Mode">
+          <i class="fas fa-moon"></i>
+        </button>
+        <div class="user-info">
+          <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" alt="Avatar" class="user-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+          <div>
+            <div style="font-weight: 600;"><%= user.username %></div>
+            <div style="font-size: 0.85rem; opacity: 0.7;">Bot Owner</div>
+          </div>
         </div>
       </div>
     </div>

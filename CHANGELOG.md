@@ -3,13 +3,13 @@
 ## [1.0.4] - 2025-10-19
 
 ### Added
-- 📢 **Founder Changelog Broadcast**: Founder können jetzt das Changelog an alle Server senden
+- 📢 **Founder Changelog Broadcast**: Founder können jetzt das Changelog an alle Log-Channels senden
   - "Changelog Broadcast" Button im Founder Panel (nur für nicht-restricted Founder)
   - Bestätigungs-Modal mit Changelog-Vorschau
   - Automatischer Versand der aktuellen Changelog-Version
   - Loading-Animation während des Sendens
   - Detaillierte Ergebnis-Anzeige: Erfolgreiche und fehlgeschlagene Server
-  - Automatische Channel-Erkennung (Log-Channel oder erster verfügbarer Text-Channel)
+  - Wird nur in konfigurierte Log-Channels gesendet (Server ohne Log-Channel werden übersprungen)
   - Automatische Sprach-Anpassung pro Server (9 Sprachen)
   - Professional Embed-Design mit Versions-Info und Änderungsliste
   - Vollständige Logging aller Broadcast-Aktionen

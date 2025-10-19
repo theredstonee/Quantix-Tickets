@@ -1,6 +1,8 @@
 <!doctype html>
-<html lang="<%= lang %>" data-theme="light" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+<html lang="<%= lang %>" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
 <head>
+  <!-- Theme Manager - Load before anything else -->
+  <script src="/js/theme-manager.js"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SLMX16ZJ6Y"></script>
   <script>
@@ -1171,8 +1173,8 @@
             </a>
           </div>
         </div>
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
-          <i id="themeIcon" class="fas fa-moon"></i>
+        <button class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+          <i class="fas fa-moon"></i>
         </button>
         <a href="/panel" class="btn-dashboard" id="dashboardBtn">
           <i class="fas fa-tachometer-alt"></i>
@@ -1204,7 +1206,7 @@
       %><%= heroTexts[lang] || heroTexts.de %></p>
 
       <div class="version-badge">
-        <i class="fas fa-star"></i> v1.0.3
+        <i class="fas fa-star"></i> v1.0.4
       </div>
 
       <% if (isAuthenticated && user) { %>
@@ -2561,20 +2563,7 @@
       }
     });
 
-    // Theme Toggle
-    function toggleTheme() {
-      const html = document.documentElement;
-      const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-      document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
-
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    // Theme is managed by /js/theme-manager.js (Cookie-based)
 
     // Dashboard Button Loading Animation
     const dashboardBtn = document.getElementById('dashboardBtn');

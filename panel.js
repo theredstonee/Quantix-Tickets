@@ -4562,27 +4562,25 @@ module.exports = (client)=>{
       for (const [guildId, guild] of guilds) {
         try {
           const cfg = readCfg(guildId);
-          let targetChannel = null;
 
-          // Try to find log channel
-          if (cfg.logChannelId) {
-            targetChannel = guild.channels.cache.get(cfg.logChannelId);
+          // Only send to log channel
+          if (!cfg.logChannelId) {
+            results.push({
+              success: false,
+              guildId: guildId,
+              guildName: guild.name,
+              error: 'Kein Log-Channel konfiguriert'
+            });
+            continue;
           }
 
-          // If no log channel, find first available text channel
-          if (!targetChannel) {
-            targetChannel = guild.channels.cache.find(ch =>
-              ch.type === 0 && // GUILD_TEXT
-              ch.permissionsFor(guild.members.me).has(['ViewChannel', 'SendMessages'])
-            );
-          }
-
+          const targetChannel = guild.channels.cache.get(cfg.logChannelId);
           if (!targetChannel) {
             results.push({
               success: false,
               guildId: guildId,
               guildName: guild.name,
-              error: 'Kein verfügbarer Channel gefunden'
+              error: 'Log-Channel nicht gefunden oder keine Berechtigung'
             });
             continue;
           }

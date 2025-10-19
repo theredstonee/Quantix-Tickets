@@ -6,76 +6,76 @@
       "date": "2025-10-19",
       "changes": {
         "de": [
-          "📢 Founder Changelog Broadcast - Changelog an alle Server senden",
+          "📢 Founder Changelog Broadcast - Changelog an alle Log-Channels senden",
           "🚀 Button im Founder Panel mit Changelog-Vorschau",
           "⏳ Loading-Animation während des Sendens",
           "✅ Detaillierte Ergebnis-Anzeige für erfolgreiche/fehlgeschlagene Server",
           "🌍 Automatische Sprach-Anpassung pro Server (9 Sprachen)",
-          "🔍 Automatische Channel-Erkennung (Log-Channel oder erster Text-Channel)"
+          "📋 Wird nur in konfigurierte Log-Channels gesendet"
         ],
         "en": [
-          "📢 Founder Changelog Broadcast - Send changelog to all servers",
+          "📢 Founder Changelog Broadcast - Send changelog to all log channels",
           "🚀 Button in Founder Panel with changelog preview",
           "⏳ Loading animation during broadcast",
           "✅ Detailed result display for successful/failed servers",
           "🌍 Automatic language adaptation per server (9 languages)",
-          "🔍 Automatic channel detection (Log-Channel or first text channel)"
+          "📋 Sent only to configured log channels"
         ],
         "he": [
-          "📢 שידור Changelog למייסדים - שליחת Changelog לכל השרתים",
+          "📢 שידור Changelog למייסדים - שליחת Changelog לכל ערוצי הלוג",
           "🚀 כפתור בפאנל המייסדים עם תצוגה מקדימה של Changelog",
           "⏳ אנימציית טעינה במהלך השליחה",
           "✅ תצוגת תוצאות מפורטת לשרתים מוצלחים/כושלים",
           "🌍 התאמת שפה אוטומטית לכל שרת (9 שפות)",
-          "🔍 זיהוי אוטומטי של ערוץ (ערוץ לוג או ערוץ טקסט ראשון)"
+          "📋 נשלח רק לערוצי לוג מוגדרים"
         ],
         "ja": [
-          "📢 創設者Changelogブロードキャスト - 全サーバーにChangelogを送信",
+          "📢 創設者Changelogブロードキャスト - 全ログチャンネルにChangelogを送信",
           "🚀 Changelogプレビュー付きFounder Panelボタン",
           "⏳ 送信中のローディングアニメーション",
           "✅ 成功/失敗したサーバーの詳細な結果表示",
           "🌍 サーバーごとの自動言語適応（9言語）",
-          "🔍 自動チャンネル検出（ログチャンネルまたは最初のテキストチャンネル）"
+          "📋 設定されたログチャンネルにのみ送信"
         ],
         "ru": [
-          "📢 Трансляция Changelog основателя - Отправка changelog на все серверы",
+          "📢 Трансляция Changelog основателя - Отправка changelog во все лог-каналы",
           "🚀 Кнопка на панели основателя с предпросмотром changelog",
           "⏳ Анимация загрузки во время отправки",
           "✅ Подробное отображение результатов для успешных/неудачных серверов",
           "🌍 Автоматическая адаптация языка для каждого сервера (9 языков)",
-          "🔍 Автоматическое определение канала (канал логов или первый текстовый канал)"
+          "📋 Отправляется только в настроенные лог-каналы"
         ],
         "pt": [
-          "📢 Broadcast de Changelog do Fundador - Enviar changelog para todos os servidores",
+          "📢 Broadcast de Changelog do Fundador - Enviar changelog para todos os canais de log",
           "🚀 Botão no Painel do Fundador com visualização do changelog",
           "⏳ Animação de carregamento durante o envio",
           "✅ Exibição detalhada de resultados para servidores bem-sucedidos/falhados",
           "🌍 Adaptação automática de idioma por servidor (9 idiomas)",
-          "🔍 Detecção automática de canal (canal de log ou primeiro canal de texto)"
+          "📋 Enviado apenas para canais de log configurados"
         ],
         "es": [
-          "📢 Broadcast de Changelog del Fundador - Enviar changelog a todos los servidores",
+          "📢 Broadcast de Changelog del Fundador - Enviar changelog a todos los canales de registro",
           "🚀 Botón en el Panel del Fundador con vista previa del changelog",
           "⏳ Animación de carga durante el envío",
           "✅ Visualización detallada de resultados para servidores exitosos/fallidos",
           "🌍 Adaptación automática de idioma por servidor (9 idiomas)",
-          "🔍 Detección automática de canal (canal de registro o primer canal de texto)"
+          "📋 Enviado solo a canales de registro configurados"
         ],
         "id": [
-          "📢 Broadcast Changelog Pendiri - Kirim changelog ke semua server",
+          "📢 Broadcast Changelog Pendiri - Kirim changelog ke semua channel log",
           "🚀 Tombol di Panel Pendiri dengan pratinjau changelog",
           "⏳ Animasi loading selama pengiriman",
           "✅ Tampilan hasil detail untuk server berhasil/gagal",
           "🌍 Adaptasi bahasa otomatis per server (9 bahasa)",
-          "🔍 Deteksi channel otomatis (channel log atau channel teks pertama)"
+          "📋 Dikirim hanya ke channel log yang dikonfigurasi"
         ],
         "ar": [
-          "📢 بث Changelog للمؤسس - إرسال changelog لجميع الخوادم",
+          "📢 بث Changelog للمؤسس - إرسال changelog لجميع قنوات السجل",
           "🚀 زر في لوحة المؤسس مع معاينة changelog",
           "⏳ رسوم متحركة للتحميل أثناء الإرسال",
           "✅ عرض تفصيلي للنتائج للخوادم الناجحة/الفاشلة",
           "🌍 تكيف تلقائي للغة لكل خادم (9 لغات)",
-          "🔍 اكتشاف تلقائي للقناة (قناة السجل أو أول قناة نصية)"
+          "📋 يُرسل فقط إلى قنوات السجل المكونة"
         ]
       }
     },
