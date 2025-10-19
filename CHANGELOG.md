@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.2] - 2025-10-19
+
+### Added
+- 👀 **Member Counter Status**: Bot zeigt jetzt "Schaut X Members zu" als zusätzlichen Status an
+- 🔐 **Automatische Mitternachts-Abmeldung**: Session-Management mit automatischem Logout um 00:00 Uhr
+  - LocalStorage-basierte Session-Verwaltung
+  - Visuelle Benachrichtigung vor der Abmeldung
+  - Neue Datei: `public/js/auth-session.js`
+  - Script in alle authentifizierten Seiten integriert
+
+### Fixed
+- 🔘 **Panel-Send-Buttons**: "Panel senden" und "Panel bearbeiten" Buttons sind jetzt sofort klickbar
+  - JavaScript-basierte Aktivierung basierend auf Channel-Auswahl
+  - Keine vorherige Speicherung der Einstellungen mehr nötig
+
+### Changed
+- ⏱️ **Status-Rotation**: Bot-Status wechselt jetzt alle 20 Sekunden (vorher 10 Sekunden)
+- 📊 **Status-Anzeige**: 5 verschiedene Status-Typen statt 4
+  - SPIELT auf X Servern
+  - SPIELT vX.X.X
+  - SPIELT Quantix Development
+  - SPIELT !commands für Hilfe
+  - SCHAUT X Members zu (NEU)
+
+---
+
 ## [1.0.1] - 2025-10-18
 
 ### Added

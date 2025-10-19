@@ -1,6 +1,75 @@
 {
-  "currentVersion": "1.0.1",
+  "currentVersion": "1.0.2",
   "versions": [
+    {
+      "version": "1.0.2",
+      "date": "2025-10-19",
+      "changes": {
+        "de": [
+          "👀 Member Counter Status - Bot zeigt 'Schaut X Members zu'",
+          "🔐 Automatische Mitternachts-Abmeldung - Session-Management mit LocalStorage",
+          "🔘 Panel-Send-Buttons jetzt sofort klickbar ohne vorherige Speicherung",
+          "⏱️ Status-Rotation jetzt alle 20 Sekunden (vorher 10 Sekunden)",
+          "📊 5 verschiedene Status-Typen statt 4"
+        ],
+        "en": [
+          "👀 Member Counter Status - Bot shows 'Watching X Members'",
+          "🔐 Automatic midnight logout - Session management with LocalStorage",
+          "🔘 Panel send buttons now immediately clickable without prior saving",
+          "⏱️ Status rotation now every 20 seconds (previously 10 seconds)",
+          "📊 5 different status types instead of 4"
+        ],
+        "he": [
+          "👀 סטטוס מונה משתמשים - הבוט מציג 'צופה ב-X משתמשים'",
+          "🔐 התנתקות אוטומטית בחצות - ניהול Session עם LocalStorage",
+          "🔘 כפתורי שליחת פאנל ניתנים ללחיצה מיידית ללא שמירה מוקדמת",
+          "⏱️ רוטציית סטטוס כעת כל 20 שניות (בעבר 10 שניות)",
+          "📊 5 סוגי סטטוס שונים במקום 4"
+        ],
+        "ja": [
+          "👀 メンバーカウンターステータス - ボットが「X人のメンバーを見ています」を表示",
+          "🔐 自動深夜ログアウト - LocalStorageによるセッション管理",
+          "🔘 事前保存なしでパネル送信ボタンがすぐにクリック可能",
+          "⏱️ ステータスローテーションが20秒ごとに変更（以前は10秒）",
+          "📊 4つではなく5つの異なるステータスタイプ"
+        ],
+        "ru": [
+          "👀 Статус счетчика участников - Бот показывает 'Наблюдает за X участниками'",
+          "🔐 Автоматический выход в полночь - Управление сессиями с LocalStorage",
+          "🔘 Кнопки отправки панели теперь сразу кликабельны без предварительного сохранения",
+          "⏱️ Ротация статуса теперь каждые 20 секунд (ранее 10 секунд)",
+          "📊 5 различных типов статусов вместо 4"
+        ],
+        "pt": [
+          "👀 Status de contador de membros - Bot mostra 'Assistindo X Membros'",
+          "🔐 Logout automático à meia-noite - Gerenciamento de sessão com LocalStorage",
+          "🔘 Botões de envio do painel agora clicáveis imediatamente sem salvamento prévio",
+          "⏱️ Rotação de status agora a cada 20 segundos (anteriormente 10 segundos)",
+          "📊 5 tipos de status diferentes em vez de 4"
+        ],
+        "es": [
+          "👀 Estado de contador de miembros - Bot muestra 'Viendo X Miembros'",
+          "🔐 Cierre de sesión automático a medianoche - Gestión de sesión con LocalStorage",
+          "🔘 Botones de envío del panel ahora clicables inmediatamente sin guardado previo",
+          "⏱️ Rotación de estado ahora cada 20 segundos (anteriormente 10 segundos)",
+          "📊 5 tipos de estado diferentes en lugar de 4"
+        ],
+        "id": [
+          "👀 Status penghitung anggota - Bot menampilkan 'Menonton X Anggota'",
+          "🔐 Logout otomatis tengah malam - Manajemen sesi dengan LocalStorage",
+          "🔘 Tombol kirim panel sekarang dapat diklik langsung tanpa menyimpan terlebih dahulu",
+          "⏱️ Rotasi status sekarang setiap 20 detik (sebelumnya 10 detik)",
+          "📊 5 jenis status berbeda bukan 4"
+        ],
+        "ar": [
+          "👀 حالة عداد الأعضاء - يعرض البوت 'يشاهد X أعضاء'",
+          "🔐 تسجيل خروج تلقائي في منتصف الليل - إدارة الجلسة مع LocalStorage",
+          "🔘 أزرار إرسال اللوحة الآن قابلة للنقر فورًا دون حفظ مسبق",
+          "⏱️ تناوب الحالة الآن كل 20 ثانية (كان 10 ثوانٍ سابقًا)",
+          "📊 5 أنواع حالة مختلفة بدلاً من 4"
+        ]
+      }
+    },
     {
       "version": "1.0.1",
       "date": "2025-10-18",
