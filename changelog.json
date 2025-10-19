@@ -6,76 +6,76 @@
       "date": "2025-10-19",
       "changes": {
         "de": [
-          "📢 Founder Broadcast System - Nachrichten an alle Server senden",
-          "⚠️ Modal mit Warnung und Nachricht-Eingabe (max. 2000 Zeichen)",
+          "📢 Founder Changelog Broadcast - Changelog an alle Server senden",
+          "🚀 Button im Founder Panel mit Changelog-Vorschau",
           "⏳ Loading-Animation während des Sendens",
           "✅ Detaillierte Ergebnis-Anzeige für erfolgreiche/fehlgeschlagene Server",
-          "🔍 Automatische Channel-Erkennung (Log-Channel oder erster Text-Channel)",
-          "🔒 XSS-geschützte Nachrichtenvalidierung"
+          "🌍 Automatische Sprach-Anpassung pro Server (9 Sprachen)",
+          "🔍 Automatische Channel-Erkennung (Log-Channel oder erster Text-Channel)"
         ],
         "en": [
-          "📢 Founder Broadcast System - Send messages to all servers",
-          "⚠️ Modal with warning and message input (max. 2000 characters)",
+          "📢 Founder Changelog Broadcast - Send changelog to all servers",
+          "🚀 Button in Founder Panel with changelog preview",
           "⏳ Loading animation during broadcast",
           "✅ Detailed result display for successful/failed servers",
-          "🔍 Automatic channel detection (Log-Channel or first text channel)",
-          "🔒 XSS-protected message validation"
+          "🌍 Automatic language adaptation per server (9 languages)",
+          "🔍 Automatic channel detection (Log-Channel or first text channel)"
         ],
         "he": [
-          "📢 מערכת Broadcast למייסדים - שליחת הודעות לכל השרתים",
-          "⚠️ חלון עם אזהרה והזנת הודעה (מקס. 2000 תווים)",
+          "📢 שידור Changelog למייסדים - שליחת Changelog לכל השרתים",
+          "🚀 כפתור בפאנל המייסדים עם תצוגה מקדימה של Changelog",
           "⏳ אנימציית טעינה במהלך השליחה",
           "✅ תצוגת תוצאות מפורטת לשרתים מוצלחים/כושלים",
-          "🔍 זיהוי אוטומטי של ערוץ (ערוץ לוג או ערוץ טקסט ראשון)",
-          "🔒 אימות הודעות מוגן XSS"
+          "🌍 התאמת שפה אוטומטית לכל שרת (9 שפות)",
+          "🔍 זיהוי אוטומטי של ערוץ (ערוץ לוג או ערוץ טקסט ראשון)"
         ],
         "ja": [
-          "📢 創設者ブロードキャストシステム - 全サーバーにメッセージを送信",
-          "⚠️ 警告とメッセージ入力モーダル（最大2000文字）",
+          "📢 創設者Changelogブロードキャスト - 全サーバーにChangelogを送信",
+          "🚀 Changelogプレビュー付きFounder Panelボタン",
           "⏳ 送信中のローディングアニメーション",
           "✅ 成功/失敗したサーバーの詳細な結果表示",
-          "🔍  自動チャンネル検出（ログチャンネルまたは最初のテキストチャンネル）",
-          "🔒 XSS保護されたメッセージ検証"
+          "🌍 サーバーごとの自動言語適応（9言語）",
+          "🔍 自動チャンネル検出（ログチャンネルまたは最初のテキストチャンネル）"
         ],
         "ru": [
-          "📢 Система широковещания основателя - Отправка сообщений на все серверы",
-          "⚠️ Модальное окно с предупреждением и вводом сообщения (макс. 2000 символов)",
+          "📢 Трансляция Changelog основателя - Отправка changelog на все серверы",
+          "🚀 Кнопка на панели основателя с предпросмотром changelog",
           "⏳ Анимация загрузки во время отправки",
           "✅ Подробное отображение результатов для успешных/неудачных серверов",
-          "🔍 Автоматическое определение канала (канал логов или первый текстовый канал)",
-          "🔒 Проверка сообщений с защитой от XSS"
+          "🌍 Автоматическая адаптация языка для каждого сервера (9 языков)",
+          "🔍 Автоматическое определение канала (канал логов или первый текстовый канал)"
         ],
         "pt": [
-          "📢 Sistema de Broadcast do Fundador - Enviar mensagens para todos os servidores",
-          "⚠️ Modal com aviso e entrada de mensagem (máx. 2000 caracteres)",
+          "📢 Broadcast de Changelog do Fundador - Enviar changelog para todos os servidores",
+          "🚀 Botão no Painel do Fundador com visualização do changelog",
           "⏳ Animação de carregamento durante o envio",
           "✅ Exibição detalhada de resultados para servidores bem-sucedidos/falhados",
-          "🔍 Detecção automática de canal (canal de log ou primeiro canal de texto)",
-          "🔒 Validação de mensagens protegida contra XSS"
+          "🌍 Adaptação automática de idioma por servidor (9 idiomas)",
+          "🔍 Detecção automática de canal (canal de log ou primeiro canal de texto)"
         ],
         "es": [
-          "📢 Sistema de Broadcast del Fundador - Enviar mensajes a todos los servidores",
-          "⚠️ Modal con advertencia e entrada de mensaje (máx. 2000 caracteres)",
+          "📢 Broadcast de Changelog del Fundador - Enviar changelog a todos los servidores",
+          "🚀 Botón en el Panel del Fundador con vista previa del changelog",
           "⏳ Animación de carga durante el envío",
           "✅ Visualización detallada de resultados para servidores exitosos/fallidos",
-          "🔍 Detección automática de canal (canal de registro o primer canal de texto)",
-          "🔒 Validación de mensajes protegida contra XSS"
+          "🌍 Adaptación automática de idioma por servidor (9 idiomas)",
+          "🔍 Detección automática de canal (canal de registro o primer canal de texto)"
         ],
         "id": [
-          "📢 Sistem Broadcast Pendiri - Kirim pesan ke semua server",
-          "⚠️ Modal dengan peringatan dan input pesan (maks. 2000 karakter)",
+          "📢 Broadcast Changelog Pendiri - Kirim changelog ke semua server",
+          "🚀 Tombol di Panel Pendiri dengan pratinjau changelog",
           "⏳ Animasi loading selama pengiriman",
           "✅ Tampilan hasil detail untuk server berhasil/gagal",
-          "🔍 Deteksi channel otomatis (channel log atau channel teks pertama)",
-          "🔒 Validasi pesan terlindungi XSS"
+          "🌍 Adaptasi bahasa otomatis per server (9 bahasa)",
+          "🔍 Deteksi channel otomatis (channel log atau channel teks pertama)"
         ],
         "ar": [
-          "📢 نظام البث للمؤسس - إرسال رسائل لجميع الخوادم",
-          "⚠️ نافذة مع تحذير وإدخال رسالة (2000 حرف كحد أقصى)",
+          "📢 بث Changelog للمؤسس - إرسال changelog لجميع الخوادم",
+          "🚀 زر في لوحة المؤسس مع معاينة changelog",
           "⏳ رسوم متحركة للتحميل أثناء الإرسال",
           "✅ عرض تفصيلي للنتائج للخوادم الناجحة/الفاشلة",
-          "🔍 اكتشاف تلقائي للقناة (قناة السجل أو أول قناة نصية)",
-          "🔒 التحقق من الرسائل محمي ضد XSS"
+          "🌍 تكيف تلقائي للغة لكل خادم (9 لغات)",
+          "🔍 اكتشاف تلقائي للقناة (قناة السجل أو أول قناة نصية)"
         ]
       }
     },

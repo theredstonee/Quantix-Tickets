@@ -582,8 +582,8 @@
       <div class="header-actions">
         <% if (!restrictedView) { %>
         <button class="btn-broadcast" onclick="showBroadcastModal()">
-          <i class="fas fa-bullhorn"></i>
-          Broadcast senden
+          <i class="fas fa-rocket"></i>
+          Changelog Broadcast
         </button>
         <% } %>
         <div class="user-info">
@@ -1000,40 +1000,39 @@
   <!-- Broadcast Modal -->
   <div class="modal-overlay" id="broadcastModal">
     <div class="modal-content">
-      <div class="modal-icon" style="color: #667eea;">
-        <i class="fas fa-bullhorn"></i>
+      <div class="modal-icon" style="color: #00b894;">
+        <i class="fas fa-rocket"></i>
       </div>
-      <h3 class="modal-title">Broadcast senden</h3>
+      <h3 class="modal-title">Changelog Broadcast</h3>
       <p class="modal-message">
-        Diese Nachricht wird an <strong>alle Server</strong> gesendet!
+        Möchtest du das <strong>Changelog v1.0.4</strong> an alle Server senden?
         <br><br>
-        <span style="opacity: 0.7; font-size: 0.95rem; color: #f39c12;">
-          <strong>⚠️ WARNUNG:</strong>
-          <br>• Nachricht wird in allen Servern im Log-Channel gesendet
-          <br>• Falls kein Log-Channel: in erstem verfügbaren Text-Channel
-          <br>• Server ohne Berechtigungen werden übersprungen
+        <span style="opacity: 0.7; font-size: 0.95rem;">
+          <strong>📢 Was passiert:</strong>
+          <br>• Changelog-Embed wird an alle Server gesendet
+          <br>• Nachricht im Log-Channel (oder erstem verfügbaren Text-Channel)
+          <br>• Automatische Sprach-Anpassung pro Server
           <br>• Detaillierte Rückmeldung nach dem Senden
         </span>
+        <br><br>
+        <span style="opacity: 0.9; font-size: 1rem; color: var(--accent-color);">
+          <strong>✨ Changelog v1.0.4:</strong>
+        </span>
+        <div style="margin-top: 0.75rem; padding: 1rem; background: rgba(0, 255, 136, 0.05); border-left: 3px solid var(--accent-color); border-radius: 0.5rem; text-align: left; font-size: 0.9rem; line-height: 1.6;">
+          📢 Founder Changelog Broadcast - Changelog an alle Server senden<br>
+          🚀 Button im Founder Panel mit Changelog-Vorschau<br>
+          ⏳ Loading-Animation während des Sendens<br>
+          ✅ Detaillierte Ergebnis-Anzeige für erfolgreiche/fehlgeschlagene Server<br>
+          🌍 Automatische Sprach-Anpassung pro Server (9 Sprachen)<br>
+          🔍 Automatische Channel-Erkennung (Log-Channel oder erster Text-Channel)
+        </div>
       </p>
-      <div style="margin: 1.5rem 0;">
-        <label for="broadcastMessage" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-color);">
-          <i class="fas fa-comment-alt"></i> Broadcast-Nachricht:
-        </label>
-        <textarea
-          id="broadcastMessage"
-          rows="6"
-          maxlength="2000"
-          placeholder="Gib hier deine Broadcast-Nachricht ein..."
-          style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); font-family: inherit; resize: vertical; min-height: 120px;"
-        ></textarea>
-        <small style="opacity: 0.6; font-size: 0.85rem;">Max. 2000 Zeichen</small>
-      </div>
       <div class="modal-buttons">
         <button class="modal-btn modal-btn-cancel" onclick="closeBroadcastModal()">
           <i class="fas fa-times"></i> Abbrechen
         </button>
-        <button class="modal-btn modal-btn-confirm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="confirmBroadcast()">
-          <i class="fas fa-bullhorn"></i> Broadcast senden
+        <button class="modal-btn modal-btn-confirm" style="background: #00b894; color: white;" onclick="confirmBroadcast()">
+          <i class="fas fa-paper-plane"></i> Changelog senden
         </button>
       </div>
     </div>
@@ -1042,10 +1041,10 @@
   <!-- Broadcast Results Modal -->
   <div class="modal-overlay" id="broadcastResultsModal">
     <div class="modal-content" style="max-width: 700px;">
-      <div class="modal-icon" style="color: var(--accent-color);">
+      <div class="modal-icon" style="color: #00b894;">
         <i class="fas fa-check-circle"></i>
       </div>
-      <h3 class="modal-title">Broadcast Ergebnisse</h3>
+      <h3 class="modal-title">Changelog Broadcast Ergebnisse</h3>
       <div style="text-align: center; margin-bottom: 1rem;">
         <p id="broadcastSummary" style="font-size: 1.1rem; font-weight: 600;"></p>
       </div>
@@ -1063,8 +1062,8 @@
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
-    <div class="loading-text">Broadcast wird gesendet...</div>
-    <div class="loading-subtext">Bitte warten, während die Nachricht an alle Server übermittelt wird. Dies kann einige Sekunden dauern.</div>
+    <div class="loading-text">Changelog wird gesendet...</div>
+    <div class="loading-subtext">Bitte warten, während das Changelog v1.0.4 an alle Server übermittelt wird. Dies kann einige Sekunden dauern.</div>
   </div>
 
   <script>
@@ -1298,23 +1297,9 @@
 
     function closeBroadcastModal() {
       document.getElementById('broadcastModal').classList.remove('active');
-      document.getElementById('broadcastMessage').value = '';
     }
 
     async function confirmBroadcast() {
-      const message = document.getElementById('broadcastMessage').value.trim();
-
-      // Validate message
-      if (!message || message.length === 0) {
-        alert('Bitte gib eine Broadcast-Nachricht ein!');
-        return;
-      }
-
-      if (message.length > 2000) {
-        alert('Die Nachricht ist zu lang! Max. 2000 Zeichen.');
-        return;
-      }
-
       // Close broadcast modal
       closeBroadcastModal();
 
@@ -1327,8 +1312,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ message })
+          }
         });
 
         const data = await response.json();
@@ -1340,13 +1324,13 @@
           // Show results modal
           showBroadcastResults(data);
         } else {
-          alert('Fehler beim Senden des Broadcasts: ' + (data.error || 'Unbekannter Fehler'));
+          alert('Fehler beim Senden des Changelogs: ' + (data.error || 'Unbekannter Fehler'));
         }
       } catch (error) {
         // Hide loading overlay
         document.getElementById('loadingOverlay').classList.remove('active');
         console.error('Broadcast error:', error);
-        alert('Fehler beim Senden des Broadcasts: ' + error.message);
+        alert('Fehler beim Senden des Changelogs: ' + error.message);
       }
     }
 
@@ -1358,9 +1342,11 @@
       // Set summary
       const successCount = data.results.filter(r => r.success).length;
       const totalCount = data.results.length;
+      const version = data.version || '1.0.4';
       summary.innerHTML = `
+        Changelog <strong>v${version}</strong> wurde an
         <span style="color: var(--accent-color);">${successCount}</span> von
-        <span style="color: var(--accent-color);">${totalCount}</span> Servern erfolgreich erreicht
+        <span style="color: var(--accent-color);">${totalCount}</span> Servern gesendet
       `;
 
       // Build results list

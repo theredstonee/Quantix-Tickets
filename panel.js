@@ -4524,7 +4524,7 @@ module.exports = (client)=>{
     }
   });
 
-  // Broadcast to all servers - POST Route
+  // Broadcast changelog to all servers - POST Route
   router.post('/founder/broadcast', isFounder, async (req, res) => {
     try {
       // Restricted user cannot perform admin actions
@@ -4533,24 +4533,31 @@ module.exports = (client)=>{
         return res.status(403).json({ success: false, error: 'Keine Berechtigung für diese Aktion' });
       }
 
-      const { message } = req.body;
+      // Load changelog
+      const { EmbedBuilder } = require('discord.js');
+      const { getGuildLanguage } = require('./translations');
+      const { COPYRIGHT, VERSION } = require('./version.config');
 
-      // Validate message
-      if (!message || typeof message !== 'string' || message.trim().length === 0) {
-        return res.status(400).json({ success: false, error: 'Keine Nachricht angegeben' });
+      let changelog;
+      try {
+        const changelogPath = path.join(__dirname, 'changelog.json');
+        const changelogData = fs.readFileSync(changelogPath, 'utf8');
+        changelog = JSON.parse(changelogData);
+      } catch (err) {
+        console.error('Error loading changelog:', err);
+        return res.status(500).json({ success: false, error: 'Changelog konnte nicht geladen werden' });
       }
 
-      if (message.length > 2000) {
-        return res.status(400).json({ success: false, error: 'Nachricht ist zu lang (max. 2000 Zeichen)' });
+      const currentVersionData = changelog.versions.find(v => v.version === VERSION);
+      if (!currentVersionData) {
+        return res.status(400).json({ success: false, error: `Keine Changelog-Daten für Version ${VERSION} gefunden` });
       }
-
-      const sanitizedMessage = sanitizeString(message, 2000);
 
       // Get all guilds
       const guilds = client.guilds.cache;
       const results = [];
 
-      console.log(`📢 Broadcasting message to ${guilds.size} servers by ${req.user.username} (${req.user.id})`);
+      console.log(`📢 Broadcasting changelog v${VERSION} to ${guilds.size} servers by ${req.user.username} (${req.user.id})`);
 
       for (const [guildId, guild] of guilds) {
         try {
@@ -4580,16 +4587,101 @@ module.exports = (client)=>{
             continue;
           }
 
-          // Create broadcast embed
-          const { EmbedBuilder } = require('discord.js');
-          const broadcastEmbed = new EmbedBuilder()
-            .setTitle('📢 Wichtige Ankündigung vom Quantix Tickets Team')
-            .setDescription(sanitizedMessage)
-            .setColor(0x667eea)
-            .setTimestamp()
-            .setFooter({ text: 'Quantix Tickets © 2025 • Founder Broadcast' });
+          // Get guild language and changelog
+          const guildLang = getGuildLanguage(guildId) || 'de';
+          const changes = currentVersionData.changes[guildLang] || currentVersionData.changes.de || [];
 
-          await targetChannel.send({ embeds: [broadcastEmbed] });
+          // Translation texts
+          const texts = {
+            de: {
+              title: '📢 Versions-Update',
+              description: `**Quantix Tickets Bot** wurde auf Version **${VERSION}** aktualisiert`,
+              versionLabel: '🆕 Version',
+              dateLabel: '📅 Datum',
+              changesLabel: '✨ Änderungen'
+            },
+            en: {
+              title: '📢 Version Update',
+              description: `**Quantix Tickets Bot** has been updated to version **${VERSION}**`,
+              versionLabel: '🆕 Version',
+              dateLabel: '📅 Date',
+              changesLabel: '✨ Changes'
+            },
+            he: {
+              title: '📢 עדכון גרסה',
+              description: `**בוט Quantix Tickets** עודכן לגרסה **${VERSION}**`,
+              versionLabel: '🆕 גרסה',
+              dateLabel: '📅 תאריך',
+              changesLabel: '✨ שינויים'
+            },
+            ja: {
+              title: '📢 バージョンアップデート',
+              description: `**Quantix Tickets Bot** がバージョン **${VERSION}** にアップデートされました`,
+              versionLabel: '🆕 バージョン',
+              dateLabel: '📅 日付',
+              changesLabel: '✨ 変更点'
+            },
+            ru: {
+              title: '📢 Обновление версии',
+              description: `**Quantix Tickets Bot** обновлен до версии **${VERSION}**`,
+              versionLabel: '🆕 Версия',
+              dateLabel: '📅 Дата',
+              changesLabel: '✨ Изменения'
+            },
+            pt: {
+              title: '📢 Atualização de Versão',
+              description: `**Quantix Tickets Bot** foi atualizado para a versão **${VERSION}**`,
+              versionLabel: '🆕 Versão',
+              dateLabel: '📅 Data',
+              changesLabel: '✨ Mudanças'
+            },
+            es: {
+              title: '📢 Actualización de Versión',
+              description: `**Quantix Tickets Bot** se actualizó a la versión **${VERSION}**`,
+              versionLabel: '🆕 Versión',
+              dateLabel: '📅 Fecha',
+              changesLabel: '✨ Cambios'
+            },
+            id: {
+              title: '📢 Pembaruan Versi',
+              description: `**Quantix Tickets Bot** telah diperbarui ke versi **${VERSION}**`,
+              versionLabel: '🆕 Versi',
+              dateLabel: '📅 Tanggal',
+              changesLabel: '✨ Perubahan'
+            },
+            ar: {
+              title: '📢 تحديث الإصدار',
+              description: `**بوت Quantix Tickets** تم تحديثه إلى الإصدار **${VERSION}**`,
+              versionLabel: '🆕 الإصدار',
+              dateLabel: '📅 التاريخ',
+              changesLabel: '✨ التغييرات'
+            }
+          };
+
+          const t = texts[guildLang] || texts.de;
+
+          // Create changelog embed
+          const embed = new EmbedBuilder()
+            .setColor(0x00b894)
+            .setTitle(t.title)
+            .setDescription(t.description)
+            .addFields([
+              { name: t.versionLabel, value: VERSION, inline: true },
+              { name: t.dateLabel, value: currentVersionData.date || new Date().toLocaleDateString('de-DE'), inline: true }
+            ])
+            .setFooter({ text: COPYRIGHT })
+            .setTimestamp();
+
+          if (changes.length > 0) {
+            embed.addFields([
+              {
+                name: t.changesLabel,
+                value: changes.join('\n')
+              }
+            ]);
+          }
+
+          await targetChannel.send({ embeds: [embed] });
 
           results.push({
             success: true,
@@ -4598,7 +4690,7 @@ module.exports = (client)=>{
             channelName: targetChannel.name
           });
 
-          console.log(`✅ Broadcast sent to ${guild.name} (${guildId}) in #${targetChannel.name}`);
+          console.log(`✅ Changelog sent to ${guild.name} (${guildId}) in #${targetChannel.name}`);
         } catch (guildErr) {
           results.push({
             success: false,
@@ -4606,15 +4698,16 @@ module.exports = (client)=>{
             guildName: guild.name,
             error: guildErr.message || 'Unbekannter Fehler'
           });
-          console.error(`❌ Failed to send broadcast to ${guild.name} (${guildId}):`, guildErr.message);
+          console.error(`❌ Failed to send changelog to ${guild.name} (${guildId}):`, guildErr.message);
         }
       }
 
       const successCount = results.filter(r => r.success).length;
-      console.log(`📊 Broadcast completed: ${successCount}/${guilds.size} servers reached`);
+      console.log(`📊 Changelog broadcast completed: ${successCount}/${guilds.size} servers reached`);
 
       res.json({
         success: true,
+        version: VERSION,
         results: results
       });
     } catch (err) {
