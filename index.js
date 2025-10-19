@@ -664,11 +664,11 @@ function startStatusRotation() {
     const totalMembers = client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
 
     const statuses = [
-      { name: `auf **${serverCount}** Servern`, type: ActivityType.Playing },
-      { name: `Release **v${VERSION}**`, type: ActivityType.Playing },
+      { name: `auf ${serverCount} Servern`, type: ActivityType.Playing },
+      { name: `Release v${VERSION}`, type: ActivityType.Playing },
       { name: `Quantix Development`, type: ActivityType.Playing },
       { name: `!commands für Hilfe`, type: ActivityType.Playing },
-      { name: `**${totalMembers}** Members zu`, type: ActivityType.Watching }
+      { name: `${totalMembers} Members zu`, type: ActivityType.Watching }
     ];
 
     const status = statuses[currentStatusIndex];
@@ -685,7 +685,7 @@ function startStatusRotation() {
   updateStatus();
 
   // Wechsle alle 20 Sekunden
-  setInterval(updateStatus, 20000);
+  setInterval(updateStatus, 15000);
 }
 
 client.once('ready', async () => {
