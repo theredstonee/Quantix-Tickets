@@ -323,6 +323,7 @@ router.get('/transcript/:id', isAuthenticated, isAdminOrTeam, (req, res) => {
 router.get('/uptime', async (req, res) => {
   try {
     const apiKey = process.env.UPTIMEROBOT_API_KEY;
+    const monitorId = process.env.UPTIMEROBOT_MONITOR_ID; // Optional: Spezifische Monitor-ID
 
     if (!apiKey) {
       return res.json({
@@ -333,7 +334,7 @@ router.get('/uptime', async (req, res) => {
     }
 
     // Fetch data from UptimeRobot API
-    const uptimeData = await getUptimeRobotData(apiKey);
+    const uptimeData = await getUptimeRobotData(apiKey, monitorId);
 
     if (!uptimeData || uptimeData.stat !== 'ok') {
       return res.json({
@@ -353,7 +354,7 @@ router.get('/uptime', async (req, res) => {
       });
     }
 
-    // Get first monitor (or you can loop through all)
+    // Get first monitor
     const monitor = monitors[0];
 
     // Calculate uptime percentages
@@ -403,19 +404,28 @@ router.get('/uptime', async (req, res) => {
 
 /**
  * Fetches data from UptimeRobot API
+ * @param {string} apiKey - UptimeRobot API Key
+ * @param {string} monitorId - Optional Monitor ID (if set, only this monitor is fetched)
  */
-async function getUptimeRobotData(apiKey) {
+async function getUptimeRobotData(apiKey, monitorId = null) {
   const https = require('https');
 
   return new Promise((resolve, reject) => {
-    const postData = JSON.stringify({
+    const postDataObj = {
       api_key: apiKey,
       format: 'json',
       custom_uptime_ratios: '1-7-30', // 1 day, 7 days, 30 days
       logs: 1,
       log_types: '1-2', // down and up events
       logs_limit: 10
-    });
+    };
+
+    // Wenn Monitor-ID gesetzt ist, nur diesen Monitor abrufen
+    if (monitorId) {
+      postDataObj.monitors = monitorId;
+    }
+
+    const postData = JSON.stringify(postDataObj);
 
     const options = {
       hostname: 'api.uptimerobot.com',

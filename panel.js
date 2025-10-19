@@ -2106,6 +2106,15 @@ module.exports = (client)=>{
         cfg.githubWebhookChannelId = null;
       }
 
+      // Ticket Archive Settings
+      cfg.archiveEnabled = req.body.archiveEnabled === 'true';
+      if(req.body.archiveCategoryId){
+        const archiveCatId = sanitizeDiscordId(req.body.archiveCategoryId);
+        cfg.archiveCategoryId = archiveCatId || req.body.archiveCategoryId.trim();
+      } else {
+        cfg.archiveCategoryId = null;
+      }
+
       // Email-Benachrichtigungen (Pro Feature)
       if(req.body.notificationEmail){
         const email = sanitizeEmail(req.body.notificationEmail);

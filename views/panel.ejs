@@ -698,6 +698,60 @@
       background: var(--bg-secondary);
     }
 
+    /* Toggle Switch Styles */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-label input[type="checkbox"] {
+      display: none;
+    }
+
+    .toggle-slider {
+      position: relative;
+      width: 50px;
+      height: 26px;
+      background: var(--border-color);
+      border-radius: 34px;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+
+    .toggle-label input:checked + .toggle-slider {
+      background: var(--accent-color);
+    }
+
+    .toggle-label input:checked + .toggle-slider::before {
+      transform: translateX(24px);
+    }
+
+    .toggle-text {
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
     select[multiple] {
       height: auto;
       min-height: 150px;
@@ -2002,16 +2056,28 @@
                     <i class="fas fa-ticket"></i>
                     <span><%= lang === 'de' ? 'Maximale Tickets pro User' : 'Maximum Tickets per User' %></span>
                   </div>
-                  <input
-                    type="number"
-                    name="maxTicketsPerUser"
-                    value="<%= cfg.maxTicketsPerUser || 3 %>"
-                    min="0"
-                    max="100"
-                    placeholder="3">
+                  <select name="maxTicketsPerUser">
+                    <%
+                    const currentMaxTickets = cfg.maxTicketsPerUser || 3;
+                    const ticketOptions = [
+                      { value: 0, label: lang === 'de' ? '♾️ Unbegrenzt' : '♾️ Unlimited' },
+                      { value: 1, label: '1 Ticket' },
+                      { value: 2, label: '2 Tickets' },
+                      { value: 3, label: '3 Tickets' },
+                      { value: 5, label: '5 Tickets' },
+                      { value: 10, label: '10 Tickets' },
+                      { value: 15, label: '15 Tickets' },
+                      { value: 20, label: '20 Tickets' }
+                    ];
+                    ticketOptions.forEach(opt => { %>
+                      <option value="<%= opt.value %>" <%= currentMaxTickets == opt.value ? 'selected' : '' %>>
+                        <%= opt.label %>
+                      </option>
+                    <% }); %>
+                  </select>
                   <div class="help-text">
                     <i class="fas fa-lightbulb"></i>
-                    <span><%= lang === 'de' ? '0 = Unbegrenzt | Empfohlen: 3-5 Tickets' : '0 = Unlimited | Recommended: 3-5 tickets' %></span>
+                    <span><%= lang === 'de' ? 'Empfohlen: 3-5 Tickets für optimale Übersicht' : 'Recommended: 3-5 tickets for optimal overview' %></span>
                   </div>
                 </div>
 
@@ -2161,6 +2227,71 @@
                       </option>
                     <% }) %>
                   </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ticket Archive Settings -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-archive"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Ticket-Archiv' : 'Ticket Archive' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Geschlossene Tickets automatisch in eine Archiv-Kategorie verschieben statt löschen'
+                      : 'Automatically move closed tickets to an archive category instead of deleting them'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <div class="toggle-container">
+                    <label class="toggle-label">
+                      <input type="checkbox" name="archiveEnabled" value="true" <%= cfg.archiveEnabled ? 'checked' : '' %>>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-text"><%= lang === 'de' ? 'Archiv aktivieren' : 'Enable Archive' %></span>
+                    </label>
+                  </div>
+                  <div class="help-text">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>
+                      <%= lang === 'de'
+                        ? 'Wenn aktiviert, werden geschlossene Tickets in die Archiv-Kategorie verschoben statt gelöscht'
+                        : 'When enabled, closed tickets will be moved to the archive category instead of being deleted'
+                      %>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1.5rem;">
+                  <div class="form-label">
+                    <i class="fas fa-folder"></i>
+                    <span><%= lang === 'de' ? 'Archiv-Kategorie' : 'Archive Category' %></span>
+                  </div>
+                  <select name="archiveCategoryId">
+                    <option value=""><%= lang === 'de' ? 'Kategorie auswählen' : 'Select Category' %></option>
+                    <%
+                    channels.filter(ch => ch.type === 4).forEach(ch => { %>
+                      <option value="<%= ch.id %>" <%= cfg.archiveCategoryId === ch.id ? 'selected' : '' %>>
+                        📁 <%= ch.name %>
+                      </option>
+                    <% }) %>
+                  </select>
+                  <div class="help-text">
+                    <i class="fas fa-info-circle"></i>
+                    <span>
+                      <%= lang === 'de'
+                        ? 'Wähle die Kategorie aus, in die geschlossene Tickets verschoben werden sollen'
+                        : 'Select the category where closed tickets should be moved to'
+                      %>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -239,9 +239,29 @@ async function closeInactiveTicket(client, guild, ticket, cfg, guildId) {
       }
     }
 
-    // Delete channel after delay
-    setTimeout(() => {
-      channel.delete().catch(() => {});
+    // Archive or Delete channel after delay
+    setTimeout(async () => {
+      if (cfg.archiveEnabled && cfg.archiveCategoryId) {
+        try {
+          // Verschiebe Channel in Archiv-Kategorie
+          await channel.setParent(cfg.archiveCategoryId, {
+            lockPermissions: false
+          });
+
+          // Benenne Channel um zu "closed-ticket-####"
+          const newName = `closed-${channel.name}`;
+          await channel.setName(newName);
+
+          console.log(`✅ Auto-Close: Ticket #${ticket.id} in Archiv verschoben`);
+        } catch (err) {
+          console.error('Fehler beim Archivieren (Auto-Close):', err);
+          // Fallback: Lösche Channel
+          await channel.delete().catch(() => {});
+        }
+      } else {
+        // Kein Archiv aktiv: Lösche Channel
+        await channel.delete().catch(() => {});
+      }
     }, 5000);
 
     console.log(`[Auto-Close] Closed ticket #${ticket.id} in guild ${guildId} due to inactivity`);

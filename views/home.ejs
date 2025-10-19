@@ -1401,19 +1401,22 @@
       </div>
       <div class="stat-item">
         <span class="stat-number" id="uptime-display">...</span><span style="font-size: 1.5rem; color: var(--accent-color); font-weight: 700;">%</span>
-        <span class="stat-label"><%
-          const uptimeText = {
-            de: 'Uptime',
-            en: 'Uptime',
-            he: 'זמן פעילות',
-            ja: '稼働時間',
-            ru: 'Аптайм',
-            pt: 'Tempo Ativo',
-            es: 'Tiempo Activo',
-            id: 'Waktu Aktif',
-            ar: 'وقت التشغيل'
-          };
-        %><%= uptimeText[lang] || uptimeText.de %></span>
+        <span class="stat-label">
+          <%
+            const uptimeText = {
+              de: 'Uptime',
+              en: 'Uptime',
+              he: 'זמן פעילות',
+              ja: '稼働時間',
+              ru: 'Аптайм',
+              pt: 'Tempo Ativo',
+              es: 'Tiempo Activo',
+              id: 'Waktu Aktif',
+              ar: 'وقت التشغيل'
+            };
+          %><%= uptimeText[lang] || uptimeText.de %>
+        </span>
+        <span id="uptime-status" style="display: block; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 600;"></span>
       </div>
     </div>
   </section>
@@ -2641,8 +2644,16 @@
     // Load real uptime from UptimeRobot API and display as percentage
     async function loadUptime() {
       try {
+        console.log('[Uptime] Fetching uptime data...');
         const response = await fetch('/api/uptime');
+
+        if (!response.ok) {
+          console.error('[Uptime] HTTP error:', response.status, response.statusText);
+          throw new Error(`HTTP ${response.status}`);
+        }
+
         const data = await response.json();
+        console.log('[Uptime] Response data:', data);
 
         if (data.success && data.uptime) {
           // Use real 30-day uptime from UptimeRobot
@@ -2650,8 +2661,9 @@
 
           // Display with 1 decimal place
           document.getElementById('uptime-display').textContent = uptimePercent.toFixed(1);
+          console.log('[Uptime] Displayed:', uptimePercent.toFixed(1) + '%');
 
-          // Optionally update status indicator if exists
+          // Update status indicator if exists
           const statusEl = document.getElementById('uptime-status');
           if (statusEl) {
             if (data.status === 'online') {
@@ -2667,13 +2679,25 @@
           }
         } else {
           // Fallback to default if UptimeRobot is not configured
-          console.warn('UptimeRobot not configured or error:', data.error);
+          console.warn('[Uptime] UptimeRobot not configured or error:', data.error || 'No success flag');
           document.getElementById('uptime-display').textContent = '99.5';
+
+          const statusEl = document.getElementById('uptime-status');
+          if (statusEl) {
+            statusEl.textContent = '⚙️ Nicht konfiguriert';
+            statusEl.style.color = '#95a5a6';
+          }
         }
       } catch (err) {
-        console.error('Failed to load uptime:', err);
+        console.error('[Uptime] Failed to load uptime:', err);
         // Fallback to default value
         document.getElementById('uptime-display').textContent = '99.5';
+
+        const statusEl = document.getElementById('uptime-status');
+        if (statusEl) {
+          statusEl.textContent = '⚠️ Fehler';
+          statusEl.style.color = '#e74c3c';
+        }
       }
     }
 

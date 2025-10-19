@@ -2188,7 +2188,31 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         logEvent(i.guild, `🔐 Ticket **#${ticket.id}** geschlossen durch Zustimmung von ${closerTag}`);
-        setTimeout(() => i.channel.delete().catch(() => {}), 2500);
+
+        // Archiv oder Löschen
+        setTimeout(async () => {
+          if (cfg.archiveEnabled && cfg.archiveCategoryId) {
+            try {
+              // Verschiebe Channel in Archiv-Kategorie
+              await i.channel.setParent(cfg.archiveCategoryId, {
+                lockPermissions: false
+              });
+
+              // Benenne Channel um zu "closed-ticket-####"
+              const newName = `closed-${i.channel.name}`;
+              await i.channel.setName(newName);
+
+              console.log(`✅ Ticket #${ticket.id} in Archiv verschoben`);
+            } catch (err) {
+              console.error('Fehler beim Archivieren:', err);
+              // Fallback: Lösche Channel
+              await i.channel.delete().catch(() => {});
+            }
+          } else {
+            // Kein Archiv aktiv: Lösche Channel
+            await i.channel.delete().catch(() => {});
+          }
+        }, 2500);
         return;
       }
 
