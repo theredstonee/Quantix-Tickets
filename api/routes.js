@@ -320,14 +320,16 @@ router.get('/transcript/:id', isAuthenticated, isAdminOrTeam, (req, res) => {
 // ============================================================
 
 // GET /api/uptime - Get UptimeRobot statistics
+// WICHTIG: Verwende einen Read-Only API Key aus Sicherheitsgründen!
 router.get('/uptime', async (req, res) => {
   console.log('[UptimeRobot API] Uptime-Anfrage erhalten');
 
   try {
-    const apiKey = process.env.UPTIMEROBOT_API_KEY;
+    const apiKey = process.env.UPTIMEROBOT_API_KEY; // Read-Only API Key empfohlen
     const monitorId = process.env.UPTIMEROBOT_MONITOR_ID; // Optional: Spezifische Monitor-ID
 
     console.log('[UptimeRobot API] API Key vorhanden:', !!apiKey);
+    console.log('[UptimeRobot API] API Key Typ: Read-Only (empfohlen)');
     console.log('[UptimeRobot API] Monitor ID:', monitorId || 'Nicht gesetzt (alle Monitore werden abgerufen)');
 
     if (!apiKey) {
@@ -438,8 +440,14 @@ router.get('/uptime', async (req, res) => {
 
 /**
  * Fetches data from UptimeRobot API
- * @param {string} apiKey - UptimeRobot API Key
+ * @param {string} apiKey - UptimeRobot Read-Only API Key (empfohlen aus Sicherheitsgründen)
  * @param {string} monitorId - Optional Monitor ID (if set, only this monitor is fetched)
+ *
+ * Wie man den Read-Only API Key bekommt:
+ * 1. UptimeRobot Dashboard öffnen: https://uptimerobot.com/dashboard
+ * 2. Settings → API Settings
+ * 3. "Create API Key" → "Read-Only Key" auswählen
+ * 4. Key kopieren und in .env als UPTIMEROBOT_API_KEY eintragen
  */
 async function getUptimeRobotData(apiKey, monitorId = null) {
   const https = require('https');
