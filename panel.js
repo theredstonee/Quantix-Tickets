@@ -1034,30 +1034,33 @@ module.exports = (client)=>{
           hasBot: botGuildIds.has(g.id)
         }));
 
-      // Sammle Server mit Team-Rolle (aber ohne Admin, nur mit Bot)
+      // Sammle Server mit Team-Rolle
+      // Durchlaufe ALLE Bot-Server, nicht nur req.user.guilds
       const teamServers = [];
-      for (const guildData of (req.user.guilds || [])) {
-        const hasBot = botGuildIds.has(guildData.id);
-        const isAdmin = (BigInt(guildData.permissions) & ADMIN) === ADMIN;
+      const adminServerIds = new Set(adminServers.map(s => s.id));
 
-        // Skip wenn bereits Admin oder Bot nicht auf dem Server
-        if (!hasBot || isAdmin) continue;
+      for (const [guildId, guildData] of botGuilds) {
+        // Skip wenn User bereits Admin auf diesem Server ist
+        if (adminServerIds.has(guildId)) continue;
 
         try {
-          const cfg = readCfg(guildData.id);
+          const cfg = readCfg(guildId);
           if (!cfg.teamRoleId) continue;
 
-          const guild = await client.guilds.fetch(guildData.id);
+          const guild = await client.guilds.fetch(guildId);
           const member = await guild.members.fetch(req.user.id).catch(() => null);
 
           if (member && member.roles.cache.has(cfg.teamRoleId)) {
             teamServers.push({
-              ...guildData,
-              hasBot: true
+              id: guildId,
+              name: guild.name,
+              icon: guild.icon,
+              hasBot: true,
+              permissions: '0' // Team members haben keine Admin-Permissions
             });
           }
         } catch (err) {
-          console.error(`Error checking team role for guild ${guildData.id}:`, err);
+          console.error(`Error checking team role for guild ${guildId}:`, err);
         }
       }
 
