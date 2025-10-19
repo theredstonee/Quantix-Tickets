@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.4] - 2025-10-19
+
+### Added
+- 📢 **Founder Broadcast System**: Founder können jetzt Broadcast-Nachrichten an alle Server senden
+  - Broadcast-Button im Founder Panel (nur für nicht-restricted Founder)
+  - Modal mit Warnung und Textarea für Nachricht (max. 2000 Zeichen)
+  - Loading-Animation während des Sendens
+  - Detaillierte Ergebnis-Anzeige: Erfolgreiche und fehlgeschlagene Server
+  - Automatische Channel-Erkennung (Log-Channel oder erster verfügbarer Text-Channel)
+  - XSS-geschützte Nachrichtenvalidierung mit `sanitizeString()`
+  - Professional Embed-Design für Broadcast-Nachrichten
+  - Vollständige Logging aller Broadcast-Aktionen
+
+---
+
 ## [1.0.3] - 2025-10-19
 
 ### Added

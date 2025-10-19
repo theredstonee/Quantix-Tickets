@@ -4524,6 +4524,105 @@ module.exports = (client)=>{
     }
   });
 
+  // Broadcast to all servers - POST Route
+  router.post('/founder/broadcast', isFounder, async (req, res) => {
+    try {
+      // Restricted user cannot perform admin actions
+      const RESTRICTED_USER_ID = '928901974106202113';
+      if (req.user.id === RESTRICTED_USER_ID) {
+        return res.status(403).json({ success: false, error: 'Keine Berechtigung für diese Aktion' });
+      }
+
+      const { message } = req.body;
+
+      // Validate message
+      if (!message || typeof message !== 'string' || message.trim().length === 0) {
+        return res.status(400).json({ success: false, error: 'Keine Nachricht angegeben' });
+      }
+
+      if (message.length > 2000) {
+        return res.status(400).json({ success: false, error: 'Nachricht ist zu lang (max. 2000 Zeichen)' });
+      }
+
+      const sanitizedMessage = sanitizeString(message, 2000);
+
+      // Get all guilds
+      const guilds = client.guilds.cache;
+      const results = [];
+
+      console.log(`📢 Broadcasting message to ${guilds.size} servers by ${req.user.username} (${req.user.id})`);
+
+      for (const [guildId, guild] of guilds) {
+        try {
+          const cfg = readCfg(guildId);
+          let targetChannel = null;
+
+          // Try to find log channel
+          if (cfg.logChannelId) {
+            targetChannel = guild.channels.cache.get(cfg.logChannelId);
+          }
+
+          // If no log channel, find first available text channel
+          if (!targetChannel) {
+            targetChannel = guild.channels.cache.find(ch =>
+              ch.type === 0 && // GUILD_TEXT
+              ch.permissionsFor(guild.members.me).has(['ViewChannel', 'SendMessages'])
+            );
+          }
+
+          if (!targetChannel) {
+            results.push({
+              success: false,
+              guildId: guildId,
+              guildName: guild.name,
+              error: 'Kein verfügbarer Channel gefunden'
+            });
+            continue;
+          }
+
+          // Create broadcast embed
+          const { EmbedBuilder } = require('discord.js');
+          const broadcastEmbed = new EmbedBuilder()
+            .setTitle('📢 Wichtige Ankündigung vom Quantix Tickets Team')
+            .setDescription(sanitizedMessage)
+            .setColor(0x667eea)
+            .setTimestamp()
+            .setFooter({ text: 'Quantix Tickets © 2025 • Founder Broadcast' });
+
+          await targetChannel.send({ embeds: [broadcastEmbed] });
+
+          results.push({
+            success: true,
+            guildId: guildId,
+            guildName: guild.name,
+            channelName: targetChannel.name
+          });
+
+          console.log(`✅ Broadcast sent to ${guild.name} (${guildId}) in #${targetChannel.name}`);
+        } catch (guildErr) {
+          results.push({
+            success: false,
+            guildId: guildId,
+            guildName: guild.name,
+            error: guildErr.message || 'Unbekannter Fehler'
+          });
+          console.error(`❌ Failed to send broadcast to ${guild.name} (${guildId}):`, guildErr.message);
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      console.log(`📊 Broadcast completed: ${successCount}/${guilds.size} servers reached`);
+
+      res.json({
+        success: true,
+        results: results
+      });
+    } catch (err) {
+      console.error('Broadcast error:', err);
+      res.status(500).json({ success: false, error: err.message || 'Interner Serverfehler' });
+    }
+  });
+
   // Global Settings Click Counter (User-wide)
   const GLOBAL_CLICKS_FILE = './global-settings-clicks.json';
 
