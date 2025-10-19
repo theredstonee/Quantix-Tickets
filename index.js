@@ -1710,7 +1710,19 @@ client.on(Events.InteractionCreate, async i => {
     if(i.isModalSubmit() && i.customId.startsWith('modal_newticket:')){
       const topicValue = i.customId.split(':')[1];
       const topic = cfg.topics?.find(t=>t.value===topicValue);
-      if(!topic) return i.reply({ephemeral:true,content:'Topic ungültig'});
+
+      if(!topic) {
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Ungültiges Thema')
+          .setDescription(
+            '**Das gewählte Ticket-Thema ist nicht mehr verfügbar.**\n\n' +
+            'Möglicherweise wurde es vom Administrator entfernt. Bitte wähle ein anderes Thema aus dem Ticket-Panel.'
+          )
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+        return i.reply({ embeds: [errorEmbed], ephemeral: true });
+      }
       const formFields = getFormFieldsForTopic(cfg, topic.value).map(normalizeField);
       const answers = {};
       formFields.forEach(f=>{ answers[f.id] = i.fields.getTextInputValue(f.id); });
@@ -1819,7 +1831,20 @@ client.on(Events.InteractionCreate, async i => {
       const guildId = i.guild.id;
       const log = loadTickets(guildId);
       const ticket = log.find(t=>t.channelId===i.channel.id);
-      if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz'});
+
+      if(!ticket) {
+        const noTicketEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Kein Ticket gefunden')
+          .setDescription(
+            '**Für diesen Channel wurde kein Ticket-Datensatz gefunden.**\n\n' +
+            'Dieser Channel scheint kein gültiges Ticket zu sein.'
+          )
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+        return i.reply({ embeds: [noTicketEmbed], ephemeral: true });
+      }
+
       const TEAM_ROLE = getTeamRole(guildId);
       const isTeam = TEAM_ROLE ? i.member.roles.cache.has(TEAM_ROLE) : false;
       const isCreator = ticket.userId === i.user.id;
@@ -1859,7 +1884,19 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       if(i.customId==='unclaim'){
-        if(!isClaimer) return i.reply({ephemeral:true,content:'Nur der Claimer kann unclaimen'});
+        if(!isClaimer) {
+          const errorEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setTitle('🚫 Keine Berechtigung')
+            .setDescription('**Du kannst dieses Ticket nicht freigeben.**\n\nNur der Team-Mitarbeiter, der das Ticket übernommen hat, kann es wieder freigeben.')
+            .addFields(
+              { name: '👤 Claimer', value: ticket.claimer ? `<@${ticket.claimer}>` : 'Nicht gesetzt', inline: true },
+              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+            .setTimestamp();
+          return i.reply({ embeds: [errorEmbed], ephemeral: true });
+        }
 
         try {
           const permissions = [
@@ -1921,7 +1958,31 @@ client.on(Events.InteractionCreate, async i => {
         return;
       }
 
-      if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team'});
+      if(!isTeam) {
+        const cfg = readCfg(guildId);
+        const teamRoleId = getTeamRole(guildId);
+        const teamRole = teamRoleId ? await i.guild.roles.fetch(teamRoleId).catch(() => null) : null;
+
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🚫 Zugriff verweigert')
+          .setDescription(
+            '**Das hier darf nur das Team machen!**\n\n' +
+            'Diese Aktion ist nur für Team-Mitglieder verfügbar.'
+          )
+          .addFields(
+            {
+              name: '🏷️ Benötigte Rolle',
+              value: teamRole ? `<@&${teamRoleId}>` : 'Team-Rolle nicht konfiguriert',
+              inline: true
+            },
+            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+
+        return i.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
 
       switch(i.customId){
         case 'team_close':
@@ -2068,39 +2129,152 @@ client.on(Events.InteractionCreate, async i => {
     if(i.isModalSubmit() && i.customId==='modal_add_user'){
       const TEAM_ROLE = getTeamRole(i.guild.id);
       const isTeam = TEAM_ROLE ? i.member.roles.cache.has(TEAM_ROLE) : false;
-      if(!isTeam) return i.reply({ephemeral:true,content:'Nur Team'});
+
+      if(!isTeam) {
+        const teamRole = TEAM_ROLE ? await i.guild.roles.fetch(TEAM_ROLE).catch(() => null) : null;
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🚫 Zugriff verweigert')
+          .setDescription('**Das hier darf nur das Team machen!**\n\nNur Team-Mitglieder können Benutzer zu Tickets hinzufügen.')
+          .addFields({
+            name: '🏷️ Benötigte Rolle',
+            value: teamRole ? `<@&${TEAM_ROLE}>` : 'Team-Rolle nicht konfiguriert',
+            inline: true
+          })
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+        return i.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+
       const raw = i.fields.getTextInputValue('user').trim();
       const id = (raw.replace(/<@!?|>/g,'').match(/\d{17,20}/)||[])[0];
-      if(!id) return i.reply({ephemeral:true,content:'Ungültige ID'});
+
+      if(!id) {
+        const invalidEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Ungültige Eingabe')
+          .setDescription(
+            '**Die eingegebene User-ID oder Mention ist ungültig.**\n\n' +
+            'Bitte gib eine gültige Discord User-ID oder @Mention ein.'
+          )
+          .addFields({
+            name: '📝 Beispiele',
+            value: '`•` @Username\n`•` 123456789012345678',
+            inline: false
+          })
+          .setFooter({ text: 'Quantix Tickets • Ungültige Eingabe' })
+          .setTimestamp();
+        return i.reply({ embeds: [invalidEmbed], ephemeral: true });
+      }
+
       try {
         await i.guild.members.fetch(id);
 
         const guildId = i.guild.id;
         const log = loadTickets(guildId);
         const ticket = log.find(t=>t.channelId===i.channel.id);
-        if(!ticket) return i.reply({ephemeral:true,content:'Kein Ticket-Datensatz'});
+
+        if(!ticket) {
+          const noTicketEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setTitle('❌ Kein Ticket gefunden')
+            .setDescription('**Für diesen Channel wurde kein Ticket-Datensatz gefunden.**')
+            .setFooter({ text: 'Quantix Tickets • Fehler' })
+            .setTimestamp();
+          return i.reply({ embeds: [noTicketEmbed], ephemeral: true });
+        }
 
         if(!ticket.addedUsers) ticket.addedUsers = [];
-        if(ticket.addedUsers.includes(id) || ticket.userId === id || ticket.claimer === id)
-          return i.reply({ephemeral:true,content:'Hat bereits Zugriff'});
+
+        if(ticket.addedUsers.includes(id) || ticket.userId === id || ticket.claimer === id) {
+          const alreadyAccessEmbed = new EmbedBuilder()
+            .setColor(0xffa500)
+            .setTitle('ℹ️ Bereits vorhanden')
+            .setDescription(`**<@${id}> hat bereits Zugriff auf dieses Ticket.**`)
+            .addFields(
+              { name: '👤 User', value: `<@${id}>`, inline: true },
+              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Zugriff bereits vorhanden' })
+            .setTimestamp();
+          return i.reply({ embeds: [alreadyAccessEmbed], ephemeral: true });
+        }
 
         ticket.addedUsers.push(id);
         saveTickets(guildId, log);
 
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
-        await i.reply({ephemeral:true,content:`<@${id}> hinzugefügt`});
 
-        await i.channel.send(`➕ <@${id}> ${t(guildId, 'messages.user_added_success', { user: `<@${id}>` }).replace('✅', '')}`);
+        const successEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('✅ Benutzer hinzugefügt')
+          .setDescription(`**<@${id}> wurde erfolgreich zum Ticket hinzugefügt.**`)
+          .addFields(
+            { name: '👤 Hinzugefügt', value: `<@${id}>`, inline: true },
+            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+            { name: '👥 Von', value: `<@${i.user.id}>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Benutzer hinzugefügt' })
+          .setTimestamp();
+        await i.reply({ embeds: [successEmbed], ephemeral: true });
+
+        const publicEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('👥 Neuer Benutzer hinzugefügt')
+          .setDescription(`<@${id}> wurde von <@${i.user.id}> zum Ticket hinzugefügt und kann nun hier schreiben.`)
+          .addFields(
+            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets' })
+          .setTimestamp();
+        await i.channel.send({ embeds: [publicEmbed] });
 
         logEvent(i.guild, t(guildId, 'logs.user_added', { user: `<@${id}>`, id: ticket.id }));
       } catch(err) {
         console.error('Fehler beim Hinzufügen:', err);
-        return i.reply({ephemeral:true,content:'Fehler beim Hinzufügen'});
+
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Fehler beim Hinzufügen')
+          .setDescription(
+            '**Der Benutzer konnte nicht hinzugefügt werden.**\n\n' +
+            'Mögliche Gründe:\n' +
+            '`•` Benutzer ist nicht auf diesem Server\n' +
+            '`•` Ungültige User-ID\n' +
+            '`•` Bot hat keine Berechtigung'
+          )
+          .addFields({
+            name: '🐛 Fehlermeldung',
+            value: `\`\`\`${err.message || 'Unbekannter Fehler'}\`\`\``,
+            inline: false
+          })
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+        return i.reply({ embeds: [errorEmbed], ephemeral: true });
       }
     }
   } catch(err) {
     console.error(err);
-    if(!i.replied && !i.deferred) i.reply({ephemeral:true,content:'Fehler'});
+
+    if(!i.replied && !i.deferred) {
+      const generalErrorEmbed = new EmbedBuilder()
+        .setColor(0xff4444)
+        .setTitle('❌ Ein Fehler ist aufgetreten')
+        .setDescription(
+          '**Bei der Verarbeitung deiner Anfrage ist ein unerwarteter Fehler aufgetreten.**\n\n' +
+          'Bitte versuche es erneut oder kontaktiere den Support.'
+        )
+        .addFields({
+          name: '💬 Support',
+          value: '[Support Server](https://discord.com/invite/mnYbnpyyBS)',
+          inline: false
+        })
+        .setFooter({ text: 'Quantix Tickets • Fehler' })
+        .setTimestamp();
+
+      i.reply({ embeds: [generalErrorEmbed], ephemeral: true }).catch(() => {});
+    }
   }
 });
 
@@ -2334,12 +2508,43 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
     }
   }
 
+  // Public priority change notification
+  const priorityEmbed = new EmbedBuilder()
+    .setColor(state.embedColor)
+    .setTitle('🎯 Priorität geändert')
+    .setDescription(`Die Ticket-Priorität wurde auf **${state.label}** ${dir === 'hoch' ? '**erhöht**' : '**gesenkt**'}.`)
+    .addFields(
+      { name: '🔻 Neue Priorität', value: `${state.emoji} ${state.label}`, inline: true },
+      { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+      { name: '👤 Geändert von', value: `<@${interaction.user.id}>`, inline: true }
+    )
+    .setFooter({ text: 'Quantix Tickets • Priorität geändert' })
+    .setTimestamp();
+
   if(mentions.length > 0){
-    await interaction.channel.send({ content: `${mentions.join(' ')} ${t(guildId, 'messages.priority_changed', { priority: state.label })}` });
+    await interaction.channel.send({
+      content: mentions.join(' '),
+      embeds: [priorityEmbed]
+    });
+  } else {
+    await interaction.channel.send({ embeds: [priorityEmbed] });
   }
 
   logEvent(interaction.guild, t(guildId, 'logs.priority_changed', { id: ticket.id, direction: dir, priority: state.label }));
-  await interaction.reply({ephemeral:true,content:`Priorität: ${state.label}`});
+
+  // Ephemeral confirmation for user who changed priority
+  const confirmEmbed = new EmbedBuilder()
+    .setColor(0x00ff88)
+    .setTitle('✅ Priorität aktualisiert')
+    .setDescription(`**Die Ticket-Priorität wurde erfolgreich aktualisiert.**`)
+    .addFields(
+      { name: '🎯 Neue Priorität', value: `${state.emoji} ${state.label}`, inline: true },
+      { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
+    )
+    .setFooter({ text: 'Quantix Tickets' })
+    .setTimestamp();
+
+  await interaction.reply({ embeds: [confirmEmbed], ephemeral: true });
 }
 
 client.on(Events.MessageCreate, async (message) => {
