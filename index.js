@@ -652,7 +652,7 @@ async function executeDeletion(deletion) {
 }
 
 /**
- * Status-Rotation - wechselt alle 10 Sekunden zwischen verschiedenen Status
+ * Status-Rotation - wechselt alle 20 Sekunden zwischen verschiedenen Status
  */
 function startStatusRotation() {
   let currentStatusIndex = 0;
@@ -660,11 +660,15 @@ function startStatusRotation() {
   const updateStatus = () => {
     const serverCount = client.guilds.cache.size;
 
+    // Berechne Gesamt-Member-Anzahl
+    const totalMembers = client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
+
     const statuses = [
-      { name: `auf ${serverCount} Servern`, type: ActivityType.Playing },
-      { name: `v${VERSION}`, type: ActivityType.Playing },
+      { name: `auf **${serverCount}** Servern`, type: ActivityType.Playing },
+      { name: `Release **v${VERSION}**`, type: ActivityType.Playing },
       { name: `Quantix Development`, type: ActivityType.Playing },
-      { name: `!commands für Hilfe`, type: ActivityType.Playing }
+      { name: `!commands für Hilfe`, type: ActivityType.Playing },
+      { name: `**${totalMembers}** Members zu`, type: ActivityType.Watching }
     ];
 
     const status = statuses[currentStatusIndex];
@@ -680,8 +684,8 @@ function startStatusRotation() {
   // Setze initialen Status
   updateStatus();
 
-  // Wechsle alle 10 Sekunden
-  setInterval(updateStatus, 10000);
+  // Wechsle alle 20 Sekunden
+  setInterval(updateStatus, 20000);
 }
 
 client.once('ready', async () => {
