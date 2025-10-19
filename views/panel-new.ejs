@@ -1,6 +1,8 @@
 <!doctype html>
-<html lang="<%= lang || 'de' %>" data-theme="light">
+<html lang="<%= lang || 'de' %>">
 <head>
+  <!-- Theme Manager - Load before anything else -->
+  <script src="/js/theme-manager.js"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SLMX16ZJ6Y"></script>
   <script>
@@ -841,8 +843,8 @@
   </div>
 
   <!-- Theme Toggle -->
-  <button class="theme-toggle" onclick="toggleTheme()" title="<%= lang === 'de' ? 'Dark Mode umschalten' : 'Toggle Dark Mode' %>">
-    <i id="themeIcon" class="fas fa-moon"></i>
+  <button class="theme-toggle" id="themeToggle" title="<%= lang === 'de' ? 'Dark Mode umschalten' : 'Toggle Dark Mode' %>">
+    <i class="fas fa-moon"></i>
   </button>
 
   <!-- Language Dropdown -->
@@ -1827,28 +1829,7 @@
       }
     }
 
-    // Theme Toggle
-    function toggleTheme() {
-      const html = document.documentElement;
-      const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-      html.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-
-      const icon = document.getElementById('themeIcon');
-      icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
-
-    // Load saved theme
-    (function() {
-      const savedTheme = localStorage.getItem('theme') || 'light';
-      document.documentElement.setAttribute('data-theme', savedTheme);
-      const icon = document.getElementById('themeIcon');
-      if (icon) {
-        icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-      }
-    })();
+    // Theme is managed by /js/theme-manager.js (Cookie-based)
 
     // Language Dropdown
     function toggleLangDropdown() {

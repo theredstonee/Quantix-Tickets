@@ -1,6 +1,8 @@
 <!doctype html>
-<html lang="<%= lang %>" data-theme="light">
+<html lang="<%= lang %>">
 <head>
+  <!-- Theme Manager - Load before anything else -->
+  <script src="/js/theme-manager.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feedback - Quantix Tickets</title>
@@ -379,8 +381,8 @@
             <i class="fas fa-sign-in-alt"></i> Login
           </a>
         <% } %>
-        <button class="theme-toggle" onclick="toggleTheme()">
-          <i class="fas fa-moon" id="theme-icon"></i>
+        <button class="theme-toggle" id="themeToggle">
+          <i class="fas fa-moon"></i>
         </button>
       </nav>
     </div>
@@ -743,23 +745,7 @@
   </div>
 
   <script>
-    function toggleTheme() {
-      const html = document.documentElement;
-      const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-      updateThemeIcon(newTheme);
-    }
-
-    function updateThemeIcon(theme) {
-      const icon = document.getElementById('theme-icon');
-      icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
-
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
+    // Theme is managed by /js/theme-manager.js (Cookie-based)
 
     // Show/hide rating based on feedback type
     const feedbackTypeSelect = document.getElementById('feedbackType');

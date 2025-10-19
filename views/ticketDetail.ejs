@@ -1,7 +1,9 @@
 <!-- views/ticketDetail.ejs -->
 <!DOCTYPE html>
-<html lang="de" data-theme="light">
+<html lang="de">
 <head>
+  <!-- Theme Manager - Load before anything else -->
+  <script src="/js/theme-manager.js"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-SLMX16ZJ6Y"></script>
   <script>
@@ -181,8 +183,8 @@
   </script>
 </head>
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode umschalten">
-    <i id="themeIcon" class="fas fa-moon"></i>
+  <button class="theme-toggle" id="themeToggle" title="Dark Mode umschalten">
+    <i class="fas fa-moon"></i>
   </button>
   <h1>Ticket #<%= ticket.id.toString().padStart(5, '0') %></h1>
   <p>Status: <strong><%= ticket.status %></strong></p>
@@ -213,22 +215,7 @@
   </footer>
 
   <script>
-    // Theme Toggle
-    function toggleTheme() {
-      const html = document.documentElement;
-      const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', newTheme);
-      localStorage.setItem('trs-theme', newTheme);
-      document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
-
-    // Theme beim Laden setzen
-    (function() {
-      const savedTheme = localStorage.getItem('trs-theme') || 'light';
-      document.documentElement.setAttribute('data-theme', savedTheme);
-      document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    })();
+    // Theme is managed by /js/theme-manager.js (Cookie-based)
   </script>
 </body>
 </html>
