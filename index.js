@@ -870,6 +870,7 @@ async function sendWelcomeMessage(guild) {
         `2️⃣ Wähle deinen Server aus\n` +
         `3️⃣ Konfiguriere deine Ticket-Kategorien und Team-Rollen\n` +
         `4️⃣ Sende das Ticket-Panel in einen Channel mit \`/panel/send\`\n\n` +
+        `💡 **Tipp:** Nutze \`!commands\` um alle verfügbaren Befehle zu sehen!\n\n` +
         `**✨ Features:**\n` +
         `• 🌍 **Multi-Language:** 9 Sprachen\n` +
         `• 🎨 **Anpassbar:** Custom Embeds & Formulare\n` +
@@ -882,6 +883,7 @@ async function sendWelcomeMessage(guild) {
         `2️⃣ Select your server\n` +
         `3️⃣ Configure your ticket categories and team roles\n` +
         `4️⃣ Send the ticket panel to a channel with \`/panel/send\`\n\n` +
+        `💡 **Tip:** Use \`!commands\` to see all available commands!\n\n` +
         `**✨ Features:**\n` +
         `• 🌍 **Multi-Language:** 9 languages\n` +
         `• 🎨 **Customizable:** Custom embeds & forms\n` +

@@ -945,8 +945,9 @@
       font-family: monospace;
     }
 
-    /* Form Field Items */
-    .form-field-item {
+    /* Form Field Items & Topic Items */
+    .form-field-item,
+    .topic-item {
       background: var(--glass-bg);
       padding: 1.5rem;
       border-radius: 12px;
@@ -955,7 +956,8 @@
       transition: all 0.2s;
     }
 
-    .form-field-item:hover {
+    .form-field-item:hover,
+    .topic-item:hover {
       box-shadow: var(--shadow-sm);
     }
 
@@ -2174,7 +2176,7 @@
               <div class="card-body">
                 <div id="topicsList">
                   <% (cfg.topics || []).forEach((topic, index) => { %>
-                  <div class="form-field-item" data-index="<%= index %>">
+                  <div class="topic-item" data-index="<%= index %>">
                     <div class="form-field-header">
                       <span class="form-field-number"><%= index + 1 %></span>
                       <button type="button" class="btn-icon-danger" onclick="removeTopic(this)">
@@ -2314,13 +2316,15 @@
                       </div>
 
                       <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
+                        <label class="required-field-label" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer; border: 2px solid <%= field.required ? 'var(--accent-color)' : 'transparent' %>; transition: all 0.2s;"
+                               onchange="this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent';"
+                               onclick="setTimeout(() => { this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent'; }, 10);">
                           <input
                             type="checkbox"
                             name="formField_required_<%= index %>"
                             <%= field.required ? 'checked' : '' %>
-                            style="width: auto; margin: 0;">
-                          <span style="font-weight: 500;">
+                            style="width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--accent-color);">
+                          <span style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fas fa-asterisk" style="font-size: 0.7rem; color: var(--accent-color);"></i>
                             <%= lang === 'de' ? 'Pflichtfeld' : 'Required' %>
                           </span>
@@ -3061,7 +3065,7 @@
     // Form Fields Management
     function addFormField() {
       const container = document.getElementById('formFieldsList');
-      const currentFields = container.querySelectorAll('.form-field-item');
+      const currentFields = container.querySelectorAll(':scope > .form-field-item');
       const newIndex = currentFields.length;
 
       const fieldHtml = `
@@ -3110,12 +3114,14 @@
             </div>
 
             <div class="form-group">
-              <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
+              <label style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;"
+                     onchange="this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent';"
+                     onclick="setTimeout(() => { this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent'; }, 10);">
                 <input
                   type="checkbox"
                   name="formField_required_${newIndex}"
-                  style="width: auto; margin: 0;">
-                <span style="font-weight: 500;">
+                  style="width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--accent-color);">
+                <span style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
                   <i class="fas fa-asterisk" style="font-size: 0.7rem; color: var(--accent-color);"></i>
                   <%= lang === 'de' ? 'Pflichtfeld' : 'Required' %>
                 </span>
@@ -3158,7 +3164,8 @@
     }
 
     function updateFormFieldNumbers() {
-      const fields = document.querySelectorAll('.form-field-item');
+      const container = document.getElementById('formFieldsList');
+      const fields = container.querySelectorAll(':scope > .form-field-item');
       fields.forEach((field, index) => {
         field.setAttribute('data-index', index);
         const numberSpan = field.querySelector('.form-field-number');
@@ -3181,11 +3188,11 @@
     // Topics Management
     function addTopic() {
       const container = document.getElementById('topicsList');
-      const currentTopics = container.querySelectorAll('.form-field-item');
+      const currentTopics = container.querySelectorAll('.topic-item');
       const newIndex = currentTopics.length;
 
       const topicHtml = `
-        <div class="form-field-item" data-index="${newIndex}">
+        <div class="topic-item" data-index="${newIndex}">
           <div class="form-field-header">
             <span class="form-field-number">${newIndex + 1}</span>
             <button type="button" class="btn-icon-danger" onclick="removeTopic(this)">
@@ -3243,13 +3250,13 @@
     }
 
     function removeTopic(button) {
-      const topicItem = button.closest('.form-field-item');
+      const topicItem = button.closest('.topic-item');
       topicItem.remove();
       updateTopicNumbers();
     }
 
     function updateTopicNumbers() {
-      const topics = document.querySelectorAll('#topicsList .form-field-item');
+      const topics = document.querySelectorAll('#topicsList .topic-item');
       topics.forEach((topic, index) => {
         topic.setAttribute('data-index', index);
         const numberSpan = topic.querySelector('.form-field-number');

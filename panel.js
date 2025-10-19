@@ -187,6 +187,7 @@ module.exports = (client)=>{
 
   router.use(passport.initialize());
   router.use(passport.session());
+  router.use(checkUserBlacklist); // Check if user is blacklisted
   router.use(express.urlencoded({extended:true}));
   router.use(express.json());
 
@@ -206,6 +207,60 @@ module.exports = (client)=>{
     res.locals.renderMarkdown = renderMarkdown;
     next();
   });
+
+  /**
+   * Middleware to check if user is blacklisted
+   * Must be called AFTER authentication check
+   */
+  function checkUserBlacklist(req, res, next) {
+    if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+      if (isUserBlacklisted(req.user.id)) {
+        console.log(`🚫 Blacklisted user blocked: ${req.user.username} (${req.user.id})`);
+        req.logout(() => {});
+        return res.status(403).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zugriff gesperrt</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 600px;
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    p { font-size: 1.1rem; line-height: 1.6; margin: 1rem 0; }
+    .icon { font-size: 5rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🚫</div>
+    <h1>Zugriff gesperrt</h1>
+    <p><strong>Dein Account wurde vom Panel-Zugriff ausgeschlossen.</strong></p>
+  </div>
+</body>
+</html>
+        `);
+      }
+    }
+    next();
+  }
 
   function isAuth(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
@@ -1346,6 +1401,67 @@ module.exports = (client)=>{
         `);
       }
       if(!user) return res.redirect('/login');
+
+      // Check if user is blacklisted
+      if (isUserBlacklisted(user.id)) {
+        console.log(`🚫 Blacklisted user attempted login: ${user.username} (${user.id})`);
+        return res.status(403).send(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zugriff gesperrt</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 600px;
+    }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    p { font-size: 1.1rem; line-height: 1.6; margin: 1rem 0; }
+    .icon { font-size: 5rem; margin-bottom: 1rem; }
+    .warning-box {
+      background: rgba(255,255,255,0.2);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🚫</div>
+    <h1>Zugriff gesperrt</h1>
+    <p><strong>Dein Account wurde vom Panel-Zugriff ausgeschlossen.</strong></p>
+
+    <div class="warning-box">
+      <strong>ℹ️ Hinweis:</strong><br>
+      Wenn du denkst, dies ist ein Fehler, kontaktiere bitte die Administratoren.
+    </div>
+  </div>
+</body>
+</html>
+        `);
+      }
+
+      // Track user login
+      trackUserLogin(user);
+
       req.logIn(user,(e)=>{
         if(e){ console.error('Session Fehler:', e); return res.status(500).send(`
 <!DOCTYPE html>
@@ -3229,6 +3345,25 @@ module.exports = (client)=>{
         console.error('Error loading feedbacks for owner:', err);
       }
 
+      // Load pending deletions
+      let pendingDeletions = [];
+      try {
+        const pendingFile = './pending-deletions.json';
+        if (fs.existsSync(pendingFile)) {
+          pendingDeletions = JSON.parse(fs.readFileSync(pendingFile, 'utf8'));
+          // Enrich with guild names
+          pendingDeletions = pendingDeletions.map(deletion => {
+            const guild = guildsData.find(g => g.id === deletion.guildId);
+            return {
+              ...deletion,
+              guildName: guild ? guild.name : deletion.guildName || 'Unbekannt'
+            };
+          });
+        }
+      } catch(err) {
+        console.error('Error loading pending deletions for owner:', err);
+      }
+
       res.render('owner', {
         user: req.user,
         guilds: guildsData,
@@ -3237,7 +3372,8 @@ module.exports = (client)=>{
         premiumStats: premiumStats,
         botUptime: formatUptime(client.uptime),
         version: VERSION,
-        feedbacks: feedbacks
+        feedbacks: feedbacks,
+        pendingDeletions: pendingDeletions
       });
     } catch(err) {
       console.error('Owner Panel Error:', err);
@@ -3460,6 +3596,50 @@ module.exports = (client)=>{
     }
   });
 
+  // Cancel Pending Deletion (Owner Only)
+  router.post('/owner/cancel-deletion/:guildId', isOwner, async (req, res) => {
+    try {
+      const guildId = validateDiscordId(req.params.guildId);
+      if (!guildId) return res.redirect('/owner?error=invalid-guild-id');
+
+      const pendingFile = './pending-deletions.json';
+      let pending = [];
+      if (fs.existsSync(pendingFile)) {
+        pending = JSON.parse(fs.readFileSync(pendingFile, 'utf8'));
+      }
+
+      const deletionIndex = pending.findIndex(p => p.guildId === guildId);
+      if (deletionIndex === -1) {
+        return res.redirect('/owner?error=no-pending-deletion');
+      }
+
+      const deletion = pending[deletionIndex];
+
+      // Remove from pending list
+      pending.splice(deletionIndex, 1);
+      fs.writeFileSync(pendingFile, JSON.stringify(pending, null, 2));
+
+      // Try to delete the warning message in Discord
+      try {
+        const guild = await client.guilds.fetch(guildId).catch(() => null);
+        if (guild && deletion.channelId && deletion.messageId) {
+          const channel = await guild.channels.fetch(deletion.channelId).catch(() => null);
+          if (channel) {
+            await channel.messages.delete(deletion.messageId).catch(() => {});
+          }
+        }
+      } catch(err) {
+        console.log('Could not delete warning message:', err.message);
+      }
+
+      console.log(`✅ Deletion cancelled for ${guildId} by ${sanitizeUsername(req.user.username || req.user.id)}`);
+      res.redirect('/owner?success=deletion-cancelled');
+    } catch(err) {
+      console.error('Cancel deletion error:', err);
+      res.redirect('/owner?error=cancel-failed');
+    }
+  });
+
   // Premium Management (Owner Only)
   router.post('/owner/manage-premium', isOwner, async (req, res) => {
     try {
@@ -3529,6 +3709,100 @@ module.exports = (client)=>{
   // ==================== FOUNDER ROUTES ====================
   // Blacklist file handling
   const BLACKLIST_FILE = './server-blacklist.json';
+  const USER_BLACKLIST_FILE = './user-blacklist.json';
+  const SESSIONS_FILE = './sessions.json';
+
+  /**
+   * Read user blacklist
+   */
+  function readUserBlacklist() {
+    try {
+      if (!fs.existsSync(USER_BLACKLIST_FILE)) {
+        return { users: {} };
+      }
+      return JSON.parse(fs.readFileSync(USER_BLACKLIST_FILE, 'utf8'));
+    } catch (err) {
+      console.error('Error reading user blacklist:', err);
+      return { users: {} };
+    }
+  }
+
+  /**
+   * Write user blacklist
+   */
+  function writeUserBlacklist(data) {
+    try {
+      fs.writeFileSync(USER_BLACKLIST_FILE, JSON.stringify(data, null, 2));
+    } catch (err) {
+      console.error('Error writing user blacklist:', err);
+    }
+  }
+
+  /**
+   * Read sessions
+   */
+  function readSessions() {
+    try {
+      if (!fs.existsSync(SESSIONS_FILE)) {
+        return { users: {} };
+      }
+      return JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+    } catch (err) {
+      console.error('Error reading sessions:', err);
+      return { users: {} };
+    }
+  }
+
+  /**
+   * Write sessions
+   */
+  function writeSessions(data) {
+    try {
+      fs.writeFileSync(SESSIONS_FILE, JSON.stringify(data, null, 2));
+    } catch (err) {
+      console.error('Error writing sessions:', err);
+    }
+  }
+
+  /**
+   * Track user login
+   */
+  function trackUserLogin(user) {
+    try {
+      const sessions = readSessions();
+      const userId = user.id;
+
+      if (!sessions.users[userId]) {
+        sessions.users[userId] = {
+          id: userId,
+          username: sanitizeUsername(user.username),
+          discriminator: user.discriminator,
+          avatar: user.avatar,
+          firstLogin: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+          loginCount: 1
+        };
+      } else {
+        sessions.users[userId].username = sanitizeUsername(user.username);
+        sessions.users[userId].discriminator = user.discriminator;
+        sessions.users[userId].avatar = user.avatar;
+        sessions.users[userId].lastLogin = new Date().toISOString();
+        sessions.users[userId].loginCount = (sessions.users[userId].loginCount || 0) + 1;
+      }
+
+      writeSessions(sessions);
+    } catch (err) {
+      console.error('Error tracking user login:', err);
+    }
+  }
+
+  /**
+   * Check if user is blacklisted
+   */
+  function isUserBlacklisted(userId) {
+    const blacklist = readUserBlacklist();
+    return !!blacklist.users[userId];
+  }
 
   /**
    * Send ban message to server before bot leaves
@@ -3713,9 +3987,38 @@ module.exports = (client)=>{
         return b.memberCount - a.memberCount;
       });
 
+      // Load user sessions and blacklist
+      const sessions = readSessions();
+      const userBlacklist = readUserBlacklist();
+
+      const usersData = [];
+      for (const [userId, userData] of Object.entries(sessions.users)) {
+        const isBlocked = !!userBlacklist.users[userId];
+        usersData.push({
+          id: userId,
+          username: userData.username || 'Unknown',
+          discriminator: userData.discriminator || '0',
+          avatar: userData.avatar,
+          firstLogin: userData.firstLogin,
+          lastLogin: userData.lastLogin,
+          loginCount: userData.loginCount || 0,
+          blocked: isBlocked,
+          blockReason: isBlocked ? userBlacklist.users[userId].reason : null,
+          blockedAt: isBlocked ? userBlacklist.users[userId].blockedAt : null,
+          blockedBy: isBlocked ? userBlacklist.users[userId].blockedBy : null
+        });
+      }
+
+      // Sort: blocked first, then by last login (most recent first)
+      usersData.sort((a, b) => {
+        if (a.blocked !== b.blocked) return a.blocked ? -1 : 1;
+        return new Date(b.lastLogin) - new Date(a.lastLogin);
+      });
+
       res.render('founder', {
         user: req.user,
         guilds: guildsData,
+        users: usersData,
         restrictedView: isRestrictedView
       });
     } catch (err) {
@@ -3887,6 +4190,73 @@ module.exports = (client)=>{
     }
   });
 
+  // Block User - POST Route
+  router.post('/founder/block-user/:userId', isFounder, async (req, res) => {
+    try {
+      // Restricted user cannot perform admin actions
+      const RESTRICTED_USER_ID = '928901974106202113';
+      if (req.user.id === RESTRICTED_USER_ID) {
+        return res.status(403).send('Keine Berechtigung für diese Aktion');
+      }
+
+      const userId = validateDiscordId(req.params.userId);
+      if (!userId) return res.redirect('/founder?error=invalid-user-id');
+
+      const blockReason = req.body.reason ? sanitizeString(req.body.reason.trim(), 500) : 'Kein Grund angegeben';
+
+      const blacklist = readUserBlacklist();
+
+      if (!blacklist.users[userId]) {
+        // Get user info from sessions
+        const sessions = readSessions();
+        const username = sessions.users[userId]?.username || `User ${userId}`;
+
+        blacklist.users[userId] = {
+          username: username,
+          blockedAt: new Date().toISOString(),
+          blockedBy: sanitizeUsername(req.user.username || req.user.id),
+          reason: blockReason
+        };
+
+        writeUserBlacklist(blacklist);
+        console.log(`🚫 User blocked: ${username} (${userId}) by ${req.user.username}`);
+      }
+
+      res.redirect('/founder?success=user-blocked');
+    } catch (err) {
+      console.error('Block user error:', err);
+      res.redirect('/founder?error=block-failed');
+    }
+  });
+
+  // Unblock User - POST Route
+  router.post('/founder/unblock-user/:userId', isFounder, async (req, res) => {
+    try {
+      // Restricted user cannot perform admin actions
+      const RESTRICTED_USER_ID = '928901974106202113';
+      if (req.user.id === RESTRICTED_USER_ID) {
+        return res.status(403).send('Keine Berechtigung für diese Aktion');
+      }
+
+      const userId = validateDiscordId(req.params.userId);
+      if (!userId) return res.redirect('/founder?error=invalid-user-id');
+
+      const blacklist = readUserBlacklist();
+
+      if (blacklist.users[userId]) {
+        const username = blacklist.users[userId].username || `User ${userId}`;
+        delete blacklist.users[userId];
+        writeUserBlacklist(blacklist);
+        console.log(`✅ User unblocked: ${username} (${userId}) by ${req.user.username}`);
+      }
+
+      res.redirect('/founder?success=user-unblocked');
+    } catch (err) {
+      console.error('Unblock user error:', err);
+      res.redirect('/founder?error=unblock-failed');
+    }
+  });
+
   // Global Settings Click Counter (User-wide)
   const GLOBAL_CLICKS_FILE = './global-settings-clicks.json';
 
@@ -3959,13 +4329,66 @@ function formatUptime(ms) {
   return parts.join(' ') || '0s';
 }
 
+/**
+ * Validate and parse emoji for Discord API
+ * @param {string} emoji - Emoji string (Unicode or custom format)
+ * @returns {object|string|undefined} - Valid emoji object/string or undefined
+ */
+function parseEmoji(emoji) {
+  if (!emoji || typeof emoji !== 'string') return undefined;
+
+  const trimmed = emoji.trim();
+  if (!trimmed) return undefined;
+
+  // Check if it's a custom emoji format: <:name:id> or <a:name:id>
+  const customEmojiMatch = trimmed.match(/^<(a?):([^:]+):(\d+)>$/);
+  if (customEmojiMatch) {
+    return {
+      name: customEmojiMatch[2],
+      id: customEmojiMatch[3],
+      animated: customEmojiMatch[1] === 'a'
+    };
+  }
+
+  // Check if it's just a custom emoji ID format: name:id
+  const idFormatMatch = trimmed.match(/^([^:]+):(\d+)$/);
+  if (idFormatMatch) {
+    return {
+      name: idFormatMatch[1],
+      id: idFormatMatch[2],
+      animated: false
+    };
+  }
+
+  // Check if it's a Unicode emoji (contains emoji characters)
+  // Unicode emojis are typically 1-4 characters and contain special unicode ranges
+  const emojiRegex = /^[\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Component}]+$/u;
+  if (emojiRegex.test(trimmed) && trimmed.length <= 10) {
+    return trimmed; // Return as string for Unicode emoji
+  }
+
+  // If it's just text (like "wink"), it's invalid - return undefined
+  console.log(`⚠️ Invalid emoji detected and skipped: "${trimmed}"`);
+  return undefined;
+}
+
 function buildPanelSelect(cfg){
   const topics = (cfg.topics||[]).filter(t => t && t.label && t.value);
   if(topics.length === 0){
     topics.push({ label: 'Keine Topics konfiguriert', value: 'none', emoji: '⚠️' });
   }
   return new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder().setCustomId('topic').setPlaceholder('Thema wählen …').addOptions(topics.map(t=>({ label:t.label, value:t.value, emoji:t.emoji||undefined })))
+    new StringSelectMenuBuilder()
+      .setCustomId('topic')
+      .setPlaceholder('Thema wählen …')
+      .addOptions(topics.map(t => {
+        const parsedEmoji = parseEmoji(t.emoji);
+        return {
+          label: t.label,
+          value: t.value,
+          emoji: parsedEmoji
+        };
+      }))
   );
 }
 

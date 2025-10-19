@@ -527,6 +527,90 @@
       </div>
     </div>
 
+    <!-- Users Management Section -->
+    <div class="section" style="margin-top: 3rem;">
+      <h2 class="section-title">
+        <i class="fas fa-users"></i>
+        Nutzer-Verwaltung (<%= users.length %>)
+      </h2>
+
+      <div class="search-box">
+        <input type="text" id="searchUsersInput" placeholder="🔍 Nutzer suchen (Name oder ID)...">
+      </div>
+
+      <div class="table-wrapper">
+        <table class="guilds-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>Nutzer</th>
+              <th>Erster Login</th>
+              <th>Letzter Login</th>
+              <th>Logins</th>
+              <th>Status</th>
+              <% if (!restrictedView) { %>
+              <th>Aktionen</th>
+              <% } %>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(user => { %>
+            <tr>
+              <td>
+                <div class="guild-info">
+                  <% if (user.avatar) { %>
+                    <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" alt="<%= user.username %>" class="guild-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="guild-icon-placeholder" style="display: none;"><%= user.username[0] %></div>
+                  <% } else { %>
+                    <div class="guild-icon-placeholder"><%= user.username[0] %></div>
+                  <% } %>
+                  <div>
+                    <div class="guild-name"><%= user.username %>#<%= user.discriminator %></div>
+                    <div class="guild-id"><%= user.id %></div>
+                  </div>
+                </div>
+              </td>
+              <td><%= new Date(user.firstLogin).toLocaleDateString('de-DE') %></td>
+              <td><%= new Date(user.lastLogin).toLocaleDateString('de-DE') %></td>
+              <td><strong><%= user.loginCount %></strong></td>
+              <td>
+                <% if (user.blocked) { %>
+                  <span class="badge badge-blocked"><i class="fas fa-ban"></i> Gesperrt</span>
+                  <% if (user.blockReason) { %>
+                    <div style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.8; font-style: italic;">
+                      <i class="fas fa-comment-alt"></i> <%= user.blockReason %>
+                    </div>
+                  <% } %>
+                  <% if (user.blockedBy) { %>
+                    <div style="margin-top: 0.25rem; font-size: 0.75rem; opacity: 0.6;">
+                      von <%= user.blockedBy %> am <%= new Date(user.blockedAt).toLocaleDateString('de-DE') %>
+                    </div>
+                  <% } %>
+                <% } else { %>
+                  <span class="badge badge-active"><i class="fas fa-check"></i> Aktiv</span>
+                <% } %>
+              </td>
+              <% if (!restrictedView) { %>
+              <td>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <% if (user.blocked) { %>
+                    <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--accent-color); color: #000;" onclick="showUnblockUserModal('<%= user.id %>', '<%= user.username %>')">
+                      <i class="fas fa-check-circle"></i> Entsperren
+                    </button>
+                  <% } else { %>
+                    <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #f39c12;" onclick="showBlockUserModal('<%= user.id %>', '<%= user.username %>')">
+                      <i class="fas fa-ban"></i> Sperren
+                    </button>
+                  <% } %>
+                </div>
+              </td>
+              <% } %>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div style="text-align: center; margin-top: 3rem;">
       <a href="/" class="btn btn-secondary">
         <i class="fas fa-home"></i> Zurück zur Startseite
@@ -661,8 +745,77 @@
     </div>
   </div>
 
+  <!-- Block User Modal -->
+  <div class="modal-overlay" id="blockUserModal">
+    <div class="modal-content">
+      <div class="modal-icon" style="color: #f39c12;">
+        <i class="fas fa-user-slash"></i>
+      </div>
+      <h3 class="modal-title">Nutzer sperren?</h3>
+      <p class="modal-message">
+        Möchtest du <strong id="blockUserName"></strong> wirklich sperren?
+        <br><br>
+        <span style="opacity: 0.7; font-size: 0.95rem;">
+          Der Nutzer wird vom Panel-Zugriff ausgeschlossen:
+          <br>• Kann sich nicht mehr einloggen
+          <br>• Aktive Sessions werden beendet
+          <br>• Kann später entsperrt werden
+        </span>
+      </p>
+      <div style="margin: 1.5rem 0;">
+        <label for="userBlockReason" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-color);">
+          <i class="fas fa-comment-alt"></i> Sperr-Grund:
+        </label>
+        <textarea
+          id="userBlockReason"
+          rows="4"
+          maxlength="500"
+          placeholder="z.B. Missbrauch des Panels..."
+          style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); font-family: inherit; resize: vertical; min-height: 80px;"
+        ></textarea>
+        <small style="opacity: 0.6; font-size: 0.85rem;">Max. 500 Zeichen</small>
+      </div>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeBlockUserModal()">
+          <i class="fas fa-times"></i> Abbrechen
+        </button>
+        <button class="modal-btn modal-btn-confirm" style="background: #f39c12;" onclick="confirmBlockUser()">
+          <i class="fas fa-user-slash"></i> Sperren
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unblock User Modal -->
+  <div class="modal-overlay" id="unblockUserModal">
+    <div class="modal-content">
+      <div class="modal-icon" style="color: var(--accent-color);">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <h3 class="modal-title">Nutzer entsperren?</h3>
+      <p class="modal-message">
+        Möchtest du <strong id="unblockUserName"></strong> wirklich entsperren?
+        <br><br>
+        <span style="opacity: 0.7; font-size: 0.95rem;">
+          Der Nutzer kann sich wieder einloggen:
+          <br>• Panel-Zugriff wird wiederhergestellt
+          <br>• Normaler Login wieder möglich
+        </span>
+      </p>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeUnblockUserModal()">
+          <i class="fas fa-times"></i> Abbrechen
+        </button>
+        <button class="modal-btn modal-btn-confirm" style="background: var(--accent-color); color: #000;" onclick="confirmUnblockUser()">
+          <i class="fas fa-user-check"></i> Entsperren
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let currentGuildId = null;
+    let currentUserId = null;
     let currentGuildName = null;
 
     // Search functionality
@@ -803,6 +956,80 @@
       });
     });
 
+    // User Management Functions
+    function showBlockUserModal(userId, username) {
+      currentUserId = userId;
+      document.getElementById('blockUserName').textContent = username;
+      document.getElementById('blockUserModal').classList.add('active');
+    }
+
+    function closeBlockUserModal() {
+      document.getElementById('blockUserModal').classList.remove('active');
+      document.getElementById('userBlockReason').value = '';
+      currentUserId = null;
+    }
+
+    function confirmBlockUser() {
+      const reason = document.getElementById('userBlockReason').value.trim();
+      if (currentUserId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/founder/block-user/' + currentUserId;
+
+        const reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = reason || 'Kein Grund angegeben';
+        form.appendChild(reasonInput);
+
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    function showUnblockUserModal(userId, username) {
+      currentUserId = userId;
+      document.getElementById('unblockUserName').textContent = username;
+      document.getElementById('unblockUserModal').classList.add('active');
+    }
+
+    function closeUnblockUserModal() {
+      document.getElementById('unblockUserModal').classList.remove('active');
+      currentUserId = null;
+    }
+
+    function confirmUnblockUser() {
+      if (currentUserId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/founder/unblock-user/' + currentUserId;
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Search functionality for users
+    const searchUsersInput = document.getElementById('searchUsersInput');
+    const usersTable = document.getElementById('usersTable');
+
+    if (searchUsersInput && usersTable) {
+      searchUsersInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = usersTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        for (let row of rows) {
+          const username = row.cells[0].textContent.toLowerCase();
+          const userId = row.cells[0].querySelector('.guild-id').textContent.toLowerCase();
+
+          if (username.includes(searchTerm) || userId.includes(searchTerm)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        }
+      });
+    }
+
     // Close modals on Escape key
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
@@ -810,7 +1037,23 @@
         closeUnblockModal();
         closeKickModal();
         closeForceDeleteModal();
+        closeBlockUserModal();
+        closeUnblockUserModal();
       }
+    });
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeBlockModal();
+          closeUnblockModal();
+          closeKickModal();
+          closeForceDeleteModal();
+          closeBlockUserModal();
+          closeUnblockUserModal();
+        }
+      });
     });
   </script>
 </body>
