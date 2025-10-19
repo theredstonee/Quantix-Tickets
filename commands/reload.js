@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { t } = require('../translations');
 const fs = require('fs');
 const path = require('path');
@@ -46,8 +46,32 @@ module.exports = {
         delete require.cache[require.resolve(translationsPath)];
       }
 
+      const successEmbed = new EmbedBuilder()
+        .setColor(0x00ff88)
+        .setTitle('🔄 Reload erfolgreich!')
+        .setDescription('**Alle Komponenten wurden erfolgreich neu geladen.**\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        .addFields(
+          { name: '📦 Commands', value: `\`${reloadedCount}\` neu geladen`, inline: true },
+          { name: '⚙️ Server-Configs', value: `\`${configCount}\` aktualisiert`, inline: true },
+          { name: '🌐 Übersetzungen', value: 'Cache geleert', inline: true },
+          {
+            name: '✅ Erfolgreich geladen',
+            value:
+              '`•` Command-Cache zurückgesetzt\n' +
+              '`•` Konfigurationsdateien aktualisiert\n' +
+              '`•` Übersetzungsmodul neu geladen\n' +
+              '`•` Bot läuft weiter ohne Neustart',
+            inline: false
+          }
+        )
+        .setFooter({
+          text: `Ausgeführt von ${interaction.user.tag} • Quantix Tickets`,
+          iconURL: interaction.user.displayAvatarURL({ size: 32 })
+        })
+        .setTimestamp();
+
       await interaction.reply({
-        content: `✅ **Reload Erfolgreich!**\n📦 ${reloadedCount} Commands neu geladen\n⚙️ ${configCount} Server-Configs aktualisiert\n🔄 Commands werden neu deployed...`,
+        embeds: [successEmbed],
         ephemeral: true
       });
 
@@ -55,8 +79,21 @@ module.exports = {
 
     } catch (err) {
       console.error('Reload Fehler:', err);
+
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0xff4444)
+        .setTitle('❌ Reload Fehler')
+        .setDescription('**Beim Neuladen ist ein Fehler aufgetreten.**')
+        .addFields({
+          name: '🐛 Fehlermeldung',
+          value: `\`\`\`${err.message || 'Unbekannter Fehler'}\`\`\``,
+          inline: false
+        })
+        .setFooter({ text: 'Quantix Tickets • Fehler beim Reload' })
+        .setTimestamp();
+
       await interaction.reply({
-        content: `❌ **Fehler beim Neuladen:**\n\`\`\`${err.message}\`\`\``,
+        embeds: [errorEmbed],
         ephemeral: true
       });
     }

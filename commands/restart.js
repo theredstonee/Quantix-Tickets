@@ -25,17 +25,39 @@ module.exports = {
     const guildId = interaction.guild?.id;
 
     const embed = new EmbedBuilder()
-      .setTitle('🔄 Bot Restart')
+      .setTitle('🔄 Bot wird neu gestartet')
       .setDescription(
-        '**Bot wird neu gestartet...**\n\n' +
-        '⏱️ Erwartete Downtime: ~5-10 Sekunden\n' +
-        '✅ Alle Konfigurationen bleiben erhalten\n' +
-        '📝 Commands werden automatisch neu registriert\n\n' +
-        `Angefordert von: ${interaction.user}`
+        '**Der Bot wird jetzt neu gestartet...**\n\n' +
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+      )
+      .addFields(
+        { name: '⏱️ Downtime', value: '`~5-10 Sekunden`', inline: true },
+        { name: '💾 Daten', value: 'Alle gespeichert', inline: true },
+        { name: '🔐 Status', value: 'Sicher', inline: true },
+        {
+          name: '✅ Was bleibt erhalten',
+          value:
+            '`•` Alle Server-Konfigurationen\n' +
+            '`•` Ticket-Verlauf & Transcripts\n' +
+            '`•` Premium-Status & Features\n' +
+            '`•` Alle Benutzereinstellungen',
+          inline: false
+        },
+        {
+          name: '🚀 Nach dem Restart',
+          value:
+            '`•` Commands automatisch neu registriert\n' +
+            '`•` Alle Funktionen wieder verfügbar\n' +
+            '`•` Bot ist sofort einsatzbereit',
+          inline: false
+        }
       )
       .setColor(0xff9900)
-      .setTimestamp()
-      .setFooter({ text: 'Quantix Tickets © 2025 Theredstonee • Alle Rechte vorbehalten' });
+      .setFooter({
+        text: `Angefordert von ${interaction.user.tag} • Quantix Tickets`,
+        iconURL: interaction.user.displayAvatarURL({ size: 32 })
+      })
+      .setTimestamp();
 
     await interaction.reply({
       embeds: [embed],

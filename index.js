@@ -276,17 +276,46 @@ function nextTicket(guildId){
 
 function buttonRows(claimed, guildId = null){
   const row1 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('request_close').setEmoji('❓').setLabel(t(guildId, 'buttons.request_close')).setStyle(ButtonStyle.Secondary)
+    new ButtonBuilder()
+      .setCustomId('request_close')
+      .setEmoji('📩')
+      .setLabel(t(guildId, 'buttons.request_close'))
+      .setStyle(ButtonStyle.Secondary)
   );
   const row2 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('close').setEmoji('🔒').setLabel(t(guildId, 'buttons.close')).setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId('priority_down').setEmoji('🔻').setLabel(t(guildId, 'buttons.priority_down')).setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId('priority_up').setEmoji('🔺').setLabel(t(guildId, 'buttons.priority_up')).setStyle(ButtonStyle.Primary),
-    claimed ? new ButtonBuilder().setCustomId('unclaim').setEmoji('🔄').setLabel(t(guildId, 'buttons.unclaim')).setStyle(ButtonStyle.Secondary)
-            : new ButtonBuilder().setCustomId('claim').setEmoji('✅').setLabel(t(guildId, 'buttons.claim')).setStyle(ButtonStyle.Success)
+    new ButtonBuilder()
+      .setCustomId('close')
+      .setEmoji('🔐')
+      .setLabel(t(guildId, 'buttons.close'))
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
+      .setCustomId('priority_down')
+      .setEmoji('⬇️')
+      .setLabel(t(guildId, 'buttons.priority_down'))
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('priority_up')
+      .setEmoji('⬆️')
+      .setLabel(t(guildId, 'buttons.priority_up'))
+      .setStyle(ButtonStyle.Primary),
+    claimed
+      ? new ButtonBuilder()
+          .setCustomId('unclaim')
+          .setEmoji('↩️')
+          .setLabel(t(guildId, 'buttons.unclaim'))
+          .setStyle(ButtonStyle.Secondary)
+      : new ButtonBuilder()
+          .setCustomId('claim')
+          .setEmoji('✨')
+          .setLabel(t(guildId, 'buttons.claim'))
+          .setStyle(ButtonStyle.Success)
   );
   const row3 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('add_user').setEmoji('➕').setLabel(t(guildId, 'buttons.add_user')).setStyle(ButtonStyle.Secondary)
+    new ButtonBuilder()
+      .setCustomId('add_user')
+      .setEmoji('👥')
+      .setLabel(t(guildId, 'buttons.add_user'))
+      .setStyle(ButtonStyle.Secondary)
   );
   return [row1,row2,row3];
 }
@@ -1797,9 +1826,36 @@ client.on(Events.InteractionCreate, async i => {
       const isClaimer = ticket.claimer === i.user.id;
 
       if(i.customId==='request_close'){
-        await i.channel.send({ content:`❓ Schließungsanfrage von <@${i.user.id}>`, components:[ new ActionRowBuilder().addComponents( new ButtonBuilder().setCustomId('team_close').setEmoji('🔒').setLabel(t(guildId, 'buttons.close')).setStyle(ButtonStyle.Danger) ) ] });
+        const requestEmbed = new EmbedBuilder()
+          .setColor(0xffa500)
+          .setTitle('📩 Schließungsanfrage')
+          .setDescription(`<@${i.user.id}> möchte dieses Ticket schließen lassen.`)
+          .addFields(
+            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+            { name: '👤 Angefordert von', value: `<@${i.user.id}>`, inline: true },
+            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Schließungsanfrage' })
+          .setTimestamp();
+
+        const closeButton = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('team_close')
+            .setEmoji('🔐')
+            .setLabel(t(guildId, 'buttons.close'))
+            .setStyle(ButtonStyle.Danger)
+        );
+
+        await i.channel.send({ embeds: [requestEmbed], components: [closeButton] });
         logEvent(i.guild, t(guildId, 'logs.close_requested', { id: ticket.id, user: `<@${i.user.id}>` }));
-        return i.reply({ephemeral:true,content:'Anfrage gesendet'});
+
+        const confirmEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setDescription('✅ **Schließungsanfrage erfolgreich gesendet!**\n\nEin Team-Mitglied wird deine Anfrage prüfen.')
+          .setFooter({ text: 'Quantix Tickets' })
+          .setTimestamp();
+
+        return i.reply({ embeds: [confirmEmbed], ephemeral: true });
       }
 
       if(i.customId==='unclaim'){
@@ -1842,7 +1898,19 @@ client.on(Events.InteractionCreate, async i => {
 
           await i.channel.permissionOverwrites.set(permissions);
 
-          await i.channel.send(`🔄 <@${i.user.id}> ${t(guildId, 'messages.ticket_unclaimed', { user: `<@${i.user.id}>` })}`);
+          const unclaimEmbed = new EmbedBuilder()
+            .setColor(0x9b59b6)
+            .setTitle('↩️ Ticket freigegeben')
+            .setDescription(`<@${i.user.id}> hat das Ticket freigegeben.\n\nDas Ticket ist jetzt wieder für alle Team-Mitglieder verfügbar.`)
+            .addFields(
+              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+              { name: '👤 Freigegeben von', value: `<@${i.user.id}>`, inline: true },
+              { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Ticket freigegeben' })
+            .setTimestamp();
+
+          await i.channel.send({ embeds: [unclaimEmbed] });
         } catch(err) {
           console.error('Fehler beim Zurücksetzen der Berechtigungen:', err);
         }
@@ -1867,9 +1935,22 @@ client.on(Events.InteractionCreate, async i => {
         const roleObj    = TEAM_ROLE ? await i.guild.roles.fetch(TEAM_ROLE).catch(()=>null) : null;
         const teamLabel  = roleObj ? `@${roleObj.name}` : '@Team';
 
-        await i.reply({ ephemeral:true, content:'Ticket wird geschlossen…' });
+        await i.reply({ ephemeral:true, content:'🔐 Ticket wird geschlossen…' });
 
-        await i.channel.send(`🔒 Ticket geschlossen von ${closerName} (${closerTag}) • ${teamLabel}`);
+        const closeEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🔐 Ticket geschlossen')
+          .setDescription(`Dieses Ticket wurde von **${closerName}** geschlossen.\n\nVielen Dank für deine Geduld! Das Ticket wird in wenigen Sekunden gelöscht.`)
+          .addFields(
+            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+            { name: '👤 Geschlossen von', value: `<@${i.user.id}>`, inline: true },
+            { name: '🏷️ Team', value: teamLabel, inline: true },
+            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+          )
+          .setFooter({ text: 'Quantix Tickets • Ticket geschlossen' })
+          .setTimestamp();
+
+        await i.channel.send({ embeds: [closeEmbed] });
 
         let files = null;
         try { files = await createTranscript(i.channel, ticket, { resolveMentions: true }); } catch {}
@@ -1944,7 +2025,19 @@ client.on(Events.InteractionCreate, async i => {
 
             await i.channel.permissionOverwrites.set(permissions);
 
-            await i.channel.send(`✅ <@${i.user.id}> ${t(guildId, 'messages.ticket_claimed', { user: `<@${i.user.id}>` })}`);
+            const claimEmbed = new EmbedBuilder()
+              .setColor(0x00ff88)
+              .setTitle('✨ Ticket übernommen')
+              .setDescription(`<@${i.user.id}> hat das Ticket übernommen und wird sich um dein Anliegen kümmern.`)
+              .addFields(
+                { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+                { name: '👤 Übernommen von', value: `<@${i.user.id}>`, inline: true },
+                { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+              )
+              .setFooter({ text: 'Quantix Tickets • Ticket übernommen' })
+              .setTimestamp();
+
+            await i.channel.send({ embeds: [claimEmbed] });
           } catch(err) {
             console.error('Fehler beim Setzen der Berechtigungen:', err);
           }
@@ -2397,9 +2490,19 @@ client.on(Events.MessageCreate, async (message) => {
       // Build embed
       const embed = new EmbedBuilder()
         .setColor(0x00ff88)
-        .setTitle('📚 Quantix Tickets - Command Liste')
-        .setDescription('Hier findest du alle verfügbaren Bot-Commands.\n✅ = Du kannst diesen Command verwenden\n❌ = Keine Berechtigung')
-        .setFooter({ text: 'Quantix Tickets' })
+        .setTitle('📚 Quantix Tickets - Command Übersicht')
+        .setDescription(
+          '**Alle verfügbaren Bot-Commands im Überblick**\n\n' +
+          '**Legende:**\n' +
+          '✅ Du hast Zugriff auf diesen Command\n' +
+          '❌ Du hast keine Berechtigung für diesen Command\n\n' +
+          '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+        )
+        .setThumbnail(client.user.displayAvatarURL({ size: 128 }))
+        .setFooter({
+          text: `Quantix Tickets © ${new Date().getFullYear()} • Angefordert von ${message.author.tag}`,
+          iconURL: message.author.displayAvatarURL({ size: 32 })
+        })
         .setTimestamp();
 
       // Add fields for each category
@@ -2407,27 +2510,51 @@ client.on(Events.MessageCreate, async (message) => {
         let fieldValue = '';
 
         for (const cmd of category.items) {
-          const icon = cmd.canUse ? '✅' : '❌';
-          fieldValue += `${icon} **${cmd.name}**\n`;
-          fieldValue += `└ ${cmd.description}\n`;
-          fieldValue += `└ *Berechtigung: ${cmd.permission}*\n\n`;
+          const statusIcon = cmd.canUse ? '✅' : '❌';
+          const permIcon = cmd.permission === 'Alle' ? '🌐' :
+                          cmd.permission === 'Administrator' ? '⚙️' :
+                          cmd.permission === 'Owner' ? '👑' :
+                          cmd.permission === 'Founder' ? '⭐' :
+                          cmd.permission === 'Claimer' ? '🎫' : '🔒';
+
+          fieldValue += `${statusIcon} **${cmd.name}**\n`;
+          fieldValue += `   └ 📝 ${cmd.description}\n`;
+          fieldValue += `   └ ${permIcon} *${cmd.permission}*\n\n`;
         }
 
         embed.addFields({
-          name: category.category,
+          name: `${category.category}`,
           value: fieldValue || 'Keine Commands',
           inline: false
         });
       }
 
-      // Add usage info
+      // Add usage info with enhanced formatting
       embed.addFields({
-        name: '💡 Hinweis',
-        value: 'Du kannst Commands auch mit `/commands` als Slash-Command verwenden.\nFür mehr Informationen besuche das Dashboard mit `/dashboard`.',
+        name: '💡 Hilfreiche Tipps',
+        value:
+          '• Nutze `/commands` für die Slash-Command Version\n' +
+          '• Besuche `/dashboard` für erweiterte Einstellungen\n' +
+          '• Premium-Features mit `/premium` freischalten\n' +
+          '• Bei Fragen: [Support Server](https://discord.com/invite/mnYbnpyyBS)',
         inline: false
       });
 
-      await message.reply({ embeds: [embed] });
+      // Create button row with useful links
+      const buttonRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setURL(`${PANEL_FIXED_URL}`)
+          .setStyle(ButtonStyle.Link)
+          .setLabel('🎫 Dashboard')
+          .setEmoji('🚀'),
+        new ButtonBuilder()
+          .setURL('https://discord.com/invite/mnYbnpyyBS')
+          .setStyle(ButtonStyle.Link)
+          .setLabel('Support')
+          .setEmoji('💬')
+      );
+
+      await message.reply({ embeds: [embed], components: [buttonRow] });
       return;
     } catch (err) {
       console.error('Error in !commands message command:', err);
