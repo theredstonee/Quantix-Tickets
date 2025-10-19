@@ -380,8 +380,8 @@ router.get('/uptime', async (req, res) => {
       name: monitor.friendly_name,
       url: monitor.url,
       status: monitor.status,
-      custom_uptime_ratios: monitor.custom_uptime_ratios,
-      custom_uptime_ranges: monitor.custom_uptime_ranges
+      custom_uptime_ratio: monitor.custom_uptime_ratio,
+      custom_down_durations: monitor.custom_down_durations
     });
 
     // Calculate uptime percentages
@@ -389,20 +389,15 @@ router.get('/uptime', async (req, res) => {
     let uptime7Days = 0;
     let uptime30Days = 0;
 
-    if (monitor.custom_uptime_ratios && monitor.custom_uptime_ratios.trim()) {
-      const ratios = monitor.custom_uptime_ratios.split('-');
+    // UptimeRobot verwendet custom_uptime_ratio (SINGULAR!)
+    if (monitor.custom_uptime_ratio && monitor.custom_uptime_ratio.trim()) {
+      const ratios = monitor.custom_uptime_ratio.split('-');
       uptime1Day = parseFloat(ratios[0]) || 0;
       uptime7Days = parseFloat(ratios[1]) || 0;
       uptime30Days = parseFloat(ratios[2]) || 0;
-      console.log('[UptimeRobot API] Verwende custom_uptime_ratios');
-    } else if (monitor.custom_uptime_ranges && monitor.custom_uptime_ranges.trim()) {
-      const ranges = monitor.custom_uptime_ranges.split('-');
-      uptime1Day = parseFloat(ranges[0]) || 0;
-      uptime7Days = parseFloat(ranges[1]) || 0;
-      uptime30Days = parseFloat(ranges[2]) || 0;
-      console.log('[UptimeRobot API] Verwende custom_uptime_ranges');
+      console.log('[UptimeRobot API] ✅ Verwende custom_uptime_ratio (Singular)');
     } else {
-      console.warn('[UptimeRobot API] ⚠️ Keine custom_uptime_ratios oder custom_uptime_ranges gefunden!');
+      console.warn('[UptimeRobot API] ⚠️ custom_uptime_ratio nicht gefunden!');
       console.warn('[UptimeRobot API] Verfügbare Felder im Monitor:', Object.keys(monitor));
     }
 
@@ -479,7 +474,8 @@ async function getUptimeRobotData(apiKey, monitorId = null) {
     const postDataObj = {
       api_key: apiKey,
       format: 'json',
-      custom_uptime_ratios: '1-7-30', // 1 day, 7 days, 30 days
+      custom_uptime_ratios: '1-7-30', // Parameter: custom_uptime_ratios (plural)
+      // Antwort-Feld: custom_uptime_ratio (singular!)
       logs: 1,
       log_types: '1-2', // down and up events
       logs_limit: 10
