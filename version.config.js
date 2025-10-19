@@ -1,5 +1,5 @@
 module.exports = {
-  VERSION: '1.0.2',
+  VERSION: '1.0.3',
   RELEASE_DATE: '2025-10-19',
   AUTHOR: 'Theredstonee',
   REPOSITORY: 'https://github.com/Theredstonee/TRS-Tickets-Bot',

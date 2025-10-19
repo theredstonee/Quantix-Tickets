@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.0.3] - 2025-10-19
+
+### Added
+- 📨 **/forward Command** (Pro Feature): Ticket-Weiterleitung an andere Team-Mitglieder
+  - Nur der Claimer kann Tickets weiterleiten
+  - Modal-Dialog für Grund-Eingabe
+  - Professional Embed mit allen Ticket-Informationen
+  - User-Ping außerhalb des Embeds
+  - Annehmen/Ablehnen Buttons (nur für gepingten User)
+  - Automatische Claim-Übertragung bei Annahme
+  - 24h Timeout für Weiterleitung
+  - Log-Events für alle Aktionen
+- 📊 **Echte Uptime-Anzeige**: Homepage zeigt jetzt echte Bot-Uptime als Prozent
+  - Berechnung basierend auf Laufzeit (1 Tag / 7 Tage / 30 Tage)
+  - Live-Updates alle 30 Sekunden
+  - Maximum 99.9% für realistisch Darstellung
+
+### Fixed
+- 👥 **Team-Rollen Server-Anzeige**: Team-Mitglieder sehen jetzt alle Server mit Team-Rolle
+  - Durchläuft alle Bot-Server, nicht nur User-Guilds
+  - Zeigt Server auch ohne Discord-Admin-Berechtigung
+
+### Changed
+- 🎨 **Ticket-Themen Design**: Komplett überarbeitetes Layout
+  - Live-Vorschau von Emoji und Name im Header
+  - 3-Spalten-Grid statt 2-Spalten
+  - Größeres Emoji-Feld (zentriert, 1.5rem)
+  - Professional visuelle Hierarchie
+- 📋 **Panel-Embed Position**: Vom "Design"-Tab zum "Panel"-Tab verschoben
+  - Bessere Übersichtlichkeit
+  - Alle Panel-Einstellungen an einem Ort
+
+---
+
 ## [1.0.2] - 2025-10-19
 
 ### Added

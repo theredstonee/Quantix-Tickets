@@ -2178,26 +2178,31 @@
                   <% (cfg.topics || []).forEach((topic, index) => { %>
                   <div class="topic-item" data-index="<%= index %>">
                     <div class="form-field-header">
-                      <span class="form-field-number"><%= index + 1 %></span>
-                      <button type="button" class="btn-icon-danger" onclick="removeTopic(this)">
+                      <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span class="form-field-number"><%= index + 1 %></span>
+                        <span style="font-size: 1.5rem;"><%= topic.emoji || '❓' %></span>
+                        <span style="font-weight: 600; color: var(--text-color);"><%= topic.label || 'Neues Thema' %></span>
+                      </div>
+                      <button type="button" class="btn-icon-danger" onclick="removeTopic(this)" title="<%= lang === 'de' ? 'Thema löschen' : 'Delete Topic' %>">
                         <i class="fas fa-trash"></i>
                       </button>
                     </div>
 
-                    <div class="form-group">
-                      <div class="form-label">
-                        <i class="fas fa-tag"></i>
-                        <span><%= lang === 'de' ? 'Themen-Name' : 'Topic Name' %></span>
+                    <div class="grid grid-3">
+                      <div class="form-group">
+                        <div class="form-label">
+                          <i class="fas fa-tag"></i>
+                          <span><%= lang === 'de' ? 'Themen-Name' : 'Topic Name' %></span>
+                        </div>
+                        <input
+                          type="text"
+                          name="topic_label_<%= index %>"
+                          value="<%= topic.label || '' %>"
+                          placeholder="<%= lang === 'de' ? 'z. B. Support' : 'e.g. Support' %>"
+                          oninput="updateTopicPreview(this)"
+                          required>
                       </div>
-                      <input
-                        type="text"
-                        name="topic_label_<%= index %>"
-                        value="<%= topic.label || '' %>"
-                        placeholder="<%= lang === 'de' ? 'z. B. Support' : 'e.g. Support' %>"
-                        required>
-                    </div>
 
-                    <div class="grid grid-2">
                       <div class="form-group">
                         <div class="form-label">
                           <i class="fas fa-code"></i>
@@ -2226,6 +2231,8 @@
                           value="<%= topic.emoji || '' %>"
                           placeholder="❓"
                           maxlength="2"
+                          style="font-size: 1.5rem; text-align: center;"
+                          oninput="updateTopicPreview(this)"
                           required>
                       </div>
                     </div>
@@ -3222,25 +3229,30 @@
       const topicHtml = `
         <div class="topic-item" data-index="${newIndex}">
           <div class="form-field-header">
-            <span class="form-field-number">${newIndex + 1}</span>
-            <button type="button" class="btn-icon-danger" onclick="removeTopic(this)">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="form-field-number">${newIndex + 1}</span>
+              <span style="font-size: 1.5rem;">❓</span>
+              <span style="font-weight: 600; color: var(--text-color);">Neues Thema</span>
+            </div>
+            <button type="button" class="btn-icon-danger" onclick="removeTopic(this)" title="<%= lang === 'de' ? 'Thema löschen' : 'Delete Topic' %>">
               <i class="fas fa-trash"></i>
             </button>
           </div>
 
-          <div class="form-group">
-            <div class="form-label">
-              <i class="fas fa-tag"></i>
-              <span><%= lang === 'de' ? 'Themen-Name' : 'Topic Name' %></span>
+          <div class="grid grid-3">
+            <div class="form-group">
+              <div class="form-label">
+                <i class="fas fa-tag"></i>
+                <span><%= lang === 'de' ? 'Themen-Name' : 'Topic Name' %></span>
+              </div>
+              <input
+                type="text"
+                name="topic_label_${newIndex}"
+                placeholder="<%= lang === 'de' ? 'z. B. Support' : 'e.g. Support' %>"
+                oninput="updateTopicPreview(this)"
+                required>
             </div>
-            <input
-              type="text"
-              name="topic_label_${newIndex}"
-              placeholder="<%= lang === 'de' ? 'z. B. Support' : 'e.g. Support' %>"
-              required>
-          </div>
 
-          <div class="grid grid-2">
             <div class="form-group">
               <div class="form-label">
                 <i class="fas fa-code"></i>
@@ -3267,6 +3279,8 @@
                 name="topic_emoji_${newIndex}"
                 placeholder="❓"
                 maxlength="2"
+                style="font-size: 1.5rem; text-align: center;"
+                oninput="updateTopicPreview(this)"
                 required>
             </div>
           </div>
@@ -3281,6 +3295,27 @@
       const topicItem = button.closest('.topic-item');
       topicItem.remove();
       updateTopicNumbers();
+    }
+
+    function updateTopicPreview(input) {
+      const topicItem = input.closest('.topic-item');
+      const header = topicItem.querySelector('.form-field-header > div');
+
+      // Get emoji and label inputs
+      const emojiInput = topicItem.querySelector('input[name^="topic_emoji_"]');
+      const labelInput = topicItem.querySelector('input[name^="topic_label_"]');
+
+      if (emojiInput && labelInput && header) {
+        const emoji = emojiInput.value || '❓';
+        const label = labelInput.value || 'Neues Thema';
+
+        // Find emoji and label spans in header
+        const emojiSpan = header.querySelectorAll('span')[1];
+        const labelSpan = header.querySelectorAll('span')[2];
+
+        if (emojiSpan) emojiSpan.textContent = emoji;
+        if (labelSpan) labelSpan.textContent = label;
+      }
     }
 
     function updateTopicNumbers() {
