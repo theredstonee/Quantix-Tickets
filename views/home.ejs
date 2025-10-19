@@ -1398,7 +1398,7 @@
         %><%= languagesText[lang] || languagesText.de %></span>
       </div>
       <div class="stat-item">
-        <span class="stat-number" data-target="99.9">0</span><span style="font-size: 1.5rem; color: var(--accent-color); font-weight: 700;">%</span>
+        <span class="stat-number" id="uptime-display" style="font-size: 2rem;">...</span>
         <span class="stat-label"><%
           const uptimeText = {
             de: 'Uptime',
@@ -2587,6 +2587,27 @@
         faqItem.classList.add('active');
       }
     }
+
+    // Load real uptime from API
+    async function loadUptime() {
+      try {
+        const response = await fetch('/health');
+        const data = await response.json();
+
+        if (data.uptimeFormatted) {
+          document.getElementById('uptime-display').textContent = data.uptimeFormatted;
+        }
+      } catch (err) {
+        console.error('Failed to load uptime:', err);
+        document.getElementById('uptime-display').textContent = 'N/A';
+      }
+    }
+
+    // Load uptime on page load
+    loadUptime();
+
+    // Update uptime every 30 seconds
+    setInterval(loadUptime, 30000);
 
     // Loading overlay
     function showLoading(text) {
