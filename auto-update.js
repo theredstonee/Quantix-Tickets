@@ -131,7 +131,7 @@ function restartBot() {
     if (!error) {
       // PM2 ist verfügbar
       logUpdate('✅ PM2 erkannt, verwende pm2 restart');
-      exec('pm2 restart trs-tickets-bot', (restartError, stdout) => {
+      exec('pm2 restart quantix-tickets', (restartError, stdout) => {
         if (restartError) {
           logUpdate(`⚠️ PM2 Restart Fehler: ${restartError.message}, verwende process.exit()`);
           setTimeout(() => process.exit(0), 1000);
@@ -198,10 +198,10 @@ async function handleAutoUpdate(req, res) {
       return;
     }
 
-    // Prüfe ob Repository TRS-Tickets-Bot ist
+    // Prüfe ob Repository Quantix-Tickets ist
     const repository = payload.repository?.full_name || '';
-    if (!repository.toLowerCase().includes('trs-tickets-bot')) {
-      logUpdate(`⏭️ Repository ${repository} ist nicht TRS-Tickets-Bot, ignoriere Update`);
+    if (!repository.toLowerCase().includes('quantix-tickets')) {
+      logUpdate(`⏭️ Repository ${repository} ist nicht Quantix-Tickets, ignoriere Update`);
       return;
     }
 
