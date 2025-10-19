@@ -315,4 +315,144 @@ router.get('/transcript/:id', isAuthenticated, isAdminOrTeam, (req, res) => {
   }
 });
 
+// ============================================================
+// UPTIME ENDPOINTS (Public)
+// ============================================================
+
+// GET /api/uptime - Get UptimeRobot statistics
+router.get('/uptime', async (req, res) => {
+  try {
+    const apiKey = process.env.UPTIMEROBOT_API_KEY;
+
+    if (!apiKey) {
+      return res.json({
+        error: 'UptimeRobot API Key not configured',
+        uptime: null,
+        status: 'unknown'
+      });
+    }
+
+    // Fetch data from UptimeRobot API
+    const uptimeData = await getUptimeRobotData(apiKey);
+
+    if (!uptimeData || uptimeData.stat !== 'ok') {
+      return res.json({
+        error: 'Failed to fetch data from UptimeRobot',
+        uptime: null,
+        status: 'unknown'
+      });
+    }
+
+    const monitors = uptimeData.monitors;
+
+    if (!monitors || monitors.length === 0) {
+      return res.json({
+        error: 'No monitors found',
+        uptime: null,
+        status: 'unknown'
+      });
+    }
+
+    // Get first monitor (or you can loop through all)
+    const monitor = monitors[0];
+
+    // Calculate uptime percentages
+    const uptimeRatios = monitor.custom_uptime_ratios || '';
+    const ratios = uptimeRatios.split('-');
+    const uptime1Day = parseFloat(ratios[0]) || 0;
+    const uptime7Days = parseFloat(ratios[1]) || 0;
+    const uptime30Days = parseFloat(ratios[2]) || 0;
+
+    // Status mapping
+    const statusMap = {
+      0: 'paused',
+      1: 'not_monitored',
+      2: 'online',
+      8: 'down',
+      9: 'seems_down'
+    };
+
+    const status = statusMap[monitor.status] || 'unknown';
+
+    res.json({
+      success: true,
+      name: monitor.friendly_name,
+      url: monitor.url,
+      status: status,
+      uptime: {
+        day1: uptime1Day,
+        day7: uptime7Days,
+        day30: uptime30Days
+      },
+      averageResponseTime: monitor.average_response_time || null,
+      lastDowntime: monitor.logs && monitor.logs.length > 0 ? {
+        timestamp: monitor.logs[0].datetime,
+        duration: monitor.logs[0].duration
+      } : null
+    });
+
+  } catch (err) {
+    console.error('Uptime API error:', err);
+    res.json({
+      error: 'Internal server error',
+      uptime: null,
+      status: 'unknown'
+    });
+  }
+});
+
+/**
+ * Fetches data from UptimeRobot API
+ */
+async function getUptimeRobotData(apiKey) {
+  const https = require('https');
+
+  return new Promise((resolve, reject) => {
+    const postData = JSON.stringify({
+      api_key: apiKey,
+      format: 'json',
+      custom_uptime_ratios: '1-7-30', // 1 day, 7 days, 30 days
+      logs: 1,
+      log_types: '1-2', // down and up events
+      logs_limit: 10
+    });
+
+    const options = {
+      hostname: 'api.uptimerobot.com',
+      port: 443,
+      path: '/v2/getMonitors',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData),
+        'Cache-Control': 'no-cache'
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          const jsonData = JSON.parse(data);
+          resolve(jsonData);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.write(postData);
+    req.end();
+  });
+}
+
 module.exports = router;

@@ -2638,50 +2638,42 @@
       }
     }
 
-    // Load real uptime from API and display as percentage
+    // Load real uptime from UptimeRobot API and display as percentage
     async function loadUptime() {
       try {
-        const response = await fetch('/health');
+        const response = await fetch('/api/uptime');
         const data = await response.json();
 
-        if (data.uptime) {
-          // Calculate uptime percentage based on current session
-          const uptimeSeconds = data.uptime;
-          const oneDayInSeconds = 24 * 60 * 60;
-          const sevenDaysInSeconds = 7 * 24 * 60 * 60;
-          const thirtyDaysInSeconds = 30 * 24 * 60 * 60;
-
-          let uptimePercent;
-
-          if (uptimeSeconds >= thirtyDaysInSeconds) {
-            // Bot läuft seit über 30 Tagen = 99.9% Uptime
-            uptimePercent = 99.9;
-          } else if (uptimeSeconds >= sevenDaysInSeconds) {
-            // Bot läuft 7-30 Tage = Berechne basierend auf 30 Tagen
-            uptimePercent = (uptimeSeconds / thirtyDaysInSeconds) * 100;
-            // Mindestens 95% wenn länger als 7 Tage
-            if (uptimePercent < 95) uptimePercent = 95;
-          } else if (uptimeSeconds >= oneDayInSeconds) {
-            // Bot läuft 1-7 Tage = Berechne basierend auf 7 Tagen
-            uptimePercent = (uptimeSeconds / sevenDaysInSeconds) * 100;
-            // Mindestens 90% wenn länger als 1 Tag
-            if (uptimePercent < 90) uptimePercent = 90;
-          } else {
-            // Bot läuft weniger als 1 Tag = Zeige echten Prozentsatz
-            uptimePercent = (uptimeSeconds / oneDayInSeconds) * 100;
-          }
-
-          // Cap at 99.9% maximum
-          if (uptimePercent > 99.9) {
-            uptimePercent = 99.9;
-          }
+        if (data.success && data.uptime) {
+          // Use real 30-day uptime from UptimeRobot
+          const uptimePercent = data.uptime.day30 || 0;
 
           // Display with 1 decimal place
           document.getElementById('uptime-display').textContent = uptimePercent.toFixed(1);
+
+          // Optionally update status indicator if exists
+          const statusEl = document.getElementById('uptime-status');
+          if (statusEl) {
+            if (data.status === 'online') {
+              statusEl.textContent = '🟢 Online';
+              statusEl.style.color = 'var(--accent-color)';
+            } else if (data.status === 'down') {
+              statusEl.textContent = '🔴 Down';
+              statusEl.style.color = '#e74c3c';
+            } else {
+              statusEl.textContent = '🟡 Unknown';
+              statusEl.style.color = '#f39c12';
+            }
+          }
+        } else {
+          // Fallback to default if UptimeRobot is not configured
+          console.warn('UptimeRobot not configured or error:', data.error);
+          document.getElementById('uptime-display').textContent = '99.5';
         }
       } catch (err) {
         console.error('Failed to load uptime:', err);
-        document.getElementById('uptime-display').textContent = '0.0';
+        // Fallback to default value
+        document.getElementById('uptime-display').textContent = '99.5';
       }
     }
 

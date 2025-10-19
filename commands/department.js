@@ -59,7 +59,7 @@ module.exports = {
     // Premium Check
     if (!hasFeature(guildId, 'multiDepartment')) {
       return interaction.reply({
-        content: '❌ **Premium Basic+** Feature! Multi-Department Support is only available with Premium Basic or higher.\n🔗 Upgrade: https://your-domain.com/premium',
+        content: '❌ **Premium Basic+** Feature! Multi-Department Support is only available with Premium Basic or higher.\n🔗 Upgrade: https://tickets.quantix-bot.de/premium',
         ephemeral: true
       });
     }
