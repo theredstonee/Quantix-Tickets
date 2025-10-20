@@ -2807,7 +2807,8 @@ module.exports = (client)=>{
       }
 
       const premiumInfo = getPremiumInfo(guildId);
-      const isPro = premiumInfo.tier === 'pro' || premiumInfo.tier === 'beta' || guildId === '1291125037876904026';
+      // CSV Export ist für alle mit statistics Feature verfügbar (Basic+ und Pro)
+      const canExportCSV = hasFeature(guildId, 'statistics');
 
       const tickets = loadTickets(guildId);
       const guild = await client.guilds.fetch(guildId);
@@ -2890,7 +2891,7 @@ module.exports = (client)=>{
         guildName: guild.name,
         stats: stats,
         insights: insights,
-        isPro: isPro,
+        canExportCSV: canExportCSV,
         timeRange: timeRange,
         guildId: guildId
       });
@@ -2900,15 +2901,14 @@ module.exports = (client)=>{
     }
   });
 
-  // CSV Export Routes (Pro Feature)
+  // CSV Export Routes (Basic+ Feature - requires statistics)
   router.get('/export/tickets/csv', isAuth, async (req, res) => {
     try {
       const guildId = req.session.selectedGuild;
 
-      // Check if Pro tier
-      const premiumInfo = getPremiumInfo(guildId);
-      if (premiumInfo.tier !== 'pro' && premiumInfo.tier !== 'beta' && guildId !== '1291125037876904026') {
-        return res.status(403).send('CSV Export requires Premium Pro');
+      // Check if statistics feature is available (Basic+ and Pro)
+      if (!hasFeature(guildId, 'statistics')) {
+        return res.status(403).send('CSV Export requires Premium Basic+ or higher');
       }
 
       const options = {
@@ -2934,10 +2934,9 @@ module.exports = (client)=>{
     try {
       const guildId = req.session.selectedGuild;
 
-      // Check if Pro tier
-      const premiumInfo = getPremiumInfo(guildId);
-      if (premiumInfo.tier !== 'pro' && premiumInfo.tier !== 'beta' && guildId !== '1291125037876904026') {
-        return res.status(403).send('CSV Export requires Premium Pro');
+      // Check if statistics feature is available (Basic+ and Pro)
+      if (!hasFeature(guildId, 'statistics')) {
+        return res.status(403).send('CSV Export requires Premium Basic+ or higher');
       }
 
       const csvContent = generateStatsCSVExport(guildId);

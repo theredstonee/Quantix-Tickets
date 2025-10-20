@@ -216,26 +216,17 @@ function hasFeature(guildId, feature) {
     return PREMIUM_TIERS.none.features[feature] || false;
   }
 
-  // Lifetime Premium läuft nie ab
-  if (cfg.premium.lifetime === true) {
-    return cfg.premium.features?.[feature] || false;
-  }
+  // Get current tier
+  const tier = cfg.premium.tier;
 
-  // Betatester haben Pro-Features
-  if (cfg.premium.tier === 'beta') {
-    // Prüfe ob abgelaufen
-    if (cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) < new Date()) {
-      return PREMIUM_TIERS.none.features[feature] || false;
-    }
-    return PREMIUM_TIERS.beta.features[feature] || false;
-  }
-
-  // Prüfe ob abgelaufen
-  if (cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) < new Date()) {
+  // Prüfe ob abgelaufen (nicht für Lifetime)
+  if (!cfg.premium.lifetime && cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) < new Date()) {
     return PREMIUM_TIERS.none.features[feature] || false;
   }
 
-  return cfg.premium.features?.[feature] || false;
+  // Return features from PREMIUM_TIERS (nicht aus Config!)
+  // Dies stellt sicher, dass neue Features automatisch verfügbar sind
+  return PREMIUM_TIERS[tier]?.features[feature] || false;
 }
 
 /**
@@ -308,7 +299,7 @@ function getPremiumInfo(guildId) {
     tier: tier,
     tierName: tierName,
     price: PREMIUM_TIERS[tier].price,
-    features: cfg.premium?.features || PREMIUM_TIERS[tier].features,
+    features: PREMIUM_TIERS[tier].features, // Immer aktuelle Features aus PREMIUM_TIERS
     expiresAt: cfg.premium?.expiresAt || null,
     isActive: tier !== 'none',
     isLifetime: isLifetime,
@@ -410,7 +401,6 @@ function getMaxCategories(guildId) {
     return 999;
   }
 
-  const cfg = readCfg(guildId);
   const tier = getPremiumTier(guildId);
 
   // Betatester haben unbegrenzte Kategorien
@@ -418,7 +408,8 @@ function getMaxCategories(guildId) {
     return 999;
   }
 
-  return cfg.premium?.features?.maxCategories || PREMIUM_TIERS[tier].features.maxCategories;
+  // Immer aktuelle maxCategories aus PREMIUM_TIERS verwenden
+  return PREMIUM_TIERS[tier].features.maxCategories;
 }
 
 /**

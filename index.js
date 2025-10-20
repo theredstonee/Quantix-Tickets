@@ -1895,13 +1895,12 @@ client.on(Events.InteractionCreate, async i => {
             modal.addComponents(new ActionRowBuilder().addComponents(inputBuilder));
           });
 
-          await i.update({ embeds: [], components: [] });
           return i.showModal(modal);
         }
 
         // No form fields, create ticket directly
-        await i.update({ content: '🎫 Ticket wird erstellt...', embeds: [], components: [] });
         await i.deferUpdate();
+        await i.editReply({ content: '🎫 Ticket wird erstellt...', embeds: [], components: [] });
         return await createTicketChannel(i, topic, {}, cfg);
       }
 
