@@ -2086,14 +2086,73 @@
                   </div>
                 </div>
 
-                <label style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
+                <!-- DM Notification Toggle -->
+                <label class="dm-notify-toggle-option" style="margin-top: 1rem;">
                   <input
                     type="checkbox"
                     name="notifyUserOnStatusChange"
                     <%= (cfg.notifyUserOnStatusChange !== false) ? 'checked' : '' %>
-                    style="width: auto; margin: 0;">
-                  <span style="font-weight: 500;"><%= lang === 'de' ? 'User per DM benachrichtigen, wenn Ticket geschlossen wird' : 'Notify user via DM when ticket is closed' %></span>
+                    style="display: none;">
+                  <div class="toggle-content">
+                    <div class="toggle-icon">
+                      <i class="fas fa-check"></i>
+                    </div>
+                    <span style="font-weight: 500;"><%= lang === 'de' ? 'User per DM benachrichtigen, wenn Ticket geschlossen wird' : 'Notify user via DM when ticket is closed' %></span>
+                  </div>
                 </label>
+
+                <style>
+                  .dm-notify-toggle-option {
+                    display: block;
+                    padding: 0.875rem 1rem;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                  }
+
+                  .dm-notify-toggle-option:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-color: rgba(59, 130, 246, 0.3);
+                    transform: translateX(2px);
+                  }
+
+                  .dm-notify-toggle-option input:checked + .toggle-content {
+                    color: #3b82f6;
+                  }
+
+                  .dm-notify-toggle-option input:checked ~ .toggle-content .toggle-icon {
+                    background: #3b82f6;
+                    border-color: #3b82f6;
+                  }
+
+                  .dm-notify-toggle-option input:checked ~ .toggle-content .toggle-icon i {
+                    opacity: 1;
+                  }
+
+                  [data-theme="dark"] .dm-notify-toggle-option {
+                    background: rgba(255, 255, 255, 0.02);
+                    border-color: rgba(255, 255, 255, 0.08);
+                  }
+
+                  [data-theme="dark"] .dm-notify-toggle-option:hover {
+                    background: rgba(255, 255, 255, 0.04);
+                    border-color: rgba(59, 130, 246, 0.4);
+                  }
+                </style>
+
+                <script>
+                  // Toggle functionality for DM notification
+                  document.querySelectorAll('.dm-notify-toggle-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                      if (e.target.tagName !== 'INPUT') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                      }
+                    });
+                  });
+                </script>
 
                 <!-- AntiSpam Einstellungen -->
                 <div style="margin-top: 1.5rem; padding: 1.25rem; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 12px;">
