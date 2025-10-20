@@ -2052,7 +2052,9 @@ client.on(Events.InteractionCreate, async i => {
             .setStyle(ButtonStyle.Danger)
         );
 
-        await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] });
+        const requestMessage = await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] });
+        ticket.closeRequest.messageId = requestMessage.id; // Speichere Message-ID
+        saveTickets(guildId, log);
         logEvent(i.guild, t(guildId, 'logs.close_requested', { id: ticket.id, user: `<@${i.user.id}>` }));
 
         const confirmEmbed = new EmbedBuilder()
@@ -2132,6 +2134,30 @@ client.on(Events.InteractionCreate, async i => {
         const teamLabel = roleObj ? `@${roleObj.name}` : '@Team';
 
         await i.reply({ ephemeral: true, content: '🔐 Ticket wird geschlossen…' });
+
+        // Deaktiviere die Buttons der ursprünglichen Schließungsanfrage
+        if (ticket.closeRequest.messageId) {
+          try {
+            const requestMsg = await i.channel.messages.fetch(ticket.closeRequest.messageId);
+            const disabledButtons = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId('approve_close_request_disabled')
+                .setEmoji('✅')
+                .setLabel('Bestätigt')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true),
+              new ButtonBuilder()
+                .setCustomId('deny_close_request_disabled')
+                .setEmoji('❌')
+                .setLabel('Ablehnen')
+                .setStyle(ButtonStyle.Danger)
+                .setDisabled(true)
+            );
+            await requestMsg.edit({ components: [disabledButtons] });
+          } catch (err) {
+            console.error('Error disabling close request buttons:', err);
+          }
+        }
 
         const closeEmbed = new EmbedBuilder()
           .setColor(0x00ff88)
@@ -2263,6 +2289,30 @@ client.on(Events.InteractionCreate, async i => {
         saveTickets(guildId, log);
 
         await i.reply({ ephemeral: true, content: '✅ Schließungsanfrage wurde abgelehnt.' });
+
+        // Deaktiviere die Buttons der ursprünglichen Schließungsanfrage
+        if (ticket.closeRequest.messageId) {
+          try {
+            const requestMsg = await i.channel.messages.fetch(ticket.closeRequest.messageId);
+            const disabledButtons = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId('approve_close_request_disabled')
+                .setEmoji('✅')
+                .setLabel('Bestätigen')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true),
+              new ButtonBuilder()
+                .setCustomId('deny_close_request_disabled')
+                .setEmoji('❌')
+                .setLabel('Abgelehnt')
+                .setStyle(ButtonStyle.Danger)
+                .setDisabled(true)
+            );
+            await requestMsg.edit({ components: [disabledButtons] });
+          } catch (err) {
+            console.error('Error disabling close request buttons:', err);
+          }
+        }
 
         const denyEmbed = new EmbedBuilder()
           .setColor(0xff4444)
