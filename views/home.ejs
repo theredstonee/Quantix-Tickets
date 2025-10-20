@@ -163,9 +163,9 @@
       opacity: 0.3;
     }
 
-    /* Dark Mode: Deaktiviere animiertes Hintergrundmuster */
+    /* Dark Mode: Blaues animiertes Hintergrundmuster */
     [data-theme="dark"] .animated-bg::before {
-      display: none;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 1px, transparent 1px);
     }
 
     @keyframes bgMove {
@@ -1211,7 +1211,7 @@
       %><%= heroTexts[lang] || heroTexts.de %></p>
 
       <div class="version-badge">
-        <i class="fas fa-star"></i> v1.2.0
+        <i class="fas fa-star"></i> v1.3.0
       </div>
 
       <% if (isAuthenticated && user) { %>
@@ -1749,6 +1749,19 @@
               ar: 'دعم أساسي'
             };
           %><%= free4[lang] || free4.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const free5 = {
+              de: 'Ticket-Bewertungssystem',
+              en: 'Ticket rating system',
+              he: 'מערכת דירוג כרטיסים',
+              ja: 'チケット評価システム',
+              ru: 'Система оценки тикетов',
+              pt: 'Sistema de avaliação de tickets',
+              es: 'Sistema de calificación de tickets',
+              id: 'Sistem rating tiket',
+              ar: 'نظام تقييم التذاكر'
+            };
+          %><%= free5[lang] || free5.de %></li>
         </ul>
         <a href="/login" class="btn-primary"><%
           const startText = {
@@ -1834,6 +1847,19 @@
               ar: 'دعم ذو أولوية'
             };
           %><%= basic4[lang] || basic4.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const basic5 = {
+              de: 'Datei-Upload (bis 10MB)',
+              en: 'File upload (up to 10MB)',
+              he: 'העלאת קבצים (עד 10MB)',
+              ja: 'ファイルアップロード（最大10MB）',
+              ru: 'Загрузка файлов (до 10MB)',
+              pt: 'Upload de arquivos (até 10MB)',
+              es: 'Carga de archivos (hasta 10MB)',
+              id: 'Upload file (hingga 10MB)',
+              ar: 'تحميل الملفات (حتى 10 ميجابايت)'
+            };
+          %><%= basic5[lang] || basic5.de %></li>
         </ul>
         <a href="/premium" class="btn-primary"><%
           const upgradeText = {
@@ -1958,6 +1984,19 @@
               ar: 'دعم متميز'
             };
           %><%= pro6[lang] || pro6.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const pro7 = {
+              de: 'SLA-System mit Countdown',
+              en: 'SLA system with countdown',
+              he: 'מערכת SLA עם ספירה לאחור',
+              ja: 'カウントダウン付きSLAシステム',
+              ru: 'SLA система с обратным отсчётом',
+              pt: 'Sistema SLA com contagem regressiva',
+              es: 'Sistema SLA con cuenta regresiva',
+              id: 'Sistem SLA dengan countdown',
+              ar: 'نظام SLA مع العد التنازلي'
+            };
+          %><%= pro7[lang] || pro7.de %></li>
         </ul>
         <a href="/premium" class="btn-primary"><%
           const upgradeText2 = {

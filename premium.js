@@ -42,8 +42,9 @@ function getDefaultConfig() {
         maxCategories: 5,
         customTags: false,
         templates: false,
-        slaTimer: false,
-        ratingSystem: false,
+        slaSystem: false,
+        ratingSystem: true,
+        fileUpload: false,
         autoAssignment: false
       }
     }
@@ -53,7 +54,7 @@ function getDefaultConfig() {
 // Premium Tiers Definition
 const PREMIUM_TIERS = {
   none: {
-    name: 'Basic',
+    name: 'Free',
     price: 0,
     priceId: null,
     features: {
@@ -68,8 +69,9 @@ const PREMIUM_TIERS = {
       maxCategories: 5,
       customTags: false,
       templates: false,
-      slaTimer: false,
-      ratingSystem: false,
+      slaSystem: false,
+      ratingSystem: true,
+      fileUpload: false,
       autoAssignment: false,
       customBranding: false,
       vipSystem: false,
@@ -92,8 +94,9 @@ const PREMIUM_TIERS = {
       maxCategories: 7,
       customTags: true,
       templates: true,
-      slaTimer: true,
-      ratingSystem: false,
+      slaSystem: false,
+      ratingSystem: true,
+      fileUpload: true,
       autoAssignment: false,
       customBranding: false,
       vipSystem: true,
@@ -112,10 +115,11 @@ const PREMIUM_TIERS = {
       prioritySupport: true,
       customTags: true,
       templates: true,
-      slaTimer: true,
+      fileUpload: true,
       vipSystem: true,
       multiDepartment: true,
       // Pro-exklusive Features
+      slaSystem: true,
       autoClose: true,
       emailNotifications: true,
       dmNotifications: true,
@@ -138,10 +142,11 @@ const PREMIUM_TIERS = {
       prioritySupport: true,
       customTags: true,
       templates: true,
-      slaTimer: true,
+      fileUpload: true,
       vipSystem: true,
       multiDepartment: true,
       // Pro-exklusive Features
+      slaSystem: true,
       autoClose: true,
       emailNotifications: true,
       dmNotifications: true,

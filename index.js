@@ -170,6 +170,43 @@ function safeRead(file, fallback){
 }
 function safeWrite(file, data){ fs.writeFileSync(file, JSON.stringify(data,null,2)); }
 
+// SLA System Helper Functions
+function calculateSLADeadline(guildId, priority, createdAt = Date.now()){
+  const cfg = readCfg(guildId);
+  if(!cfg.sla || !cfg.sla.enabled) return null;
+
+  const hours = priority === 2 ? cfg.sla.priority2Hours : priority === 1 ? cfg.sla.priority1Hours : cfg.sla.priority0Hours;
+  return createdAt + (hours * 60 * 60 * 1000);
+}
+
+function getSLAStatusText(deadline){
+  if(!deadline) return null;
+  const now = Date.now();
+  const remaining = deadline - now;
+
+  if(remaining <= 0){
+    const overdue = Math.abs(remaining);
+    const hours = Math.floor(overdue / (60 * 60 * 1000));
+    const minutes = Math.floor((overdue % (60 * 60 * 1000)) / (60 * 1000));
+    return `🚨 **ÜBERFÄLLIG** (${hours}h ${minutes}m)`;
+  }
+
+  const hours = Math.floor(remaining / (60 * 60 * 1000));
+  const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+
+  if(hours < 1){
+    return `⚠️ **${minutes}m verbleibend**`;
+  }
+  return `⏱️ ${hours}h ${minutes}m verbleibend`;
+}
+
+function getSLAProgress(createdAt, deadline){
+  if(!deadline) return 0;
+  const total = deadline - createdAt;
+  const elapsed = Date.now() - createdAt;
+  return Math.min(100, Math.max(0, (elapsed / total) * 100));
+}
+
 if(!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
 
 function readCfg(guildId){
@@ -195,6 +232,32 @@ function readCfg(guildId){
         githubCommitsEnabled: true,
         githubWebhookChannelId: null,
         maxTicketsPerUser: 3,
+        antiSpam: {
+          enabled: true,
+          maxTickets: 3,
+          timeWindowMinutes: 10,
+          maxButtonClicks: 5,
+          buttonTimeWindowSeconds: 10
+        },
+        ticketRating: {
+          enabled: true,
+          requireFeedback: false,
+          sendDMAfterClose: true,
+          showInAnalytics: true
+        },
+        sla: {
+          enabled: false,
+          priority0Hours: 24,
+          priority1Hours: 4,
+          priority2Hours: 1,
+          warnAtPercent: 80,
+          escalateToRole: null
+        },
+        fileUpload: {
+          enabled: true,
+          maxSizeMB: 10,
+          allowedFormats: ['png', 'jpg', 'jpeg', 'pdf', 'txt', 'log']
+        },
         notifyUserOnStatusChange: true,
         autoClose: {
           enabled: false,
@@ -253,6 +316,119 @@ function saveTickets(guildId, tickets){
   const ticketsPath = getTicketsPath(guildId);
   safeWrite(ticketsPath, tickets);
 }
+
+// AntiSpam System
+const ticketCreationLog = new Map(); // userId -> [{timestamp, guildId}]
+const buttonClickLog = new Map(); // userId -> [{timestamp, buttonId}]
+
+function checkTicketRateLimit(userId, guildId) {
+  const cfg = readCfg(guildId);
+
+  if (!cfg.antiSpam || !cfg.antiSpam.enabled) {
+    return { allowed: true };
+  }
+
+  const now = Date.now();
+  const maxTickets = cfg.antiSpam.maxTickets || 3;
+  const timeWindow = (cfg.antiSpam.timeWindowMinutes || 10) * 60 * 1000;
+
+  if (!ticketCreationLog.has(userId)) {
+    ticketCreationLog.set(userId, []);
+  }
+
+  const userLog = ticketCreationLog.get(userId);
+
+  // Entferne alte Einträge außerhalb des Zeitfensters
+  const recentTickets = userLog.filter(entry =>
+    now - entry.timestamp < timeWindow && entry.guildId === guildId
+  );
+
+  ticketCreationLog.set(userId, recentTickets);
+
+  if (recentTickets.length >= maxTickets) {
+    const oldestTicket = recentTickets[0];
+    const waitTime = Math.ceil((timeWindow - (now - oldestTicket.timestamp)) / 1000 / 60);
+    return {
+      allowed: false,
+      reason: 'ticket_limit',
+      waitMinutes: waitTime,
+      count: recentTickets.length,
+      max: maxTickets
+    };
+  }
+
+  return { allowed: true };
+}
+
+function logTicketCreation(userId, guildId) {
+  const now = Date.now();
+
+  if (!ticketCreationLog.has(userId)) {
+    ticketCreationLog.set(userId, []);
+  }
+
+  ticketCreationLog.get(userId).push({ timestamp: now, guildId });
+}
+
+function checkButtonRateLimit(userId, buttonId) {
+  const now = Date.now();
+  const key = `${userId}_${buttonId}`;
+
+  if (!buttonClickLog.has(key)) {
+    buttonClickLog.set(key, []);
+  }
+
+  const clicks = buttonClickLog.get(key);
+
+  // Entferne Klicks älter als 10 Sekunden
+  const recentClicks = clicks.filter(timestamp => now - timestamp < 10000);
+  buttonClickLog.set(key, recentClicks);
+
+  if (recentClicks.length >= 5) {
+    return {
+      allowed: false,
+      reason: 'button_spam',
+      waitSeconds: Math.ceil((10000 - (now - recentClicks[0])) / 1000)
+    };
+  }
+
+  return { allowed: true };
+}
+
+function logButtonClick(userId, buttonId) {
+  const now = Date.now();
+  const key = `${userId}_${buttonId}`;
+
+  if (!buttonClickLog.has(key)) {
+    buttonClickLog.set(key, []);
+  }
+
+  buttonClickLog.get(key).push(now);
+}
+
+// Cleanup alte Einträge alle 5 Minuten
+setInterval(() => {
+  const now = Date.now();
+  const maxAge = 15 * 60 * 1000; // 15 Minuten
+
+  for (const [userId, entries] of ticketCreationLog.entries()) {
+    const recent = entries.filter(e => now - e.timestamp < maxAge);
+    if (recent.length === 0) {
+      ticketCreationLog.delete(userId);
+    } else {
+      ticketCreationLog.set(userId, recent);
+    }
+  }
+
+  for (const [key, timestamps] of buttonClickLog.entries()) {
+    const recent = timestamps.filter(t => now - t < 15000);
+    if (recent.length === 0) {
+      buttonClickLog.delete(key);
+    } else {
+      buttonClickLog.set(key, recent);
+    }
+  }
+}, 5 * 60 * 1000);
 
 const app = express();
 app.set('view engine','ejs');
@@ -660,6 +836,125 @@ function startTrialExpiryWarningChecker() {
   setInterval(checkTrialWarnings, 6 * 60 * 60 * 1000);
 }
 
+// SLA Warning & Escalation Checker
+function startSLAChecker() {
+  const checkSLAStatus = async () => {
+    try {
+      const configFiles = fs.readdirSync(CONFIG_DIR).filter(f => f.endsWith('.json') && !f.includes('_tickets') && !f.includes('_counter'));
+
+      for (const file of configFiles) {
+        const guildId = file.replace('.json', '');
+        const cfg = readCfg(guildId);
+
+        // Skip if SLA not enabled or not Pro
+        if (!cfg.sla || !cfg.sla.enabled || !hasFeature(guildId, 'slaSystem')) continue;
+
+        const ticketsPath = getTicketsPath(guildId);
+        if (!fs.existsSync(ticketsPath)) continue;
+
+        const tickets = safeRead(ticketsPath, []);
+        const now = Date.now();
+
+        for (const ticket of tickets) {
+          // Skip if ticket closed or no SLA deadline
+          if (ticket.status !== 'offen' || !ticket.slaDeadline) continue;
+
+          const progress = getSLAProgress(ticket.timestamp, ticket.slaDeadline);
+
+          // SLA Warning at 80%
+          if (progress >= cfg.sla.warnAtPercent && !ticket.slaWarned) {
+            try {
+              const guild = await client.guilds.fetch(guildId).catch(() => null);
+              if (!guild) continue;
+
+              const channel = await guild.channels.fetch(ticket.channelId).catch(() => null);
+              if (!channel) continue;
+
+              const remaining = ticket.slaDeadline - now;
+              const hours = Math.floor(remaining / (60 * 60 * 1000));
+              const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+
+              const warningEmbed = new EmbedBuilder()
+                .setColor(0xff9900)
+                .setTitle('⚠️ SLA-Warnung')
+                .setDescription(
+                  `**Dieses Ticket nähert sich der SLA-Deadline!**\n\n` +
+                  `⏱️ **Verbleibende Zeit:** ${hours}h ${minutes}m\n` +
+                  `📊 **SLA-Fortschritt:** ${Math.round(progress)}%`
+                )
+                .setFooter({ text: 'Quantix Tickets • SLA System' })
+                .setTimestamp();
+
+              await channel.send({ embeds: [warningEmbed] });
+
+              // Mark as warned
+              ticket.slaWarned = true;
+              safeWrite(ticketsPath, tickets);
+
+              console.log(`⚠️ SLA-Warnung gesendet für Ticket #${ticket.id} in Guild ${guildId}`);
+            } catch (err) {
+              console.error(`❌ Fehler beim Senden der SLA-Warnung für Ticket #${ticket.id}:`, err.message);
+            }
+          }
+
+          // SLA Escalation at 100%
+          if (now >= ticket.slaDeadline && !ticket.slaEscalated) {
+            try {
+              const guild = await client.guilds.fetch(guildId).catch(() => null);
+              if (!guild) continue;
+
+              const channel = await guild.channels.fetch(ticket.channelId).catch(() => null);
+              if (!channel) continue;
+
+              const overdue = now - ticket.slaDeadline;
+              const hours = Math.floor(overdue / (60 * 60 * 1000));
+              const minutes = Math.floor((overdue % (60 * 60 * 1000)) / (60 * 1000));
+
+              const escalationEmbed = new EmbedBuilder()
+                .setColor(0xff0000)
+                .setTitle('🚨 SLA ÜBERSCHRITTEN')
+                .setDescription(
+                  `**Dieses Ticket hat die SLA-Deadline überschritten!**\n\n` +
+                  `❌ **Überfällig seit:** ${hours}h ${minutes}m\n` +
+                  `⚡ **Sofortige Bearbeitung erforderlich!**`
+                )
+                .setFooter({ text: 'Quantix Tickets • SLA Eskalation' })
+                .setTimestamp();
+
+              let mentionText = '';
+              if (cfg.sla.escalateToRole && cfg.sla.escalateToRole.trim()) {
+                mentionText = `<@&${cfg.sla.escalateToRole}>`;
+              }
+
+              await channel.send({
+                content: mentionText || undefined,
+                embeds: [escalationEmbed]
+              });
+
+              // Mark as escalated
+              ticket.slaEscalated = true;
+              safeWrite(ticketsPath, tickets);
+
+              console.log(`🚨 SLA-Eskalation gesendet für Ticket #${ticket.id} in Guild ${guildId}`);
+            } catch (err) {
+              console.error(`❌ Fehler beim Senden der SLA-Eskalation für Ticket #${ticket.id}:`, err.message);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('❌ Fehler beim SLA Status Check:', err);
+    }
+  };
+
+  // Initial check
+  console.log('⏱️ SLA Checker gestartet (läuft alle 10 Minuten)');
+  checkSLAStatus();
+
+  // Check every 10 minutes
+  setInterval(checkSLAStatus, 10 * 60 * 1000);
+}
+
 async function executeDeletion(deletion) {
   try {
     console.log(`🗑️ Executing deletion for guild: ${deletion.guildId}`);
@@ -753,6 +1048,9 @@ client.once('ready', async () => {
 
   // Trial Expiry Warning Checker - läuft alle 6 Stunden
   startTrialExpiryWarningChecker();
+
+  // SLA Warning & Escalation Checker - läuft alle 10 Minuten
+  startSLAChecker();
 
   // Send startup notification to all guilds
   await sendStartupNotifications();
@@ -1604,6 +1902,164 @@ async function createTranscript(channel, ticket, opts = {}) {
   return { txt: new AttachmentBuilder(tTxt), html: new AttachmentBuilder(tHtml) };
 }
 
+// Live Transcript: Fügt eine einzelne Nachricht zu den Transcript-Dateien hinzu
+async function appendToLiveTranscript(message, ticket, guildId) {
+  try {
+    const transcriptsDir = path.join(__dirname, 'transcripts');
+    const guildTranscriptsDir = path.join(transcriptsDir, guildId);
+
+    if (!fs.existsSync(guildTranscriptsDir)) {
+      fs.mkdirSync(guildTranscriptsDir, { recursive: true });
+    }
+
+    const tTxt  = path.join(guildTranscriptsDir, `transcript_${ticket.id}.txt`);
+    const tHtml = path.join(guildTranscriptsDir, `transcript_${ticket.id}.html`);
+
+    // Initialize files if they don't exist
+    if (!fs.existsSync(tTxt)) {
+      const header = [
+        `# Transcript Ticket ${ticket.id}`,
+        `Channel: ${message.channel.name}`,
+        `Erstellt: ${new Date(ticket.timestamp).toISOString()}`,
+        ''
+      ].join('\n');
+      fs.writeFileSync(tTxt, header + '\n');
+    }
+
+    if (!fs.existsSync(tHtml)) {
+      const htmlHeader = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transcript - Ticket #${ticket.id}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); color: #dcddde; line-height: 1.6; padding: 2rem; }
+    .container { max-width: 1200px; margin: 0 auto; background: #36393f; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #00ff88 0%, #00b894 100%); padding: 2.5rem; color: white; border-bottom: 4px solid #00dd77; }
+    .header h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .messages { padding: 2rem 2.5rem; }
+    .message { display: flex; gap: 1rem; padding: 0.75rem 0; border-radius: 8px; transition: background 0.15s; }
+    .message:hover { background: #32353b; padding-left: 0.5rem; margin-left: -0.5rem; padding-right: 0.5rem; margin-right: -0.5rem; }
+    .avatar-fallback { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #00ff88, #00b894); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.1rem; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3); }
+    .message-content { flex: 1; min-width: 0; }
+    .message-header { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.25rem; }
+    .author { color: #00ff88; font-weight: 600; font-size: 1rem; }
+    .timestamp { color: #72767d; font-size: 0.75rem; font-weight: 500; }
+    .message-text { color: #dcddde; word-wrap: break-word; white-space: pre-wrap; line-height: 1.5; }
+    .attachments { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .attachment { display: inline-flex; align-items: center; gap: 0.5rem; background: #2f3136; padding: 0.75rem 1rem; border-radius: 6px; border-left: 3px solid #00ff88; text-decoration: none; color: #00b8ff; font-weight: 500; transition: all 0.2s; max-width: fit-content; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎫 <span class="ticket-badge">#${ticket.id.toString().padStart(5, '0')}</span></h1>
+      <p style="opacity: 0.95; font-size: 1.1rem; margin-top: 0.5rem;">Live Transcript</p>
+    </div>
+    <div class="messages" id="messages">
+`;
+      fs.writeFileSync(tHtml, htmlHeader);
+    }
+
+    const rolesCache = message.guild.roles.cache;
+    const chansCache = message.guild.channels.cache;
+    const membersCache = message.guild.members.cache;
+
+    const mentionToName = (text = '') => {
+      if (!text) return text;
+      return text
+        .replace(/<@!?(\d{17,20})>/g, (_, id) => {
+          const m = membersCache.get(id);
+          const tag = sanitizeUsername(m?.user?.tag || m?.user?.username || id);
+          const name = sanitizeUsername(m?.displayName || tag);
+          return `@${name}`;
+        })
+        .replace(/<@&(\d{17,20})>/g, (_, id) => {
+          const r = rolesCache.get(id);
+          return `@${(r && r.name) || `Rolle:${id}`}`;
+        })
+        .replace(/<#(\d{17,20})>/g, (_, id) => {
+          const c = chansCache.get(id);
+          return `#${(c && c.name) || id}`;
+        });
+    };
+
+    // TXT Format
+    const time = new Date(message.createdTimestamp).toISOString();
+    const author = sanitizeUsername(message.author ? (message.author.tag || message.author.username || message.author.id) : 'Unbekannt');
+    const content = mentionToName(message.content || '').replace(/\n/g, '\\n');
+
+    let txtLine = `[${time}] ${author}: ${content}\n`;
+
+    if (message.attachments.size) {
+      message.attachments.forEach(a => {
+        txtLine += `  [Anhang] ${a.name} -> ${a.url}\n`;
+      });
+    }
+
+    fs.appendFileSync(tTxt, txtLine);
+
+    // HTML Format
+    const escapedContent = mentionToName(message.content || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
+
+    const authorInitial = author.charAt(0).toUpperCase();
+    const timeFormatted = new Date(message.createdTimestamp).toLocaleString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    let htmlMessage = `
+      <div class="message">
+        <div class="avatar-fallback">${authorInitial}</div>
+        <div class="message-content">
+          <div class="message-header">
+            <span class="author">${author}</span>
+            <span class="timestamp">${timeFormatted}</span>
+          </div>
+          <div class="message-text">${escapedContent}</div>`;
+
+    if (message.attachments.size) {
+      htmlMessage += '<div class="attachments">';
+      message.attachments.forEach(a => {
+        htmlMessage += `<a href="${a.url}" class="attachment" target="_blank">📎 ${a.name}</a>`;
+      });
+      htmlMessage += '</div>';
+    }
+
+    htmlMessage += `
+        </div>
+      </div>`;
+
+    // Read HTML file, insert before closing tags
+    let htmlContent = fs.readFileSync(tHtml, 'utf8');
+
+    // If closing tags exist, insert before them, otherwise append
+    if (htmlContent.includes('</div></div></body>')) {
+      htmlContent = htmlContent.replace('</div></div></body>', htmlMessage + '</div></div></body>');
+    } else if (htmlContent.includes('id="messages"')) {
+      // Insert after messages div opening
+      htmlContent = htmlContent.replace('id="messages">', `id="messages">${htmlMessage}`);
+    } else {
+      htmlContent += htmlMessage;
+    }
+
+    fs.writeFileSync(tHtml, htmlContent);
+
+  } catch (err) {
+    console.error('Fehler beim Schreiben des Live-Transcripts:', err);
+  }
+}
+
 
 function getFormFieldsForTopic(cfg, topicValue){
   const all = Array.isArray(cfg.formFields)? cfg.formFields : [];
@@ -1840,6 +2296,40 @@ client.on(Events.InteractionCreate, async i => {
     }
 
     if(i.isButton()){
+      // AntiSpam Button Protection (ausgenommen bestimmte Buttons)
+      const exemptButtons = ['faq_solved:', 'faq_create:', 'cancel-deletion-'];
+      const isExempt = exemptButtons.some(prefix => i.customId.startsWith(prefix));
+
+      if (!isExempt) {
+        const guildId = i.guild?.id;
+        const cfg = guildId ? readCfg(guildId) : {};
+
+        if (cfg.antiSpam && cfg.antiSpam.enabled) {
+          const buttonRateLimit = checkButtonRateLimit(i.user.id, i.customId);
+
+          if (!buttonRateLimit.allowed) {
+            const spamEmbed = new EmbedBuilder()
+              .setColor(0xff4444)
+              .setTitle('🛑 Zu viele Klicks!')
+              .setDescription(
+                '**Langsam, langsam!**\n\n' +
+                'Du klickst zu schnell auf die Buttons. Bitte warte einen Moment.'
+              )
+              .addFields({
+                name: '⏱️ Warte noch',
+                value: `**${buttonRateLimit.waitSeconds} Sekunde(n)**`,
+                inline: true
+              })
+              .setFooter({ text: 'Quantix Tickets • AntiSpam System' })
+              .setTimestamp();
+
+            return i.reply({ embeds: [spamEmbed], ephemeral: true });
+          }
+
+          logButtonClick(i.user.id, i.customId);
+        }
+      }
+
       // FAQ Button Handlers
       if(i.customId.startsWith('faq_solved:')){
         const successEmbed = new EmbedBuilder()
@@ -1983,6 +2473,104 @@ client.on(Events.InteractionCreate, async i => {
         } catch(err){
           console.error('Error cancelling deletion:', err);
           return i.reply({ephemeral:true,content:'❌ Fehler beim Abbrechen der Löschung'});
+        }
+        return;
+      }
+
+      // Rating System: Handle star ratings
+      if(i.customId.startsWith('rate_')){
+        const [_, rating, ticketId] = i.customId.split(/[_:]/);
+        const stars = parseInt(rating);
+
+        // Find ticket across all guilds
+        let foundGuildId = null;
+        let foundTicket = null;
+
+        for (const guild of client.guilds.cache.values()) {
+          const guildTickets = loadTickets(guild.id);
+          const ticket = guildTickets.find(t => t.id === parseInt(ticketId) && t.userId === i.user.id);
+          if (ticket) {
+            foundGuildId = guild.id;
+            foundTicket = ticket;
+            break;
+          }
+        }
+
+        if (!foundTicket) {
+          return i.reply({
+            content: '❌ Ticket nicht gefunden oder du bist nicht der Ersteller dieses Tickets.',
+            ephemeral: true
+          });
+        }
+
+        // Check if already rated
+        if (foundTicket.rating) {
+          return i.reply({
+            content: '⚠️ Du hast dieses Ticket bereits bewertet!',
+            ephemeral: true
+          });
+        }
+
+        const cfg = readCfg(foundGuildId);
+
+        // Show feedback modal if enabled
+        if (cfg.ticketRating && cfg.ticketRating.requireFeedback) {
+          const modal = new ModalBuilder()
+            .setCustomId(`rating_feedback:${ticketId}:${stars}`)
+            .setTitle(`Bewertung: ${stars} ⭐`);
+
+          const feedbackInput = new TextInputBuilder()
+            .setCustomId('feedback_text')
+            .setLabel('Was können wir besser machen?')
+            .setStyle(TextInputStyle.Paragraph)
+            .setPlaceholder('Dein Feedback hilft uns, besser zu werden...')
+            .setRequired(true)
+            .setMaxLength(1000);
+
+          const row = new ActionRowBuilder().addComponents(feedbackInput);
+          modal.addComponents(row);
+
+          return i.showModal(modal);
+        } else {
+          // Save rating without feedback
+          const guildTickets = loadTickets(foundGuildId);
+          const ticketIndex = guildTickets.findIndex(t => t.id === parseInt(ticketId));
+
+          if (ticketIndex !== -1) {
+            guildTickets[ticketIndex].rating = {
+              stars: stars,
+              feedback: null,
+              ratedAt: Date.now(),
+              ratedBy: i.user.id
+            };
+            saveTickets(foundGuildId, guildTickets);
+
+            const thankYouEmbed = new EmbedBuilder()
+              .setColor(0x00ff88)
+              .setTitle('✅ Vielen Dank für deine Bewertung!')
+              .setDescription(
+                `Du hast **${stars} ${'⭐'.repeat(stars)}** vergeben.\n\n` +
+                `Dein Feedback hilft uns, unseren Service zu verbessern!`
+              )
+              .addFields(
+                { name: '🎫 Ticket', value: `#${ticketId}`, inline: true },
+                { name: '⭐ Bewertung', value: `${stars}/5 Sterne`, inline: true }
+              )
+              .setFooter({ text: 'Quantix Tickets • Danke für dein Feedback!' })
+              .setTimestamp();
+
+            await i.update({ embeds: [thankYouEmbed], components: [] });
+
+            // Notify team in log channel
+            try {
+              const guild = client.guilds.cache.get(foundGuildId);
+              if (guild) {
+                await logEvent(guild, `⭐ Ticket #${ticketId} wurde mit ${stars}/5 Sternen bewertet`);
+              }
+            } catch (err) {
+              console.error('Fehler beim Loggen der Bewertung:', err);
+            }
+          }
         }
         return;
       }
@@ -2478,6 +3066,56 @@ client.on(Events.InteractionCreate, async i => {
           // Generate transcript
           await createTranscript(i.channel, ticket, { guildId });
 
+          // Send rating request DM
+          try {
+            const cfg = readCfg(guildId);
+            if (cfg.ticketRating && cfg.ticketRating.enabled && cfg.ticketRating.sendDMAfterClose) {
+              const user = await client.users.fetch(ticket.userId).catch(() => null);
+              if (user) {
+                const ratingEmbed = new EmbedBuilder()
+                  .setColor(0x3b82f6)
+                  .setTitle('⭐ Wie war deine Support-Erfahrung?')
+                  .setDescription(
+                    `Dein Ticket **#${ticket.id}** wurde geschlossen.\n\n` +
+                    `Bitte bewerte deinen Support, damit wir uns verbessern können!`
+                  )
+                  .addFields(
+                    { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+                    { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true }
+                  )
+                  .setFooter({ text: 'Quantix Tickets • Deine Meinung zählt!' })
+                  .setTimestamp();
+
+                const ratingButtons = new ActionRowBuilder().addComponents(
+                  new ButtonBuilder()
+                    .setCustomId(`rate_1:${ticket.id}`)
+                    .setLabel('⭐')
+                    .setStyle(ButtonStyle.Danger),
+                  new ButtonBuilder()
+                    .setCustomId(`rate_2:${ticket.id}`)
+                    .setLabel('⭐⭐')
+                    .setStyle(ButtonStyle.Danger),
+                  new ButtonBuilder()
+                    .setCustomId(`rate_3:${ticket.id}`)
+                    .setLabel('⭐⭐⭐')
+                    .setStyle(ButtonStyle.Primary),
+                  new ButtonBuilder()
+                    .setCustomId(`rate_4:${ticket.id}`)
+                    .setLabel('⭐⭐⭐⭐')
+                    .setStyle(ButtonStyle.Success),
+                  new ButtonBuilder()
+                    .setCustomId(`rate_5:${ticket.id}`)
+                    .setLabel('⭐⭐⭐⭐⭐')
+                    .setStyle(ButtonStyle.Success)
+                );
+
+                await user.send({ embeds: [ratingEmbed], components: [ratingButtons] });
+              }
+            }
+          } catch (dmErr) {
+            console.log('Konnte Bewertungs-DM nicht senden:', dmErr.message);
+          }
+
           // Close the channel
           setTimeout(async () => {
             try {
@@ -2575,6 +3213,85 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       logEvent(i.guild, `🚫 Schließungsanfrage für Ticket #${ticket.id} wurde von <@${i.user.id}> abgelehnt. Grund: ${reason}`);
+    }
+
+    // Modal-Submit für Rating-Feedback
+    if(i.isModalSubmit() && i.customId.startsWith('rating_feedback:')){
+      const [_, ticketId, stars] = i.customId.split(':');
+      const feedback = i.fields.getTextInputValue('feedback_text');
+
+      // Find ticket across all guilds
+      let foundGuildId = null;
+      let foundTicket = null;
+
+      for (const guild of client.guilds.cache.values()) {
+        const guildTickets = loadTickets(guild.id);
+        const ticket = guildTickets.find(t => t.id === parseInt(ticketId) && t.userId === i.user.id);
+        if (ticket) {
+          foundGuildId = guild.id;
+          foundTicket = ticket;
+          break;
+        }
+      }
+
+      if (!foundTicket) {
+        return i.reply({
+          content: '❌ Ticket nicht gefunden.',
+          ephemeral: true
+        });
+      }
+
+      // Save rating with feedback
+      const guildTickets = loadTickets(foundGuildId);
+      const ticketIndex = guildTickets.findIndex(t => t.id === parseInt(ticketId));
+
+      if (ticketIndex !== -1) {
+        guildTickets[ticketIndex].rating = {
+          stars: parseInt(stars),
+          feedback: feedback,
+          ratedAt: Date.now(),
+          ratedBy: i.user.id
+        };
+        saveTickets(foundGuildId, guildTickets);
+
+        const thankYouEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('✅ Vielen Dank für deine Bewertung!')
+          .setDescription(
+            `Du hast **${stars} ${'⭐'.repeat(parseInt(stars))}** vergeben.\n\n` +
+            `Dein Feedback hilft uns, unseren Service zu verbessern!`
+          )
+          .addFields(
+            { name: '🎫 Ticket', value: `#${ticketId}`, inline: true },
+            { name: '⭐ Bewertung', value: `${stars}/5 Sterne`, inline: true },
+            { name: '💬 Feedback', value: feedback.substring(0, 200) + (feedback.length > 200 ? '...' : ''), inline: false }
+          )
+          .setFooter({ text: 'Quantix Tickets • Danke für dein Feedback!' })
+          .setTimestamp();
+
+        await i.reply({ embeds: [thankYouEmbed], ephemeral: true });
+
+        // Notify team in log channel
+        try {
+          const guild = client.guilds.cache.get(foundGuildId);
+          if (guild) {
+            const logEmbed = new EmbedBuilder()
+              .setColor(0x3b82f6)
+              .setTitle('⭐ Neue Ticket-Bewertung')
+              .setDescription(`Ticket #${ticketId} wurde bewertet`)
+              .addFields(
+                { name: '⭐ Bewertung', value: `${stars}/5 Sterne`, inline: true },
+                { name: '👤 Bewertet von', value: `<@${i.user.id}>`, inline: true },
+                { name: '💬 Feedback', value: feedback.substring(0, 1000), inline: false }
+              )
+              .setTimestamp();
+
+            await logEvent(guild, null, logEmbed);
+          }
+        } catch (err) {
+          console.error('Fehler beim Loggen der Bewertung:', err);
+        }
+      }
     }
 
     if(i.isModalSubmit() && i.customId==='modal_add_user'){
@@ -2760,6 +3477,35 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   const VIP_SERVER_ID = '1403053662825222388';
   const isVIP = guildId === VIP_SERVER_ID && cfg.vipUsers && cfg.vipUsers.includes(userId);
 
+  // Check AntiSpam Rate Limit
+  const rateLimitCheck = checkTicketRateLimit(userId, guildId);
+  if (!rateLimitCheck.allowed) {
+    const spamEmbed = new EmbedBuilder()
+      .setColor(0xff4444)
+      .setTitle('🚫 Rate-Limit erreicht')
+      .setDescription(
+        '**Du erstellst zu viele Tickets!**\n\n' +
+        `Du hast bereits **${rateLimitCheck.count} von ${rateLimitCheck.max}** Tickets in den letzten ${cfg.antiSpam.timeWindowMinutes} Minuten erstellt.`
+      )
+      .addFields(
+        {
+          name: '⏱️ Warte noch',
+          value: `**${rateLimitCheck.waitMinutes} Minute(n)**`,
+          inline: true
+        },
+        {
+          name: '📊 Limit',
+          value: `${rateLimitCheck.max} Tickets / ${cfg.antiSpam.timeWindowMinutes} Minuten`,
+          inline: true
+        }
+      )
+      .setFooter({ text: 'Quantix Tickets • AntiSpam System' })
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [spamEmbed], ephemeral: true });
+    return;
+  }
+
   // Check ticket limit
   const limitCheck = canUserCreateTicket(guildId, userId);
   if(!limitCheck.allowed){
@@ -2847,6 +3593,19 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     });
     embed.addFields(fields);
   }
+
+  // SLA Field hinzufügen (nur für Pro mit SLA enabled)
+  const tempSlaDeadline = calculateSLADeadline(guildId, 0, Date.now());
+  if(tempSlaDeadline && hasFeature(guildId, 'slaSystem')){
+    const slaDate = new Date(tempSlaDeadline);
+    const slaText = `<t:${Math.floor(tempSlaDeadline / 1000)}:R>`;
+    embed.addFields({
+      name: '⏱️ SLA-Deadline',
+      value: slaText,
+      inline: true
+    });
+  }
+
   await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
 
   const mentions = [];
@@ -2871,6 +3630,10 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   const ticketsPath = getTicketsPath(guildId);
   if(!fs.existsSync(ticketsPath)) safeWrite(ticketsPath, []);
   const log = safeRead(ticketsPath, []);
+
+  const createdAt = Date.now();
+  const slaDeadline = calculateSLADeadline(guildId, 0, createdAt);
+
   log.push({
     id:nr,
     channelId:ch.id,
@@ -2878,18 +3641,24 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     topic:topic.value,
     status:'offen',
     priority:0,
-    timestamp:Date.now(),
+    timestamp:createdAt,
     formData,
     addedUsers:[],
     notes: [],
     isVIP: isVIP || false,
+    slaDeadline: slaDeadline,
+    slaWarned: false,
     statusHistory: [{
       status: 'offen',
-      timestamp: Date.now(),
+      timestamp: createdAt,
       userId: interaction.user.id
     }]
   });
   safeWrite(ticketsPath, log);
+
+  // Log für AntiSpam Rate-Limiting
+  logTicketCreation(interaction.user.id, guildId);
+
   logEvent(interaction.guild, t(guildId, 'logs.ticket_created', { id: nr, user: `<@${interaction.user.id}>`, topic: topic.label }));
 
   // Email-Benachrichtigung senden (nur für Pro)
@@ -3074,6 +3843,21 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
 
 client.on(Events.MessageCreate, async (message) => {
   if(message.author.bot) return;
+
+  // Live Transcript: Schreibe Nachrichten in Ticket-Channels live
+  if (message.channel.name && message.channel.name.startsWith(PREFIX) && message.guild) {
+    const guildId = message.guild.id;
+    const ticketsPath = getTicketsPath(guildId);
+
+    if (fs.existsSync(ticketsPath)) {
+      const tickets = safeRead(ticketsPath, []);
+      const ticket = tickets.find(t => t.channelId === message.channel.id && t.status === 'offen');
+
+      if (ticket) {
+        await appendToLiveTranscript(message, ticket, guildId);
+      }
+    }
+  }
 
   // Handle !commands message command
   if (message.content.toLowerCase() === '!commands' || message.content.toLowerCase() === '!command') {
@@ -3347,6 +4131,99 @@ client.on(Events.MessageCreate, async (message) => {
 
       await logEvent(message.guild, `🚫 Nachricht gelöscht in Ticket #${ticket.id}\n**Nutzer:** ${messageAuthor} (<@${authorId}>)\n**Nachricht:** ${messageContent.substring(0, 200)}`);
     }
+
+    // File Upload Validation (Basic+ Feature)
+    if (message.attachments.size > 0 && message.channel.name && message.channel.name.startsWith(PREFIX)) {
+      const guildId = message.guild.id;
+      const cfg = readCfg(guildId);
+
+      // Check if file upload is enabled and user has Basic+ or higher
+      if (!cfg.fileUpload || !cfg.fileUpload.enabled) {
+        // File upload disabled
+        return;
+      }
+
+      if (!hasFeature(guildId, 'fileUpload')) {
+        // Not Basic+ or higher - delete attachments
+        try {
+          await message.delete();
+          const warningEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setTitle('📎 Datei-Upload nicht verfügbar')
+            .setDescription(
+              '**Datei-Uploads sind nur mit Premium Basic+ oder höher verfügbar!**\n\n' +
+              '**Upgrade auf Basic+ für:**\n' +
+              '✅ Datei-Uploads (bis 10MB)\n' +
+              '✅ 7 Ticket-Kategorien\n' +
+              '✅ Custom Avatar\n' +
+              '✅ Statistiken\n\n' +
+              '💎 **Jetzt upgraden für nur €2.99/Monat!**'
+            )
+            .setFooter({ text: 'Quantix Tickets • Premium Feature' })
+            .setTimestamp();
+
+          await message.channel.send({ embeds: [warningEmbed] });
+        } catch (err) {
+          console.error('Fehler beim Löschen der Nachricht mit Attachment:', err);
+        }
+        return;
+      }
+
+      // Validate attachments
+      const maxSizeMB = cfg.fileUpload.maxSizeMB || 10;
+      const maxSizeBytes = maxSizeMB * 1024 * 1024;
+      const allowedFormats = cfg.fileUpload.allowedFormats || ['png', 'jpg', 'jpeg', 'pdf', 'txt', 'log'];
+
+      for (const [id, attachment] of message.attachments) {
+        // Check file size
+        if (attachment.size > maxSizeBytes) {
+          try {
+            await message.delete();
+            const warningEmbed = new EmbedBuilder()
+              .setColor(0xff4444)
+              .setTitle('📎 Datei zu groß')
+              .setDescription(
+                `**Die hochgeladene Datei ist zu groß!**\n\n` +
+                `📊 **Maximale Größe:** ${maxSizeMB} MB\n` +
+                `📁 **Deine Datei:** ${(attachment.size / (1024 * 1024)).toFixed(2)} MB\n\n` +
+                `Bitte komprimiere die Datei oder teile sie in kleinere Teile auf.`
+              )
+              .setFooter({ text: 'Quantix Tickets • File Upload' })
+              .setTimestamp();
+
+            await message.channel.send({ embeds: [warningEmbed] });
+          } catch (err) {
+            console.error('Fehler beim Löschen der zu großen Datei:', err);
+          }
+          return;
+        }
+
+        // Check file format
+        const fileExtension = attachment.name.split('.').pop().toLowerCase();
+        if (!allowedFormats.includes(fileExtension)) {
+          try {
+            await message.delete();
+            const warningEmbed = new EmbedBuilder()
+              .setColor(0xff4444)
+              .setTitle('📎 Dateiformat nicht erlaubt')
+              .setDescription(
+                `**Dieses Dateiformat ist nicht erlaubt!**\n\n` +
+                `✅ **Erlaubte Formate:** ${allowedFormats.join(', ')}\n` +
+                `❌ **Dein Format:** ${fileExtension}\n\n` +
+                `Bitte verwende ein erlaubtes Dateiformat.`
+              )
+              .setFooter({ text: 'Quantix Tickets • File Upload' })
+              .setTimestamp();
+
+            await message.channel.send({ embeds: [warningEmbed] });
+          } catch (err) {
+            console.error('Fehler beim Löschen der ungültigen Datei:', err);
+          }
+          return;
+        }
+      }
+    }
+
   } catch(err) {
     console.error('Fehler beim Message-Delete-Check:', err);
   }

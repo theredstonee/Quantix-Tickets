@@ -2392,6 +2392,36 @@ module.exports = (client)=>{
       cfg.maxTicketsPerUser = sanitizeNumber(req.body.maxTicketsPerUser, 0, 100) || 3;
       cfg.notifyUserOnStatusChange = req.body.notifyUserOnStatusChange !== 'off';
 
+      // AntiSpam Configuration
+      if (!cfg.antiSpam) {
+        cfg.antiSpam = {
+          enabled: true,
+          maxTickets: 3,
+          timeWindowMinutes: 10,
+          maxButtonClicks: 5,
+          buttonTimeWindowSeconds: 10
+        };
+      }
+
+      cfg.antiSpam.enabled = req.body.antiSpamEnabled !== 'off';
+      cfg.antiSpam.maxTickets = sanitizeNumber(req.body.antiSpamMaxTickets, 1, 20) || 3;
+      cfg.antiSpam.timeWindowMinutes = sanitizeNumber(req.body.antiSpamTimeWindow, 1, 120) || 10;
+
+      // Ticket Rating Configuration
+      if (!cfg.ticketRating) {
+        cfg.ticketRating = {
+          enabled: true,
+          requireFeedback: false,
+          sendDMAfterClose: true,
+          showInAnalytics: true
+        };
+      }
+
+      cfg.ticketRating.enabled = req.body.ticketRatingEnabled !== 'off';
+      cfg.ticketRating.sendDMAfterClose = req.body.ticketRatingSendDM !== 'off';
+      cfg.ticketRating.requireFeedback = req.body.ticketRatingRequireFeedback === 'on';
+      cfg.ticketRating.showInAnalytics = req.body.ticketRatingShowInAnalytics !== 'off';
+
       // Auto-Responses / FAQ Configuration (Free Feature)
       if (!cfg.autoResponses) cfg.autoResponses = { enabled: true, responses: [] };
       cfg.autoResponses.enabled = req.body.autoResponsesEnabled !== 'off';
@@ -2866,6 +2896,78 @@ module.exports = (client)=>{
         ? Math.round(stats.last30Days.month / 30 * 10) / 10
         : 0;
 
+      // Rating-Statistiken berechnen
+      const ratingStats = {
+        total: 0,
+        average: 0,
+        byStars: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 },
+        withFeedback: 0,
+        recent: [],
+        byTeamMember: {}
+      };
+
+      const ratedTickets = tickets.filter(t => t.rating);
+      ratingStats.total = ratedTickets.length;
+
+      if (ratedTickets.length > 0) {
+        let totalStars = 0;
+
+        for (const ticket of ratedTickets) {
+          const stars = ticket.rating.stars;
+          totalStars += stars;
+          ratingStats.byStars[stars.toString()] = (ratingStats.byStars[stars.toString()] || 0) + 1;
+
+          if (ticket.rating.feedback) {
+            ratingStats.withFeedback++;
+          }
+
+          // Per Team-Mitglied (Claimer)
+          if (ticket.claimer) {
+            if (!ratingStats.byTeamMember[ticket.claimer]) {
+              ratingStats.byTeamMember[ticket.claimer] = {
+                userId: ticket.claimer,
+                ratings: [],
+                average: 0,
+                count: 0
+              };
+            }
+            ratingStats.byTeamMember[ticket.claimer].ratings.push(stars);
+            ratingStats.byTeamMember[ticket.claimer].count++;
+          }
+        }
+
+        ratingStats.average = (totalStars / ratedTickets.length).toFixed(1);
+
+        // Durchschnitte pro Team-Mitglied berechnen
+        for (const memberId in ratingStats.byTeamMember) {
+          const member = ratingStats.byTeamMember[memberId];
+          const sum = member.ratings.reduce((a, b) => a + b, 0);
+          member.average = (sum / member.ratings.length).toFixed(1);
+        }
+
+        // Team-Mitglieder Namen auflösen
+        for (const memberId in ratingStats.byTeamMember) {
+          try {
+            const member = await guild.members.fetch(memberId);
+            ratingStats.byTeamMember[memberId].username = sanitizeUsername(member.user.username || member.user.tag || memberId);
+          } catch (err) {
+            ratingStats.byTeamMember[memberId].username = sanitizeUsername(memberId);
+          }
+        }
+
+        // Letzte 10 Bewertungen mit Feedback
+        ratingStats.recent = ratedTickets
+          .filter(t => t.rating.feedback)
+          .sort((a, b) => b.rating.ratedAt - a.rating.ratedAt)
+          .slice(0, 10)
+          .map(t => ({
+            ticketId: t.id,
+            stars: t.rating.stars,
+            feedback: t.rating.feedback,
+            ratedAt: t.rating.ratedAt
+          }));
+      }
+
       // Get comprehensive insights (Basic+ Feature)
       const timeRange = req.query.range || 'all';
       const insights = getComprehensiveInsights(guildId, timeRange);
@@ -2874,6 +2976,7 @@ module.exports = (client)=>{
         guildName: guild.name,
         stats: stats,
         insights: insights,
+        ratingStats: ratingStats,
         canExportCSV: canExportCSV,
         timeRange: timeRange,
         guildId: guildId

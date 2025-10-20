@@ -1,5 +1,133 @@
 # Changelog
 
+## [1.3.0] - 2025-10-20
+
+### 🎉 Major Feature Update - Quality & Performance
+
+Dieses Update bringt vier leistungsstarke neue Features zur Verbesserung der Ticket-Qualität, Service-Level-Überwachung und Echtzeit-Dokumentation.
+
+### Added
+
+#### ⭐ **Ticket-Bewertungssystem** (Free)
+- Kunden können Tickets nach Schließung bewerten (1-5 Sterne)
+- DM-basierte Bewertung mit optionalem Feedback-Text
+- Team-Performance-Analytics im Dashboard
+- Individuelle Bewertungs-Statistiken pro Team-Mitglied
+- Rating-Distribution Charts
+- Top-Performer Rankings mit Prozent-Anzeigen
+- Konfigurierbar: DM-Versand, Feedback-Pflicht, Analytics-Anzeige
+- Integration in Analytics-Dashboard (analytics.ejs)
+
+#### ⏱️ **SLA-System mit Live-Countdown** (Pro Feature)
+- Automatische SLA-Deadline-Berechnung basierend auf Priority:
+  - 🔴 Priority 2 (Rot): 1 Stunde Reaktionszeit
+  - 🟠 Priority 1 (Orange): 4 Stunden Reaktionszeit
+  - 🟢 Priority 0 (Grün): 24 Stunden Reaktionszeit
+- Discord Timestamp Integration für Live-Countdown im Embed
+- ⚠️ Automatische Warnung bei 80% SLA-Fortschritt
+- 🚨 Eskalation bei SLA-Überschreitung mit Role-Ping
+- Background-Service läuft alle 10 Minuten
+- Konfigurierbar: Warn-Prozentsatz, Eskalations-Rolle
+- Visueller Fortschrittsbalken in Ticket-Embeds
+
+#### 📎 **File-Upload System** (Basic+ Feature)
+- Datei-Uploads in Ticket-Channels (bis 10MB Standard)
+- Format-Validierung: png, jpg, jpeg, pdf, txt, log
+- Größen-Validierung mit konfigurierbarem Limit
+- Automatisches Löschen von invaliden Uploads
+- Informative Fehlermeldungen mit Details
+- Premium-Paywall für Free-Tier
+- Panel-UI für Konfiguration (maxSizeMB, allowedFormats)
+
+#### 📝 **Live-Transcript System** (Free)
+- Echtzeit-Protokollierung aller Ticket-Nachrichten
+- Dual-Format: TXT + HTML
+- Automatische Initialisierung beim ersten Message
+- Mention-Auflösung (User/Rolle/Channel → Namen)
+- Attachment-URLs werden erfasst
+- Modern gestyltes HTML-Transcript mit Dark-Theme
+- Performance-optimiert: Nur aktive Tickets werden getrackt
+- Transcript wird bei Close komplett neu generiert (Final Version)
+
+### Changed
+
+#### 🌐 **Premium-Tier Beschreibungen aktualisiert**
+- **Free Tier**:
+  - Hinzugefügt: Ticket-Bewertungssystem
+  - Hinzugefügt: Live-Transcripts
+- **Basic+ Tier**:
+  - Hinzugefügt: Datei-Upload (bis 10MB)
+- **Pro Tier**:
+  - Hinzugefügt: SLA-System mit Live-Countdown & Eskalation
+- Premium-Seiten (home.ejs, premium.ejs) komplett aktualisiert
+- Feature-Flags in premium.js korrekt zugeordnet
+
+### Technical
+
+- SLA Helper-Funktionen: `calculateSLADeadline()`, `getSLAStatusText()`, `getSLAProgress()`
+- Live-Transcript Funktion: `appendToLiveTranscript(message, ticket, guildId)`
+- File-Upload Validierung in messageCreate Event-Handler
+- Rating Button Handler mit Cross-Guild Ticket-Search
+- Rating Modal Handler für Feedback-Erfassung
+- Analytics Backend erweitert um Rating-Statistiken
+- Background-Service: `startSLAChecker()` läuft alle 10 Minuten
+
+---
+
+## [1.2.1] - 2025-10-20
+
+### 🛡️ Security & Spam Protection
+
+#### Added
+- **🛡️ AntiSpam System**: Umfassender Schutz vor Ticket- und Button-Spam
+  - Rate-Limiting für Ticket-Erstellung (konfigurierbar: X Tickets in Y Minuten)
+  - Button-Click Protection (max. 5 Klicks in 10 Sekunden)
+  - Server-spezifische Konfiguration im Panel
+  - Einstellbar: Max. Tickets (1-10), Zeitfenster (5-60 Minuten)
+  - Schöne Fehlermeldungen mit Wartezeit-Anzeige
+  - Automatisches Cleanup alter Logs alle 5 Minuten
+  - Toggle zum An/Ausschalten im Panel-UI
+  - Glassmorphism-Design für AntiSpam-Einstellungen
+  - Memory-optimiert mit Map-basierten Logs
+
+### Fixed
+- **🐛 FAQ Button**: "Trotzdem Ticket erstellen" Button funktioniert jetzt korrekt
+  - Fehler durch doppelte Interaction-Calls behoben
+  - Modal wird jetzt sauber angezeigt
+- **💎 Premium Feature Access**: Pro-Tier kann jetzt alle Basic+ Features nutzen
+  - hasFeature() liest jetzt direkt aus PREMIUM_TIERS
+  - getPremiumInfo() gibt immer aktuelle Feature-Liste zurück
+  - CSV Export, /depart und andere Features jetzt für Pro verfügbar
+- **🎨 Ticket Cards CSS**: Überlappung in der Ticket-Historie behoben
+  - z-index, position: relative, flexbox Layout hinzugefügt
+  - Grid Layout für korrekte Abstände
+- **🔒 Transcript Security**: Transcripte werden nur noch vom ausgewählten Server angezeigt
+  - Cross-Server Transcript-Zugriff verhindert
+  - Gefährliche Fallback-Suche entfernt
+- **🔘 Close Request Buttons**: Buttons werden nach Aktion korrekt deaktiviert
+  - Message-ID Tracking implementiert
+  - Buttons bleiben nicht mehr klickbar nach Approve/Deny
+- **🌙 Dark Mode Theme**: Neue dunkelblaue Optik mit schwarzem Hintergrund
+  - Accent-Farbe: #3b82f6 (Dunkelblau)
+  - Hintergrund: #000000 (Schwarz)
+  - Animiertes Dot-Pattern im Dark Mode deaktiviert
+  - Alle 16 EJS-Seiten aktualisiert
+- **📝 Modal Submit Error**: "Etwas ist schiefgelaufen" beim Ablehnen von Close Requests behoben
+  - Modal-Submit Handler korrekt außerhalb des Button-Blocks platziert
+  - isModalSubmit() Check hinzugefügt
+- **🔐 Close Button**: Schließen-Button funktioniert jetzt
+  - Fehlender 'close' Handler im switch-Statement hinzugefügt
+  - Transcript-Erstellung vor Channel-Löschung
+  - 5-Sekunden Verzögerung vor Löschung
+
+### Changed
+- **🎨 Theme System**: Dark Mode komplett überarbeitet
+  - Von Grün (#00ff88) zu Blau (#3b82f6) gewechselt
+  - Background von #0a0a0a zu #000000 geändert
+  - Glass-Effekte angepasst
+
+---
+
 ## [1.2.0] - 2025-10-19
 
 ### 🎉 Major Premium Features Release

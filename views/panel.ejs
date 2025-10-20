@@ -109,9 +109,9 @@
       50% { opacity: 0.05; }
     }
 
-    /* Dark Mode: Deaktiviere Hintergrundmuster */
+    /* Dark Mode: Blaues Hintergrundmuster */
     [data-theme="dark"] body::before {
-      display: none;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 1px, transparent 1px);
     }
 
     /* Layout */
@@ -2094,6 +2094,115 @@
                     style="width: auto; margin: 0;">
                   <span style="font-weight: 500;"><%= lang === 'de' ? 'User per DM benachrichtigen, wenn Ticket geschlossen wird' : 'Notify user via DM when ticket is closed' %></span>
                 </label>
+
+                <!-- AntiSpam Einstellungen -->
+                <div style="margin-top: 1.5rem; padding: 1.25rem; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 12px;">
+                  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                    <i class="fas fa-shield-alt" style="font-size: 1.25rem; color: var(--accent-color);"></i>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;"><%= lang === 'de' ? '🛡️ AntiSpam System' : '🛡️ AntiSpam System' %></h3>
+                  </div>
+
+                  <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; cursor: pointer;">
+                    <input
+                      type="checkbox"
+                      name="antiSpamEnabled"
+                      <%= (cfg.antiSpam && cfg.antiSpam.enabled !== false) ? 'checked' : '' %>
+                      style="width: auto; margin: 0;">
+                    <span style="font-weight: 500;"><%= lang === 'de' ? 'AntiSpam aktivieren' : 'Enable AntiSpam' %></span>
+                  </label>
+
+                  <div class="form-group" style="margin-bottom: 1rem;">
+                    <div class="form-label">
+                      <i class="fas fa-ticket"></i>
+                      <span><%= lang === 'de' ? 'Max. Tickets' : 'Max. Tickets' %></span>
+                    </div>
+                    <select name="antiSpamMaxTickets" style="width: 100%;">
+                      <%
+                      const currentAntiSpamMax = (cfg.antiSpam && cfg.antiSpam.maxTickets) || 3;
+                      const antiSpamOptions = [1, 2, 3, 4, 5, 7, 10];
+                      antiSpamOptions.forEach(val => { %>
+                        <option value="<%= val %>" <%= currentAntiSpamMax == val ? 'selected' : '' %>>
+                          <%= val %> <%= lang === 'de' ? 'Tickets' : 'Tickets' %>
+                        </option>
+                      <% }); %>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-clock"></i>
+                      <span><%= lang === 'de' ? 'Zeitfenster (Minuten)' : 'Time Window (Minutes)' %></span>
+                    </div>
+                    <select name="antiSpamTimeWindow" style="width: 100%;">
+                      <%
+                      const currentTimeWindow = (cfg.antiSpam && cfg.antiSpam.timeWindowMinutes) || 10;
+                      const timeWindowOptions = [5, 10, 15, 30, 60];
+                      timeWindowOptions.forEach(val => { %>
+                        <option value="<%= val %>" <%= currentTimeWindow == val ? 'selected' : '' %>>
+                          <%= val %> <%= lang === 'de' ? 'Minuten' : 'Minutes' %>
+                        </option>
+                      <% }); %>
+                    </select>
+                  </div>
+
+                  <div class="help-text" style="margin-top: 0.75rem;">
+                    <i class="fas fa-info-circle"></i>
+                    <span><%= lang === 'de'
+                      ? 'Schützt vor Spam: Ein User kann nur X Tickets in Y Minuten erstellen'
+                      : 'Protects against spam: A user can only create X tickets in Y minutes' %></span>
+                  </div>
+                </div>
+
+                <!-- Ticket-Bewertungssystem -->
+                <div style="margin-top: 1.5rem; padding: 1.25rem; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 12px;">
+                  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                    <i class="fas fa-star" style="font-size: 1.25rem; color: var(--accent-color);"></i>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;"><%= lang === 'de' ? '⭐ Ticket-Bewertungssystem' : '⭐ Ticket Rating System' %></h3>
+                  </div>
+
+                  <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; cursor: pointer;">
+                    <input
+                      type="checkbox"
+                      name="ticketRatingEnabled"
+                      <%= (cfg.ticketRating && cfg.ticketRating.enabled !== false) ? 'checked' : '' %>
+                      style="width: auto; margin: 0;">
+                    <span style="font-weight: 500;"><%= lang === 'de' ? 'Bewertungssystem aktivieren' : 'Enable Rating System' %></span>
+                  </label>
+
+                  <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; cursor: pointer;">
+                    <input
+                      type="checkbox"
+                      name="ticketRatingSendDM"
+                      <%= (cfg.ticketRating && cfg.ticketRating.sendDMAfterClose !== false) ? 'checked' : '' %>
+                      style="width: auto; margin: 0;">
+                    <span style="font-weight: 500;"><%= lang === 'de' ? 'DM nach Ticket-Schließung senden' : 'Send DM after ticket closure' %></span>
+                  </label>
+
+                  <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; cursor: pointer;">
+                    <input
+                      type="checkbox"
+                      name="ticketRatingRequireFeedback"
+                      <%= (cfg.ticketRating && cfg.ticketRating.requireFeedback) ? 'checked' : '' %>
+                      style="width: auto; margin: 0;">
+                    <span style="font-weight: 500;"><%= lang === 'de' ? 'Feedback-Text erforderlich' : 'Require feedback text' %></span>
+                  </label>
+
+                  <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                    <input
+                      type="checkbox"
+                      name="ticketRatingShowInAnalytics"
+                      <%= (cfg.ticketRating && cfg.ticketRating.showInAnalytics !== false) ? 'checked' : '' %>
+                      style="width: auto; margin: 0;">
+                    <span style="font-weight: 500;"><%= lang === 'de' ? 'In Analytics anzeigen' : 'Show in Analytics' %></span>
+                  </label>
+
+                  <div class="help-text" style="margin-top: 0.75rem;">
+                    <i class="fas fa-info-circle"></i>
+                    <span><%= lang === 'de'
+                      ? 'User können Tickets nach Schließung bewerten (1-5 Sterne)'
+                      : 'Users can rate tickets after closure (1-5 stars)' %></span>
+                  </div>
+                </div>
               </div>
             </div>
 

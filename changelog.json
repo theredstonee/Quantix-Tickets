@@ -1,6 +1,180 @@
 {
-  "currentVersion": "1.2.0",
+  "currentVersion": "1.3.0",
   "versions": [
+    {
+      "version": "1.3.0",
+      "date": "2025-10-20",
+      "changes": {
+        "de": [
+          "⭐ Ticket-Bewertungssystem - Kunden bewerten Tickets (1-5 Sterne) mit Team-Analytics",
+          "⏱️ SLA-System mit Live-Countdown - Automatische Deadlines & Eskalationen (Pro)",
+          "📎 File-Upload System - Datei-Uploads mit Format & Größen-Validierung (Basic+)",
+          "📝 Live-Transcript - Echtzeit-Protokollierung aller Nachrichten (TXT & HTML)",
+          "🌐 Premium-Seiten aktualisiert - Neue Features in allen Tiers"
+        ],
+        "en": [
+          "⭐ Ticket Rating System - Customers rate tickets (1-5 stars) with team analytics",
+          "⏱️ SLA System with Live Countdown - Automatic deadlines & escalations (Pro)",
+          "📎 File Upload System - File uploads with format & size validation (Basic+)",
+          "📝 Live Transcripts - Real-time logging of all messages (TXT & HTML)",
+          "🌐 Premium pages updated - New features in all tiers"
+        ],
+        "he": [
+          "⭐ מערכת דירוג כרטיסים - לקוחות מדרגים כרטיסים (1-5 כוכבים) עם ניתוח צוות",
+          "⏱️ מערכת SLA עם ספירה לאחור - מועדים אוטומטיים והסלמות (Pro)",
+          "📎 מערכת העלאת קבצים - העלאות קבצים עם אימות פורמט וגודל (Basic+)",
+          "📝 תמלול חי - רישום בזמן אמת של כל ההודעות (TXT & HTML)",
+          "🌐 דפי Premium עודכנו - תכונות חדשות בכל השכבות"
+        ],
+        "ja": [
+          "⭐チケット評価システム - 顧客がチケットを評価（1-5つ星）チーム分析付き",
+          "⏱️ SLAシステム（ライブカウントダウン付き）- 自動期限とエスカレーション（Pro）",
+          "📎ファイルアップロードシステム - 形式とサイズ検証付きアップロード（Basic+）",
+          "📝ライブトランスクリプト - すべてのメッセージのリアルタイムログ（TXT & HTML）",
+          "🌐プレミアムページ更新 - 全ティアで新機能"
+        ],
+        "ru": [
+          "⭐ Система оценки тикетов - Клиенты оценивают тикеты (1-5 звезд) с аналитикой команды",
+          "⏱️ SLA система с обратным отсчётом - Автоматические дедлайны и эскалации (Pro)",
+          "📎 Система загрузки файлов - Загрузка с проверкой формата и размера (Basic+)",
+          "📝 Живые транскрипты - Логирование всех сообщений в реальном времени (TXT & HTML)",
+          "🌐 Премиум-страницы обновлены - Новые функции во всех тарифах"
+        ],
+        "pt": [
+          "⭐ Sistema de Avaliação de Tickets - Clientes avaliam tickets (1-5 estrelas) com análise de equipe",
+          "⏱️ Sistema SLA com Contagem Regressiva - Prazos automáticos e escalações (Pro)",
+          "📎 Sistema de Upload de Arquivos - Uploads com validação de formato e tamanho (Basic+)",
+          "📝 Transcrições ao Vivo - Registro em tempo real de todas as mensagens (TXT & HTML)",
+          "🌐 Páginas Premium atualizadas - Novos recursos em todos os níveis"
+        ],
+        "es": [
+          "⭐ Sistema de Calificación de Tickets - Los clientes califican tickets (1-5 estrellas) con análisis de equipo",
+          "⏱️ Sistema SLA con Cuenta Regresiva - Plazos automáticos y escalaciones (Pro)",
+          "📎 Sistema de Carga de Archivos - Cargas con validación de formato y tamaño (Basic+)",
+          "📝 Transcripciones en Vivo - Registro en tiempo real de todos los mensajes (TXT & HTML)",
+          "🌐 Páginas Premium actualizadas - Nuevas características en todos los niveles"
+        ],
+        "id": [
+          "⭐ Sistem Rating Tiket - Pelanggan menilai tiket (1-5 bintang) dengan analitik tim",
+          "⏱️ Sistem SLA dengan Countdown Langsung - Tenggat otomatis & eskalasi (Pro)",
+          "📎 Sistem Upload File - Upload dengan validasi format & ukuran (Basic+)",
+          "📝 Transkrip Langsung - Pencatatan real-time semua pesan (TXT & HTML)",
+          "🌐 Halaman Premium diperbarui - Fitur baru di semua tingkat"
+        ],
+        "ar": [
+          "⭐ نظام تقييم التذاكر - العملاء يقيمون التذاكر (1-5 نجوم) مع تحليلات الفريق",
+          "⏱️ نظام SLA مع العد التنازلي المباشر - مواعيد نهائية تلقائية وتصعيد (Pro)",
+          "📎 نظام رفع الملفات - رفع الملفات مع التحقق من الصيغة والحجم (Basic+)",
+          "📝 النصوص المباشرة - تسجيل فوري لجميع الرسائل (TXT & HTML)",
+          "🌐 تحديث صفحات Premium - ميزات جديدة في جميع المستويات"
+        ]
+      }
+    },
+    {
+      "version": "1.2.1",
+      "date": "2025-10-20",
+      "changes": {
+        "de": [
+          "🛡️ AntiSpam System - Schutz vor Ticket- & Button-Spam",
+          "🐛 FAQ Button 'Trotzdem Ticket erstellen' repariert",
+          "💎 Premium Pro kann jetzt alle Basic+ Features nutzen",
+          "🎨 Ticket Cards Überlappung behoben",
+          "🔒 Transcript Security - Nur noch vom ausgewählten Server",
+          "🔘 Close Request Buttons werden nach Aktion deaktiviert",
+          "🌙 Dark Mode Theme in Dunkelblau & Schwarz",
+          "📝 Modal Submit Fehler beim Ablehnen behoben",
+          "🔐 Schließen-Button funktioniert jetzt"
+        ],
+        "en": [
+          "🛡️ AntiSpam System - Protection against ticket & button spam",
+          "🐛 FAQ button 'Create ticket anyway' fixed",
+          "💎 Premium Pro can now use all Basic+ features",
+          "🎨 Ticket cards overlap fixed",
+          "🔒 Transcript Security - Only from selected server",
+          "🔘 Close request buttons disabled after action",
+          "🌙 Dark Mode theme in dark blue & black",
+          "📝 Modal submit error when declining fixed",
+          "🔐 Close button now works"
+        ],
+        "he": [
+          "🛡️ מערכת AntiSpam - הגנה מפני ספאם כרטיסים וכפתורים",
+          "🐛 כפתור FAQ 'צור כרטיס בכל זאת' תוקן",
+          "💎 Premium Pro יכול כעת להשתמש בכל תכונות Basic+",
+          "🎨 חפיפת כרטיסי כרטיס תוקנה",
+          "🔒 אבטחת Transcript - רק מהשרת שנבחר",
+          "🔘 כפתורי בקשת סגירה מושבתים לאחר פעולה",
+          "🌙 ערכת נושא Dark Mode בכחול כהה ושחור",
+          "📝 שגיאת שליחת Modal בעת דחייה תוקנה",
+          "🔐 כפתור סגירה עובד כעת"
+        ],
+        "ja": [
+          "🛡️ AntiSpamシステム - チケット＆ボタンスパムからの保護",
+          "🐛 FAQボタン「とにかくチケットを作成」修正",
+          "💎プレミアムProがすべてのBasic+機能を使用可能に",
+          "🎨チケットカードの重なり修正",
+          "🔒トランスクリプトセキュリティ - 選択したサーバーのみ",
+          "🔘クローズリクエストボタンがアクション後に無効化",
+          "🌙ダークモードテーマがダークブルー＆ブラックに",
+          "📝拒否時のModal送信エラー修正",
+          "🔐クローズボタンが機能するように"
+        ],
+        "ru": [
+          "🛡️ Система AntiSpam - Защита от спама тикетов и кнопок",
+          "🐛 Кнопка FAQ 'Создать тикет все равно' исправлена",
+          "💎 Premium Pro теперь может использовать все функции Basic+",
+          "🎨 Наложение карточек тикетов исправлено",
+          "🔒 Безопасность транскриптов - Только с выбранного сервера",
+          "🔘 Кнопки запроса закрытия отключаются после действия",
+          "🌙 Темная тема в темно-синем и черном",
+          "📝 Ошибка отправки модального окна при отклонении исправлена",
+          "🔐 Кнопка закрытия теперь работает"
+        ],
+        "pt": [
+          "🛡️ Sistema AntiSpam - Proteção contra spam de tickets e botões",
+          "🐛 Botão FAQ 'Criar ticket mesmo assim' corrigido",
+          "💎 Premium Pro agora pode usar todos os recursos Basic+",
+          "🎨 Sobreposição de cartões de ticket corrigida",
+          "🔒 Segurança de Transcript - Apenas do servidor selecionado",
+          "🔘 Botões de solicitação de fechamento desativados após ação",
+          "🌙 Tema Dark Mode em azul escuro e preto",
+          "📝 Erro de envio de Modal ao recusar corrigido",
+          "🔐 Botão de fechar agora funciona"
+        ],
+        "es": [
+          "🛡️ Sistema AntiSpam - Protección contra spam de tickets y botones",
+          "🐛 Botón FAQ 'Crear ticket de todos modos' reparado",
+          "💎 Premium Pro ahora puede usar todas las características Basic+",
+          "🎨 Superposición de tarjetas de ticket corregida",
+          "🔒 Seguridad de Transcript - Solo del servidor seleccionado",
+          "🔘 Botones de solicitud de cierre deshabilitados después de la acción",
+          "🌙 Tema Dark Mode en azul oscuro y negro",
+          "📝 Error de envío de Modal al rechazar corregido",
+          "🔐 Botón de cerrar ahora funciona"
+        ],
+        "id": [
+          "🛡️ Sistem AntiSpam - Perlindungan terhadap spam tiket & tombol",
+          "🐛 Tombol FAQ 'Buat tiket saja' diperbaiki",
+          "💎 Premium Pro sekarang dapat menggunakan semua fitur Basic+",
+          "🎨 Tumpang tindih kartu tiket diperbaiki",
+          "🔒 Keamanan Transcript - Hanya dari server yang dipilih",
+          "🔘 Tombol permintaan tutup dinonaktifkan setelah aksi",
+          "🌙 Tema Dark Mode dalam biru gelap & hitam",
+          "📝 Error pengiriman Modal saat menolak diperbaiki",
+          "🔐 Tombol tutup sekarang berfungsi"
+        ],
+        "ar": [
+          "🛡️ نظام AntiSpam - الحماية من رسائل التذاكر والأزرار العشوائية",
+          "🐛 زر FAQ 'إنشاء تذكرة على أي حال' تم إصلاحه",
+          "💎 Premium Pro يمكنه الآن استخدام جميع ميزات Basic+",
+          "🎨 تم إصلاح تداخل بطاقات التذاكر",
+          "🔒 أمان النصوص - من الخادم المحدد فقط",
+          "🔘 تعطيل أزرار طلب الإغلاق بعد الإجراء",
+          "🌙 وضع الظلام بالأزرق الداكن والأسود",
+          "📝 تم إصلاح خطأ إرسال Modal عند الرفض",
+          "🔐 زر الإغلاق يعمل الآن"
+        ]
+      }
+    },
     {
       "version": "1.2.0",
       "date": "2025-10-19",

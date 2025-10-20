@@ -78,9 +78,9 @@
       100% { transform: translate(50px, 50px); }
     }
 
-    /* Dark Mode: Deaktiviere Hintergrundmuster */
+    /* Dark Mode: Blaues Hintergrundmuster */
     [data-theme="dark"] body::before {
-      display: none;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 1px, transparent 1px);
     }
 
     body {
@@ -533,6 +533,126 @@
           </tbody>
         </table>
       </div>
+    </div>
+    <% } %>
+
+    <!-- Ticket Bewertungen -->
+    <% if (ratingStats && ratingStats.total > 0) { %>
+    <div class="chart-container" style="background: linear-gradient(135deg, var(--glass-bg), rgba(59, 130, 246, 0.1)); border: 2px solid rgba(59, 130, 246, 0.3);">
+      <h2 class="chart-title">⭐ Ticket-Bewertungen</h2>
+
+      <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+        <div class="stat-card" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);">
+          <span class="stat-icon">⭐</span>
+          <h3>Durchschnitt</h3>
+          <div class="stat-value"><%= ratingStats.average %> / 5</div>
+          <div class="stat-label"><%= ratingStats.total %> Bewertungen</div>
+        </div>
+
+        <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+          <span class="stat-icon">💬</span>
+          <h3>Mit Feedback</h3>
+          <div class="stat-value"><%= ratingStats.withFeedback %></div>
+          <div class="stat-label"><%= Math.round((ratingStats.withFeedback / ratingStats.total) * 100) %>% der Bewertungen</div>
+        </div>
+
+        <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+          <span class="stat-icon">🎯</span>
+          <h3>5-Sterne</h3>
+          <div class="stat-value"><%= ratingStats.byStars['5'] %></div>
+          <div class="stat-label"><%= Math.round((ratingStats.byStars['5'] / ratingStats.total) * 100) %>% aller Bewertungen</div>
+        </div>
+      </div>
+
+      <!-- Bewertungsverteilung -->
+      <h3 style="margin: 1.5rem 0 1rem 0; font-size: 1.2rem;">📊 Bewertungsverteilung</h3>
+      <div style="background: var(--glass-bg); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+        <% for (let stars = 5; stars >= 1; stars--) {
+          const count = ratingStats.byStars[stars.toString()] || 0;
+          const percentage = ratingStats.total > 0 ? Math.round((count / ratingStats.total) * 100) : 0;
+        %>
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem;">
+          <div style="min-width: 60px; font-weight: 600;"><%= '⭐'.repeat(stars) %></div>
+          <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 8px; height: 24px; overflow: hidden;">
+            <div style="background: linear-gradient(90deg, #fbbf24, #f59e0b); height: 100%; width: <%= percentage %>%; transition: width 0.3s;"></div>
+          </div>
+          <div style="min-width: 80px; text-align: right;"><strong><%= count %></strong> (<%= percentage %>%)</div>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- Team Performance -->
+      <%
+      const teamMembers = Object.values(ratingStats.byTeamMember).sort((a, b) => b.average - a.average);
+      if (teamMembers.length > 0) { %>
+      <h3 style="margin: 1.5rem 0 1rem 0; font-size: 1.2rem;">👥 Team Performance</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Team-Mitglied</th>
+              <th>Bewertungen</th>
+              <th>Durchschnitt</th>
+              <th>Performance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% teamMembers.forEach((member, index) => {
+              let badgeColor = '#10b981'; // Grün
+              if (member.average < 3) badgeColor = '#ef4444'; // Rot
+              else if (member.average < 4) badgeColor = '#f59e0b'; // Orange
+            %>
+            <tr>
+              <td>
+                <% if (index === 0) { %>
+                  <span style="font-size: 1.2rem;">🏆</span>
+                <% } %>
+                <%= member.username %>
+              </td>
+              <td><%= member.count %></td>
+              <td><strong><%= member.average %> ⭐</strong></td>
+              <td>
+                <span class="badge" style="background: <%= badgeColor %>;">
+                  <% if (member.average >= 4.5) { %>
+                    Exzellent
+                  <% } else if (member.average >= 4) { %>
+                    Sehr gut
+                  <% } else if (member.average >= 3) { %>
+                    Gut
+                  <% } else { %>
+                    Verbesserung nötig
+                  <% } %>
+                </span>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+
+      <!-- Letztes Feedback -->
+      <% if (ratingStats.recent && ratingStats.recent.length > 0) { %>
+      <h3 style="margin: 1.5rem 0 1rem 0; font-size: 1.2rem;">💬 Letztes Feedback</h3>
+      <div style="display: grid; gap: 1rem;">
+        <% ratingStats.recent.slice(0, 5).forEach(rating => { %>
+        <div style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border-left: 3px solid #fbbf24;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div>
+              <strong>Ticket #<%= rating.ticketId %></strong>
+              <span style="margin-left: 0.5rem;"><%= '⭐'.repeat(rating.stars) %></span>
+            </div>
+            <div style="font-size: 0.85rem; opacity: 0.7;">
+              <%= new Date(rating.ratedAt).toLocaleDateString('de-DE') %>
+            </div>
+          </div>
+          <div style="color: var(--text-color); opacity: 0.9;">
+            "<%= rating.feedback.substring(0, 200) %><%= rating.feedback.length > 200 ? '...' : '' %>"
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
     </div>
     <% } %>
 
