@@ -2280,16 +2280,20 @@ client.on(Events.InteractionCreate, async i => {
 
       // Modal-Submit für Ablehnung
       if (i.customId === 'deny_close_reason_modal') {
-        const reason = i.fields.getTextInputValue('deny_reason') || 'Kein Grund angegeben';
+        try {
+          const reason = i.fields.getTextInputValue('deny_reason') || 'Kein Grund angegeben';
 
-        ticket.closeRequest.status = 'denied';
-        ticket.closeRequest.deniedBy = i.user.id;
-        ticket.closeRequest.deniedAt = Date.now();
-        ticket.closeRequest.denyReason = reason;
-        saveTickets(guildId, log);
+          ticket.closeRequest.status = 'denied';
+          ticket.closeRequest.deniedBy = i.user.id;
+          ticket.closeRequest.deniedAt = Date.now();
+          ticket.closeRequest.denyReason = reason;
+          saveTickets(guildId, log);
 
-        // Defer the update first (Modal submissions need special handling)
-        await i.deferUpdate();
+          // Modal submissions require reply, not deferUpdate
+          await i.reply({
+            content: '✅ Schließungsanfrage wurde abgelehnt.',
+            ephemeral: true
+          });
 
         // Deaktiviere die Buttons der ursprünglichen Schließungsanfrage
         if (ticket.closeRequest.messageId) {
@@ -2344,6 +2348,16 @@ client.on(Events.InteractionCreate, async i => {
         }, 5000);
 
         return;
+        } catch (err) {
+          console.error('Error handling deny close request modal:', err);
+          if (!i.replied && !i.deferred) {
+            await i.reply({
+              content: '❌ Fehler beim Ablehnen der Schließungsanfrage.',
+              ephemeral: true
+            }).catch(() => {});
+          }
+          return;
+        }
       }
 
       if(i.customId==='unclaim'){
