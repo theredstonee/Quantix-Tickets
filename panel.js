@@ -281,6 +281,14 @@ module.exports = (client)=>{
     next();
   }
 
+  // Simple authentication middleware (no admin check, just login check)
+  function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated && req.isAuthenticated()) {
+      return next();
+    }
+    res.redirect('/login');
+  }
+
   function isOwner(req,res,next){
     if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
 
@@ -2744,11 +2752,8 @@ module.exports = (client)=>{
   router.get('/tickets/data', isAuth, (req,res)=>{ res.json(loadTickets(req.session.selectedGuild)); });
 
   // User's own tickets (no admin required, just authenticated)
-  router.get('/my-tickets', async (req,res)=>{
+  router.get('/my-tickets', ensureAuthenticated, async (req,res)=>{
     try {
-      // Check if user is authenticated
-      if(!(req.isAuthenticated && req.isAuthenticated())) return res.redirect('/login');
-
       const userId = req.user.id;
       const userGuilds = req.user.guilds || [];
 
