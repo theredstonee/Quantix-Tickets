@@ -2220,7 +2220,7 @@
                   </div>
 
                   <!-- Toggle Option -->
-                  <label class="rating-toggle-option" data-option="enabled">
+                  <label class="rating-toggle-option <%= (cfg.ticketRating && cfg.ticketRating.enabled !== false) ? 'active' : '' %>" data-option="enabled">
                     <input
                       type="checkbox"
                       name="ticketRatingEnabled"
@@ -2235,7 +2235,7 @@
                   </label>
 
                   <!-- Toggle Option -->
-                  <label class="rating-toggle-option" data-option="sendDM">
+                  <label class="rating-toggle-option <%= (cfg.ticketRating && cfg.ticketRating.sendDMAfterClose !== false) ? 'active' : '' %>" data-option="sendDM">
                     <input
                       type="checkbox"
                       name="ticketRatingSendDM"
@@ -2250,7 +2250,7 @@
                   </label>
 
                   <!-- Toggle Option -->
-                  <label class="rating-toggle-option" data-option="feedback">
+                  <label class="rating-toggle-option <%= (cfg.ticketRating && cfg.ticketRating.requireFeedback) ? 'active' : '' %>" data-option="feedback">
                     <input
                       type="checkbox"
                       name="ticketRatingRequireFeedback"
@@ -2265,7 +2265,7 @@
                   </label>
 
                   <!-- Toggle Option -->
-                  <label class="rating-toggle-option" data-option="analytics">
+                  <label class="rating-toggle-option <%= (cfg.ticketRating && cfg.ticketRating.showInAnalytics !== false) ? 'active' : '' %>" data-option="analytics">
                     <input
                       type="checkbox"
                       name="ticketRatingShowInAnalytics"
@@ -2306,16 +2306,16 @@
                     transform: translateX(2px);
                   }
 
-                  .rating-toggle-option input:checked + .toggle-content {
+                  .rating-toggle-option.active .toggle-content {
                     color: #3b82f6;
                   }
 
-                  .rating-toggle-option input:checked ~ .toggle-content .toggle-icon {
+                  .rating-toggle-option.active .toggle-icon {
                     background: #3b82f6;
                     border-color: #3b82f6;
                   }
 
-                  .rating-toggle-option input:checked ~ .toggle-content .toggle-icon i {
+                  .rating-toggle-option.active .toggle-icon i {
                     opacity: 1;
                   }
 
@@ -2363,6 +2363,247 @@
                       if (e.target.tagName !== 'INPUT') {
                         const checkbox = this.querySelector('input[type="checkbox"]');
                         checkbox.checked = !checkbox.checked;
+
+                        // Toggle active class
+                        if (checkbox.checked) {
+                          this.classList.add('active');
+                        } else {
+                          this.classList.remove('active');
+                        }
+                      }
+                    });
+                  });
+                </script>
+              </div>
+            </div>
+
+            <!-- SLA System Settings -->
+            <div class="card" style="margin-top: 24px;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-clock"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '⏱️ SLA-System' : '⏱️ SLA System' %></span>
+                    <% if (!hasFeature(cfg.guildId || selectedGuild, 'slaSystem')) { %>
+                      <span class="premium-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">
+                        <i class="fas fa-crown"></i> PRO
+                      </span>
+                    <% } %>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Service Level Agreement - Automatische Eskalation bei überschrittener Reaktionszeit'
+                      : 'Service Level Agreement - Automatic escalation when response time is exceeded'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <% if (!hasFeature(cfg.guildId || selectedGuild, 'slaSystem')) { %>
+                  <div class="premium-upsell">
+                    <i class="fas fa-lock"></i>
+                    <div>
+                      <strong><%= lang === 'de' ? 'Premium-Feature' : 'Premium Feature' %></strong>
+                      <p><%= lang === 'de' ? 'Das SLA-System ist nur in der Pro-Version verfügbar.' : 'The SLA system is only available in the Pro version.' %></p>
+                      <a href="/premium" class="btn btn-premium">
+                        <i class="fas fa-crown"></i>
+                        <%= lang === 'de' ? 'Jetzt upgraden' : 'Upgrade now' %>
+                      </a>
+                    </div>
+                  </div>
+                <% } else { %>
+                  <!-- Enable SLA Toggle -->
+                  <div class="form-group">
+                    <label class="sla-toggle-option <%= (cfg.sla && cfg.sla.enabled) ? 'active' : '' %>" data-option="enabled">
+                      <input
+                        type="checkbox"
+                        name="slaEnabled"
+                        <%= (cfg.sla && cfg.sla.enabled) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'SLA-System aktivieren' : 'Enable SLA System' %></span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- SLA Configuration -->
+                  <div class="grid grid-3" style="margin-top: 20px;">
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-circle" style="color: #10b981;"></i>
+                        <span><%= lang === 'de' ? 'Niedrig (Grün)' : 'Low (Green)' %></span>
+                      </div>
+                      <div class="input-with-addon">
+                        <input
+                          type="number"
+                          name="slaPriority0Hours"
+                          value="<%= (cfg.sla && cfg.sla.priority0Hours != null) ? cfg.sla.priority0Hours : 24 %>"
+                          min="1"
+                          max="168"
+                          style="border-radius: 8px 0 0 8px;">
+                        <span class="input-addon" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-left: none; padding: 0 12px; border-radius: 0 8px 8px 0; display: flex; align-items: center;">
+                          <%= lang === 'de' ? 'Stunden' : 'Hours' %>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-circle" style="color: #f59e0b;"></i>
+                        <span><%= lang === 'de' ? 'Mittel (Orange)' : 'Medium (Orange)' %></span>
+                      </div>
+                      <div class="input-with-addon">
+                        <input
+                          type="number"
+                          name="slaPriority1Hours"
+                          value="<%= (cfg.sla && cfg.sla.priority1Hours != null) ? cfg.sla.priority1Hours : 4 %>"
+                          min="1"
+                          max="72"
+                          style="border-radius: 8px 0 0 8px;">
+                        <span class="input-addon" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-left: none; padding: 0 12px; border-radius: 0 8px 8px 0; display: flex; align-items: center;">
+                          <%= lang === 'de' ? 'Stunden' : 'Hours' %>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-circle" style="color: #ef4444;"></i>
+                        <span><%= lang === 'de' ? 'Hoch (Rot)' : 'High (Red)' %></span>
+                      </div>
+                      <div class="input-with-addon">
+                        <input
+                          type="number"
+                          name="slaPriority2Hours"
+                          value="<%= (cfg.sla && cfg.sla.priority2Hours != null) ? cfg.sla.priority2Hours : 1 %>"
+                          min="1"
+                          max="24"
+                          style="border-radius: 8px 0 0 8px;">
+                        <span class="input-addon" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-left: none; padding: 0 12px; border-radius: 0 8px 8px 0; display: flex; align-items: center;">
+                          <%= lang === 'de' ? 'Stunden' : 'Hours' %>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-2" style="margin-top: 20px;">
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span><%= lang === 'de' ? 'Warnung bei' : 'Warning at' %></span>
+                      </div>
+                      <div class="input-with-addon">
+                        <input
+                          type="number"
+                          name="slaWarnAtPercent"
+                          value="<%= (cfg.sla && cfg.sla.warnAtPercent != null) ? cfg.sla.warnAtPercent : 80 %>"
+                          min="50"
+                          max="95"
+                          step="5"
+                          style="border-radius: 8px 0 0 8px;">
+                        <span class="input-addon" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-left: none; padding: 0 12px; border-radius: 0 8px 8px 0; display: flex; align-items: center;">
+                          %
+                        </span>
+                      </div>
+                      <div class="help-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span><%= lang === 'de' ? 'Sendet Warnung bei z.B. 80% der SLA-Zeit' : 'Sends warning at e.g. 80% of SLA time' %></span>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-bell"></i>
+                        <span><%= lang === 'de' ? 'Eskalations-Rolle' : 'Escalation Role' %></span>
+                        <span class="form-label-optional">(<%= lang === 'de' ? 'Optional' : 'Optional' %>)</span>
+                      </div>
+                      <select name="slaEscalateToRole">
+                        <option value=""><%= lang === 'de' ? 'Keine Rolle' : 'No Role' %></option>
+                        <% roles.filter(r => !r.managed && r.name !== '@everyone').forEach(role => { %>
+                          <option
+                            value="<%= role.id %>"
+                            <%= (cfg.sla && cfg.sla.escalateToRole === role.id) ? 'selected' : '' %>>
+                            <%= role.name %>
+                          </option>
+                        <% }) %>
+                      </select>
+                      <div class="help-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span><%= lang === 'de' ? 'Wird bei 100% SLA-Überschreitung gepingt' : 'Gets pinged at 100% SLA breach' %></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="alert alert-info" style="margin-top: 20px;">
+                    <i class="fas fa-lightbulb"></i>
+                    <div>
+                      <strong><%= lang === 'de' ? 'So funktioniert es:' : 'How it works:' %></strong><br>
+                      <%= lang === 'de'
+                        ? 'Das SLA-System überwacht die Reaktionszeit auf Tickets. Bei 80% wird eine Warnung gesendet, bei 100% erfolgt eine Eskalation mit Rollen-Ping.'
+                        : 'The SLA system monitors response time on tickets. At 80% a warning is sent, at 100% an escalation with role ping occurs.'
+                      %>
+                    </div>
+                  </div>
+                <% } %>
+
+                <style>
+                  .sla-toggle-option {
+                    display: flex;
+                    align-items: center;
+                    padding: 16px;
+                    background: var(--glass-bg);
+                    border: 2px solid var(--glass-border);
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                  }
+
+                  .sla-toggle-option:hover {
+                    transform: translateX(4px);
+                    border-color: #3b82f6;
+                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+                  }
+
+                  .sla-toggle-option.active .toggle-content {
+                    color: #3b82f6;
+                  }
+
+                  .sla-toggle-option.active .toggle-icon {
+                    background: #3b82f6;
+                    border-color: #3b82f6;
+                  }
+
+                  .sla-toggle-option.active .toggle-icon i {
+                    opacity: 1;
+                  }
+
+                  .input-with-addon {
+                    display: flex;
+                    align-items: stretch;
+                  }
+
+                  .input-with-addon input {
+                    flex: 1;
+                  }
+                </style>
+
+                <script>
+                  document.querySelectorAll('.sla-toggle-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                      if (e.target.tagName !== 'INPUT') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+
+                        if (checkbox.checked) {
+                          this.classList.add('active');
+                        } else {
+                          this.classList.remove('active');
+                        }
                       }
                     });
                   });

@@ -2422,6 +2422,28 @@ module.exports = (client)=>{
       cfg.ticketRating.requireFeedback = req.body.ticketRatingRequireFeedback === 'on';
       cfg.ticketRating.showInAnalytics = req.body.ticketRatingShowInAnalytics !== 'off';
 
+      // SLA System Configuration (Pro Feature)
+      if (!cfg.sla) {
+        cfg.sla = {
+          enabled: false,
+          priority0Hours: 24,
+          priority1Hours: 4,
+          priority2Hours: 1,
+          warnAtPercent: 80,
+          escalateToRole: null
+        };
+      }
+
+      if (hasFeature(guildId, 'slaSystem')) {
+        cfg.sla.enabled = req.body.slaEnabled === 'on';
+        cfg.sla.priority0Hours = sanitizeNumber(req.body.slaPriority0Hours, 1, 168) || 24;
+        cfg.sla.priority1Hours = sanitizeNumber(req.body.slaPriority1Hours, 1, 72) || 4;
+        cfg.sla.priority2Hours = sanitizeNumber(req.body.slaPriority2Hours, 1, 24) || 1;
+        cfg.sla.warnAtPercent = sanitizeNumber(req.body.slaWarnAtPercent, 50, 95) || 80;
+        cfg.sla.escalateToRole = sanitizeString(req.body.slaEscalateToRole, 30) || null;
+        if (cfg.sla.escalateToRole === '') cfg.sla.escalateToRole = null;
+      }
+
       // Auto-Responses / FAQ Configuration (Free Feature)
       if (!cfg.autoResponses) cfg.autoResponses = { enabled: true, responses: [] };
       cfg.autoResponses.enabled = req.body.autoResponsesEnabled !== 'off';
