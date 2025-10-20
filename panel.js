@@ -1982,6 +1982,7 @@ module.exports = (client)=>{
       version: VERSION,
       guildName,
       guildId,
+      selectedGuild: guildId, // Add selectedGuild for hasFeature checks
       premiumTier: premiumInfo.tier,
       premiumTierName: premiumInfo.tierName,
       isPremium: premiumInfo.isActive,
@@ -1990,7 +1991,8 @@ module.exports = (client)=>{
       isAdmin: req.isAdmin, // Flag ob User Admin ist oder nur Team-Mitglied
       user: req.user, // User object for display
       t: res.locals.t, // Translation object
-      lang: res.locals.lang // Language code
+      lang: res.locals.lang, // Language code
+      hasFeature: hasFeature // Add hasFeature function
     });
   });
 
