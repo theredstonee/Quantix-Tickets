@@ -182,6 +182,10 @@
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1.5rem;
       margin-top: 1.5rem;
+      width: 100%;
+      clear: both;
+      position: relative;
+      z-index: 1;
     }
 
     .ticket-cards.active {
@@ -198,6 +202,10 @@
       transition: all 0.3s;
       cursor: pointer;
       box-shadow: 0 8px 32px var(--shadow-color);
+      position: relative;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
     }
 
     .ticket-card:hover {
@@ -239,12 +247,15 @@
       gap: 0.5rem;
       font-size: 0.85rem;
       opacity: 0.8;
+      flex: 1;
+      margin-top: auto;
     }
 
     .ticket-card-info > div {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      word-break: break-word;
     }
 
     .ticket-card-status {
@@ -264,6 +275,13 @@
     .ticket-card-status.geschlossen {
       background: #d92b2b;
       color: #fff;
+    }
+
+    table {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      clear: both;
     }
 
     table.hide {
@@ -374,10 +392,12 @@
       .ticket-cards {
         grid-template-columns: 1fr;
         gap: 1rem;
+        margin-bottom: 2rem;
       }
 
       .ticket-card {
         padding: 1.2rem;
+        min-height: 180px;
       }
     }
 
