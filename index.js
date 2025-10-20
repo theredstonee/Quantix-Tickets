@@ -2288,7 +2288,8 @@ client.on(Events.InteractionCreate, async i => {
         ticket.closeRequest.denyReason = reason;
         saveTickets(guildId, log);
 
-        await i.reply({ ephemeral: true, content: '✅ Schließungsanfrage wurde abgelehnt.' });
+        // Defer the update first (Modal submissions need special handling)
+        await i.deferUpdate();
 
         // Deaktiviere die Buttons der ursprünglichen Schließungsanfrage
         if (ticket.closeRequest.messageId) {
