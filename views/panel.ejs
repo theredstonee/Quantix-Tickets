@@ -2154,55 +2154,160 @@
                 </div>
 
                 <!-- Ticket-Bewertungssystem -->
-                <div style="margin-top: 1.5rem; padding: 1.25rem; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 12px;">
-                  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                    <i class="fas fa-star" style="font-size: 1.25rem; color: var(--accent-color);"></i>
-                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;"><%= lang === 'de' ? '⭐ Ticket-Bewertungssystem' : '⭐ Ticket Rating System' %></h3>
+                <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 12px; backdrop-filter: blur(10px);">
+                  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <i class="fas fa-star" style="font-size: 1.25rem; color: #fbbf24;"></i>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;"><%= lang === 'de' ? 'Ticket-Bewertungssystem' : 'Ticket Rating System' %></h3>
                   </div>
 
-                  <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; cursor: pointer;">
+                  <!-- Toggle Option -->
+                  <label class="rating-toggle-option" data-option="enabled">
                     <input
                       type="checkbox"
                       name="ticketRatingEnabled"
                       <%= (cfg.ticketRating && cfg.ticketRating.enabled !== false) ? 'checked' : '' %>
-                      style="width: auto; margin: 0;">
-                    <span style="font-weight: 500;"><%= lang === 'de' ? 'Bewertungssystem aktivieren' : 'Enable Rating System' %></span>
+                      style="display: none;">
+                    <div class="toggle-content">
+                      <div class="toggle-icon">
+                        <i class="fas fa-check"></i>
+                      </div>
+                      <span style="font-weight: 500;"><%= lang === 'de' ? 'Bewertungssystem aktivieren' : 'Enable Rating System' %></span>
+                    </div>
                   </label>
 
-                  <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; cursor: pointer;">
+                  <!-- Toggle Option -->
+                  <label class="rating-toggle-option" data-option="sendDM">
                     <input
                       type="checkbox"
                       name="ticketRatingSendDM"
                       <%= (cfg.ticketRating && cfg.ticketRating.sendDMAfterClose !== false) ? 'checked' : '' %>
-                      style="width: auto; margin: 0;">
-                    <span style="font-weight: 500;"><%= lang === 'de' ? 'DM nach Ticket-Schließung senden' : 'Send DM after ticket closure' %></span>
+                      style="display: none;">
+                    <div class="toggle-content">
+                      <div class="toggle-icon">
+                        <i class="fas fa-check"></i>
+                      </div>
+                      <span style="font-weight: 500;"><%= lang === 'de' ? 'DM nach Ticket-Schließung senden' : 'Send DM after ticket closure' %></span>
+                    </div>
                   </label>
 
-                  <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; cursor: pointer;">
+                  <!-- Toggle Option -->
+                  <label class="rating-toggle-option" data-option="feedback">
                     <input
                       type="checkbox"
                       name="ticketRatingRequireFeedback"
                       <%= (cfg.ticketRating && cfg.ticketRating.requireFeedback) ? 'checked' : '' %>
-                      style="width: auto; margin: 0;">
-                    <span style="font-weight: 500;"><%= lang === 'de' ? 'Feedback-Text erforderlich' : 'Require feedback text' %></span>
+                      style="display: none;">
+                    <div class="toggle-content">
+                      <div class="toggle-icon">
+                        <i class="fas fa-check"></i>
+                      </div>
+                      <span style="font-weight: 500;"><%= lang === 'de' ? 'Feedback-Text erforderlich' : 'Require feedback text' %></span>
+                    </div>
                   </label>
 
-                  <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                  <!-- Toggle Option -->
+                  <label class="rating-toggle-option" data-option="analytics">
                     <input
                       type="checkbox"
                       name="ticketRatingShowInAnalytics"
                       <%= (cfg.ticketRating && cfg.ticketRating.showInAnalytics !== false) ? 'checked' : '' %>
-                      style="width: auto; margin: 0;">
-                    <span style="font-weight: 500;"><%= lang === 'de' ? 'In Analytics anzeigen' : 'Show in Analytics' %></span>
+                      style="display: none;">
+                    <div class="toggle-content">
+                      <div class="toggle-icon">
+                        <i class="fas fa-check"></i>
+                      </div>
+                      <span style="font-weight: 500;"><%= lang === 'de' ? 'In Analytics anzeigen' : 'Show in Analytics' %></span>
+                    </div>
                   </label>
 
-                  <div class="help-text" style="margin-top: 0.75rem;">
-                    <i class="fas fa-info-circle"></i>
+                  <div class="help-text" style="margin-top: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px;">
+                    <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
                     <span><%= lang === 'de'
                       ? 'User können Tickets nach Schließung bewerten (1-5 Sterne)'
                       : 'Users can rate tickets after closure (1-5 stars)' %></span>
                   </div>
                 </div>
+
+                <style>
+                  .rating-toggle-option {
+                    display: block;
+                    padding: 0.875rem 1rem;
+                    margin-bottom: 0.5rem;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    position: relative;
+                  }
+
+                  .rating-toggle-option:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-color: rgba(59, 130, 246, 0.3);
+                    transform: translateX(2px);
+                  }
+
+                  .rating-toggle-option input:checked + .toggle-content {
+                    color: #3b82f6;
+                  }
+
+                  .rating-toggle-option input:checked ~ .toggle-content .toggle-icon {
+                    background: #3b82f6;
+                    border-color: #3b82f6;
+                  }
+
+                  .rating-toggle-option input:checked ~ .toggle-content .toggle-icon i {
+                    opacity: 1;
+                  }
+
+                  .toggle-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    transition: color 0.2s ease;
+                  }
+
+                  .toggle-icon {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+                    flex-shrink: 0;
+                  }
+
+                  .toggle-icon i {
+                    font-size: 0.75rem;
+                    color: white;
+                    opacity: 0;
+                    transition: opacity 0.2s ease;
+                  }
+
+                  [data-theme="dark"] .rating-toggle-option {
+                    background: rgba(255, 255, 255, 0.02);
+                    border-color: rgba(255, 255, 255, 0.08);
+                  }
+
+                  [data-theme="dark"] .rating-toggle-option:hover {
+                    background: rgba(255, 255, 255, 0.04);
+                    border-color: rgba(59, 130, 246, 0.4);
+                  }
+                </style>
+
+                <script>
+                  // Toggle functionality for rating options
+                  document.querySelectorAll('.rating-toggle-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                      if (e.target.tagName !== 'INPUT') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                      }
+                    });
+                  });
+                </script>
               </div>
             </div>
 
