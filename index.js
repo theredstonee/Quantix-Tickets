@@ -2278,88 +2278,6 @@ client.on(Events.InteractionCreate, async i => {
         return;
       }
 
-      // Modal-Submit für Ablehnung
-      if (i.customId === 'deny_close_reason_modal') {
-        try {
-          const reason = i.fields.getTextInputValue('deny_reason') || 'Kein Grund angegeben';
-
-          ticket.closeRequest.status = 'denied';
-          ticket.closeRequest.deniedBy = i.user.id;
-          ticket.closeRequest.deniedAt = Date.now();
-          ticket.closeRequest.denyReason = reason;
-          saveTickets(guildId, log);
-
-          // Modal submissions require reply, not deferUpdate
-          await i.reply({
-            content: '✅ Schließungsanfrage wurde abgelehnt.',
-            ephemeral: true
-          });
-
-        // Deaktiviere die Buttons der ursprünglichen Schließungsanfrage
-        if (ticket.closeRequest.messageId) {
-          try {
-            const requestMsg = await i.channel.messages.fetch(ticket.closeRequest.messageId);
-            const disabledButtons = new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setCustomId('approve_close_request_disabled')
-                .setEmoji('✅')
-                .setLabel('Bestätigen')
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true),
-              new ButtonBuilder()
-                .setCustomId('deny_close_request_disabled')
-                .setEmoji('❌')
-                .setLabel('Abgelehnt')
-                .setStyle(ButtonStyle.Danger)
-                .setDisabled(true)
-            );
-            await requestMsg.edit({ components: [disabledButtons] });
-          } catch (err) {
-            console.error('Error disabling close request buttons:', err);
-          }
-        }
-
-        const denyEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Schließungsanfrage abgelehnt')
-          .setDescription(
-            `Die Schließungsanfrage wurde abgelehnt.\n\n` +
-            `**Angefordert von:** <@${ticket.closeRequest.requestedBy}>\n` +
-            `**Abgelehnt von:** <@${i.user.id}>\n\n` +
-            `**Grund:**\n> ${reason}`
-          )
-          .addFields(
-            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets • Anfrage abgelehnt' })
-          .setTimestamp();
-
-        await i.channel.send({ embeds: [denyEmbed] });
-
-        logEvent(i.guild, `❌ Schließungsanfrage für Ticket **#${ticket.id}** von <@${i.user.id}> abgelehnt. Grund: ${reason}`);
-
-        // Lösche die Schließungsanfrage nach 5 Sekunden
-        setTimeout(() => {
-          if (ticket.closeRequest) {
-            delete ticket.closeRequest;
-            saveTickets(guildId, log);
-          }
-        }, 5000);
-
-        return;
-        } catch (err) {
-          console.error('Error handling deny close request modal:', err);
-          if (!i.replied && !i.deferred) {
-            await i.reply({
-              content: '❌ Fehler beim Ablehnen der Schließungsanfrage.',
-              ephemeral: true
-            }).catch(() => {});
-          }
-          return;
-        }
-      }
-
       if(i.customId==='unclaim'){
         if(!isClaimer) {
           const errorEmbed = new EmbedBuilder()
@@ -2536,6 +2454,89 @@ client.on(Events.InteractionCreate, async i => {
           return i.showModal(modal);
         }
       }
+    }
+
+    // Modal-Submit für Schließungsanfrage-Ablehnung
+    if(i.isModalSubmit() && i.customId === 'deny_close_reason_modal') {
+      const guildId = i.guild.id;
+      const log = loadTickets(guildId);
+      const ticket = log.find(t => t.channelId === i.channel.id);
+
+      if (!ticket) {
+        return i.reply({ content: '❌ Ticket nicht gefunden.', ephemeral: true });
+      }
+
+      const reason = i.fields.getTextInputValue('deny_reason') || 'Kein Grund angegeben';
+
+      // Update ticket
+      ticket.closeRequest.status = 'denied';
+      ticket.closeRequest.deniedBy = i.user.id;
+      ticket.closeRequest.deniedAt = Date.now();
+      ticket.closeRequest.denyReason = reason;
+      saveTickets(guildId, log);
+
+      await i.reply({ content: '✅ Schließungsanfrage wurde abgelehnt.', ephemeral: true });
+
+      // Disable buttons
+      if (ticket.closeRequest.messageId) {
+        try {
+          const requestMsg = await i.channel.messages.fetch(ticket.closeRequest.messageId);
+
+          const disabledApproveBtn = new ButtonBuilder()
+            .setCustomId('approve_close_request_disabled')
+            .setLabel('Genehmigen')
+            .setEmoji('✅')
+            .setStyle(ButtonStyle.Success)
+            .setDisabled(true);
+
+          const disabledDenyBtn = new ButtonBuilder()
+            .setCustomId('deny_close_request_disabled')
+            .setLabel('Ablehnen')
+            .setEmoji('❌')
+            .setStyle(ButtonStyle.Danger)
+            .setDisabled(true);
+
+          const disabledRow = new ActionRowBuilder().addComponents(disabledApproveBtn, disabledDenyBtn);
+          await requestMsg.edit({ components: [disabledRow] });
+        } catch (err) {
+          console.error('Fehler beim Deaktivieren der Buttons:', err);
+        }
+      }
+
+      // Send denial message
+      const denyEmbed = new EmbedBuilder()
+        .setColor(0xff4444)
+        .setTitle('❌ Schließungsanfrage abgelehnt')
+        .setDescription(`<@${i.user.id}> hat die Schließungsanfrage abgelehnt.`)
+        .addFields(
+          { name: '📝 Grund', value: reason, inline: false },
+          { name: '⏰ Abgelehnt am', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+        )
+        .setFooter({ text: 'Quantix Tickets • Schließungsanfrage abgelehnt' })
+        .setTimestamp();
+
+      await i.channel.send({ embeds: [denyEmbed] });
+
+      // Notify requester
+      const requesterEmbed = new EmbedBuilder()
+        .setColor(0xff4444)
+        .setTitle('❌ Deine Schließungsanfrage wurde abgelehnt')
+        .setDescription(`Deine Anfrage, Ticket #${ticket.id} zu schließen, wurde von einem Team-Mitglied abgelehnt.`)
+        .addFields(
+          { name: '📝 Grund', value: reason, inline: false },
+          { name: '🎫 Ticket', value: `<#${i.channel.id}>`, inline: true }
+        )
+        .setFooter({ text: 'Quantix Tickets' })
+        .setTimestamp();
+
+      try {
+        const requester = await i.guild.members.fetch(ticket.closeRequest.requestedBy);
+        await requester.send({ embeds: [requesterEmbed] });
+      } catch (err) {
+        console.log('Konnte DM nicht senden an Requester:', err.message);
+      }
+
+      logEvent(i.guild, `🚫 Schließungsanfrage für Ticket #${ticket.id} wurde von <@${i.user.id}> abgelehnt. Grund: ${reason}`);
     }
 
     if(i.isModalSubmit() && i.customId==='modal_add_user'){
