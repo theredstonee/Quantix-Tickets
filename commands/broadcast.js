@@ -4,7 +4,7 @@ const path = require('path');
 const { getGuildLanguage } = require('../translations');
 const { COPYRIGHT } = require('../version.config');
 
-const ALLOWED_GUILD = '1291125037876904026';
+const ALLOWED_GUILD = '1403053662825222388';
 const ALLOWED_USERS = ['1159182333316968530', '1415387837359984740', '1048900200497954868'];
 const CONFIG_DIR = path.join(__dirname, '..', 'configs');
 const CHANGELOG_PATH = path.join(__dirname, '..', 'changelog.json');
