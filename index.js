@@ -2453,6 +2453,44 @@ client.on(Events.InteractionCreate, async i => {
           ));
           return i.showModal(modal);
         }
+        case 'close': {
+          await i.deferReply({ ephemeral: true });
+
+          ticket.status = 'geschlossen';
+          ticket.closedAt = Date.now();
+          ticket.closedBy = i.user.id;
+          saveTickets(guildId, log);
+
+          const closeEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setTitle('🔐 Ticket wird geschlossen')
+            .setDescription(`Dieses Ticket wird in wenigen Sekunden geschlossen und archiviert.`)
+            .addFields(
+              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+              { name: '👤 Geschlossen von', value: `<@${i.user.id}>`, inline: true },
+              { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Ticket geschlossen' })
+            .setTimestamp();
+
+          await i.channel.send({ embeds: [closeEmbed] });
+
+          // Generate transcript
+          await createTranscript(i.channel, ticket, { guildId });
+
+          // Close the channel
+          setTimeout(async () => {
+            try {
+              await i.channel.delete();
+            } catch (err) {
+              console.error('Fehler beim Löschen des Channels:', err);
+            }
+          }, 5000);
+
+          await i.editReply({ content: '✅ Ticket wird geschlossen...', ephemeral: true });
+          logEvent(i.guild, t(guildId, 'logs.ticket_closed', { id: ticket.id, user: `<@${i.user.id}>` }));
+          break;
+        }
       }
     }
 
