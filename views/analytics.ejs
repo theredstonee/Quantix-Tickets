@@ -39,18 +39,18 @@
     }
 
     [data-theme="dark"] {
-      --bg-color: #0a0a0a;
-      --text-color: #00ff88;
-      --border-color: #1a3a2a;
-      --accent-color: #00ff88;
-      --accent-hover: #00dd77;
-      --card-bg: rgba(15, 21, 16, 0.9);
-      --success-color: #00ff88;
+      --bg-color: #000000;
+      --text-color: #60a5fa;
+      --border-color: #1e293b;
+      --accent-color: #3b82f6;
+      --accent-hover: #60a5fa;
+      --card-bg: rgba(10, 10, 20, 0.9);
+      --success-color: #3b82f6;
       --warning-color: #ff9900;
       --error-color: #ff4444;
-      --glass-bg: rgba(15, 21, 16, 0.7);
-      --glass-border: rgba(0, 255, 136, 0.3);
-      --shadow-color: rgba(0, 255, 136, 0.2);
+      --glass-bg: rgba(10, 10, 20, 0.7);
+      --glass-border: rgba(59, 130, 246, 0.3);
+      --shadow-color: rgba(59, 130, 246, 0.2);
     }
 
     [data-theme="dark"] body {
@@ -76,6 +76,11 @@
     @keyframes bgMove {
       0% { transform: translate(0, 0); }
       100% { transform: translate(50px, 50px); }
+    }
+
+    /* Dark Mode: Deaktiviere Hintergrundmuster */
+    [data-theme="dark"] body::before {
+      display: none;
     }
 
     body {

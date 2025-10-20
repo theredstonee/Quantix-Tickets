@@ -2765,32 +2765,15 @@ module.exports = (client)=>{
           console.log(`📄 Transcript gefunden: ${guildTranscriptFile}`);
           return res.sendFile(guildTranscriptFile);
         }
+
+        // Transcript nicht im ausgewählten Server gefunden
+        console.log(`❌ Transcript nicht gefunden im ausgewählten Server: ID ${id}, Guild: ${guildId}`);
+        return res.status(404).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>📄 Transcript nicht gefunden</h2><p>Das Transcript mit der ID <strong>' + id + '</strong> existiert nicht auf diesem Server.</p><p style="opacity: 0.7; font-size: 0.9rem; margin-top: 1rem;">Bitte stelle sicher, dass du den richtigen Server ausgewählt hast.</p></div></body></html>');
       }
 
-      // Strategy 2: Search in all guild folders
-      if (fs.existsSync(transcriptsDir)) {
-        const guildFolders = fs.readdirSync(transcriptsDir);
-        for (const folder of guildFolders) {
-          const folderPath = path.join(transcriptsDir, folder);
-          if (fs.statSync(folderPath).isDirectory()) {
-            const transcriptFile = path.join(folderPath, `transcript_${id}.html`);
-            if (fs.existsSync(transcriptFile)) {
-              console.log(`📄 Transcript gefunden (Suche): ${transcriptFile}`);
-              return res.sendFile(transcriptFile);
-            }
-          }
-        }
-      }
-
-      // Strategy 3: Fallback to legacy root directory
-      const legacyFile = path.join(__dirname, `transcript_${id}.html`);
-      if(fs.existsSync(legacyFile)) {
-        console.log(`📄 Transcript gefunden (Legacy): ${legacyFile}`);
-        return res.sendFile(legacyFile);
-      }
-
-      console.log(`❌ Transcript nicht gefunden: ID ${id}, Guild: ${guildId || 'nicht gesetzt'}`);
-      return res.status(404).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>📄 Transcript nicht gefunden</h2><p>Das Transcript mit der ID <strong>' + id + '</strong> existiert nicht.</p></div></body></html>');
+      // No guildId in session - should not happen with isAuthOrTeam middleware
+      console.log(`⚠️ Kein Server ausgewählt für Transcript ID ${id}`);
+      return res.status(400).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>⚠️ Fehler</h2><p>Kein Server ausgewählt. Bitte wähle einen Server aus.</p><p style="margin-top: 1rem;"><a href="/select-server" style="color: #00ff88; text-decoration: none;">← Server auswählen</a></p></div></body></html>');
     } catch(err) {
       console.error('❌ Fehler beim Laden des Transcripts:', err);
       return res.status(500).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>⚠️ Fehler</h2><p>Das Transcript konnte nicht geladen werden.</p></div></body></html>');
