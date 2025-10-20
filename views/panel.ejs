@@ -2087,7 +2087,7 @@
                 </div>
 
                 <!-- DM Notification Toggle -->
-                <label class="dm-notify-toggle-option" style="margin-top: 1rem;">
+                <label class="dm-notify-toggle-option <%= (cfg.notifyUserOnStatusChange !== false) ? 'active' : '' %>" style="margin-top: 1rem;">
                   <input
                     type="checkbox"
                     name="notifyUserOnStatusChange"
@@ -2118,16 +2118,16 @@
                     transform: translateX(2px);
                   }
 
-                  .dm-notify-toggle-option input:checked + .toggle-content {
+                  .dm-notify-toggle-option.active .toggle-content {
                     color: #3b82f6;
                   }
 
-                  .dm-notify-toggle-option input:checked ~ .toggle-content .toggle-icon {
+                  .dm-notify-toggle-option.active .toggle-icon {
                     background: #3b82f6;
                     border-color: #3b82f6;
                   }
 
-                  .dm-notify-toggle-option input:checked ~ .toggle-content .toggle-icon i {
+                  .dm-notify-toggle-option.active .toggle-icon i {
                     opacity: 1;
                   }
 
@@ -2146,9 +2146,20 @@
                   // Toggle functionality for DM notification
                   document.querySelectorAll('.dm-notify-toggle-option').forEach(option => {
                     option.addEventListener('click', function(e) {
-                      if (e.target.tagName !== 'INPUT') {
-                        const checkbox = this.querySelector('input[type="checkbox"]');
-                        checkbox.checked = !checkbox.checked;
+                      // Prevent double-triggering
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      const checkbox = this.querySelector('input[type="checkbox"]');
+
+                      // Toggle checkbox
+                      checkbox.checked = !checkbox.checked;
+
+                      // Update active class based on checkbox state
+                      if (checkbox.checked) {
+                        this.classList.add('active');
+                      } else {
+                        this.classList.remove('active');
                       }
                     });
                   });
@@ -2360,16 +2371,20 @@
                   // Toggle functionality for rating options
                   document.querySelectorAll('.rating-toggle-option').forEach(option => {
                     option.addEventListener('click', function(e) {
-                      if (e.target.tagName !== 'INPUT') {
-                        const checkbox = this.querySelector('input[type="checkbox"]');
-                        checkbox.checked = !checkbox.checked;
+                      // Prevent double-triggering
+                      e.preventDefault();
+                      e.stopPropagation();
 
-                        // Toggle active class
-                        if (checkbox.checked) {
-                          this.classList.add('active');
-                        } else {
-                          this.classList.remove('active');
-                        }
+                      const checkbox = this.querySelector('input[type="checkbox"]');
+
+                      // Toggle checkbox
+                      checkbox.checked = !checkbox.checked;
+
+                      // Update active class based on checkbox state
+                      if (checkbox.checked) {
+                        this.classList.add('active');
+                      } else {
+                        this.classList.remove('active');
                       }
                     });
                   });
@@ -2595,15 +2610,20 @@
                 <script>
                   document.querySelectorAll('.sla-toggle-option').forEach(option => {
                     option.addEventListener('click', function(e) {
-                      if (e.target.tagName !== 'INPUT') {
-                        const checkbox = this.querySelector('input[type="checkbox"]');
-                        checkbox.checked = !checkbox.checked;
+                      // Prevent double-triggering
+                      e.preventDefault();
+                      e.stopPropagation();
 
-                        if (checkbox.checked) {
-                          this.classList.add('active');
-                        } else {
-                          this.classList.remove('active');
-                        }
+                      const checkbox = this.querySelector('input[type="checkbox"]');
+
+                      // Toggle checkbox
+                      checkbox.checked = !checkbox.checked;
+
+                      // Update active class based on checkbox state
+                      if (checkbox.checked) {
+                        this.classList.add('active');
+                      } else {
+                        this.classList.remove('active');
                       }
                     });
                   });
