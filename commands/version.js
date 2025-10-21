@@ -65,7 +65,7 @@ module.exports = {
         .setLabel('Support Server')
         .setEmoji('💬'),
       new ButtonBuilder()
-        .setURL('https://quantixtickets.theredstonee.de/panel')
+        .setURL('https://tickets.quantix-bot.de/panel')
         .setStyle(ButtonStyle.Link)
         .setLabel('Dashboard')
         .setEmoji('🎫')

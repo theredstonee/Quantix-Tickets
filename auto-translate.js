@@ -1,4 +1,4 @@
-const axios = require('axios');
+const { Translate } = require('@google-cloud/translate').v2;
 const fs = require('fs');
 const path = require('path');
 
@@ -14,89 +14,80 @@ function readCfg(guildId) {
 }
 
 const languageMapping = {
-  de: 'DE',
-  en: 'EN',
-  es: 'ES',
-  pt: 'PT',
-  ru: 'RU',
-  ja: 'JA',
-  he: 'HE', // DeepL unterstützt kein Hebräisch
-  ar: 'AR',  // DeepL unterstützt kein Arabisch
-  id: 'ID'   // DeepL unterstützt kein Indonesisch
+  de: 'de',
+  en: 'en',
+  es: 'es',
+  pt: 'pt',
+  ru: 'ru',
+  ja: 'ja',
+  he: 'he',
+  ar: 'ar',
+  id: 'id'
 };
 
-async function translateText(text, targetLang, sourceLang = null) {
-  const apiKey = process.env.DEEPL_API_KEY;
+let translateClient = null;
+
+function getTranslateClient() {
+  if (translateClient) return translateClient;
+
+  const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY;
 
   if (!apiKey) {
-    console.warn('⚠️ DEEPL_API_KEY not configured');
+    console.warn('⚠️ GOOGLE_TRANSLATE_API_KEY not configured');
     return null;
   }
 
   try {
-    const deeplTargetLang = languageMapping[targetLang] || 'EN';
+    translateClient = new Translate({ key: apiKey });
+    return translateClient;
+  } catch (err) {
+    console.error('Google Translate Client Error:', err.message);
+    return null;
+  }
+}
 
-    if (!['HE', 'AR', 'ID'].includes(deeplTargetLang)) {
-      const params = {
-        auth_key: apiKey,
-        text: text,
-        target_lang: deeplTargetLang
-      };
+async function translateText(text, targetLang, sourceLang = null) {
+  const client = getTranslateClient();
 
-      if (sourceLang && languageMapping[sourceLang]) {
-        params.source_lang = languageMapping[sourceLang];
-      }
+  if (!client) {
+    console.warn('⚠️ Google Translate API not configured');
+    return null;
+  }
 
-      const response = await axios.post('https://api-free.deepl.com/v2/translate', null, {
-        params: params,
-        timeout: 5000
-      });
+  try {
+    const googleTargetLang = languageMapping[targetLang] || 'en';
 
-      if (response.data && response.data.translations && response.data.translations.length > 0) {
-        return response.data.translations[0].text;
-      }
+    const options = {
+      to: googleTargetLang
+    };
+
+    if (sourceLang && languageMapping[sourceLang]) {
+      options.from = languageMapping[sourceLang];
     }
 
-    return null;
+    const [translation] = await client.translate(text, options);
+    return translation;
+
   } catch (err) {
-    console.error('DeepL Translation Error:', err.message);
+    console.error('Google Translate Error:', err.message);
     return null;
   }
 }
 
 async function detectLanguage(text) {
-  const apiKey = process.env.DEEPL_API_KEY;
+  const client = getTranslateClient();
 
-  if (!apiKey) return null;
+  if (!client) return null;
 
   try {
-    const response = await axios.post('https://api-free.deepl.com/v2/translate', null, {
-      params: {
-        auth_key: apiKey,
-        text: text,
-        target_lang: 'EN'
-      },
-      timeout: 5000
-    });
+    const [detection] = await client.detect(text);
 
-    if (response.data && response.data.translations && response.data.translations.length > 0) {
-      const detectedLang = response.data.translations[0].detected_source_language;
+    const detectedLang = detection.language;
 
-      const reversedMapping = {
-        'DE': 'de',
-        'EN': 'en',
-        'ES': 'es',
-        'PT': 'pt',
-        'RU': 'ru',
-        'JA': 'ja'
-      };
+    return detectedLang || 'en';
 
-      return reversedMapping[detectedLang] || 'en';
-    }
-
-    return null;
   } catch (err) {
-    console.error('DeepL Language Detection Error:', err.message);
+    console.error('Google Language Detection Error:', err.message);
     return null;
   }
 }

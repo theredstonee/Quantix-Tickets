@@ -2631,6 +2631,408 @@
               </div>
             </div>
 
+            <!-- Ticket-Blacklist System -->
+            <div class="card" style="margin-top: 24px;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-ban"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '🚫 Ticket-Blacklist' : '🚫 Ticket Blacklist' %></span>
+                    <span class="premium-badge" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">
+                      <i class="fas fa-check-circle"></i> FREE
+                    </span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Blockiere User von der Ticket-Erstellung (temporär oder permanent)'
+                      : 'Block users from creating tickets (temporary or permanent)' %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="help-text" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px;">
+                  <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                  <div>
+                    <strong><%= lang === 'de' ? 'Verwaltung per Command:' : 'Manage via Command:' %></strong><br>
+                    <code style="background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: monospace;">/ticket-blacklist add @user [Dauer]</code><br>
+                    <code style="background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: monospace;">/ticket-blacklist remove @user</code><br>
+                    <code style="background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; font-family: monospace;">/ticket-blacklist list</code>
+                  </div>
+                </div>
+
+                <% if (cfg.ticketBlacklist && cfg.ticketBlacklist.length > 0) { %>
+                  <div style="margin-top: 1rem;">
+                    <h4 style="margin-bottom: 0.75rem; font-size: 0.95rem; font-weight: 600;">
+                      <%= lang === 'de' ? 'Blockierte User:' : 'Blocked Users:' %>
+                    </h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                      <% cfg.ticketBlacklist.forEach(block => { %>
+                        <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                          <div>
+                            <strong><code><%= block.userId %></code></strong>
+                            <% if (block.isPermanent) { %>
+                              <span style="margin-left: 0.5rem; padding: 2px 8px; background: #ef4444; color: white; border-radius: 4px; font-size: 0.75rem;">
+                                <%= lang === 'de' ? 'Permanent' : 'Permanent' %>
+                              </span>
+                            <% } else { %>
+                              <span style="margin-left: 0.5rem; padding: 2px 8px; background: #f59e0b; color: white; border-radius: 4px; font-size: 0.75rem;">
+                                <%= lang === 'de' ? 'Bis' : 'Until' %>: <%= new Date(block.expiresAt).toLocaleString(lang === 'de' ? 'de-DE' : 'en-US') %>
+                              </span>
+                            <% } %>
+                          </div>
+                          <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+                            <%= lang === 'de' ? 'Grund' : 'Reason' %>: <%= block.reason || '-' %>
+                          </div>
+                        </div>
+                      <% }); %>
+                    </div>
+                  </div>
+                <% } else { %>
+                  <div style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.5);">
+                    <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 0.5rem; color: #10b981;"></i>
+                    <p><%= lang === 'de' ? 'Keine blockierten User' : 'No blocked users' %></p>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Auto-Translate System -->
+            <div class="card" style="margin-top: 24px;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-language"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '🌐 Auto-Translate' : '🌐 Auto-Translate' %></span>
+                    <% if (!hasFeature(cfg.guildId || selectedGuild, 'autoTranslate')) { %>
+                      <span class="premium-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">
+                        <i class="fas fa-crown"></i> PRO
+                      </span>
+                    <% } %>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Automatische Übersetzung zwischen Team-Sprache und User-Sprache'
+                      : 'Automatic translation between team language and user language' %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <% if (!hasFeature(cfg.guildId || selectedGuild, 'autoTranslate')) { %>
+                  <div class="premium-lock-message" style="text-align: center; padding: 2rem; background: rgba(102, 126, 234, 0.1); border-radius: 12px; border: 2px dashed rgba(102, 126, 234, 0.3);">
+                    <i class="fas fa-lock"></i>
+                    <div>
+                      <strong><%= lang === 'de' ? 'Premium-Feature' : 'Premium Feature' %></strong>
+                      <p><%= lang === 'de' ? 'Auto-Translate ist nur in der Pro-Version verfügbar.' : 'Auto-Translate is only available in the Pro version.' %></p>
+                      <a href="/premium" class="btn btn-premium">
+                        <i class="fas fa-crown"></i>
+                        <%= lang === 'de' ? 'Jetzt upgraden' : 'Upgrade now' %>
+                      </a>
+                    </div>
+                  </div>
+                <% } else { %>
+                  <!-- Toggle to enable Auto-Translate -->
+                  <div style="margin-bottom: 20px;">
+                    <label class="translate-toggle-option <%= (cfg.autoTranslate && cfg.autoTranslate.enabled) ? 'active' : '' %>">
+                      <input
+                        type="checkbox"
+                        name="autoTranslateEnabled"
+                        <%= (cfg.autoTranslate && cfg.autoTranslate.enabled) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'Auto-Translate aktivieren' : 'Enable Auto-Translate' %></span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- Team Language Selection -->
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-globe"></i>
+                      <span><%= lang === 'de' ? 'Team-Sprache' : 'Team Language' %></span>
+                    </div>
+                    <select name="autoTranslateTeamLanguage" style="width: 100%;">
+                      <%
+                      const currentTeamLang = (cfg.autoTranslate && cfg.autoTranslate.teamLanguage) || 'de';
+                      const languages = [
+                        { code: 'de', name: '🇩🇪 Deutsch' },
+                        { code: 'en', name: '🇬🇧 English' },
+                        { code: 'es', name: '🇪🇸 Español' },
+                        { code: 'pt', name: '🇵🇹 Português' },
+                        { code: 'ru', name: '🇷🇺 Русский' },
+                        { code: 'ja', name: '🇯🇵 日本語' },
+                        { code: 'he', name: '🇮🇱 עברית' },
+                        { code: 'ar', name: '🇸🇦 العربية' },
+                        { code: 'id', name: '🇮🇩 Bahasa Indonesia' }
+                      ];
+                      languages.forEach(l => { %>
+                        <option value="<%= l.code %>" <%= currentTeamLang === l.code ? 'selected' : '' %>>
+                          <%= l.name %>
+                        </option>
+                      <% }); %>
+                    </select>
+                  </div>
+
+                  <!-- Additional Options -->
+                  <div style="margin-top: 1rem;">
+                    <label class="translate-toggle-option <%= (cfg.autoTranslate && cfg.autoTranslate.showOriginal) ? 'active' : '' %>">
+                      <input
+                        type="checkbox"
+                        name="autoTranslateShowOriginal"
+                        <%= (cfg.autoTranslate && cfg.autoTranslate.showOriginal) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'Original-Nachricht anzeigen' : 'Show original message' %></span>
+                      </div>
+                    </label>
+
+                    <label class="translate-toggle-option <%= (cfg.autoTranslate && cfg.autoTranslate.translateUserMessages !== false) ? 'active' : '' %>" style="margin-top: 0.5rem;">
+                      <input
+                        type="checkbox"
+                        name="autoTranslateUserMessages"
+                        <%= (cfg.autoTranslate && cfg.autoTranslate.translateUserMessages !== false) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'User-Nachrichten übersetzen' : 'Translate user messages' %></span>
+                      </div>
+                    </label>
+
+                    <label class="translate-toggle-option <%= (cfg.autoTranslate && cfg.autoTranslate.translateTeamMessages !== false) ? 'active' : '' %>" style="margin-top: 0.5rem;">
+                      <input
+                        type="checkbox"
+                        name="autoTranslateTeamMessages"
+                        <%= (cfg.autoTranslate && cfg.autoTranslate.translateTeamMessages !== false) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'Team-Nachrichten übersetzen' : 'Translate team messages' %></span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div class="help-text" style="margin-top: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px;">
+                    <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                    <span><%= lang === 'de'
+                      ? 'User-Nachrichten werden in die Team-Sprache übersetzt. Team-Antworten werden in die User-Sprache übersetzt.'
+                      : 'User messages are translated to team language. Team responses are translated to user language.' %></span>
+                  </div>
+                <% } %>
+
+                <style>
+                  .translate-toggle-option {
+                    display: block;
+                    padding: 0.875rem 1rem;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                  }
+
+                  .translate-toggle-option:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-color: rgba(59, 130, 246, 0.3);
+                    transform: translateX(2px);
+                  }
+
+                  .translate-toggle-option.active .toggle-content {
+                    color: #3b82f6;
+                  }
+
+                  .translate-toggle-option.active .toggle-icon {
+                    background: #3b82f6;
+                    border-color: #3b82f6;
+                  }
+
+                  .translate-toggle-option.active .toggle-icon i {
+                    opacity: 1;
+                  }
+
+                  [data-theme="dark"] .translate-toggle-option {
+                    background: rgba(255, 255, 255, 0.02);
+                    border-color: rgba(255, 255, 255, 0.08);
+                  }
+
+                  [data-theme="dark"] .translate-toggle-option:hover {
+                    background: rgba(255, 255, 255, 0.04);
+                    border-color: rgba(59, 130, 246, 0.4);
+                  }
+                </style>
+
+                <script>
+                  document.querySelectorAll('.translate-toggle-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      const checkbox = this.querySelector('input[type="checkbox"]');
+                      checkbox.checked = !checkbox.checked;
+
+                      if (checkbox.checked) {
+                        this.classList.add('active');
+                      } else {
+                        this.classList.remove('active');
+                      }
+                    });
+                  });
+                </script>
+              </div>
+            </div>
+
+            <!-- Voice-Support System -->
+            <div class="card" style="margin-top: 24px;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-microphone"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '🎤 Voice-Support' : '🎤 Voice-Support' %></span>
+                    <% if (!hasFeature(cfg.guildId || selectedGuild, 'voiceSupport')) { %>
+                      <span class="premium-badge" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">
+                        <i class="fas fa-star"></i> BASIC+
+                      </span>
+                    <% } %>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Voice-Channels für Tickets erstellen und verwalten'
+                      : 'Create and manage voice channels for tickets' %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <% if (!hasFeature(cfg.guildId || selectedGuild, 'voiceSupport')) { %>
+                  <div class="premium-lock-message" style="text-align: center; padding: 2rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 2px dashed rgba(59, 130, 246, 0.3);">
+                    <i class="fas fa-lock"></i>
+                    <div>
+                      <strong><%= lang === 'de' ? 'Premium-Feature' : 'Premium Feature' %></strong>
+                      <p><%= lang === 'de' ? 'Voice-Support ist ab der Basic-Version verfügbar.' : 'Voice-Support is available from Basic tier.' %></p>
+                      <a href="/premium" class="btn btn-premium">
+                        <i class="fas fa-crown"></i>
+                        <%= lang === 'de' ? 'Jetzt upgraden' : 'Upgrade now' %>
+                      </a>
+                    </div>
+                  </div>
+                <% } else { %>
+                  <!-- Toggle to enable Voice-Support -->
+                  <div style="margin-bottom: 20px;">
+                    <label class="voice-toggle-option <%= (cfg.voiceSupport && cfg.voiceSupport.enabled) ? 'active' : '' %>">
+                      <input
+                        type="checkbox"
+                        name="voiceSupportEnabled"
+                        <%= (cfg.voiceSupport && cfg.voiceSupport.enabled) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'Voice-Support aktivieren' : 'Enable Voice-Support' %></span>
+                      </div>
+                    </label>
+
+                    <label class="voice-toggle-option <%= (cfg.voiceSupport && cfg.voiceSupport.showButton !== false) ? 'active' : '' %>" style="margin-top: 0.5rem;">
+                      <input
+                        type="checkbox"
+                        name="voiceSupportShowButton"
+                        <%= (cfg.voiceSupport && cfg.voiceSupport.showButton !== false) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'Voice-Button im Ticket anzeigen' : 'Show voice button in ticket' %></span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div class="help-text" style="margin-top: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px;">
+                    <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                    <div>
+                      <strong><%= lang === 'de' ? 'So funktioniert es:' : 'How it works:' %></strong><br>
+                      <%= lang === 'de'
+                        ? 'User können per Button einen Voice-Channel für ihr Ticket erstellen. Der Channel wird automatisch gelöscht, wenn das Ticket geschlossen wird.'
+                        : 'Users can create a voice channel for their ticket via button. The channel is automatically deleted when the ticket is closed.'
+                      %>
+                    </div>
+                  </div>
+                <% } %>
+
+                <style>
+                  .voice-toggle-option {
+                    display: block;
+                    padding: 0.875rem 1rem;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                  }
+
+                  .voice-toggle-option:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-color: rgba(59, 130, 246, 0.3);
+                    transform: translateX(2px);
+                  }
+
+                  .voice-toggle-option.active .toggle-content {
+                    color: #3b82f6;
+                  }
+
+                  .voice-toggle-option.active .toggle-icon {
+                    background: #3b82f6;
+                    border-color: #3b82f6;
+                  }
+
+                  .voice-toggle-option.active .toggle-icon i {
+                    opacity: 1;
+                  }
+
+                  [data-theme="dark"] .voice-toggle-option {
+                    background: rgba(255, 255, 255, 0.02);
+                    border-color: rgba(255, 255, 255, 0.08);
+                  }
+
+                  [data-theme="dark"] .voice-toggle-option:hover {
+                    background: rgba(255, 255, 255, 0.04);
+                    border-color: rgba(59, 130, 246, 0.4);
+                  }
+                </style>
+
+                <script>
+                  document.querySelectorAll('.voice-toggle-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      const checkbox = this.querySelector('input[type="checkbox"]');
+                      checkbox.checked = !checkbox.checked;
+
+                      if (checkbox.checked) {
+                        this.classList.add('active');
+                      } else {
+                        this.classList.remove('active');
+                      }
+                    });
+                  });
+                </script>
+              </div>
+            </div>
+
             <div class="alert alert-info">
               <i class="fas fa-lightbulb"></i>
               <div>

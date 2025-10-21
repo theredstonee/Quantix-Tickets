@@ -52,6 +52,7 @@ const { translateTicketMessage, isAutoTranslateEnabled } = require('./auto-trans
 const { createVoiceChannel, deleteVoiceChannel, hasVoiceChannel } = require('./voice-support');
 const { handleTemplateUse } = require('./template-handler');
 const { handleDepartmentForward } = require('./department-handler');
+const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo, isTrialActive, activateAutoTrial } = require('./premium');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -514,19 +515,16 @@ function buttonRows(claimed, guildId = null){
   ];
 
   // Voice-Support Button (Basic+ Feature)
-  if (guildId) {
-    const { hasFeature } = require('./premium');
-    if (hasFeature(guildId, 'voiceSupport')) {
-      const cfg = readCfg(guildId);
-      if (cfg.voiceSupport && cfg.voiceSupport.enabled && cfg.voiceSupport.showButton !== false) {
-        row3Components.push(
-          new ButtonBuilder()
-            .setCustomId('request_voice')
-            .setEmoji('🎤')
-            .setLabel(t(guildId, 'voiceSupport.request_voice'))
-            .setStyle(ButtonStyle.Primary)
-        );
-      }
+  if (guildId && hasFeature(guildId, 'voiceSupport')) {
+    const cfg = readCfg(guildId);
+    if (cfg.voiceSupport && cfg.voiceSupport.enabled && cfg.voiceSupport.showButton !== false) {
+      row3Components.push(
+        new ButtonBuilder()
+          .setCustomId('request_voice')
+          .setEmoji('🎤')
+          .setLabel(t(guildId, 'voiceSupport.request_voice'))
+          .setStyle(ButtonStyle.Primary)
+      );
     }
   }
 
@@ -712,8 +710,6 @@ function startPendingDeletionsChecker() {
 function startTrialExpiryWarningChecker() {
   const checkTrialWarnings = async () => {
     try {
-      const { getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo } = require('./premium');
-      const { getGuildLanguage, t } = require('./translations');
       const expiringTrials = getExpiringTrials();
 
       if (expiringTrials.length === 0) return;
@@ -965,7 +961,8 @@ function startSLAChecker() {
         }
       }
     } catch (err) {
-      console.error('❌ Fehler beim SLA Status Check:', err);
+      console.error('❌ Fehler beim SLA Status Check:', err.message || err);
+      if (err.stack) console.error(err.stack);
     }
   };
 
@@ -1204,7 +1201,6 @@ async function sendWelcomeMessage(guild) {
     const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de').replace(/\/+$/, '');
 
     // Check if trial is active
-    const { isTrialActive, getTrialInfo } = require('./premium');
     const trialActive = isTrialActive(guild.id);
     const trialInfo = trialActive ? getTrialInfo(guild.id) : null;
 
@@ -1324,7 +1320,6 @@ client.on(Events.GuildCreate, async (guild) => {
 
   // Activate 14-day auto-trial for new servers
   try {
-    const { activateAutoTrial } = require('./premium');
     const trialResult = activateAutoTrial(guild.id);
 
     if (trialResult.success) {
@@ -2714,8 +2709,6 @@ client.on(Events.InteractionCreate, async i => {
 
       // Voice-Support Button Handler
       if (i.customId === 'request_voice') {
-        const { hasFeature } = require('./premium');
-
         if (!hasFeature(guildId, 'voiceSupport')) {
           const premiumEmbed = new EmbedBuilder()
             .setColor(0xff9900)
@@ -3721,7 +3714,13 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     });
   }
 
-  await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
+  try {
+    await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
+  } catch (err) {
+    console.error('❌ Fehler beim Senden der Willkommens-Nachricht:', err.message || err);
+    if (err.stack) console.error(err.stack);
+    throw err;
+  }
 
   const mentions = [];
   const greenRoles = getPriorityRoles(guildId, 0);

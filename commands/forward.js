@@ -44,7 +44,7 @@ module.exports = {
       const premiumInfo = isPremium(guildId, 'pro');
       if (!premiumInfo) {
         return interaction.reply({
-          content: '⚠️ **Premium Feature**\n\nDie Ticket-Weiterleitung ist ein Pro-Feature. Upgrade auf Pro, um diese Funktion zu nutzen!\n\nhttps://quantixtickets.theredstonee.de/premium',
+          content: '⚠️ **Premium Feature**\n\nDie Ticket-Weiterleitung ist ein Pro-Feature. Upgrade auf Pro, um diese Funktion zu nutzen!\n\nhttps://tickets.quantix-bot.de/premium',
           ephemeral: true
         });
       }
