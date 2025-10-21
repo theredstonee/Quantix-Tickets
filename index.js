@@ -2740,11 +2740,15 @@ client.on(Events.InteractionCreate, async i => {
 
           await i.editReply({ embeds: [successEmbed] });
 
+          // Lade Ticket neu, damit voiceChannelId aktualisiert ist
+          const updatedTickets = loadTickets(guildId);
+          const updatedTicket = updatedTickets.find(t => t.id === ticket.id);
+
           // Aktualisiere Ticket-Embed mit neuen Buttons (zeigt jetzt "Voice beenden")
           const ticketEmbed = i.message.embeds[0];
           await i.message.edit({
             embeds: [ticketEmbed],
-            components: buttonRows(ticket.claimedBy ? true : false, guildId, ticket)
+            components: buttonRows(updatedTicket.claimedBy ? true : false, guildId, updatedTicket)
           });
         } catch (err) {
           console.error('Error creating voice channel:', err);
@@ -2790,11 +2794,15 @@ client.on(Events.InteractionCreate, async i => {
 
           await i.editReply({ embeds: [successEmbed] });
 
-          // Aktualisiere Ticket-Embed mit neuen Buttons
+          // Lade Ticket neu, damit voiceChannelId auf null gesetzt ist
+          const updatedTickets = loadTickets(guildId);
+          const updatedTicket = updatedTickets.find(t => t.id === ticket.id);
+
+          // Aktualisiere Ticket-Embed mit neuen Buttons (zeigt jetzt wieder "Voice-Support")
           const ticketEmbed = i.message.embeds[0];
           await i.message.edit({
             embeds: [ticketEmbed],
-            components: buttonRows(ticket.claimedBy ? true : false, guildId, ticket)
+            components: buttonRows(updatedTicket.claimedBy ? true : false, guildId, updatedTicket)
           });
         } catch (err) {
           console.error('Error ending voice channel:', err);
