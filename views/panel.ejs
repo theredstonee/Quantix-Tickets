@@ -2246,21 +2246,6 @@
                   </label>
 
                   <!-- Toggle Option -->
-                  <label class="rating-toggle-option <%= (cfg.ticketRating && cfg.ticketRating.sendDMAfterClose !== false) ? 'active' : '' %>" data-option="sendDM">
-                    <input
-                      type="checkbox"
-                      name="ticketRatingSendDM"
-                      <%= (cfg.ticketRating && cfg.ticketRating.sendDMAfterClose !== false) ? 'checked' : '' %>
-                      style="display: none;">
-                    <div class="toggle-content">
-                      <div class="toggle-icon">
-                        <i class="fas fa-check"></i>
-                      </div>
-                      <span style="font-weight: 500;"><%= lang === 'de' ? 'DM nach Ticket-Schließung senden' : 'Send DM after ticket closure' %></span>
-                    </div>
-                  </label>
-
-                  <!-- Toggle Option -->
                   <label class="rating-toggle-option <%= (cfg.ticketRating && cfg.ticketRating.requireFeedback) ? 'active' : '' %>" data-option="feedback">
                     <input
                       type="checkbox"
@@ -2293,8 +2278,8 @@
                   <div class="help-text" style="margin-top: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px;">
                     <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
                     <span><%= lang === 'de'
-                      ? 'User können Tickets nach Schließung bewerten (1-5 Sterne)'
-                      : 'Users can rate tickets after closure (1-5 stars)' %></span>
+                      ? 'User erhalten nach JEDEM geschlossenen Ticket automatisch eine DM mit Bewertungs-Buttons (1-5 Sterne)'
+                      : 'Users automatically receive a DM with rating buttons (1-5 stars) after EVERY closed ticket' %></span>
                   </div>
                 </div>
 

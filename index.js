@@ -244,7 +244,6 @@ function readCfg(guildId){
         ticketRating: {
           enabled: true,
           requireFeedback: false,
-          sendDMAfterClose: true,
           showInAnalytics: true
         },
         sla: {
@@ -2891,6 +2890,57 @@ client.on(Events.InteractionCreate, async i => {
 
         logEvent(i.guild, `🔐 Ticket **#${ticket.id}** geschlossen durch Zustimmung von ${closerTag}`);
 
+        // Send rating request DM (immer nach jedem Ticket)
+        try {
+          // Sende Bewertungs-DM immer, außer explizit deaktiviert
+          if (!cfg.ticketRating || cfg.ticketRating.enabled !== false) {
+            const user = await client.users.fetch(ticket.userId).catch(() => null);
+            if (user) {
+              const ratingEmbed = new EmbedBuilder()
+                .setColor(0x3b82f6)
+                .setTitle('⭐ Wie war deine Support-Erfahrung?')
+                .setDescription(
+                  `Dein Ticket **#${ticket.id}** wurde geschlossen.\n\n` +
+                  `Bitte bewerte deinen Support, damit wir uns verbessern können!`
+                )
+                .addFields(
+                  { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+                  { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true }
+                )
+                .setFooter({ text: 'Quantix Tickets • Deine Meinung zählt!' })
+                .setTimestamp();
+
+              const ratingButtons = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                  .setCustomId(`rate_1:${ticket.id}`)
+                  .setLabel('⭐')
+                  .setStyle(ButtonStyle.Danger),
+                new ButtonBuilder()
+                  .setCustomId(`rate_2:${ticket.id}`)
+                  .setLabel('⭐⭐')
+                  .setStyle(ButtonStyle.Danger),
+                new ButtonBuilder()
+                  .setCustomId(`rate_3:${ticket.id}`)
+                  .setLabel('⭐⭐⭐')
+                  .setStyle(ButtonStyle.Primary),
+                new ButtonBuilder()
+                  .setCustomId(`rate_4:${ticket.id}`)
+                  .setLabel('⭐⭐⭐⭐')
+                  .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
+                  .setCustomId(`rate_5:${ticket.id}`)
+                  .setLabel('⭐⭐⭐⭐⭐')
+                  .setStyle(ButtonStyle.Success)
+              );
+
+              await user.send({ embeds: [ratingEmbed], components: [ratingButtons] });
+              console.log(`✅ Bewertungs-DM gesendet an User ${user.tag} für Ticket #${ticket.id}`);
+            }
+          }
+        } catch (dmErr) {
+          console.log('Konnte Bewertungs-DM nicht senden:', dmErr.message);
+        }
+
         // Lösche Voice-Channel falls vorhanden
         if (ticket.voiceChannelId) {
           try {
@@ -3164,10 +3214,11 @@ client.on(Events.InteractionCreate, async i => {
           // Generate transcript
           await createTranscript(i.channel, ticket, { guildId });
 
-          // Send rating request DM
+          // Send rating request DM (immer nach jedem Ticket)
           try {
             const cfg = readCfg(guildId);
-            if (cfg.ticketRating && cfg.ticketRating.enabled && cfg.ticketRating.sendDMAfterClose) {
+            // Sende Bewertungs-DM immer, außer explizit deaktiviert
+            if (!cfg.ticketRating || cfg.ticketRating.enabled !== false) {
               const user = await client.users.fetch(ticket.userId).catch(() => null);
               if (user) {
                 const ratingEmbed = new EmbedBuilder()
@@ -3208,6 +3259,7 @@ client.on(Events.InteractionCreate, async i => {
                 );
 
                 await user.send({ embeds: [ratingEmbed], components: [ratingButtons] });
+                console.log(`✅ Bewertungs-DM gesendet an User ${user.tag} für Ticket #${ticket.id}`);
               }
             }
           } catch (dmErr) {

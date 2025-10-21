@@ -2422,13 +2422,11 @@ module.exports = (client)=>{
         cfg.ticketRating = {
           enabled: true,
           requireFeedback: false,
-          sendDMAfterClose: true,
           showInAnalytics: true
         };
       }
 
       cfg.ticketRating.enabled = req.body.ticketRatingEnabled !== 'off';
-      cfg.ticketRating.sendDMAfterClose = req.body.ticketRatingSendDM !== 'off';
       cfg.ticketRating.requireFeedback = req.body.ticketRatingRequireFeedback === 'on';
       cfg.ticketRating.showInAnalytics = req.body.ticketRatingShowInAnalytics !== 'off';
 
