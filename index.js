@@ -4553,8 +4553,9 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     });
   }
 
+  let ticketMessage;
   try {
-    await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id, null) });
+    ticketMessage = await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id, null) });
   } catch (err) {
     console.error('❌ Fehler beim Senden der Willkommens-Nachricht:', err.message || err);
     if (err.stack) console.error(err.stack);
@@ -4590,6 +4591,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   log.push({
     id:nr,
     channelId:ch.id,
+    messageId: ticketMessage.id,  // Store ticket message ID for later updates
     userId:interaction.user.id,
     topic:topic.value,
     status:'offen',
@@ -4687,31 +4689,36 @@ async function createTicketChannel(interaction, topic, formData, cfg){
 
           // Update ticket embed and buttons to show claimed status
           try {
-            const firstMessage = await ch.messages.fetch({ limit: 1 }).then(msgs => msgs.first());
-            if (firstMessage && firstMessage.embeds.length > 0) {
-              const updatedEmbed = EmbedBuilder.from(firstMessage.embeds[0]);
+            // Use stored messageId to find the correct ticket message
+            if (!currentTicket.messageId) {
+              console.warn(`⚠️ Ticket #${nr} has no messageId, cannot update buttons`);
+            } else {
+              const ticketMessageObj = await ch.messages.fetch(currentTicket.messageId);
+              if (ticketMessageObj && ticketMessageObj.embeds.length > 0) {
+                const updatedEmbed = EmbedBuilder.from(ticketMessageObj.embeds[0]);
 
-              // Add claimer field if not exists
-              const existingFields = updatedEmbed.data.fields || [];
-              const claimerFieldIndex = existingFields.findIndex(f => f.name && f.name.includes('Bearbeiter'));
+                // Add claimer field if not exists
+                const existingFields = updatedEmbed.data.fields || [];
+                const claimerFieldIndex = existingFields.findIndex(f => f.name && f.name.includes('Bearbeiter'));
 
-              if (claimerFieldIndex === -1) {
-                updatedEmbed.addFields({
-                  name: '👤 Bearbeiter',
-                  value: `<@${assignedMember}>`,
-                  inline: true
+                if (claimerFieldIndex === -1) {
+                  updatedEmbed.addFields({
+                    name: '👤 Bearbeiter',
+                    value: `<@${assignedMember}>`,
+                    inline: true
+                  });
+                }
+
+                // Update buttons to show claimed state
+                const updatedButtons = buttonRows(true, guildId, currentTicket);
+
+                await ticketMessageObj.edit({
+                  embeds: [updatedEmbed],
+                  components: updatedButtons
                 });
+
+                console.log(`✅ Updated ticket embed and buttons to show claimed status (messageId: ${currentTicket.messageId})`);
               }
-
-              // Update buttons to show claimed state
-              const updatedButtons = buttonRows(true, guildId, currentTicket);
-
-              await firstMessage.edit({
-                embeds: [updatedEmbed],
-                components: updatedButtons
-              });
-
-              console.log(`✅ Updated ticket embed and buttons to show claimed status`);
             }
           } catch (embedErr) {
             console.error('Error updating ticket embed:', embedErr);
