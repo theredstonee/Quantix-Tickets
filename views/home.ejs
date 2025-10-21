@@ -136,19 +136,14 @@
 
     /* Animated Background */
     .animated-bg {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      bottom: 0;
+      height: 100%;
       z-index: -1;
       background: linear-gradient(135deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%);
       opacity: 0.05;
-    }
-
-    .main-content-wrapper {
-      position: relative;
-      min-height: 100vh;
     }
 
     [data-theme="dark"] .animated-bg {
@@ -1108,8 +1103,7 @@
   </style>
 </head>
 <body>
-  <div class="main-content-wrapper">
-    <div class="animated-bg"></div>
+  <div class="animated-bg"></div>
 
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
@@ -2459,8 +2453,6 @@
       </div>
     </div>
   </section>
-
-  </div> <!-- End main-content-wrapper -->
 
   <!-- Footer -->
   <footer class="footer">
