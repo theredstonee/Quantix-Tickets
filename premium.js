@@ -45,7 +45,10 @@ function getDefaultConfig() {
         slaSystem: false,
         ratingSystem: true,
         fileUpload: false,
-        autoAssignment: false
+        autoAssignment: false,
+        autoTranslate: false,
+        voiceSupport: false,
+        ticketBlacklist: true
       }
     }
   };
@@ -75,7 +78,10 @@ const PREMIUM_TIERS = {
       autoAssignment: false,
       customBranding: false,
       vipSystem: false,
-      multiDepartment: false
+      multiDepartment: false,
+      autoTranslate: false,
+      voiceSupport: false,
+      ticketBlacklist: true
     }
   },
   basic: {
@@ -100,7 +106,10 @@ const PREMIUM_TIERS = {
       autoAssignment: false,
       customBranding: false,
       vipSystem: true,
-      multiDepartment: true
+      multiDepartment: true,
+      autoTranslate: false,
+      voiceSupport: true,
+      ticketBlacklist: true
     }
   },
   pro: {
@@ -127,7 +136,10 @@ const PREMIUM_TIERS = {
       maxCategories: 999,
       ratingSystem: true,
       autoAssignment: true,
-      customBranding: true
+      customBranding: true,
+      autoTranslate: true,
+      voiceSupport: true,
+      ticketBlacklist: true
     }
   },
   beta: {
@@ -154,7 +166,10 @@ const PREMIUM_TIERS = {
       maxCategories: 999,
       ratingSystem: true,
       autoAssignment: true,
-      customBranding: true
+      customBranding: true,
+      autoTranslate: true,
+      voiceSupport: true,
+      ticketBlacklist: true
     }
   }
 };

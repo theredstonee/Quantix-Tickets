@@ -48,6 +48,8 @@ const { sendDMNotification } = require('./dm-notifications');
 const { sanitizeUsername, validateDiscordId, sanitizeString } = require('./xss-protection');
 const { startAutoCloseService } = require('./auto-close-service');
 const { handleTagAdd, handleTagRemove } = require('./tag-handler');
+const { translateTicketMessage, isAutoTranslateEnabled } = require('./auto-translate');
+const { createVoiceChannel, deleteVoiceChannel, hasVoiceChannel } = require('./voice-support');
 const { handleTemplateUse } = require('./template-handler');
 const { handleDepartmentForward } = require('./department-handler');
 
@@ -502,13 +504,33 @@ function buttonRows(claimed, guildId = null){
           .setLabel(t(guildId, 'buttons.claim'))
           .setStyle(ButtonStyle.Success)
   );
-  const row3 = new ActionRowBuilder().addComponents(
+
+  const row3Components = [
     new ButtonBuilder()
       .setCustomId('add_user')
       .setEmoji('👥')
       .setLabel(t(guildId, 'buttons.add_user'))
       .setStyle(ButtonStyle.Secondary)
-  );
+  ];
+
+  // Voice-Support Button (Basic+ Feature)
+  if (guildId) {
+    const { hasFeature } = require('./premium');
+    if (hasFeature(guildId, 'voiceSupport')) {
+      const cfg = readCfg(guildId);
+      if (cfg.voiceSupport && cfg.voiceSupport.enabled && cfg.voiceSupport.showButton !== false) {
+        row3Components.push(
+          new ButtonBuilder()
+            .setCustomId('request_voice')
+            .setEmoji('🎤')
+            .setLabel(t(guildId, 'voiceSupport.request_voice'))
+            .setStyle(ButtonStyle.Primary)
+        );
+      }
+    }
+  }
+
+  const row3 = new ActionRowBuilder().addComponents(...row3Components);
   return [row1,row2,row3];
 }
 
@@ -2274,6 +2296,38 @@ client.on(Events.InteractionCreate, async i => {
           .setTimestamp();
         return i.reply({ embeds: [errorEmbed], ephemeral: true });
       }
+
+      // Blacklist-Check
+      if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
+        const now = new Date();
+        const blacklist = cfg.ticketBlacklist.find(b => b.userId === i.user.id);
+
+        if (blacklist) {
+          // Check if temporary blacklist has expired
+          if (!blacklist.isPermanent && new Date(blacklist.expiresAt) <= now) {
+            // Remove expired blacklist
+            cfg.ticketBlacklist = cfg.ticketBlacklist.filter(b => b.userId !== i.user.id);
+            writeCfg(guildId, cfg);
+          } else {
+            // User is blacklisted
+            const expiryText = blacklist.isPermanent
+              ? t(guildId, 'ticketBlacklist.permanent')
+              : `<t:${Math.floor(new Date(blacklist.expiresAt).getTime() / 1000)}:R>`;
+
+            const blacklistEmbed = new EmbedBuilder()
+              .setColor(0xff4444)
+              .setTitle('🚫 ' + t(guildId, 'ticketBlacklist.user_blacklisted'))
+              .setDescription(t(guildId, 'ticketBlacklist.blocked_error', {
+                reason: blacklist.reason,
+                expires: expiryText
+              }))
+              .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+              .setTimestamp();
+
+            return i.reply({ embeds: [blacklistEmbed], ephemeral: true });
+          }
+        }
+      }
       const formFields = getFormFieldsForTopic(cfg, topic.value).map(normalizeField);
       const answers = {};
       formFields.forEach(f=>{ answers[f.id] = i.fields.getTextInputValue(f.id); });
@@ -2658,6 +2712,49 @@ client.on(Events.InteractionCreate, async i => {
         return i.reply({ embeds: [confirmEmbed], ephemeral: true });
       }
 
+      // Voice-Support Button Handler
+      if (i.customId === 'request_voice') {
+        const { hasFeature } = require('./premium');
+
+        if (!hasFeature(guildId, 'voiceSupport')) {
+          const premiumEmbed = new EmbedBuilder()
+            .setColor(0xff9900)
+            .setTitle('⭐ Premium Feature')
+            .setDescription(t(guildId, 'voiceSupport.feature_locked'))
+            .setFooter({ text: 'Quantix Tickets • Premium' })
+            .setTimestamp();
+          return i.reply({ embeds: [premiumEmbed], ephemeral: true });
+        }
+
+        if (hasVoiceChannel(ticket)) {
+          return i.reply({
+            content: t(guildId, 'voiceSupport.already_exists'),
+            ephemeral: true
+          });
+        }
+
+        try {
+          await i.deferReply({ ephemeral: true });
+          const voiceChannel = await createVoiceChannel(i, ticket, guildId);
+
+          const successEmbed = new EmbedBuilder()
+            .setColor(0x00ff88)
+            .setTitle('🎤 ' + t(guildId, 'voiceSupport.channel_created'))
+            .setDescription(t(guildId, 'voiceSupport.channel_description', { channel: `<#${voiceChannel.id}>` }))
+            .setFooter({ text: 'Quantix Tickets • Voice Support' })
+            .setTimestamp();
+
+          await i.editReply({ embeds: [successEmbed] });
+        } catch (err) {
+          console.error('Error creating voice channel:', err);
+          await i.editReply({
+            content: t(guildId, 'voiceSupport.create_failed'),
+            ephemeral: true
+          }).catch(() => {});
+        }
+        return;
+      }
+
       // Schließungsanfrage bestätigen
       if (i.customId === 'approve_close_request') {
         if (!ticket.closeRequest || ticket.closeRequest.status !== 'pending') {
@@ -2801,6 +2898,15 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         logEvent(i.guild, `🔐 Ticket **#${ticket.id}** geschlossen durch Zustimmung von ${closerTag}`);
+
+        // Lösche Voice-Channel falls vorhanden
+        if (ticket.voiceChannelId) {
+          try {
+            await deleteVoiceChannel(i.guild, ticket.voiceChannelId, guildId);
+          } catch (voiceErr) {
+            console.error('Error deleting voice channel on ticket close:', voiceErr);
+          }
+        }
 
         // Archiv oder Löschen
         setTimeout(async () => {
@@ -3114,6 +3220,15 @@ client.on(Events.InteractionCreate, async i => {
             }
           } catch (dmErr) {
             console.log('Konnte Bewertungs-DM nicht senden:', dmErr.message);
+          }
+
+          // Lösche Voice-Channel falls vorhanden
+          if (ticket.voiceChannelId) {
+            try {
+              await deleteVoiceChannel(i.guild, ticket.voiceChannelId, guildId);
+            } catch (voiceErr) {
+              console.error('Error deleting voice channel on ticket close:', voiceErr);
+            }
           }
 
           // Close the channel
@@ -3855,6 +3970,42 @@ client.on(Events.MessageCreate, async (message) => {
 
       if (ticket) {
         await appendToLiveTranscript(message, ticket, guildId);
+
+        // Auto-Translate für Ticket-Nachrichten (Pro Feature)
+        if (isAutoTranslateEnabled(guildId)) {
+          try {
+            const cfg = readCfg(guildId);
+            const TEAM_ROLE = cfg.teamRole || null;
+            const isTeamMember = TEAM_ROLE && message.member && message.member.roles.cache.has(TEAM_ROLE);
+
+            const translation = await translateTicketMessage(message, guildId, isTeamMember);
+
+            if (translation) {
+              const translationEmbed = new EmbedBuilder()
+                .setColor(0x0ea5e9)
+                .setAuthor({
+                  name: message.author.tag,
+                  iconURL: message.author.displayAvatarURL()
+                })
+                .setDescription(translation.translatedText)
+                .setFooter({
+                  text: `🌐 ${t(guildId, 'autoTranslate.translated_from', { lang: translation.sourceLang })} → ${translation.targetLang}`
+                })
+                .setTimestamp();
+
+              if (translation.showOriginal) {
+                translationEmbed.addFields({
+                  name: t(guildId, 'autoTranslate.original_message'),
+                  value: translation.originalText.substring(0, 1024)
+                });
+              }
+
+              await message.channel.send({ embeds: [translationEmbed] });
+            }
+          } catch (translateErr) {
+            console.error('Auto-Translate Error:', translateErr);
+          }
+        }
       }
     }
   }
