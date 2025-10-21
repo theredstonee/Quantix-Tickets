@@ -3562,6 +3562,118 @@ client.on(Events.InteractionCreate, async i => {
         return;
       }
 
+      // Claim Button Handler - Ticket übernehmen
+      if(i.customId === 'claim') {
+        // Nur Team kann Tickets claimen
+        if(!isTeam) {
+          const noPermEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setTitle('🚫 Zugriff verweigert')
+            .setDescription(
+              '**Das hier darf nur das Team machen!**\n\n' +
+              'Nur Team-Mitglieder können Tickets übernehmen.'
+            )
+            .addFields(
+              {
+                name: '🏷️ Benötigte Berechtigung',
+                value: 'Team-Rolle',
+                inline: true
+              },
+              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+            .setTimestamp();
+          return i.reply({ embeds: [noPermEmbed], ephemeral: true });
+        }
+
+        // Prüfe ob Ticket bereits geclaimed ist
+        if(ticket.claimer) {
+          const alreadyClaimedEmbed = new EmbedBuilder()
+            .setColor(0xffa500)
+            .setTitle('⚠️ Bereits übernommen')
+            .setDescription(`**Dieses Ticket wurde bereits von <@${ticket.claimer}> übernommen.**`)
+            .addFields(
+              { name: '👤 Aktueller Claimer', value: `<@${ticket.claimer}>`, inline: true },
+              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets' })
+            .setTimestamp();
+          return i.reply({ embeds: [alreadyClaimedEmbed], ephemeral: true });
+        }
+
+        try {
+          // Set permissions: Remove team role, only claimer + creator + added users
+          const permissions = [
+            { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+            { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+            { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.AttachFiles, PermissionsBitField.Flags.EmbedLinks] }
+          ];
+
+          // Add permissions for added users
+          if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
+            ticket.addedUsers.forEach(uid => {
+              permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+            });
+          }
+
+          // Priority roles get VIEW permission only (no write)
+          const currentPriority = ticket.priority || 0;
+          const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, currentPriority);
+          for(const roleId of hierarchicalRoles){
+            if(roleId && roleId.trim()){
+              try {
+                await i.guild.roles.fetch(roleId);
+                permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel], deny: [PermissionsBitField.Flags.SendMessages] });
+              } catch {
+                console.error('Priority-Rolle nicht gefunden:', roleId);
+              }
+            }
+          }
+
+          await i.channel.permissionOverwrites.set(permissions);
+
+          // Update ticket
+          ticket.claimer = i.user.id;
+          saveTickets(guildId, log);
+
+          // Send claim notification WITH PING outside embed
+          const claimEmbed = new EmbedBuilder()
+            .setColor(0x00ff88)
+            .setTitle('✨ Ticket übernommen')
+            .setDescription(`hat dieses Ticket übernommen und wird sich um dein Anliegen kümmern.`)
+            .addFields(
+              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+              { name: '👤 Übernommen von', value: `<@${i.user.id}>`, inline: true },
+              { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Claim' })
+            .setTimestamp();
+
+          await i.channel.send({
+            content: `<@${i.user.id}>`,
+            embeds: [claimEmbed]
+          });
+
+          // Update channel name with 🔒 emoji
+          renameChannelIfNeeded(i.channel, ticket);
+
+          // Reload ticket to get current voiceChannelId
+          const updatedClaimLog = loadTickets(guildId);
+          const updatedClaimTicket = updatedClaimLog.find(t => t.id === ticket.id);
+
+          // Update buttons to show claimed state
+          await i.update({ components: buttonRows(true, guildId, updatedClaimTicket) });
+          logEvent(i.guild, t(guildId, 'logs.ticket_claimed', { id: ticket.id, user: `<@${i.user.id}>` }));
+        } catch(err) {
+          console.error('Error claiming ticket:', err);
+          return i.reply({
+            content: '❌ Fehler beim Übernehmen des Tickets.',
+            ephemeral: true
+          });
+        }
+        return;
+      }
+
       if(!isTeam) {
         const cfg = readCfg(guildId);
         const teamRoleId = getTeamRole(guildId);
@@ -4521,14 +4633,44 @@ async function createTicketChannel(interaction, topic, formData, cfg){
           currentTicket.claimer = assignedMember;
           currentTicket.status = 'offen';
 
-          // Add assigned member to channel permissions
+          // Set channel permissions like manual claim (remove team role, only claimer + creator + added users)
           try {
-            await ch.permissionOverwrites.create(assignedMember, {
-              ViewChannel: true,
-              SendMessages: true,
-              AttachFiles: true,
-              EmbedLinks: true
-            });
+            const permissions = [
+              { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+              { id: currentTicket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+              { id: assignedMember, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.AttachFiles, PermissionsBitField.Flags.EmbedLinks] }
+            ];
+
+            // Add permissions for added users
+            if (currentTicket.addedUsers && Array.isArray(currentTicket.addedUsers)) {
+              currentTicket.addedUsers.forEach(uid => {
+                permissions.push({
+                  id: uid,
+                  allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages]
+                });
+              });
+            }
+
+            // Priority roles get VIEW permission only (no write)
+            const currentPriority = currentTicket.priority || 0;
+            const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, currentPriority);
+            for (const roleId of hierarchicalRoles) {
+              if (roleId && roleId.trim()) {
+                try {
+                  await interaction.guild.roles.fetch(roleId);
+                  permissions.push({
+                    id: roleId,
+                    allow: [PermissionsBitField.Flags.ViewChannel],
+                    deny: [PermissionsBitField.Flags.SendMessages]
+                  });
+                } catch {
+                  console.error('Priority-Rolle nicht gefunden:', roleId);
+                }
+              }
+            }
+
+            await ch.permissionOverwrites.set(permissions);
+            console.log(`✅ Set claim permissions for ticket #${nr} (removed team role, only claimer + creator + added)`);
 
             // Update channel name with 🔒 emoji
             const newName = buildChannelName(nr, currentTicket.priority || 0, currentTicket.isVIP || false, true);
@@ -4575,12 +4717,12 @@ async function createTicketChannel(interaction, topic, formData, cfg){
             console.error('Error updating ticket embed:', embedErr);
           }
 
-          // Send claim notification in channel
+          // Send claim notification in channel WITH PING outside embed
           try {
             const claimEmbed = new EmbedBuilder()
               .setColor(0x00ff88)
               .setTitle('✨ Automatisch zugewiesen')
-              .setDescription(`<@${assignedMember}> wurde diesem Ticket automatisch zugewiesen und wird sich um dein Anliegen kümmern.`)
+              .setDescription(`wurde diesem Ticket automatisch zugewiesen und wird sich um dein Anliegen kümmern.`)
               .addFields(
                 { name: '🎫 Ticket', value: `#${nr}`, inline: true },
                 { name: '👤 Zugewiesen an', value: `<@${assignedMember}>`, inline: true },
@@ -4589,7 +4731,11 @@ async function createTicketChannel(interaction, topic, formData, cfg){
               .setFooter({ text: 'Quantix Tickets • Auto-Assignment' })
               .setTimestamp();
 
-            await ch.send({ embeds: [claimEmbed] });
+            // Send with content to ping the assigned member
+            await ch.send({
+              content: `<@${assignedMember}>`,
+              embeds: [claimEmbed]
+            });
           } catch (channelMsgErr) {
             console.error('Error sending claim message to channel:', channelMsgErr);
           }
