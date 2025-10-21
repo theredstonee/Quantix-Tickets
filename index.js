@@ -488,7 +488,8 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildPresences  // Für Online-Status-Erkennung
   ],
   partials: [Partials.Channel, Partials.Message]
 });
