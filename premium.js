@@ -101,7 +101,7 @@ const PREMIUM_TIERS = {
       slaSystem: false,
       ratingSystem: true,
       fileUpload: true,
-      autoAssignment: false,
+      autoAssignment: true,
       customBranding: false,
       vipSystem: true,
       multiDepartment: true,

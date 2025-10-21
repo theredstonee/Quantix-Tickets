@@ -2262,7 +2262,15 @@ client.on(Events.InteractionCreate, async i => {
 
       await resetPanelMessage();
       await i.deferReply({ ephemeral: true });
-      return await createTicketChannel(i, topic, {}, cfg);
+      try {
+        return await createTicketChannel(i, topic, {}, cfg);
+      } catch (createErr) {
+        console.error('❌ Error creating ticket channel:', createErr);
+        await i.editReply({
+          content: '❌ Fehler beim Erstellen des Tickets. Bitte versuche es erneut.'
+        });
+      }
+      return;
     }
 
     // Tag System Menu Handlers
@@ -2349,7 +2357,17 @@ client.on(Events.InteractionCreate, async i => {
         }
       }
 
-      await createTicketChannel(i, topic, answers, cfg);
+      try {
+        await createTicketChannel(i, topic, answers, cfg);
+      } catch (createErr) {
+        console.error('❌ Error creating ticket channel:', createErr);
+        if (!i.replied && !i.deferred) {
+          await i.reply({
+            content: '❌ Fehler beim Erstellen des Tickets. Bitte versuche es erneut.',
+            ephemeral: true
+          });
+        }
+      }
       return;
     }
 
@@ -2449,7 +2467,17 @@ client.on(Events.InteractionCreate, async i => {
         // No form fields, create ticket directly
         await i.deferUpdate();
         await i.editReply({ content: '🎫 Ticket wird erstellt...', embeds: [], components: [] });
-        return await createTicketChannel(i, topic, {}, cfg);
+        try {
+          return await createTicketChannel(i, topic, {}, cfg);
+        } catch (createErr) {
+          console.error('❌ Error creating ticket channel:', createErr);
+          await i.editReply({
+            content: '❌ Fehler beim Erstellen des Tickets. Bitte versuche es erneut.',
+            embeds: [],
+            components: []
+          });
+        }
+        return;
       }
 
       if(i.customId.startsWith('github_toggle:')){
@@ -4379,13 +4407,22 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   safeWrite(ticketsPath, log);
 
   // Auto-Assignment System (Basic+ Feature)
+  console.log(`🔍 Auto-Assignment Check for Ticket #${nr}:`, {
+    hasConfig: !!cfg.autoAssignment,
+    enabled: cfg.autoAssignment?.enabled,
+    assignOnCreate: cfg.autoAssignment?.assignOnCreate,
+    strategy: cfg.autoAssignment?.strategy
+  });
+
   if (cfg.autoAssignment && cfg.autoAssignment.enabled && cfg.autoAssignment.assignOnCreate) {
     try {
+      console.log(`🎯 Starting auto-assignment for ticket #${nr}`);
       const { autoAssignTicket } = require('./auto-assignment');
       const allTickets = safeRead(ticketsPath, []);
       const currentTicket = allTickets.find(t => t.id === nr);
 
       if (currentTicket) {
+        console.log(`📋 Found ticket #${nr}, calling autoAssignTicket...`);
         const assignedMember = await autoAssignTicket(interaction.guild, cfg, currentTicket, allTickets);
 
         if (assignedMember) {
@@ -4457,12 +4494,19 @@ async function createTicketChannel(interaction, topic, formData, cfg){
           const strategyName = strategyNames[cfg.autoAssignment.strategy] || cfg.autoAssignment.strategy;
 
           await logEvent(interaction.guild, `🎯 Ticket #${nr} automatisch zugewiesen an <@${assignedMember}> (${strategyName})`);
+        } else {
+          console.log(`⚠️ No member assigned to ticket #${nr} - check eligibility and team roles`);
         }
+      } else {
+        console.log(`❌ Ticket #${nr} not found after creation`);
       }
     } catch (autoAssignErr) {
-      console.error('Auto-Assignment error:', autoAssignErr);
+      console.error('❌ Auto-Assignment error:', autoAssignErr);
+      console.error('Stack:', autoAssignErr.stack);
       // Fehler wird ignoriert, Ticket-Erstellung wird nicht blockiert
     }
+  } else {
+    console.log(`⏭️ Auto-Assignment skipped for ticket #${nr}`);
   }
 
   // Log für AntiSpam Rate-Limiting
