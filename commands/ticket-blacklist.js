@@ -30,7 +30,7 @@ module.exports = {
       de: 'Verwalte die Ticket-Blacklist - Blockiere User von der Ticket-Erstellung',
       ru: 'Управление черным списком - блокировка пользователей от создания тикетов',
       pt: 'Gerenciar lista negra - bloquear usuários de criar tickets',
-      es: 'Administrar lista negra - bloquear usuarios de crear tickets',
+      'es-ES': 'Administrar lista negra - bloquear usuarios de crear tickets',
       ja: 'チケットブラックリスト管理 - ユーザーのチケット作成をブロック',
       id: 'Kelola daftar hitam - blokir pengguna dari membuat tiket'
     })
@@ -43,7 +43,7 @@ module.exports = {
           de: 'Füge einen User zur Ticket-Blacklist hinzu',
           ru: 'Добавить пользователя в черный список',
           pt: 'Adicionar um usuário à lista negra',
-          es: 'Añadir un usuario a la lista negra',
+          'es-ES': 'Añadir un usuario a la lista negra',
           ja: 'ユーザーをブラックリストに追加',
           id: 'Tambahkan pengguna ke daftar hitam'
         })
@@ -55,7 +55,7 @@ module.exports = {
               de: 'User zum Blockieren',
               ru: 'Пользователь для блокировки',
               pt: 'Usuário para bloquear',
-              es: 'Usuario para bloquear',
+              'es-ES': 'Usuario para bloquear',
               ja: 'ブロックするユーザー',
               id: 'Pengguna untuk diblokir'
             })
@@ -68,7 +68,7 @@ module.exports = {
               de: 'Grund für die Blockierung',
               ru: 'Причина блокировки',
               pt: 'Motivo para bloquear',
-              es: 'Razón para bloquear',
+              'es-ES': 'Razón para bloquear',
               ja: 'ブロックの理由',
               id: 'Alasan untuk memblokir'
             })
@@ -81,7 +81,7 @@ module.exports = {
               de: 'Permanente Blockierung (Standard: ja)',
               ru: 'Постоянная блокировка (по умолчанию: да)',
               pt: 'Bloqueio permanente (padrão: sim)',
-              es: 'Bloqueo permanente (predeterminado: sí)',
+              'es-ES': 'Bloqueo permanente (predeterminado: sí)',
               ja: '永久ブロック（デフォルト：はい）',
               id: 'Blokir permanen (default: ya)'
             })
@@ -94,7 +94,7 @@ module.exports = {
               de: 'Tage für die Blockierung (wenn nicht permanent)',
               ru: 'Дни блокировки (если не постоянно)',
               pt: 'Dias para bloquear (se não permanente)',
-              es: 'Días para bloquear (si no permanente)',
+              'es-ES': 'Días para bloquear (si no permanente)',
               ja: 'ブロック日数（永久でない場合）',
               id: 'Hari untuk memblokir (jika tidak permanen)'
             })
@@ -109,7 +109,7 @@ module.exports = {
           de: 'Entferne einen User von der Ticket-Blacklist',
           ru: 'Удалить пользователя из черного списка',
           pt: 'Remover um usuário da lista negra',
-          es: 'Eliminar un usuario de la lista negra',
+          'es-ES': 'Eliminar un usuario de la lista negra',
           ja: 'ユーザーをブラックリストから削除',
           id: 'Hapus pengguna dari daftar hitam'
         })
@@ -121,7 +121,7 @@ module.exports = {
               de: 'User zum Entblocken',
               ru: 'Пользователь для разблокировки',
               pt: 'Usuário para desbloquear',
-              es: 'Usuario para desbloquear',
+              'es-ES': 'Usuario para desbloquear',
               ja: 'ブロック解除するユーザー',
               id: 'Pengguna untuk dibuka blokirnya'
             })
@@ -134,7 +134,7 @@ module.exports = {
           de: 'Liste alle blockierten User auf',
           ru: 'Список всех заблокированных пользователей',
           pt: 'Listar todos os usuários bloqueados',
-          es: 'Listar todos los usuarios bloqueados',
+          'es-ES': 'Listar todos los usuarios bloqueados',
           ja: 'ブロックされたユーザー一覧',
           id: 'Daftar semua pengguna yang diblokir'
         }))
@@ -146,7 +146,7 @@ module.exports = {
           de: 'Prüfe ob ein User blockiert ist',
           ru: 'Проверить, заблокирован ли пользователь',
           pt: 'Verificar se um usuário está bloqueado',
-          es: 'Verificar si un usuario está bloqueado',
+          'es-ES': 'Verificar si un usuario está bloqueado',
           ja: 'ユーザーがブロックされているか確認',
           id: 'Periksa apakah pengguna diblokir'
         })
@@ -158,7 +158,7 @@ module.exports = {
               de: 'User zum Überprüfen',
               ru: 'Пользователь для проверки',
               pt: 'Usuário para verificar',
-              es: 'Usuario para verificar',
+              'es-ES': 'Usuario para verificar',
               ja: '確認するユーザー',
               id: 'Pengguna untuk diperiksa'
             })
