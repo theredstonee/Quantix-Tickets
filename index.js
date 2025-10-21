@@ -95,22 +95,68 @@ function getAllTeamRoles(guildId){
   const cfg = readCfg(guildId);
   const roles = new Set();
 
+  console.log(`🔍 getAllTeamRoles (index.js) - Raw config:`, {
+    teamRoleId: cfg.teamRoleId,
+    priorityRoles: cfg.priorityRoles
+  });
+
   if(cfg.priorityRoles){
-    Object.values(cfg.priorityRoles).forEach(roleList => {
-      if(Array.isArray(roleList)) roleList.forEach(r => roles.add(r));
+    Object.entries(cfg.priorityRoles).forEach(([priority, roleList]) => {
+      if(Array.isArray(roleList)){
+        roleList.forEach(r => {
+          if(r && r.trim()){
+            roles.add(r.trim());
+            console.log(`  ✅ Added priority role [${priority}]: ${r.trim()}`);
+          }
+        });
+      } else if(typeof roleList === 'string' && roleList.trim()){
+        roles.add(roleList.trim());
+        console.log(`  ✅ Added priority role [${priority}]: ${roleList.trim()}`);
+      }
     });
   }
 
   // Legacy support: teamRoleId can be string or array
   if(cfg.teamRoleId){
     if(Array.isArray(cfg.teamRoleId)){
-      cfg.teamRoleId.forEach(r => roles.add(r));
-    } else {
-      roles.add(cfg.teamRoleId);
+      cfg.teamRoleId.forEach(r => {
+        if(r && r.trim()){
+          roles.add(r.trim());
+          console.log(`  ✅ Added team role: ${r.trim()}`);
+        }
+      });
+    } else if(typeof cfg.teamRoleId === 'string' && cfg.teamRoleId.trim()){
+      roles.add(cfg.teamRoleId.trim());
+      console.log(`  ✅ Added team role: ${cfg.teamRoleId.trim()}`);
     }
   }
 
-  return Array.from(roles).filter(r => r && r.trim());
+  const finalRoles = Array.from(roles).filter(r => r && r.trim());
+  console.log(`📋 Final team roles (index.js):`, finalRoles);
+  return finalRoles;
+}
+
+/**
+ * Check if a member has any of the configured team roles
+ * @param {GuildMember} member - Discord guild member
+ * @param {string} guildId - Guild ID
+ * @returns {boolean} True if member has any team role
+ */
+function hasAnyTeamRole(member, guildId){
+  const allTeamRoles = getAllTeamRoles(guildId);
+  console.log(`🔍 hasAnyTeamRole - Checking member ${member.user.tag}:`, {
+    memberRoles: Array.from(member.roles.cache.keys()),
+    teamRoles: allTeamRoles
+  });
+
+  const hasRole = allTeamRoles.some(roleId => {
+    const has = member.roles.cache.has(roleId);
+    if(has) console.log(`  ✅ Member has team role: ${roleId}`);
+    return has;
+  });
+
+  console.log(`  Result: ${hasRole ? '✅ Has team role' : '❌ No team role'}`);
+  return hasRole;
 }
 
 function getHierarchicalPriorityRoles(guildId, priority = 0){
@@ -2873,7 +2919,7 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       const TEAM_ROLE = getTeamRole(guildId);
-      const isTeam = TEAM_ROLE ? i.member.roles.cache.has(TEAM_ROLE) : false;
+      const isTeam = hasAnyTeamRole(i.member, guildId);
       const isCreator = ticket.userId === i.user.id;
       const isClaimer = ticket.claimer === i.user.id;
 
@@ -2950,6 +2996,28 @@ client.on(Events.InteractionCreate, async i => {
           return i.reply({ embeds: [premiumEmbed], ephemeral: true });
         }
 
+        // Nur Team kann Voice-Channels erstellen
+        if (!isTeam) {
+          const noPermEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setTitle('🚫 Zugriff verweigert')
+            .setDescription(
+              '**Das hier darf nur das Team machen!**\n\n' +
+              'Nur Team-Mitglieder können Voice-Channels erstellen.'
+            )
+            .addFields(
+              {
+                name: '🏷️ Benötigte Berechtigung',
+                value: 'Team-Rolle',
+                inline: true
+              },
+              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+            .setTimestamp();
+          return i.reply({ embeds: [noPermEmbed], ephemeral: true });
+        }
+
         if (hasVoiceChannel(ticket)) {
           return i.reply({
             content: t(guildId, 'voiceSupport.already_exists'),
@@ -3019,6 +3087,28 @@ client.on(Events.InteractionCreate, async i => {
             .setFooter({ text: 'Quantix Tickets • Premium' })
             .setTimestamp();
           return i.reply({ embeds: [premiumEmbed], ephemeral: true });
+        }
+
+        // Nur Team kann Voice-Channels beenden
+        if (!isTeam) {
+          const noPermEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setTitle('🚫 Zugriff verweigert')
+            .setDescription(
+              '**Das hier darf nur das Team machen!**\n\n' +
+              'Nur Team-Mitglieder können Voice-Channels beenden.'
+            )
+            .addFields(
+              {
+                name: '🏷️ Benötigte Berechtigung',
+                value: 'Team-Rolle',
+                inline: true
+              },
+              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+            .setTimestamp();
+          return i.reply({ embeds: [noPermEmbed], ephemeral: true });
         }
 
         if (!ticket.voiceChannelId) {
@@ -4040,7 +4130,7 @@ client.on(Events.InteractionCreate, async i => {
 
     if(i.isModalSubmit() && i.customId==='modal_add_user'){
       const TEAM_ROLE = getTeamRole(i.guild.id);
-      const isTeam = TEAM_ROLE ? i.member.roles.cache.has(TEAM_ROLE) : false;
+      const isTeam = hasAnyTeamRole(i.member, i.guild.id);
 
       if(!isTeam) {
         const teamRole = TEAM_ROLE ? await i.guild.roles.fetch(TEAM_ROLE).catch(() => null) : null;

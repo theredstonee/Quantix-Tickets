@@ -142,21 +142,48 @@ async function getEligibleTeamMembers(guild, config, topic = null, checkOnline =
 function getAllTeamRoles(config) {
   const roles = new Set();
 
+  console.log(`🔍 getAllTeamRoles - Raw config:`, {
+    teamRoleId: config.teamRoleId,
+    priorityRoles: config.priorityRoles
+  });
+
+  // Priority Roles (0, 1, 2)
   if (config.priorityRoles) {
-    Object.values(config.priorityRoles).forEach(roleList => {
-      if (Array.isArray(roleList)) roleList.forEach(r => roles.add(r));
+    Object.entries(config.priorityRoles).forEach(([priority, roleList]) => {
+      if (Array.isArray(roleList)) {
+        roleList.forEach(r => {
+          if (r && r.trim()) {
+            roles.add(r.trim());
+            console.log(`  ✅ Added priority role [${priority}]: ${r.trim()}`);
+          }
+        });
+      } else if (typeof roleList === 'string' && roleList.trim()) {
+        // Einzelner String anstatt Array
+        roles.add(roleList.trim());
+        console.log(`  ✅ Added priority role [${priority}]: ${roleList.trim()}`);
+      }
     });
   }
 
+  // Team Role (legacy single role or array)
   if (config.teamRoleId) {
     if (Array.isArray(config.teamRoleId)) {
-      config.teamRoleId.forEach(r => roles.add(r));
-    } else {
-      roles.add(config.teamRoleId);
+      config.teamRoleId.forEach(r => {
+        if (r && r.trim()) {
+          roles.add(r.trim());
+          console.log(`  ✅ Added team role: ${r.trim()}`);
+        }
+      });
+    } else if (typeof config.teamRoleId === 'string' && config.teamRoleId.trim()) {
+      roles.add(config.teamRoleId.trim());
+      console.log(`  ✅ Added team role: ${config.teamRoleId.trim()}`);
     }
   }
 
-  return [...roles].filter(r => r && r.trim());
+  const finalRoles = [...roles].filter(r => r && r.trim());
+  console.log(`📋 Final team roles:`, finalRoles);
+
+  return finalRoles;
 }
 
 /**
