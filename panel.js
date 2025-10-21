@@ -2464,6 +2464,31 @@ module.exports = (client)=>{
       cfg.surveySystem.sendOnClose = req.body.surveySystemSendOnClose !== 'off';
       cfg.surveySystem.showInAnalytics = req.body.surveySystemShowInAnalytics !== 'off';
 
+      // Ensure defaultQuestions exist when enabling survey system
+      if (cfg.surveySystem.enabled && (!cfg.surveySystem.defaultQuestions || cfg.surveySystem.defaultQuestions.length === 0)) {
+        cfg.surveySystem.defaultQuestions = [
+          {
+            id: 'satisfaction',
+            type: 'rating',
+            text: { de: 'Wie zufrieden bist du mit dem Support?', en: 'How satisfied are you with the support?' },
+            required: true
+          },
+          {
+            id: 'recommend',
+            type: 'nps',
+            text: { de: 'Wie wahrscheinlich ist es, dass du uns weiterempfiehlst?', en: 'How likely are you to recommend us?' },
+            required: true
+          },
+          {
+            id: 'feedback',
+            type: 'text',
+            text: { de: 'Was können wir besser machen?', en: 'What can we improve?' },
+            required: false,
+            maxLength: 1000
+          }
+        ];
+      }
+
       // SLA System Configuration (Pro Feature)
       if (!cfg.sla) {
         cfg.sla = {

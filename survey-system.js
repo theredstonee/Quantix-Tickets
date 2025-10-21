@@ -107,15 +107,20 @@ function getSurveyQuestions(config, topic) {
  */
 async function sendSurveyDM(user, ticket, guildId, config) {
   try {
+    console.log(`🔍 Attempting to send survey DM to ${user.tag} for ticket #${ticket.id}`);
+
     const questions = getSurveyQuestions(config, ticket.topic);
+    console.log(`📋 Found ${questions.length} survey questions`);
 
     if (questions.length === 0) {
-      console.log('No survey questions configured, skipping survey.');
+      console.log('⚠️ No survey questions configured, skipping survey.');
+      console.log('Config:', JSON.stringify(config.surveySystem, null, 2));
       return;
     }
 
     const lang = config.language || 'de';
     const firstQuestion = questions[0];
+    console.log(`❓ First question: ${firstQuestion.id} (${firstQuestion.type})`);
 
     // Create embed
     const embed = new EmbedBuilder()
@@ -132,11 +137,14 @@ async function sendSurveyDM(user, ticket, guildId, config) {
 
     // Create buttons/components based on first question type
     const components = createQuestionComponents(firstQuestion, ticket.id, 0, guildId);
+    console.log(`🔘 Created ${components.length} component rows`);
 
     await user.send({ embeds: [embed], components });
-    console.log(`✅ Survey DM sent to ${user.tag} for ticket #${ticket.id}`);
+    console.log(`✅ Survey DM successfully sent to ${user.tag} for ticket #${ticket.id}`);
   } catch (err) {
-    console.error('Error sending survey DM:', err);
+    console.error(`❌ Error sending survey DM to ${user.tag}:`, err);
+    console.error('Error details:', err.message);
+    console.error('Stack:', err.stack);
   }
 }
 

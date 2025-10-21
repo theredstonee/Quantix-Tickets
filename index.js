@@ -3531,13 +3531,19 @@ client.on(Events.InteractionCreate, async i => {
           // Generate transcript
           await createTranscript(i.channel, ticket, { guildId });
 
-          // Send rating request DM (immer nach jedem Ticket)
+          // Send rating/survey request DM (immer nach jedem Ticket)
           try {
             const cfg = readCfg(guildId);
-            // Sende Bewertungs-DM immer, außer explizit deaktiviert
-            if (!cfg.ticketRating || cfg.ticketRating.enabled !== false) {
-              const user = await client.users.fetch(ticket.userId).catch(() => null);
-              if (user) {
+            const user = await client.users.fetch(ticket.userId).catch(() => null);
+            if (user) {
+              // Check if new Survey System is enabled (replaces old rating system)
+              if (cfg.surveySystem && cfg.surveySystem.enabled && cfg.surveySystem.sendOnClose) {
+                // Use new Survey System
+                const { sendSurveyDM } = require('./survey-system');
+                await sendSurveyDM(user, ticket, guildId, cfg);
+                console.log(`✅ Survey DM sent to ${user.tag} for ticket #${ticket.id}`);
+              } else if (!cfg.ticketRating || cfg.ticketRating.enabled !== false) {
+                // Use old Rating System (backwards compatibility)
                 const ratingEmbed = new EmbedBuilder()
                   .setColor(0x3b82f6)
                   .setTitle('⭐ Wie war deine Support-Erfahrung?')
