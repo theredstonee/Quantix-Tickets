@@ -4040,16 +4040,6 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
 
   saveTickets(guildId, log);
 
-  // Sende Log-Nachricht über Prioritätsänderung
-  const priorityNames = ['🟢 Niedrig', '🟠 Mittel', '🔴 Hoch'];
-  const priorityEmbed = new EmbedBuilder()
-    .setColor(state.embedColor)
-    .setDescription(`📊 **Priorität geändert** → ${priorityNames[ticket.priority || 0]}`)
-    .setFooter({ text: `Geändert von ${interaction.user.tag}` })
-    .setTimestamp();
-
-  await interaction.channel.send({ embeds: [priorityEmbed] });
-
   try {
     const currentPriority = ticket.priority || 0;
     const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, currentPriority);
