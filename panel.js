@@ -2430,6 +2430,40 @@ module.exports = (client)=>{
       cfg.ticketRating.requireFeedback = req.body.ticketRatingRequireFeedback === 'on';
       cfg.ticketRating.showInAnalytics = req.body.ticketRatingShowInAnalytics !== 'off';
 
+      // Survey System Configuration (Basic+ Feature)
+      if (!cfg.surveySystem) {
+        cfg.surveySystem = {
+          enabled: false,
+          sendOnClose: true,
+          showInAnalytics: true,
+          defaultQuestions: [
+            {
+              id: 'satisfaction',
+              type: 'rating',
+              text: { de: 'Wie zufrieden bist du mit dem Support?', en: 'How satisfied are you with the support?' },
+              required: true
+            },
+            {
+              id: 'recommend',
+              type: 'nps',
+              text: { de: 'Wie wahrscheinlich ist es, dass du uns weiterempfiehlst?', en: 'How likely are you to recommend us?' },
+              required: true
+            },
+            {
+              id: 'feedback',
+              type: 'text',
+              text: { de: 'Was können wir besser machen?', en: 'What can we improve?' },
+              required: false,
+              maxLength: 1000
+            }
+          ]
+        };
+      }
+
+      cfg.surveySystem.enabled = req.body.surveySystemEnabled === 'on';
+      cfg.surveySystem.sendOnClose = req.body.surveySystemSendOnClose !== 'off';
+      cfg.surveySystem.showInAnalytics = req.body.surveySystemShowInAnalytics !== 'off';
+
       // SLA System Configuration (Pro Feature)
       if (!cfg.sla) {
         cfg.sla = {
@@ -2463,6 +2497,22 @@ module.exports = (client)=>{
       if (hasFeature(guildId, 'voiceSupport')) {
         cfg.voiceSupport.enabled = req.body.voiceSupportEnabled === 'on';
         cfg.voiceSupport.showButton = req.body.voiceSupportShowButton !== 'off';
+      }
+
+      // Auto-Assignment Configuration (Basic+ Feature)
+      const { getDefaultAutoAssignmentConfig } = require('./auto-assignment');
+      if (!cfg.autoAssignment) {
+        cfg.autoAssignment = getDefaultAutoAssignmentConfig();
+      }
+
+      cfg.autoAssignment.enabled = req.body.autoAssignmentEnabled === 'on';
+      cfg.autoAssignment.assignOnCreate = req.body.autoAssignmentAssignOnCreate !== 'off';
+      cfg.autoAssignment.notifyAssignee = req.body.autoAssignmentNotifyAssignee !== 'off';
+      cfg.autoAssignment.strategy = req.body.autoAssignmentStrategy || 'workload';
+
+      // Pro features
+      if (hasFeature(guildId, 'autoAssignment')) {
+        cfg.autoAssignment.checkOnlineStatus = req.body.autoAssignmentCheckOnlineStatus === 'on';
       }
 
       // Auto-Responses / FAQ Configuration (Free Feature)
@@ -3012,14 +3062,70 @@ module.exports = (client)=>{
       const timeRange = req.query.range || 'all';
       const insights = getComprehensiveInsights(guildId, timeRange);
 
+      // Survey Statistics (Basic+ Feature)
+      const cfg = readCfg(guildId);
+      let surveyStats = null;
+      if (cfg.surveySystem && cfg.surveySystem.enabled) {
+        const { getSurveyAnalytics } = require('./survey-system');
+        surveyStats = getSurveyAnalytics(tickets);
+
+        // Resolve usernames for team member performance
+        for (const memberId in surveyStats.byTeamMember) {
+          try {
+            const member = await guild.members.fetch(memberId);
+            surveyStats.byTeamMember[memberId].username = sanitizeUsername(member.user.username || member.user.tag || memberId);
+          } catch (err) {
+            surveyStats.byTeamMember[memberId].username = sanitizeUsername(memberId);
+          }
+        }
+      }
+
+      // Auto-Assignment Statistics (Basic+ Feature)
+      let autoAssignStats = null;
+      if (cfg.autoAssignment && cfg.autoAssignment.enabled) {
+        const { getAssignmentStats } = require('./auto-assignment');
+        autoAssignStats = getAssignmentStats(cfg, tickets);
+
+        // Resolve usernames for assignment stats
+        const assignmentsByMemberWithNames = [];
+        for (const [userId, count] of Object.entries(autoAssignStats.assignmentsByMember || {})) {
+          let username = sanitizeUsername(userId);
+          try {
+            const member = await guild.members.fetch(userId);
+            username = sanitizeUsername(member.user.username || member.user.tag || userId);
+          } catch (err) {
+            console.log(`Konnte User ${userId} nicht fetchen`);
+          }
+          assignmentsByMemberWithNames.push({ userId, username, count });
+        }
+        autoAssignStats.assignmentsByMemberWithNames = assignmentsByMemberWithNames.sort((a, b) => b.count - a.count);
+
+        // Resolve usernames for current workloads
+        const currentWorkloadsWithNames = [];
+        for (const [userId, workload] of Object.entries(autoAssignStats.currentWorkloads || {})) {
+          let username = sanitizeUsername(userId);
+          try {
+            const member = await guild.members.fetch(userId);
+            username = sanitizeUsername(member.user.username || member.user.tag || userId);
+          } catch (err) {
+            console.log(`Konnte User ${userId} nicht fetchen`);
+          }
+          currentWorkloadsWithNames.push({ userId, username, workload });
+        }
+        autoAssignStats.currentWorkloadsWithNames = currentWorkloadsWithNames.sort((a, b) => b.workload - a.workload);
+      }
+
       res.render('analytics', {
         guildName: guild.name,
         stats: stats,
         insights: insights,
         ratingStats: ratingStats,
+        surveyStats: surveyStats,
+        autoAssignStats: autoAssignStats,
         canExportCSV: canExportCSV,
         timeRange: timeRange,
-        guildId: guildId
+        guildId: guildId,
+        hasFeature: hasFeature
       });
     } catch(e) {
       console.error('Analytics Error:', e);

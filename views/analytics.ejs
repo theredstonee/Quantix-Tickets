@@ -867,6 +867,313 @@
 
     <% } %>
 
+    <!-- SURVEY STATISTICS (Basic+ Feature) -->
+    <% if (surveyStats) { %>
+
+    <!-- Survey Overview -->
+    <div class="chart-container" style="margin-top: 2rem;">
+      <h2 class="chart-title">📋 Zufriedenheitsumfragen</h2>
+      <p style="opacity: 0.7; margin-bottom: 1.5rem; font-size: 0.9rem;">
+        Erweiterte Umfrage-Statistiken mit Multi-Fragen-Auswertung
+      </p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-icon">📊</span>
+          <h3>Antwortrate</h3>
+          <div class="stat-value"><%= surveyStats.responseRate %>%</div>
+          <small style="opacity: 0.7;"><%= surveyStats.totalResponses %> von <%= surveyStats.totalEligible %> ausgefüllt</small>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">⭐</span>
+          <h3>Ø Bewertung</h3>
+          <div class="stat-value"><%= surveyStats.averageRating %></div>
+          <small style="opacity: 0.7;">aus 5 Sternen</small>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">🎯</span>
+          <h3>NPS Score</h3>
+          <div class="stat-value <%= surveyStats.nps.score >= 50 ? '' : surveyStats.nps.score >= 0 ? 'warning' : 'error' %>">
+            <%= surveyStats.nps.score %>
+          </div>
+          <small style="opacity: 0.7;">
+            <%= surveyStats.nps.score >= 50 ? 'Exzellent' : surveyStats.nps.score >= 0 ? 'Gut' : 'Verbesserungsbedarf' %>
+          </small>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">💬</span>
+          <h3>Mit Feedback</h3>
+          <div class="stat-value"><%= surveyStats.withFeedback %></div>
+          <small style="opacity: 0.7;"><%= surveyStats.totalResponses > 0 ? Math.round((surveyStats.withFeedback / surveyStats.totalResponses) * 100) : 0 %>% der Antworten</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- NPS Distribution -->
+    <div class="chart-container">
+      <h2 class="chart-title">📈 Net Promoter Score Verteilung</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        Wie wahrscheinlich ist es, dass Kunden uns weiterempfehlen? (0-10 Skala)
+      </p>
+      <div class="bar-chart">
+        <%
+        const npsCategories = [
+          { label: '😍 Promoter (9-10)', value: surveyStats.nps.promoters, color: '#00ff88', desc: 'Begeisterte Fans' },
+          { label: '😐 Passiv (7-8)', value: surveyStats.nps.passives, color: '#ff9900', desc: 'Zufrieden aber neutral' },
+          { label: '😞 Kritiker (0-6)', value: surveyStats.nps.detractors, color: '#ff4444', desc: 'Unzufriedene Kunden' }
+        ];
+        const maxNPS = Math.max(...npsCategories.map(c => c.value)) || 1;
+        npsCategories.forEach(cat => {
+          const percentage = (cat.value / maxNPS) * 100;
+          const percentOfTotal = surveyStats.nps.total > 0 ? Math.round((cat.value / surveyStats.nps.total) * 100) : 0;
+        %>
+        <div class="bar-item">
+          <div class="bar-label" style="min-width: 180px;"><%= cat.label %></div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: <%= percentage %>%; background: linear-gradient(90deg, <%= cat.color %>, <%= cat.color %>dd);">
+              <%= cat.value %> (<%= percentOfTotal %>%)
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.05); border-left: 4px solid var(--accent-color); border-radius: 8px;">
+        <strong style="color: var(--accent-color);">💡 NPS Berechnung:</strong>
+        <%= surveyStats.nps.promoterPercent %>% Promoter - <%= surveyStats.nps.detractorPercent %>% Kritiker = <strong><%= surveyStats.nps.score %></strong>
+      </div>
+    </div>
+
+    <!-- Rating Distribution -->
+    <% if (Object.keys(surveyStats.ratingDistribution).length > 0) { %>
+    <div class="chart-container">
+      <h2 class="chart-title">⭐ Bewertungs-Verteilung</h2>
+      <div class="bar-chart">
+        <%
+        const ratingEntries = Object.entries(surveyStats.ratingDistribution).sort((a, b) => parseInt(b[0]) - parseInt(a[0]));
+        const maxRatingCount = Math.max(...ratingEntries.map(([_, count]) => count)) || 1;
+        ratingEntries.forEach(([stars, count]) => {
+          const percentage = (count / maxRatingCount) * 100;
+          const starIcons = '⭐'.repeat(parseInt(stars));
+        %>
+        <div class="bar-item">
+          <div class="bar-label" style="min-width: 120px;"><%= starIcons %> (<%= stars %>)</div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: <%= percentage %>%; background: linear-gradient(90deg, #fbbf24, #f59e0b);"><%= count %></div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Team Member Performance (Survey) -->
+    <% if (Object.keys(surveyStats.byTeamMember).length > 0) { %>
+    <div class="chart-container">
+      <h2 class="chart-title">👥 Team-Performance (Umfragen)</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        Durchschnittliche Bewertungen pro Team-Mitglied
+      </p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+        <%
+        const teamMemberEntries = Object.values(surveyStats.byTeamMember).sort((a, b) => b.averageRating - a.averageRating);
+        teamMemberEntries.forEach(member => {
+          const ratingColor = member.averageRating >= 4.5 ? '#00ff88' : member.averageRating >= 3.5 ? '#ff9900' : '#ff4444';
+        %>
+        <div style="
+          background: var(--glass-bg);
+          backdrop-filter: blur(10px);
+          border: 1px solid var(--glass-border);
+          border-radius: 12px;
+          padding: 1rem;
+          box-shadow: 0 4px 12px var(--shadow-color);
+        ">
+          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <div style="
+              width: 48px;
+              height: 48px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, <%= ratingColor %>, <%= ratingColor %>aa);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1.5rem;
+              font-weight: bold;
+              color: #fff;
+            ">
+              <%= member.averageRating %>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; color: var(--text-color);"><%= member.username %></div>
+              <div style="font-size: 0.85rem; opacity: 0.7;"><%= member.count %> Bewertungen</div>
+            </div>
+          </div>
+          <div style="margin-top: 0.75rem;">
+            <div style="font-size: 1.25rem;">
+              <%= '⭐'.repeat(Math.round(member.averageRating)) %><%= '☆'.repeat(5 - Math.round(member.averageRating)) %>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <% } %>
+
+    <!-- AUTO-ASSIGNMENT STATISTICS (Basic+ Feature) -->
+    <% if (autoAssignStats) { %>
+
+    <!-- Auto-Assignment Overview -->
+    <div class="chart-container" style="margin-top: 2rem;">
+      <h2 class="chart-title">🎯 Automatische Zuweisung</h2>
+      <p style="opacity: 0.7; margin-bottom: 1.5rem; font-size: 0.9rem;">
+        Statistiken zur automatischen Ticket-Zuweisung
+      </p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-icon">🤖</span>
+          <h3>Auto-Zuweisungen</h3>
+          <div class="stat-value"><%= autoAssignStats.totalAutoAssignments %></div>
+          <small style="opacity: 0.7;">Gesamt automatisch zugewiesen</small>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">⚙️</span>
+          <h3>Strategie</h3>
+          <div class="stat-value" style="font-size: 1.2rem;">
+            <%= autoAssignStats.strategy === 'workload' ? '⚖️ Workload' :
+                autoAssignStats.strategy === 'round_robin' ? '🔄 Round-Robin' :
+                autoAssignStats.strategy === 'random' ? '🎲 Zufällig' :
+                autoAssignStats.strategy === 'priority_queue' ? '⭐ Priority' :
+                autoAssignStats.strategy %>
+          </div>
+          <small style="opacity: 0.7;">Aktuelle Zuweisungs-Strategie</small>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">⏸️</span>
+          <h3>Pausierte</h3>
+          <div class="stat-value"><%= autoAssignStats.excludedCount %></div>
+          <small style="opacity: 0.7;">Team-Mitglieder pausiert</small>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon">📊</span>
+          <h3>Aktive Tickets</h3>
+          <div class="stat-value"><%= Object.values(autoAssignStats.currentWorkloads).reduce((a, b) => a + b, 0) %></div>
+          <small style="opacity: 0.7;">Aktuell zugewiesene Tickets</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assignment Distribution -->
+    <% if (autoAssignStats.assignmentsByMemberWithNames && autoAssignStats.assignmentsByMemberWithNames.length > 0) { %>
+    <div class="chart-container">
+      <h2 class="chart-title">📈 Zuweisungen pro Team-Mitglied</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        Gesamtanzahl automatisch zugewiesener Tickets (alle Zeiten)
+      </p>
+      <div class="bar-chart">
+        <%
+        const maxAssignmentCount = autoAssignStats.assignmentsByMemberWithNames[0]?.count || 1;
+        autoAssignStats.assignmentsByMemberWithNames.forEach(member => {
+          const percentage = (member.count / maxAssignmentCount) * 100;
+          const percentOfTotal = autoAssignStats.totalAutoAssignments > 0
+            ? Math.round((member.count / autoAssignStats.totalAutoAssignments) * 100)
+            : 0;
+        %>
+        <div class="bar-item">
+          <div class="bar-label" style="min-width: 150px;"><%= member.username %></div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: <%= percentage %>%; background: linear-gradient(90deg, #3b82f6, #2563eb);">
+              <%= member.count %> (<%= percentOfTotal %>%)
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Current Workloads -->
+    <% if (autoAssignStats.currentWorkloadsWithNames && autoAssignStats.currentWorkloadsWithNames.length > 0) { %>
+    <div class="chart-container">
+      <h2 class="chart-title">⚖️ Aktuelle Workload</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        Anzahl offener Tickets pro Team-Mitglied (aktuell)
+      </p>
+      <div class="bar-chart">
+        <%
+        const maxWorkload = autoAssignStats.currentWorkloadsWithNames[0]?.workload || 1;
+        autoAssignStats.currentWorkloadsWithNames.forEach(member => {
+          const percentage = maxWorkload > 0 ? (member.workload / maxWorkload) * 100 : 0;
+          const workloadColor = member.workload === 0 ? '#00ff88' :
+                                 member.workload <= 3 ? '#3b82f6' :
+                                 member.workload <= 6 ? '#ff9900' : '#ff4444';
+        %>
+        <div class="bar-item">
+          <div class="bar-label" style="min-width: 150px;"><%= member.username %></div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: <%= percentage %>%; background: linear-gradient(90deg, <%= workloadColor %>, <%= workloadColor %>dd);">
+              <%= member.workload %> offene Tickets
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Fairness Indicator -->
+    <% if (autoAssignStats.assignmentsByMemberWithNames && autoAssignStats.assignmentsByMemberWithNames.length > 1) { %>
+    <div class="chart-container">
+      <h2 class="chart-title">⚖️ Fairness-Score</h2>
+      <p style="opacity: 0.7; margin-bottom: 1rem; font-size: 0.9rem;">
+        Wie gleichmäßig werden Tickets verteilt?
+      </p>
+      <%
+        const counts = autoAssignStats.assignmentsByMemberWithNames.map(m => m.count);
+        const avgCount = counts.reduce((a, b) => a + b, 0) / counts.length;
+        const variance = counts.reduce((sum, c) => sum + Math.pow(c - avgCount, 2), 0) / counts.length;
+        const stdDev = Math.sqrt(variance);
+        const fairnessScore = avgCount > 0 ? Math.max(0, Math.min(100, 100 - (stdDev / avgCount * 100))) : 100;
+        const fairnessColor = fairnessScore >= 80 ? '#00ff88' : fairnessScore >= 60 ? '#ff9900' : '#ff4444';
+      %>
+      <div style="text-align: center; padding: 2rem;">
+        <div style="
+          display: inline-block;
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, <%= fairnessColor %>, <%= fairnessColor %>aa);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 2.5rem;
+          font-weight: bold;
+          color: #fff;
+          box-shadow: 0 8px 24px var(--shadow-color);
+        ">
+          <%= Math.round(fairnessScore) %>
+        </div>
+        <div style="margin-top: 1.5rem; font-size: 1.1rem; font-weight: 600; color: var(--text-color);">
+          <%= fairnessScore >= 80 ? '✅ Sehr fair verteilt' :
+              fairnessScore >= 60 ? '⚠️ Moderat fair' :
+              '❌ Ungleiche Verteilung' %>
+        </div>
+        <div style="margin-top: 0.5rem; opacity: 0.7; font-size: 0.9rem;">
+          Ø <%= avgCount.toFixed(1) %> Zuweisungen pro Person
+        </div>
+      </div>
+    </div>
+    <% } %>
+
+    <% } %>
+
   </div>
 
   <script>

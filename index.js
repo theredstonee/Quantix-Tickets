@@ -1366,11 +1366,12 @@ function buildTicketEmbed(cfg, i, topic, nr){
   return e;
 }
 
-function buildChannelName(ticketNumber, priorityIndex, isVIP = false){
+function buildChannelName(ticketNumber, priorityIndex, isVIP = false, isClaimed = false){
   const num = ticketNumber.toString().padStart(5,'0');
   const st  = PRIORITY_STATES[priorityIndex] || PRIORITY_STATES[0];
   const vipPrefix = isVIP ? '✨vip-' : '';
-  return `${PREFIX}${vipPrefix}${st.dot}ticket-${num}`;
+  const claimedPrefix = isClaimed ? '🔒' : '';
+  return `${PREFIX}${vipPrefix}${claimedPrefix}${st.dot}ticket-${num}`;
 }
 const renameQueue = new Map();
 const RENAME_MIN_INTERVAL_MS = 3000;
@@ -1391,7 +1392,12 @@ function scheduleChannelRename(channel, desired){
   else { if(entry.timer) clearTimeout(entry.timer); entry.timer = setTimeout(apply, 500); }
   renameQueue.set(channel.id, entry);
 }
-function renameChannelIfNeeded(channel, ticket){ const desired = buildChannelName(ticket.id, ticket.priority||0); if(channel.name === desired) return; scheduleChannelRename(channel, desired); }
+function renameChannelIfNeeded(channel, ticket){
+  const isClaimed = ticket.claimedBy ? true : false;
+  const desired = buildChannelName(ticket.id, ticket.priority||0, ticket.isVIP||false, isClaimed);
+  if(channel.name === desired) return;
+  scheduleChannelRename(channel, desired);
+}
 
 async function logEvent(guild, text){
   const cfg = readCfg(guild.id);
@@ -2627,6 +2633,200 @@ client.on(Events.InteractionCreate, async i => {
         return;
       }
 
+      // Survey System Response Handler
+      if(i.customId.startsWith('survey:')){
+        const parts = i.customId.split(':');
+        const ticketId = parts[1];
+        const questionIndex = parseInt(parts[2]);
+        const answer = parts[3];
+
+        // Find ticket across all guilds
+        let foundGuildId = null;
+        let foundTicket = null;
+
+        for (const guild of client.guilds.cache.values()) {
+          const guildTickets = loadTickets(guild.id);
+          const ticket = guildTickets.find(t => t.id === parseInt(ticketId) && t.userId === i.user.id);
+          if (ticket) {
+            foundGuildId = guild.id;
+            foundTicket = ticket;
+            break;
+          }
+        }
+
+        if (!foundTicket) {
+          return i.reply({
+            content: t(null, 'surveys.not_found'),
+            ephemeral: true
+          });
+        }
+
+        // Check if already submitted
+        if (foundTicket.survey && foundTicket.survey.completed) {
+          return i.reply({
+            content: t(foundGuildId, 'surveys.already_submitted'),
+            ephemeral: true
+          });
+        }
+
+        const cfg = readCfg(foundGuildId);
+        const { getSurveyQuestions, createQuestionComponents } = require('./survey-system');
+        const questions = getSurveyQuestions(cfg, foundTicket.topic);
+
+        if (questionIndex >= questions.length) {
+          return i.reply({ content: '❌ Ungültige Frage', ephemeral: true });
+        }
+
+        const currentQuestion = questions[questionIndex];
+        const lang = cfg.language || 'de';
+
+        // Initialize survey if not exists
+        if (!foundTicket.survey) {
+          foundTicket.survey = {
+            responses: [],
+            startedAt: Date.now(),
+            completed: false
+          };
+        }
+
+        // Save response
+        foundTicket.survey.responses.push({
+          questionId: currentQuestion.id,
+          questionText: currentQuestion.text[lang] || currentQuestion.text.de,
+          type: currentQuestion.type,
+          value: answer === 'yes' ? true : answer === 'no' ? false : (isNaN(answer) ? answer : parseInt(answer)),
+          answeredAt: Date.now()
+        });
+
+        const guildTickets = loadTickets(foundGuildId);
+        const ticketIndex = guildTickets.findIndex(t => t.id === parseInt(ticketId));
+        if (ticketIndex !== -1) {
+          guildTickets[ticketIndex] = foundTicket;
+          saveTickets(foundGuildId, guildTickets);
+        }
+
+        // Check if more questions
+        const nextQuestionIndex = questionIndex + 1;
+
+        if (nextQuestionIndex < questions.length) {
+          // Send next question
+          const nextQuestion = questions[nextQuestionIndex];
+          const nextEmbed = new EmbedBuilder()
+            .setColor(0x3b82f6)
+            .setTitle(t(foundGuildId, 'surveys.dm_title'))
+            .setDescription(t(foundGuildId, 'surveys.dm_description', { ticketId: String(foundTicket.id).padStart(5, '0') }))
+            .addFields({
+              name: `📋 ${nextQuestion.text[lang] || nextQuestion.text.de}`,
+              value: getQuestionScaleText(nextQuestion.type, lang, foundGuildId),
+              inline: false
+            })
+            .setFooter({ text: `Quantix Tickets • Frage ${nextQuestionIndex + 1} von ${questions.length}` })
+            .setTimestamp();
+
+          const nextComponents = createQuestionComponents(nextQuestion, ticketId, nextQuestionIndex, foundGuildId);
+
+          await i.update({ embeds: [nextEmbed], components: nextComponents });
+        } else {
+          // Survey complete!
+          foundTicket.survey.completed = true;
+          foundTicket.survey.completedAt = Date.now();
+
+          const updatedTickets = loadTickets(foundGuildId);
+          const idx = updatedTickets.findIndex(t => t.id === parseInt(ticketId));
+          if (idx !== -1) {
+            updatedTickets[idx] = foundTicket;
+            saveTickets(foundGuildId, updatedTickets);
+          }
+
+          const thankYouEmbed = new EmbedBuilder()
+            .setColor(0x00ff88)
+            .setTitle(t(foundGuildId, 'surveys.thank_you'))
+            .setDescription(t(foundGuildId, 'surveys.thank_you_description'))
+            .addFields(
+              { name: '🎫 Ticket', value: `#${String(ticketId).padStart(5, '0')}`, inline: true },
+              { name: '📊 Antworten', value: `${foundTicket.survey.responses.length}`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Danke für dein Feedback!' })
+            .setTimestamp();
+
+          await i.update({ embeds: [thankYouEmbed], components: [] });
+
+          // Notify team in log channel
+          try {
+            const guild = client.guilds.cache.get(foundGuildId);
+            if (guild) {
+              const ratingResponse = foundTicket.survey.responses.find(r => r.type === 'rating');
+              const npsResponse = foundTicket.survey.responses.find(r => r.type === 'nps');
+
+              let logMsg = `📋 Survey für Ticket #${ticketId} ausgefüllt`;
+              if (ratingResponse) logMsg += ` | ⭐ ${ratingResponse.value}/5`;
+              if (npsResponse) logMsg += ` | NPS: ${npsResponse.value}/10`;
+
+              await logEvent(guild, logMsg);
+            }
+          } catch (err) {
+            console.error('Fehler beim Loggen der Survey:', err);
+          }
+        }
+
+        // Helper function (imported from survey-system)
+        function getQuestionScaleText(type, lang, guildId) {
+          const { getQuestionScaleText: getScale } = require('./survey-system');
+          return getScale(type, lang, guildId);
+        }
+
+        return;
+      }
+
+      // Survey Text Input Handler
+      if(i.customId.startsWith('survey_text:')){
+        const parts = i.customId.split(':');
+        const ticketId = parts[1];
+        const questionIndex = parseInt(parts[2]);
+
+        // Find ticket
+        let foundGuildId = null;
+        let foundTicket = null;
+
+        for (const guild of client.guilds.cache.values()) {
+          const guildTickets = loadTickets(guild.id);
+          const ticket = guildTickets.find(t => t.id === parseInt(ticketId) && t.userId === i.user.id);
+          if (ticket) {
+            foundGuildId = guild.id;
+            foundTicket = ticket;
+            break;
+          }
+        }
+
+        if (!foundTicket) {
+          return i.reply({ content: t(null, 'surveys.not_found'), ephemeral: true });
+        }
+
+        const cfg = readCfg(foundGuildId);
+        const { getSurveyQuestions } = require('./survey-system');
+        const questions = getSurveyQuestions(cfg, foundTicket.topic);
+        const currentQuestion = questions[questionIndex];
+        const lang = cfg.language || 'de';
+
+        // Show text input modal
+        const modal = new ModalBuilder()
+            .setCustomId(`survey_text_submit:${ticketId}:${questionIndex}`)
+            .setTitle('Feedback');
+
+        const textInput = new TextInputBuilder()
+            .setCustomId('feedback_text')
+            .setLabel(currentQuestion.text[lang] || currentQuestion.text.de)
+            .setStyle(TextInputStyle.Paragraph)
+            .setPlaceholder(t(foundGuildId, 'surveys.feedback_placeholder'))
+            .setRequired(currentQuestion.required || false)
+            .setMaxLength(currentQuestion.maxLength || 1000);
+
+        const row = new ActionRowBuilder().addComponents(textInput);
+        modal.addComponents(row);
+
+        return i.showModal(modal);
+      }
+
       const guildId = i.guild.id;
       const log = loadTickets(guildId);
       const ticket = log.find(t=>t.channelId===i.channel.id);
@@ -2988,12 +3188,18 @@ client.on(Events.InteractionCreate, async i => {
 
         logEvent(i.guild, `🔐 Ticket **#${ticket.id}** geschlossen durch Zustimmung von ${closerTag}`);
 
-        // Send rating request DM (immer nach jedem Ticket)
+        // Send rating/survey request DM
         try {
-          // Sende Bewertungs-DM immer, außer explizit deaktiviert
-          if (!cfg.ticketRating || cfg.ticketRating.enabled !== false) {
-            const user = await client.users.fetch(ticket.userId).catch(() => null);
-            if (user) {
+          const user = await client.users.fetch(ticket.userId).catch(() => null);
+          if (user) {
+            // Check if new Survey System is enabled (replaces old rating system)
+            if (cfg.surveySystem && cfg.surveySystem.enabled && cfg.surveySystem.sendOnClose) {
+              // Use new Survey System
+              const { sendSurveyDM } = require('./survey-system');
+              await sendSurveyDM(user, ticket, guildId, cfg);
+              console.log(`✅ Survey DM sent to ${user.tag} for ticket #${ticket.id}`);
+            } else if (!cfg.ticketRating || cfg.ticketRating.enabled !== false) {
+              // Use old Rating System (backwards compatibility)
               const ratingEmbed = new EmbedBuilder()
                 .setColor(0x3b82f6)
                 .setTitle('⭐ Wie war deine Support-Erfahrung?')
@@ -3036,7 +3242,7 @@ client.on(Events.InteractionCreate, async i => {
             }
           }
         } catch (dmErr) {
-          console.log('Konnte Bewertungs-DM nicht senden:', dmErr.message);
+          console.log('Konnte Rating/Survey-DM nicht senden:', dmErr.message);
         }
 
         // Lösche Voice-Channel falls vorhanden
@@ -3564,6 +3770,134 @@ client.on(Events.InteractionCreate, async i => {
       }
     }
 
+    // Modal-Submit für Survey Text Feedback
+    if(i.isModalSubmit() && i.customId.startsWith('survey_text_submit:')){
+      const [_, ticketId, questionIndex] = i.customId.split(':');
+      const feedback = i.fields.getTextInputValue('feedback_text');
+
+      // Find ticket across all guilds
+      let foundGuildId = null;
+      let foundTicket = null;
+
+      for (const guild of client.guilds.cache.values()) {
+        const guildTickets = loadTickets(guild.id);
+        const ticket = guildTickets.find(t => t.id === parseInt(ticketId) && t.userId === i.user.id);
+        if (ticket) {
+          foundGuildId = guild.id;
+          foundTicket = ticket;
+          break;
+        }
+      }
+
+      if (!foundTicket) {
+        return i.reply({
+          content: t(null, 'surveys.not_found'),
+          ephemeral: true
+        });
+      }
+
+      const cfg = readCfg(foundGuildId);
+      const { getSurveyQuestions, createQuestionComponents } = require('./survey-system');
+      const questions = getSurveyQuestions(cfg, foundTicket.topic);
+      const currentQuestion = questions[parseInt(questionIndex)];
+      const lang = cfg.language || 'de';
+
+      // Initialize survey if not exists
+      if (!foundTicket.survey) {
+        foundTicket.survey = {
+          responses: [],
+          startedAt: Date.now(),
+          completed: false
+        };
+      }
+
+      // Save text response
+      foundTicket.survey.responses.push({
+        questionId: currentQuestion.id,
+        questionText: currentQuestion.text[lang] || currentQuestion.text.de,
+        type: currentQuestion.type,
+        value: feedback,
+        answeredAt: Date.now()
+      });
+
+      const guildTickets = loadTickets(foundGuildId);
+      const ticketIndex = guildTickets.findIndex(t => t.id === parseInt(ticketId));
+      if (ticketIndex !== -1) {
+        guildTickets[ticketIndex] = foundTicket;
+        saveTickets(foundGuildId, guildTickets);
+      }
+
+      // Check if more questions
+      const nextQuestionIndex = parseInt(questionIndex) + 1;
+
+      if (nextQuestionIndex < questions.length) {
+        // Send next question
+        const nextQuestion = questions[nextQuestionIndex];
+        const nextEmbed = new EmbedBuilder()
+          .setColor(0x3b82f6)
+          .setTitle(t(foundGuildId, 'surveys.dm_title'))
+          .setDescription(t(foundGuildId, 'surveys.dm_description', { ticketId: String(foundTicket.id).padStart(5, '0') }))
+          .addFields({
+            name: `📋 ${nextQuestion.text[lang] || nextQuestion.text.de}`,
+            value: getQuestionScaleText(nextQuestion.type, lang, foundGuildId),
+            inline: false
+          })
+          .setFooter({ text: `Quantix Tickets • Frage ${nextQuestionIndex + 1} von ${questions.length}` })
+          .setTimestamp();
+
+        const nextComponents = createQuestionComponents(nextQuestion, ticketId, nextQuestionIndex, foundGuildId);
+
+        await i.reply({ embeds: [nextEmbed], components: nextComponents, ephemeral: false });
+      } else {
+        // Survey complete!
+        foundTicket.survey.completed = true;
+        foundTicket.survey.completedAt = Date.now();
+
+        const updatedTickets = loadTickets(foundGuildId);
+        const idx = updatedTickets.findIndex(t => t.id === parseInt(ticketId));
+        if (idx !== -1) {
+          updatedTickets[idx] = foundTicket;
+          saveTickets(foundGuildId, updatedTickets);
+        }
+
+        const thankYouEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle(t(foundGuildId, 'surveys.thank_you'))
+          .setDescription(t(foundGuildId, 'surveys.thank_you_description'))
+          .addFields(
+            { name: '🎫 Ticket', value: `#${String(ticketId).padStart(5, '0')}`, inline: true },
+            { name: '📊 Antworten', value: `${foundTicket.survey.responses.length}`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Danke für dein Feedback!' })
+          .setTimestamp();
+
+        await i.reply({ embeds: [thankYouEmbed], ephemeral: false });
+
+        // Notify team in log channel
+        try {
+          const guild = client.guilds.cache.get(foundGuildId);
+          if (guild) {
+            const ratingResponse = foundTicket.survey.responses.find(r => r.type === 'rating');
+            const npsResponse = foundTicket.survey.responses.find(r => r.type === 'nps');
+
+            let logMsg = `📋 Survey für Ticket #${ticketId} ausgefüllt`;
+            if (ratingResponse) logMsg += ` | ⭐ ${ratingResponse.value}/5`;
+            if (npsResponse) logMsg += ` | NPS: ${npsResponse.value}/10`;
+
+            await logEvent(guild, logMsg);
+          }
+        } catch (err) {
+          console.error('Fehler beim Loggen der Survey:', err);
+        }
+      }
+
+      // Helper function
+      function getQuestionScaleText(type, lang, guildId) {
+        const { getQuestionScaleText: getScale } = require('./survey-system');
+        return getScale(type, lang, guildId);
+      }
+    }
+
     if(i.isModalSubmit() && i.customId==='modal_add_user'){
       const TEAM_ROLE = getTeamRole(i.guild.id);
       const isTeam = TEAM_ROLE ? i.member.roles.cache.has(TEAM_ROLE) : false;
@@ -3931,6 +4265,93 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     }]
   });
   safeWrite(ticketsPath, log);
+
+  // Auto-Assignment System (Basic+ Feature)
+  if (cfg.autoAssignment && cfg.autoAssignment.enabled && cfg.autoAssignment.assignOnCreate) {
+    try {
+      const { autoAssignTicket } = require('./auto-assignment');
+      const allTickets = safeRead(ticketsPath, []);
+      const currentTicket = allTickets.find(t => t.id === nr);
+
+      if (currentTicket) {
+        const assignedMember = await autoAssignTicket(interaction.guild, cfg, currentTicket, allTickets);
+
+        if (assignedMember) {
+          // Update ticket with assigned member
+          currentTicket.claimedBy = assignedMember;
+          currentTicket.status = 'offen';
+
+          // Add assigned member to channel permissions
+          try {
+            await ch.permissionOverwrites.create(assignedMember, {
+              ViewChannel: true,
+              SendMessages: true,
+              AttachFiles: true,
+              EmbedLinks: true
+            });
+
+            // Update channel name with 🔒 emoji
+            const newName = buildChannelName(nr, currentTicket.priority || 0, currentTicket.isVIP || false, true);
+            await scheduleChannelRename(ch, newName);
+          } catch (permErr) {
+            console.error('Auto-Assignment permission error:', permErr);
+          }
+
+          // Save updated config (with assignment stats)
+          writeCfg(guildId, cfg);
+
+          // Save updated ticket
+          safeWrite(ticketsPath, allTickets);
+
+          // Send notification DM to assigned member (if enabled)
+          if (cfg.autoAssignment.notifyAssignee) {
+            try {
+              const member = await interaction.guild.members.fetch(assignedMember);
+              const user = member.user;
+
+              const priorityEmojis = ['🟢', '🟠', '🔴'];
+              const priorityEmoji = priorityEmojis[currentTicket.priority || 0];
+
+              const notificationEmbed = new EmbedBuilder()
+                .setColor(0x3b82f6)
+                .setTitle(t(guildId, 'autoAssignment.notification_title'))
+                .setDescription(t(guildId, 'autoAssignment.notification_description', {
+                  ticketId: nr,
+                  channel: `<#${ch.id}>`
+                }))
+                .addFields(
+                  { name: t(guildId, 'autoAssignment.notification_topic'), value: topic.label, inline: true },
+                  { name: t(guildId, 'autoAssignment.notification_priority'), value: priorityEmoji, inline: true },
+                  { name: t(guildId, 'autoAssignment.notification_creator'), value: `<@${interaction.user.id}>`, inline: true }
+                )
+                .setFooter({ text: 'Quantix Tickets • Auto-Assignment' })
+                .setTimestamp();
+
+              await user.send({ embeds: [notificationEmbed] }).catch(dmErr => {
+                console.log(`Konnte Auto-Assignment DM nicht an ${user.tag} senden:`, dmErr.message);
+              });
+            } catch (memberErr) {
+              console.error('Konnte Team-Mitglied nicht fetchen:', memberErr);
+            }
+          }
+
+          // Log assignment
+          const strategyNames = {
+            'round_robin': 'Round-Robin',
+            'workload': 'Workload-basiert',
+            'random': 'Zufällig',
+            'priority_queue': 'Priority Queue'
+          };
+          const strategyName = strategyNames[cfg.autoAssignment.strategy] || cfg.autoAssignment.strategy;
+
+          await logEvent(interaction.guild, `🎯 Ticket #${nr} automatisch zugewiesen an <@${assignedMember}> (${strategyName})`);
+        }
+      }
+    } catch (autoAssignErr) {
+      console.error('Auto-Assignment error:', autoAssignErr);
+      // Fehler wird ignoriert, Ticket-Erstellung wird nicht blockiert
+    }
+  }
 
   // Log für AntiSpam Rate-Limiting
   logTicketCreation(interaction.user.id, guildId);

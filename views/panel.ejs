@@ -2377,6 +2377,541 @@
               </div>
             </div>
 
+            <!-- Advanced Survey System -->
+            <div class="card" style="margin-top: 24px;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '📋 Erweiterte Umfragen' : '📋 Advanced Surveys' %></span>
+                    <span class="premium-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">
+                      <i class="fas fa-star"></i> BASIC+
+                    </span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Multi-Question Surveys mit NPS-Tracking, Custom Questions und Trend-Analysen'
+                      : 'Multi-question surveys with NPS tracking, custom questions and trend analysis'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 12px; backdrop-filter: blur(10px);">
+                  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <i class="fas fa-clipboard-check" style="font-size: 1.25rem; color: #3b82f6;"></i>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;"><%= lang === 'de' ? 'Survey-System Einstellungen' : 'Survey System Settings' %></h3>
+                  </div>
+
+                  <!-- Enable Survey System -->
+                  <label class="survey-toggle-option <%= (cfg.surveySystem && cfg.surveySystem.enabled) ? 'active' : '' %>" data-option="enabled">
+                    <input
+                      type="checkbox"
+                      name="surveySystemEnabled"
+                      <%= (cfg.surveySystem && cfg.surveySystem.enabled) ? 'checked' : '' %>
+                      style="display: none;">
+                    <div class="toggle-content">
+                      <div class="toggle-icon">
+                        <i class="fas fa-check"></i>
+                      </div>
+                      <span style="font-weight: 500;"><%= lang === 'de' ? 'Umfrage-System aktivieren (ersetzt 5-Sterne Rating)' : 'Enable Survey System (replaces 5-star rating)' %></span>
+                    </div>
+                  </label>
+
+                  <div class="survey-config-area" style="<%= (cfg.surveySystem && cfg.surveySystem.enabled) ? '' : 'display: none;' %>">
+                    <!-- Send on Close -->
+                    <label class="survey-toggle-option <%= (!cfg.surveySystem || cfg.surveySystem.sendOnClose !== false) ? 'active' : '' %>" data-option="sendOnClose">
+                      <input
+                        type="checkbox"
+                        name="surveySystemSendOnClose"
+                        <%= (!cfg.surveySystem || cfg.surveySystem.sendOnClose !== false) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'Bei Ticket-Schließung senden' : 'Send on ticket close' %></span>
+                      </div>
+                    </label>
+
+                    <!-- Show in Analytics -->
+                    <label class="survey-toggle-option <%= (!cfg.surveySystem || cfg.surveySystem.showInAnalytics !== false) ? 'active' : '' %>" data-option="analytics">
+                      <input
+                        type="checkbox"
+                        name="surveySystemShowInAnalytics"
+                        <%= (!cfg.surveySystem || cfg.surveySystem.showInAnalytics !== false) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'In Analytics anzeigen' : 'Show in Analytics' %></span>
+                      </div>
+                    </label>
+
+                    <!-- Question Configuration -->
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px;">
+                      <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #3b82f6;">
+                        <i class="fas fa-list-check"></i> <%= lang === 'de' ? 'Standard-Fragen' : 'Default Questions' %>
+                      </h4>
+                      <p style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 1rem;">
+                        <%= lang === 'de'
+                          ? 'Diese Fragen werden bei jedem Ticket nach der Schließung gestellt:'
+                          : 'These questions will be asked after every ticket closes:'
+                        %>
+                      </p>
+
+                      <!-- Question 1: 5-Star Rating -->
+                      <div style="padding: 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 6px; margin-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                          <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">
+                              <i class="fas fa-star" style="color: #fbbf24;"></i>
+                              <%= lang === 'de' ? 'Zufriedenheitsbewertung (1-5 Sterne)' : 'Satisfaction Rating (1-5 stars)' %>
+                            </div>
+                            <div style="font-size: 0.875rem; opacity: 0.7;">
+                              <%= lang === 'de' ? 'Wie zufrieden bist du mit dem Support?' : 'How satisfied are you with the support?' %>
+                            </div>
+                          </div>
+                          <span style="background: #10b981; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">
+                            <%= lang === 'de' ? 'AKTIV' : 'ACTIVE' %>
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Question 2: NPS -->
+                      <div style="padding: 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 6px; margin-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                          <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">
+                              <i class="fas fa-chart-line" style="color: #3b82f6;"></i>
+                              <%= lang === 'de' ? 'Net Promoter Score (0-10)' : 'Net Promoter Score (0-10)' %>
+                            </div>
+                            <div style="font-size: 0.875rem; opacity: 0.7;">
+                              <%= lang === 'de' ? 'Wie wahrscheinlich ist es, dass du uns weiterempfiehlst?' : 'How likely are you to recommend us?' %>
+                            </div>
+                          </div>
+                          <span style="background: #10b981; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">
+                            <%= lang === 'de' ? 'AKTIV' : 'ACTIVE' %>
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Question 3: Feedback Text -->
+                      <div style="padding: 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                          <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">
+                              <i class="fas fa-comment-dots" style="color: #8b5cf6;"></i>
+                              <%= lang === 'de' ? 'Freitext-Feedback (Optional)' : 'Text Feedback (Optional)' %>
+                            </div>
+                            <div style="font-size: 0.875rem; opacity: 0.7;">
+                              <%= lang === 'de' ? 'Was können wir besser machen?' : 'What can we improve?' %>
+                            </div>
+                          </div>
+                          <span style="background: #10b981; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">
+                            <%= lang === 'de' ? 'AKTIV' : 'ACTIVE' %>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px;">
+                        <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                        <strong><%= lang === 'de' ? 'Hinweis:' : 'Note:' %></strong>
+                        <%= lang === 'de'
+                          ? 'Die Standard-Fragen sind optimiert für maximale Insights. Custom Questions werden in einem zukünftigen Update verfügbar.'
+                          : 'Default questions are optimized for maximum insights. Custom questions will be available in a future update.'
+                        %>
+                      </div>
+                    </div>
+
+                    <!-- Preview Section -->
+                    <div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px;">
+                      <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #10b981;">
+                        <i class="fas fa-eye"></i> <%= lang === 'de' ? 'Analytics Vorschau' : 'Analytics Preview' %>
+                      </h4>
+                      <p style="font-size: 0.875rem; opacity: 0.8;">
+                        <%= lang === 'de'
+                          ? 'In Analytics werden folgende Metriken verfügbar:'
+                          : 'The following metrics will be available in Analytics:'
+                        %>
+                      </p>
+                      <ul style="margin: 1rem 0; padding-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Antwortrate:</strong> <%= lang === 'de' ? '% der User, die Umfrage ausfüllen' : '% of users completing survey' %></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Ø Bewertung:</strong> <%= lang === 'de' ? 'Durchschnittliche Sterne-Bewertung' : 'Average star rating' %></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>NPS Score:</strong> <%= lang === 'de' ? 'Promoter % - Detractor %' : 'Promoter % - Detractor %' %></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Trend-Analyse:</strong> <%= lang === 'de' ? '30-Tage Verlauf' : '30-day trend' %></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Topic-Breakdown:</strong> <%= lang === 'de' ? 'Bewertungen pro Topic' : 'Ratings per topic' %></li>
+                        <li><strong>Team-Performance:</strong> <%= lang === 'de' ? 'Bewertungen pro Team-Mitglied' : 'Ratings per team member' %></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <script>
+                  // Toggle functionality for survey options
+                  document.querySelectorAll('.survey-toggle-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      const checkbox = this.querySelector('input[type="checkbox"]');
+                      checkbox.checked = !checkbox.checked;
+
+                      if (checkbox.checked) {
+                        this.classList.add('active');
+                      } else {
+                        this.classList.remove('active');
+                      }
+
+                      // Show/hide config area when main toggle is clicked
+                      if (this.dataset.option === 'enabled') {
+                        const configArea = document.querySelector('.survey-config-area');
+                        if (configArea) {
+                          configArea.style.display = checkbox.checked ? 'block' : 'none';
+                        }
+                      }
+                    });
+                  });
+
+                  // Copy styles from rating-toggle-option for consistency
+                  const style = document.createElement('style');
+                  style.textContent = `
+                    .survey-toggle-option {
+                      display: flex;
+                      align-items: center;
+                      padding: 1rem 1.25rem;
+                      background: var(--glass-bg);
+                      border: 2px solid var(--glass-border);
+                      border-radius: 10px;
+                      cursor: pointer;
+                      transition: all 0.3s ease;
+                      margin-bottom: 0.75rem;
+                    }
+
+                    .survey-toggle-option:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 4px 12px var(--shadow-color);
+                      border-color: #3b82f6;
+                    }
+
+                    .survey-toggle-option.active {
+                      border-color: #3b82f6;
+                      background: rgba(59, 130, 246, 0.05);
+                    }
+
+                    .survey-toggle-option .toggle-content {
+                      display: flex;
+                      align-items: center;
+                      gap: 0.75rem;
+                      width: 100%;
+                      color: var(--text-color);
+                    }
+
+                    .survey-toggle-option.active .toggle-content {
+                      color: #3b82f6;
+                    }
+
+                    .survey-toggle-option .toggle-icon {
+                      width: 24px;
+                      height: 24px;
+                      border-radius: 6px;
+                      background: rgba(148, 163, 184, 0.2);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      transition: all 0.3s ease;
+                      flex-shrink: 0;
+                    }
+
+                    .survey-toggle-option.active .toggle-icon {
+                      background: #3b82f6;
+                    }
+
+                    .survey-toggle-option .toggle-icon i {
+                      font-size: 12px;
+                      color: white;
+                      opacity: 0;
+                      transition: opacity 0.3s ease;
+                    }
+
+                    .survey-toggle-option.active .toggle-icon i {
+                      opacity: 1;
+                    }
+                  `;
+                  document.head.appendChild(style);
+                </script>
+              </div>
+            </div>
+
+            <!-- Auto-Assignment System -->
+            <div class="card" style="margin-top: 24px;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-user-check"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '🎯 Automatische Zuweisung' : '🎯 Auto-Assignment' %></span>
+                    <span class="premium-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">
+                      <i class="fas fa-star"></i> BASIC+
+                    </span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Verteile Tickets automatisch fair an dein Team - Round-Robin, Workload-basiert oder Priority Queue'
+                      : 'Automatically distribute tickets fairly to your team - Round-Robin, Workload-based or Priority Queue'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 12px; backdrop-filter: blur(10px);">
+                  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <i class="fas fa-user-check" style="font-size: 1.25rem; color: #3b82f6;"></i>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;"><%= lang === 'de' ? 'Auto-Assignment Einstellungen' : 'Auto-Assignment Settings' %></h3>
+                  </div>
+
+                  <!-- Enable Auto-Assignment -->
+                  <label class="auto-assign-toggle-option <%= (cfg.autoAssignment && cfg.autoAssignment.enabled) ? 'active' : '' %>" data-option="enabled">
+                    <input
+                      type="checkbox"
+                      name="autoAssignmentEnabled"
+                      <%= (cfg.autoAssignment && cfg.autoAssignment.enabled) ? 'checked' : '' %>
+                      style="display: none;">
+                    <div class="toggle-content">
+                      <div class="toggle-icon">
+                        <i class="fas fa-check"></i>
+                      </div>
+                      <span style="font-weight: 500;"><%= lang === 'de' ? 'Automatische Zuweisung aktivieren' : 'Enable Auto-Assignment' %></span>
+                    </div>
+                  </label>
+
+                  <div class="auto-assign-config-area" style="<%= (cfg.autoAssignment && cfg.autoAssignment.enabled) ? '' : 'display: none;' %>">
+                    <!-- Assign on Create -->
+                    <label class="auto-assign-toggle-option <%= (!cfg.autoAssignment || cfg.autoAssignment.assignOnCreate !== false) ? 'active' : '' %>" data-option="assignOnCreate">
+                      <input
+                        type="checkbox"
+                        name="autoAssignmentAssignOnCreate"
+                        <%= (!cfg.autoAssignment || cfg.autoAssignment.assignOnCreate !== false) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'Bei Ticket-Erstellung zuweisen' : 'Assign on ticket creation' %></span>
+                      </div>
+                    </label>
+
+                    <!-- Notify Assignee -->
+                    <label class="auto-assign-toggle-option <%= (!cfg.autoAssignment || cfg.autoAssignment.notifyAssignee !== false) ? 'active' : '' %>" data-option="notifyAssignee">
+                      <input
+                        type="checkbox"
+                        name="autoAssignmentNotifyAssignee"
+                        <%= (!cfg.autoAssignment || cfg.autoAssignment.notifyAssignee !== false) ? 'checked' : '' %>
+                        style="display: none;">
+                      <div class="toggle-content">
+                        <div class="toggle-icon">
+                          <i class="fas fa-check"></i>
+                        </div>
+                        <span style="font-weight: 500;"><%= lang === 'de' ? 'Zugewiesene Person benachrichtigen' : 'Notify assigned member' %></span>
+                      </div>
+                    </label>
+
+                    <!-- Strategy Selection -->
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px;">
+                      <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #3b82f6;">
+                        <i class="fas fa-route"></i> <%= lang === 'de' ? 'Zuweisungs-Strategie' : 'Assignment Strategy' %>
+                      </h4>
+
+                      <select name="autoAssignmentStrategy" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid var(--glass-border); background: var(--glass-bg); color: var(--text-color); font-size: 1rem;">
+                        <option value="workload" <%= (!cfg.autoAssignment || cfg.autoAssignment.strategy === 'workload' || !cfg.autoAssignment.strategy) ? 'selected' : '' %>>
+                          <%= lang === 'de' ? '⚖️ Workload-basiert (Wenigste offene Tickets) - BASIC+' : '⚖️ Workload-based (Least open tickets) - BASIC+' %>
+                        </option>
+                        <option value="round_robin" <%= (cfg.autoAssignment && cfg.autoAssignment.strategy === 'round_robin') ? 'selected' : '' %>>
+                          <%= lang === 'de' ? '🔄 Round-Robin (Reihum) - BASIC+' : '🔄 Round-Robin (Rotate) - BASIC+' %>
+                        </option>
+                        <option value="random" <%= (cfg.autoAssignment && cfg.autoAssignment.strategy === 'random') ? 'selected' : '' %>>
+                          <%= lang === 'de' ? '🎲 Zufällig - BASIC+' : '🎲 Random - BASIC+' %>
+                        </option>
+                        <option value="priority_queue" <%= (cfg.autoAssignment && cfg.autoAssignment.strategy === 'priority_queue') ? 'selected' : '' %>>
+                          <%= lang === 'de' ? '⭐ Priority Queue (Smart) - PRO' : '⭐ Priority Queue (Smart) - PRO' %>
+                        </option>
+                      </select>
+
+                      <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px; font-size: 0.875rem;">
+                        <strong><%= lang === 'de' ? 'ℹ️ Strategien erklärt:' : 'ℹ️ Strategies explained:' %></strong><br>
+                        <ul style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
+                          <li><strong>Workload:</strong> <%= lang === 'de' ? 'Zuweisen an das Mitglied mit den wenigsten offenen Tickets' : 'Assign to member with least open tickets' %></li>
+                          <li><strong>Round-Robin:</strong> <%= lang === 'de' ? 'Reihum an alle Team-Mitglieder' : 'Rotate through all team members' %></li>
+                          <li><strong>Random:</strong> <%= lang === 'de' ? 'Zufällige Zuweisung' : 'Random assignment' %></li>
+                          <li><strong>Priority Queue (Pro):</strong> <%= lang === 'de' ? 'Smart: Berücksichtigt Workload, Priorität & Online-Status' : 'Smart: Considers workload, priority & online status' %></li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <!-- Pro Features -->
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px;">
+                      <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #8b5cf6;">
+                        <i class="fas fa-crown"></i> <%= lang === 'de' ? 'PRO Features' : 'PRO Features' %>
+                      </h4>
+
+                      <!-- Check Online Status (Pro) -->
+                      <label class="auto-assign-toggle-option <%= (cfg.autoAssignment && cfg.autoAssignment.checkOnlineStatus) ? 'active' : '' %>" data-option="checkOnlineStatus">
+                        <input
+                          type="checkbox"
+                          name="autoAssignmentCheckOnlineStatus"
+                          <%= (cfg.autoAssignment && cfg.autoAssignment.checkOnlineStatus) ? 'checked' : '' %>
+                          style="display: none;">
+                        <div class="toggle-content">
+                          <div class="toggle-icon">
+                            <i class="fas fa-check"></i>
+                          </div>
+                          <span style="font-weight: 500;">
+                            <%= lang === 'de' ? '🟢 Nur online Team-Mitglieder' : '🟢 Only online team members' %>
+                            <span class="premium-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; margin-left: 8px;">
+                              PRO
+                            </span>
+                          </span>
+                        </div>
+                      </label>
+
+                      <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-left: 4px solid #8b5cf6; border-radius: 4px; font-size: 0.875rem;">
+                        <strong><%= lang === 'de' ? '💡 Tipp:' : '💡 Tip:' %></strong>
+                        <%= lang === 'de'
+                          ? 'Mit Priority Queue + Online-Status Check werden Tickets intelligent an verfügbare Mitglieder mit niedriger Auslastung zugewiesen.'
+                          : 'With Priority Queue + Online Status Check, tickets are intelligently assigned to available members with low workload.'
+                        %>
+                      </div>
+                    </div>
+
+                    <!-- Statistics Preview -->
+                    <div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px;">
+                      <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #10b981;">
+                        <i class="fas fa-chart-bar"></i> <%= lang === 'de' ? 'Fairness-Statistiken' : 'Fairness Statistics' %>
+                      </h4>
+                      <p style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 1rem;">
+                        <%= lang === 'de'
+                          ? 'Das System trackt automatisch:'
+                          : 'The system automatically tracks:'
+                        %>
+                      </p>
+                      <ul style="margin: 0; padding-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>Gesamt-Zuweisungen:</strong> <%= lang === 'de' ? 'Anzahl der auto-zugewiesenen Tickets' : 'Number of auto-assigned tickets' %></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Pro Team-Mitglied:</strong> <%= lang === 'de' ? 'Wie viele Tickets jeder erhalten hat' : 'How many tickets each member received' %></li>
+                        <li style="margin-bottom: 0.5rem;"><strong>Aktuelle Auslastung:</strong> <%= lang === 'de' ? 'Offene Tickets pro Person' : 'Open tickets per person' %></li>
+                        <li><strong>Fairness-Score:</strong> <%= lang === 'de' ? 'Wie gleichmäßig verteilt die Tickets sind' : 'How evenly distributed tickets are' %></li>
+                      </ul>
+                    </div>
+
+                    <!-- Command Info -->
+                    <div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(234, 179, 8, 0.05); border: 1px solid rgba(234, 179, 8, 0.2); border-radius: 8px;">
+                      <h4 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #eab308;">
+                        <i class="fas fa-terminal"></i> <%= lang === 'de' ? 'Team-Mitglieder Command' : 'Team Member Command' %>
+                      </h4>
+                      <p style="font-size: 0.875rem; margin: 0;">
+                        <%= lang === 'de'
+                          ? 'Team-Mitglieder können sich temporär von der automatischen Zuweisung ausnehmen:'
+                          : 'Team members can temporarily opt-out from auto-assignment:'
+                        %>
+                      </p>
+                      <code style="display: block; margin-top: 0.5rem; padding: 0.75rem; background: rgba(0,0,0,0.1); border-radius: 6px; font-family: monospace;">
+                        /availability
+                      </code>
+                    </div>
+                  </div>
+                </div>
+
+                <script>
+                  // Toggle functionality for auto-assign options
+                  document.querySelectorAll('.auto-assign-toggle-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      const checkbox = this.querySelector('input[type="checkbox"]');
+                      checkbox.checked = !checkbox.checked;
+
+                      if (checkbox.checked) {
+                        this.classList.add('active');
+                      } else {
+                        this.classList.remove('active');
+                      }
+
+                      // Show/hide config area when main toggle is clicked
+                      if (this.dataset.option === 'enabled') {
+                        const configArea = document.querySelector('.auto-assign-config-area');
+                        if (configArea) {
+                          configArea.style.display = checkbox.checked ? 'block' : 'none';
+                        }
+                      }
+                    });
+                  });
+
+                  // Copy styles
+                  const autoAssignStyle = document.createElement('style');
+                  autoAssignStyle.textContent = `
+                    .auto-assign-toggle-option {
+                      display: flex;
+                      align-items: center;
+                      padding: 1rem 1.25rem;
+                      background: var(--glass-bg);
+                      border: 2px solid var(--glass-border);
+                      border-radius: 10px;
+                      cursor: pointer;
+                      transition: all 0.3s ease;
+                      margin-bottom: 0.75rem;
+                    }
+                    .auto-assign-toggle-option:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 4px 12px var(--shadow-color);
+                      border-color: #3b82f6;
+                    }
+                    .auto-assign-toggle-option.active {
+                      border-color: #3b82f6;
+                      background: rgba(59, 130, 246, 0.05);
+                    }
+                    .auto-assign-toggle-option .toggle-content {
+                      display: flex;
+                      align-items: center;
+                      gap: 0.75rem;
+                      width: 100%;
+                      color: var(--text-color);
+                    }
+                    .auto-assign-toggle-option.active .toggle-content {
+                      color: #3b82f6;
+                    }
+                    .auto-assign-toggle-option .toggle-icon {
+                      width: 24px;
+                      height: 24px;
+                      border-radius: 6px;
+                      background: rgba(148, 163, 184, 0.2);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      transition: all 0.3s ease;
+                      flex-shrink: 0;
+                    }
+                    .auto-assign-toggle-option.active .toggle-icon {
+                      background: #3b82f6;
+                    }
+                    .auto-assign-toggle-option .toggle-icon i {
+                      font-size: 12px;
+                      color: white;
+                      opacity: 0;
+                      transition: opacity 0.3s ease;
+                    }
+                    .auto-assign-toggle-option.active .toggle-icon i {
+                      opacity: 1;
+                    }
+                  `;
+                  document.head.appendChild(autoAssignStyle);
+                </script>
+              </div>
+            </div>
+
             <!-- SLA System Settings -->
             <div class="card" style="margin-top: 24px;">
               <div class="card-header">
