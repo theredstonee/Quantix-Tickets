@@ -67,9 +67,11 @@ module.exports = {
     .setDescription('Add an internal note to the current ticket (team only)')
     .setDescriptionLocalizations({
       de: 'Interne Notiz zum aktuellen Ticket hinzufügen (nur Team)',
+      'en-US': 'Add an internal note to the current ticket (team only)',
+      'en-GB': 'Add an internal note to the current ticket (team only)',
       'es-ES': 'Agregar una nota interna al ticket actual (solo equipo)',
       fr: 'Ajouter une note interne au ticket actuel (équipe uniquement)',
-      pt: 'Adicionar uma nota interna ao ticket atual (apenas equipe)',
+      'pt-BR': 'Adicionar uma nota interna ao ticket atual (apenas equipe)',
       ru: 'Добавить внутреннюю заметку к текущему тикету (только команда)',
       ja: '現在のチケットに内部メモを追加（チームのみ）',
       id: 'Tambahkan catatan internal ke tiket saat ini (hanya tim)'
@@ -80,9 +82,11 @@ module.exports = {
         .setDescription('The note content')
         .setDescriptionLocalizations({
           de: 'Der Notizinhalt',
+          'en-US': 'The note content',
+          'en-GB': 'The note content',
           'es-ES': 'El contenido de la nota',
           fr: 'Le contenu de la note',
-          pt: 'O conteúdo da nota',
+          'pt-BR': 'O conteúdo da nota',
           ru: 'Содержание заметки',
           ja: 'メモの内容',
           id: 'Konten catatan'

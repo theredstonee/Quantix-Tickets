@@ -22,9 +22,11 @@ module.exports = {
     .setDescription('Show your own tickets (open and history)')
     .setDescriptionLocalizations({
       de: 'Zeige deine eigenen Tickets (offen und Verlauf)',
-      es: 'Muestra tus propios tickets (abiertos e historial)',
+      'en-US': 'Show your own tickets (open and history)',
+      'en-GB': 'Show your own tickets (open and history)',
+      'es-ES': 'Muestra tus propios tickets (abiertos e historial)',
       fr: 'Afficher vos propres tickets (ouverts et historique)',
-      pt: 'Mostrar seus próprios tickets (abertos e histórico)',
+      'pt-BR': 'Mostrar seus próprios tickets (abertos e histórico)',
       ru: 'Показать ваши тикеты (открытые и история)',
       ja: '自分のチケットを表示（オープンと履歴）',
       id: 'Tampilkan tiket Anda sendiri (terbuka dan riwayat)'
