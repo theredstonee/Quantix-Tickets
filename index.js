@@ -3258,6 +3258,49 @@ client.on(Events.InteractionCreate, async i => {
         setTimeout(async () => {
           if (cfg.archiveEnabled && cfg.archiveCategoryId) {
             try {
+              // Setze Berechtigungen so, dass nur Team Zugriff hat (nicht Creator oder addedUsers)
+              const archivePermissions = [
+                {
+                  id: i.guild.id,
+                  deny: [PermissionsBitField.Flags.ViewChannel]
+                }
+              ];
+
+              // Team-Rolle: Lesen erlauben, Schreiben verbieten
+              const TEAM_ROLE = getTeamRole(guildId);
+              if (TEAM_ROLE && TEAM_ROLE.trim()) {
+                try {
+                  await i.guild.roles.fetch(TEAM_ROLE);
+                  archivePermissions.push({
+                    id: TEAM_ROLE,
+                    allow: [PermissionsBitField.Flags.ViewChannel],
+                    deny: [PermissionsBitField.Flags.SendMessages]
+                  });
+                } catch {
+                  console.error('Team-Rolle nicht gefunden:', TEAM_ROLE);
+                }
+              }
+
+              // Priority-Rollen: Auch Zugriff erlauben (nur lesen)
+              const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, ticket.priority || 0);
+              for (const roleId of hierarchicalRoles) {
+                if (roleId && roleId.trim()) {
+                  try {
+                    await i.guild.roles.fetch(roleId);
+                    archivePermissions.push({
+                      id: roleId,
+                      allow: [PermissionsBitField.Flags.ViewChannel],
+                      deny: [PermissionsBitField.Flags.SendMessages]
+                    });
+                  } catch {
+                    console.error('Priority-Rolle nicht gefunden:', roleId);
+                  }
+                }
+              }
+
+              // Entferne Zugriff für Creator und addedUsers
+              await i.channel.permissionOverwrites.set(archivePermissions);
+
               // Verschiebe Channel in Archiv-Kategorie
               await i.channel.setParent(cfg.archiveCategoryId, {
                 lockPermissions: false
@@ -3267,7 +3310,7 @@ client.on(Events.InteractionCreate, async i => {
               const newName = `closed-${i.channel.name}`;
               await i.channel.setName(newName);
 
-              console.log(`✅ Ticket #${ticket.id} in Archiv verschoben`);
+              console.log(`✅ Ticket #${ticket.id} in Archiv verschoben (nur Team-Zugriff)`);
             } catch (err) {
               console.error('Fehler beim Archivieren:', err);
               // Fallback: Lösche Channel
@@ -3598,12 +3641,75 @@ client.on(Events.InteractionCreate, async i => {
             }
           }
 
-          // Close the channel
+          // Archiv oder Löschen
           setTimeout(async () => {
-            try {
-              await i.channel.delete();
-            } catch (err) {
-              console.error('Fehler beim Löschen des Channels:', err);
+            if (cfg.archiveEnabled && cfg.archiveCategoryId) {
+              try {
+                // Setze Berechtigungen so, dass nur Team Zugriff hat (nicht Creator oder addedUsers)
+                const archivePermissions = [
+                  {
+                    id: i.guild.id,
+                    deny: [PermissionsBitField.Flags.ViewChannel]
+                  }
+                ];
+
+                // Team-Rolle: Lesen erlauben, Schreiben verbieten
+                const TEAM_ROLE = getTeamRole(guildId);
+                if (TEAM_ROLE && TEAM_ROLE.trim()) {
+                  try {
+                    await i.guild.roles.fetch(TEAM_ROLE);
+                    archivePermissions.push({
+                      id: TEAM_ROLE,
+                      allow: [PermissionsBitField.Flags.ViewChannel],
+                      deny: [PermissionsBitField.Flags.SendMessages]
+                    });
+                  } catch {
+                    console.error('Team-Rolle nicht gefunden:', TEAM_ROLE);
+                  }
+                }
+
+                // Priority-Rollen: Auch Zugriff erlauben (nur lesen)
+                const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, ticket.priority || 0);
+                for (const roleId of hierarchicalRoles) {
+                  if (roleId && roleId.trim()) {
+                    try {
+                      await i.guild.roles.fetch(roleId);
+                      archivePermissions.push({
+                        id: roleId,
+                        allow: [PermissionsBitField.Flags.ViewChannel],
+                        deny: [PermissionsBitField.Flags.SendMessages]
+                      });
+                    } catch {
+                      console.error('Priority-Rolle nicht gefunden:', roleId);
+                    }
+                  }
+                }
+
+                // Entferne Zugriff für Creator und addedUsers
+                await i.channel.permissionOverwrites.set(archivePermissions);
+
+                // Verschiebe Channel in Archiv-Kategorie
+                await i.channel.setParent(cfg.archiveCategoryId, {
+                  lockPermissions: false
+                });
+
+                // Benenne Channel um zu "closed-ticket-####"
+                const newName = `closed-${i.channel.name}`;
+                await i.channel.setName(newName);
+
+                console.log(`✅ Ticket #${ticket.id} in Archiv verschoben (nur Team-Zugriff)`);
+              } catch (err) {
+                console.error('Fehler beim Archivieren:', err);
+                // Fallback: Lösche Channel
+                await i.channel.delete().catch(() => {});
+              }
+            } else {
+              // Kein Archiv aktiv: Lösche Channel
+              try {
+                await i.channel.delete();
+              } catch (err) {
+                console.error('Fehler beim Löschen des Channels:', err);
+              }
             }
           }, 5000);
 
@@ -4284,7 +4390,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
 
         if (assignedMember) {
           // Update ticket with assigned member
-          currentTicket.claimedBy = assignedMember;
+          currentTicket.claimer = assignedMember;
           currentTicket.status = 'offen';
 
           // Add assigned member to channel permissions

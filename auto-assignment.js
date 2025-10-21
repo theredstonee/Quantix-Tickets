@@ -136,7 +136,7 @@ function getAllTeamRoles(config) {
 function getMemberWorkload(userId, tickets) {
   return tickets.filter(t =>
     t.status === 'offen' &&
-    t.claimedBy === userId
+    t.claimer === userId
   ).length;
 }
 
@@ -331,8 +331,8 @@ function getAssignmentStats(config, tickets) {
   const stats = config.autoAssignment?.stats || { totalAssignments: 0, byMember: {} };
 
   const currentWorkloads = {};
-  tickets.filter(t => t.status === 'offen' && t.claimedBy).forEach(t => {
-    currentWorkloads[t.claimedBy] = (currentWorkloads[t.claimedBy] || 0) + 1;
+  tickets.filter(t => t.status === 'offen' && t.claimer).forEach(t => {
+    currentWorkloads[t.claimer] = (currentWorkloads[t.claimer] || 0) + 1;
   });
 
   return {

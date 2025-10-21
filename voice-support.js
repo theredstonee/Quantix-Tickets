@@ -111,14 +111,19 @@ async function createVoiceChannel(interaction, ticket, guildId) {
       bitrate: Math.min(guild.premiumTier >= 1 ? 128000 : 96000, 96000)
     });
 
+    // Update voiceChannelId without overwriting other ticket fields
     const tickets = loadTickets(guildId);
     const ticketIndex = tickets.findIndex(t => t.id === ticket.id);
 
     if (ticketIndex !== -1) {
+      // Only update voice-related fields, preserve all other fields (like claimer)
       tickets[ticketIndex].voiceChannelId = voiceChannel.id;
       tickets[ticketIndex].voiceCreatedAt = new Date().toISOString();
       tickets[ticketIndex].voiceCreatedBy = interaction.user.id;
+
+      // Important: Don't overwrite claimer, status, or other fields that might have been updated
       saveTickets(guildId, tickets);
+      console.log(`📝 Updated ticket #${ticket.id} with voiceChannelId (preserving claimer: ${tickets[ticketIndex].claimer || 'none'})`);
     }
 
     // Log-Nachricht wird in index.js gesendet
@@ -141,13 +146,18 @@ async function deleteVoiceChannel(guild, voiceChannelId, guildId) {
       console.log(`✅ Voice channel ${voiceChannelId} deleted`);
     }
 
+    // Update voiceChannelId without overwriting other ticket fields
     const tickets = loadTickets(guildId);
     const ticketIndex = tickets.findIndex(t => t.voiceChannelId === voiceChannelId);
 
     if (ticketIndex !== -1) {
+      // Only update voice-related fields, preserve all other fields (like claimer)
       tickets[ticketIndex].voiceChannelId = null;
       tickets[ticketIndex].voiceDeletedAt = new Date().toISOString();
+
+      // Important: Don't overwrite claimer, status, or other fields that might have been updated
       saveTickets(guildId, tickets);
+      console.log(`📝 Updated ticket #${tickets[ticketIndex].id} - removed voiceChannelId (preserving claimer: ${tickets[ticketIndex].claimer || 'none'})`);
     }
 
   } catch (err) {
