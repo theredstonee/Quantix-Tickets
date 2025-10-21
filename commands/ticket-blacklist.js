@@ -28,6 +28,9 @@ module.exports = {
     .setDescription('Manage ticket blacklist - block users from creating tickets')
     .setDescriptionLocalizations({
       de: 'Verwalte die Ticket-Blacklist - Blockiere User von der Ticket-Erstellung',
+      'en-US': 'Manage ticket blacklist - block users from creating tickets',
+      'en-GB': 'Manage ticket blacklist - block users from creating tickets',
+      fr: 'Gérer la liste noire - bloquer les utilisateurs de créer des tickets',
       ru: 'Управление черным списком - блокировка пользователей от создания тикетов',
       pt: 'Gerenciar lista negra - bloquear usuários de criar tickets',
       'es-ES': 'Administrar lista negra - bloquear usuarios de crear tickets',
@@ -41,6 +44,9 @@ module.exports = {
         .setDescription('Add a user to the ticket blacklist')
         .setDescriptionLocalizations({
           de: 'Füge einen User zur Ticket-Blacklist hinzu',
+          'en-US': 'Add a user to the ticket blacklist',
+          'en-GB': 'Add a user to the ticket blacklist',
+          fr: 'Ajouter un utilisateur à la liste noire',
           ru: 'Добавить пользователя в черный список',
           pt: 'Adicionar um usuário à lista negra',
           'es-ES': 'Añadir un usuario a la lista negra',
@@ -53,6 +59,9 @@ module.exports = {
             .setDescription('User to blacklist')
             .setDescriptionLocalizations({
               de: 'User zum Blockieren',
+              'en-US': 'User to blacklist',
+              'en-GB': 'User to blacklist',
+              fr: 'Utilisateur à bloquer',
               ru: 'Пользователь для блокировки',
               pt: 'Usuário para bloquear',
               'es-ES': 'Usuario para bloquear',
@@ -66,6 +75,9 @@ module.exports = {
             .setDescription('Reason for blacklisting')
             .setDescriptionLocalizations({
               de: 'Grund für die Blockierung',
+              'en-US': 'Reason for blacklisting',
+              'en-GB': 'Reason for blacklisting',
+              fr: 'Raison du blocage',
               ru: 'Причина блокировки',
               pt: 'Motivo para bloquear',
               'es-ES': 'Razón para bloquear',
@@ -79,6 +91,9 @@ module.exports = {
             .setDescription('Permanent blacklist (default: true)')
             .setDescriptionLocalizations({
               de: 'Permanente Blockierung (Standard: ja)',
+              'en-US': 'Permanent blacklist (default: true)',
+              'en-GB': 'Permanent blacklist (default: true)',
+              fr: 'Blocage permanent (par défaut: oui)',
               ru: 'Постоянная блокировка (по умолчанию: да)',
               pt: 'Bloqueio permanente (padrão: sim)',
               'es-ES': 'Bloqueo permanente (predeterminado: sí)',
@@ -92,6 +107,9 @@ module.exports = {
             .setDescription('Days to blacklist (if not permanent)')
             .setDescriptionLocalizations({
               de: 'Tage für die Blockierung (wenn nicht permanent)',
+              'en-US': 'Days to blacklist (if not permanent)',
+              'en-GB': 'Days to blacklist (if not permanent)',
+              fr: 'Jours de blocage (si non permanent)',
               ru: 'Дни блокировки (если не постоянно)',
               pt: 'Dias para bloquear (se não permanente)',
               'es-ES': 'Días para bloquear (si no permanente)',
@@ -107,6 +125,9 @@ module.exports = {
         .setDescription('Remove a user from the ticket blacklist')
         .setDescriptionLocalizations({
           de: 'Entferne einen User von der Ticket-Blacklist',
+          'en-US': 'Remove a user from the ticket blacklist',
+          'en-GB': 'Remove a user from the ticket blacklist',
+          fr: 'Retirer un utilisateur de la liste noire',
           ru: 'Удалить пользователя из черного списка',
           pt: 'Remover um usuário da lista negra',
           'es-ES': 'Eliminar un usuario de la lista negra',
@@ -119,6 +140,9 @@ module.exports = {
             .setDescription('User to unblacklist')
             .setDescriptionLocalizations({
               de: 'User zum Entblocken',
+              'en-US': 'User to unblacklist',
+              'en-GB': 'User to unblacklist',
+              fr: 'Utilisateur à débloquer',
               ru: 'Пользователь для разблокировки',
               pt: 'Usuário para desbloquear',
               'es-ES': 'Usuario para desbloquear',
@@ -132,6 +156,9 @@ module.exports = {
         .setDescription('List all blacklisted users')
         .setDescriptionLocalizations({
           de: 'Liste alle blockierten User auf',
+          'en-US': 'List all blacklisted users',
+          'en-GB': 'List all blacklisted users',
+          fr: 'Lister tous les utilisateurs bloqués',
           ru: 'Список всех заблокированных пользователей',
           pt: 'Listar todos os usuários bloqueados',
           'es-ES': 'Listar todos los usuarios bloqueados',
@@ -144,6 +171,9 @@ module.exports = {
         .setDescription('Check if a user is blacklisted')
         .setDescriptionLocalizations({
           de: 'Prüfe ob ein User blockiert ist',
+          'en-US': 'Check if a user is blacklisted',
+          'en-GB': 'Check if a user is blacklisted',
+          fr: 'Vérifier si un utilisateur est bloqué',
           ru: 'Проверить, заблокирован ли пользователь',
           pt: 'Verificar se um usuário está bloqueado',
           'es-ES': 'Verificar si un usuario está bloqueado',
@@ -156,6 +186,9 @@ module.exports = {
             .setDescription('User to check')
             .setDescriptionLocalizations({
               de: 'User zum Überprüfen',
+              'en-US': 'User to check',
+              'en-GB': 'User to check',
+              fr: 'Utilisateur à vérifier',
               ru: 'Пользователь для проверки',
               pt: 'Usuário para verificar',
               'es-ES': 'Usuario para verificar',
