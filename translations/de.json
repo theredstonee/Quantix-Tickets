@@ -474,6 +474,35 @@
     "show_voice_button": "Voice-Button in Tickets anzeigen",
     "description": "Erstelle automatisch Voice-Channels für Tickets. User und Team können dann per Sprache kommunizieren."
   },
+  "ticketBlacklist": {
+    "already_blacklisted": "❌ {user} ist bereits auf der Blacklist.",
+    "user_blacklisted": "User auf Blacklist gesetzt",
+    "blacklist_success": "**{user}** wurde erfolgreich auf die Ticket-Blacklist gesetzt.",
+    "user": "Benutzer",
+    "reason": "Grund",
+    "duration": "Dauer",
+    "permanent": "Permanent",
+    "temporary_days": "{days} Tage",
+    "blacklisted_by": "Blockiert von",
+    "blacklisted_at": "Blockiert am",
+    "dm_title": "Du wurdest von der Ticket-Erstellung ausgeschlossen",
+    "dm_description": "Du wurdest auf dem Server **{guild}** von der Ticket-Erstellung ausgeschlossen.",
+    "not_blacklisted": "❌ {user} ist nicht auf der Blacklist.",
+    "user_removed": "User von Blacklist entfernt",
+    "removal_success": "**{user}** wurde erfolgreich von der Ticket-Blacklist entfernt.",
+    "removed_by": "Entfernt von",
+    "dm_unblock_title": "Ticket-Zugang wiederhergestellt",
+    "dm_unblock_description": "Du kannst jetzt wieder Tickets auf dem Server **{guild}** erstellen.",
+    "empty_list": "✅ Die Ticket-Blacklist ist leer.",
+    "list_title": "Ticket-Blacklist",
+    "list_description": "Aktuell sind **{count}** User auf der Blacklist:",
+    "expires": "Läuft ab",
+    "showing_first": "Zeige die ersten {count} von {total} Einträgen",
+    "check_title": "Blacklist-Status",
+    "check_description": "**{user}** ist auf der Ticket-Blacklist.",
+    "expired_removed": "✅ Die Blockierung von {user} ist abgelaufen und wurde entfernt.",
+    "blocked_error": "Du wurdest von der Ticket-Erstellung auf diesem Server ausgeschlossen.\n\n**Grund:** {reason}\n**Dauer:** {duration}"
+  },
   "errors": {
     "generic": "❌ Ein Fehler ist aufgetreten. Bitte versuche es später erneut."
   }

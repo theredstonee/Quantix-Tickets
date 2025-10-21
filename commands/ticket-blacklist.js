@@ -34,7 +34,7 @@ module.exports = {
       ja: 'チケットブラックリスト管理 - ユーザーのチケット作成をブロック',
       id: 'Kelola daftar hitam - blokir pengguna dari membuat tiket'
     })
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addSubcommand(subcommand =>
       subcommand
         .setName('add')
