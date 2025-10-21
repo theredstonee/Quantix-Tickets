@@ -4452,6 +4452,57 @@ async function createTicketChannel(interaction, topic, formData, cfg){
           // Save updated ticket
           safeWrite(ticketsPath, allTickets);
 
+          // Update ticket embed and buttons to show claimed status
+          try {
+            const firstMessage = await ch.messages.fetch({ limit: 1 }).then(msgs => msgs.first());
+            if (firstMessage && firstMessage.embeds.length > 0) {
+              const updatedEmbed = EmbedBuilder.from(firstMessage.embeds[0]);
+
+              // Add claimer field if not exists
+              const existingFields = updatedEmbed.data.fields || [];
+              const claimerFieldIndex = existingFields.findIndex(f => f.name && f.name.includes('Bearbeiter'));
+
+              if (claimerFieldIndex === -1) {
+                updatedEmbed.addFields({
+                  name: '👤 Bearbeiter',
+                  value: `<@${assignedMember}>`,
+                  inline: true
+                });
+              }
+
+              // Update buttons to show claimed state
+              const updatedButtons = buttonRows(true, guildId, currentTicket);
+
+              await firstMessage.edit({
+                embeds: [updatedEmbed],
+                components: updatedButtons
+              });
+
+              console.log(`✅ Updated ticket embed and buttons to show claimed status`);
+            }
+          } catch (embedErr) {
+            console.error('Error updating ticket embed:', embedErr);
+          }
+
+          // Send claim notification in channel
+          try {
+            const claimEmbed = new EmbedBuilder()
+              .setColor(0x00ff88)
+              .setTitle('✨ Automatisch zugewiesen')
+              .setDescription(`<@${assignedMember}> wurde diesem Ticket automatisch zugewiesen und wird sich um dein Anliegen kümmern.`)
+              .addFields(
+                { name: '🎫 Ticket', value: `#${nr}`, inline: true },
+                { name: '👤 Zugewiesen an', value: `<@${assignedMember}>`, inline: true },
+                { name: '⚙️ Strategie', value: cfg.autoAssignment.strategy || 'workload', inline: true }
+              )
+              .setFooter({ text: 'Quantix Tickets • Auto-Assignment' })
+              .setTimestamp();
+
+            await ch.send({ embeds: [claimEmbed] });
+          } catch (channelMsgErr) {
+            console.error('Error sending claim message to channel:', channelMsgErr);
+          }
+
           // Send notification DM to assigned member (if enabled)
           if (cfg.autoAssignment.notifyAssignee) {
             try {

@@ -55,25 +55,46 @@ async function getEligibleTeamMembers(guild, config, topic = null, checkOnline =
   try {
     const teamRoles = getAllTeamRoles(config);
 
+    console.log(`🔍 Auto-Assignment: Looking for team members with roles:`, teamRoles);
+
     if (teamRoles.length === 0) {
-      console.log('No team roles configured for auto-assignment');
+      console.log('❌ No team roles configured for auto-assignment');
+      console.log('Config teamRoleId:', config.teamRoleId);
+      console.log('Config priorityRoles:', config.priorityRoles);
       return [];
     }
 
     const members = await guild.members.fetch();
+    console.log(`👥 Fetched ${members.size} total guild members`);
+
     let eligibleMembers = [];
+    let skippedReasons = {
+      bots: 0,
+      noTeamRole: 0,
+      excluded: 0,
+      noSkills: 0,
+      offline: 0
+    };
 
     // Get all members with team roles
     for (const [memberId, member] of members) {
       // Skip bots
-      if (member.user.bot) continue;
+      if (member.user.bot) {
+        skippedReasons.bots++;
+        continue;
+      }
 
       // Check if member has any team role
       const hasTeamRole = teamRoles.some(roleId => member.roles.cache.has(roleId));
-      if (!hasTeamRole) continue;
+      if (!hasTeamRole) {
+        skippedReasons.noTeamRole++;
+        continue;
+      }
 
       // Check if member is excluded
       if (config.autoAssignment?.excludedMembers?.includes(memberId)) {
+        console.log(`⏸️ Member ${member.user.tag} is excluded (paused)`);
+        skippedReasons.excluded++;
         continue;
       }
 
@@ -82,7 +103,10 @@ async function getEligibleTeamMembers(guild, config, topic = null, checkOnline =
         const topicSkills = config.autoAssignment.topicSkills?.[topic];
         if (topicSkills && topicSkills.length > 0) {
           const hasSkill = topicSkills.some(roleId => member.roles.cache.has(roleId));
-          if (!hasSkill) continue;
+          if (!hasSkill) {
+            skippedReasons.noSkills++;
+            continue;
+          }
         }
       }
 
@@ -90,16 +114,24 @@ async function getEligibleTeamMembers(guild, config, topic = null, checkOnline =
       if (checkOnline && config.autoAssignment?.checkOnlineStatus) {
         const presence = member.presence;
         if (!presence || presence.status === 'offline' || presence.status === 'invisible') {
+          console.log(`🔴 Member ${member.user.tag} is offline`);
+          skippedReasons.offline++;
           continue;
         }
       }
 
+      console.log(`✅ Eligible member found: ${member.user.tag} (${memberId})`);
       eligibleMembers.push(memberId);
     }
 
+    console.log(`📊 Auto-Assignment eligibility summary:`, {
+      eligible: eligibleMembers.length,
+      skipped: skippedReasons
+    });
+
     return eligibleMembers;
   } catch (error) {
-    console.error('Error getting eligible team members:', error);
+    console.error('❌ Error getting eligible team members:', error);
     return [];
   }
 }
