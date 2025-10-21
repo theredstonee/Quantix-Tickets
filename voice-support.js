@@ -121,17 +121,8 @@ async function createVoiceChannel(interaction, ticket, guildId) {
       saveTickets(guildId, tickets);
     }
 
-    const embed = new EmbedBuilder()
-      .setColor(0x00ff88)
-      .setTitle('🎤 ' + t(guildId, 'voiceSupport.channel_created'))
-      .setDescription(t(guildId, 'voiceSupport.channel_description', { channel: `<#${voiceChannel.id}>` }))
-      .addFields(
-        { name: t(guildId, 'voiceSupport.created_by'), value: `<@${interaction.user.id}>`, inline: true },
-        { name: t(guildId, 'voiceSupport.created_at'), value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
-      )
-      .setTimestamp();
-
-    await channel.send({ embeds: [embed] });
+    // Log-Nachricht wird in index.js gesendet
+    console.log(`✅ Voice channel ${voiceChannel.id} created for ticket ${ticket.id}`);
 
     return voiceChannel;
 

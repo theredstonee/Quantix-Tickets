@@ -519,6 +519,8 @@ function buttonRows(claimed, guildId = null, ticket = null){
       // Prüfe ob Voice-Channel bereits existiert
       const hasVoice = ticket && ticket.voiceChannelId;
 
+      console.log(`🔍 buttonRows() - Ticket: ${ticket?.id}, voiceChannelId: ${ticket?.voiceChannelId}, hasVoice: ${hasVoice}`);
+
       row3Components.push(
         new ButtonBuilder()
           .setCustomId(hasVoice ? 'end_voice' : 'request_voice')
@@ -2744,12 +2746,31 @@ client.on(Events.InteractionCreate, async i => {
           const updatedTickets = loadTickets(guildId);
           const updatedTicket = updatedTickets.find(t => t.id === ticket.id);
 
+          console.log(`🔍 Voice created - Ticket #${ticket.id} voiceChannelId:`, updatedTicket?.voiceChannelId);
+
           // Aktualisiere Ticket-Embed mit neuen Buttons (zeigt jetzt "Voice beenden")
-          const ticketEmbed = i.message.embeds[0];
-          await i.message.edit({
-            embeds: [ticketEmbed],
-            components: buttonRows(updatedTicket.claimedBy ? true : false, guildId, updatedTicket)
-          });
+          if (updatedTicket) {
+            const ticketEmbed = i.message.embeds[0];
+            await i.message.edit({
+              embeds: [ticketEmbed],
+              components: buttonRows(updatedTicket.claimedBy ? true : false, guildId, updatedTicket)
+            });
+            console.log(`✅ Buttons updated for ticket #${ticket.id}`);
+          } else {
+            console.error(`❌ Could not find updated ticket #${ticket.id}`);
+          }
+
+          // Sende Log-Nachricht über Voice-Channel-Erstellung
+          const voiceLogEmbed = new EmbedBuilder()
+            .setColor(0x00ff88)
+            .setDescription(`🎤 **Voice-Support erstellt** von ${i.user}`)
+            .addFields(
+              { name: '🔊 Channel', value: `<#${voiceChannel.id}>`, inline: true }
+            )
+            .setFooter({ text: 'Quantix Tickets • Voice Support' })
+            .setTimestamp();
+
+          await i.channel.send({ embeds: [voiceLogEmbed] });
         } catch (err) {
           console.error('Error creating voice channel:', err);
           await i.editReply({
@@ -2804,6 +2825,15 @@ client.on(Events.InteractionCreate, async i => {
             embeds: [ticketEmbed],
             components: buttonRows(updatedTicket.claimedBy ? true : false, guildId, updatedTicket)
           });
+
+          // Sende Log-Nachricht über Voice-Channel-Schließung
+          const voiceLogEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setDescription(`🔇 **Voice-Support beendet** von ${i.user}`)
+            .setFooter({ text: 'Quantix Tickets • Voice Support' })
+            .setTimestamp();
+
+          await i.channel.send({ embeds: [voiceLogEmbed] });
         } catch (err) {
           console.error('Error ending voice channel:', err);
           await i.editReply({
@@ -3152,7 +3182,14 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         delete ticket.claimer; saveTickets(guildId, log);
-        await i.update({ components: buttonRows(false, guildId, ticket) });
+
+        // Lade Ticket neu, um aktuelle voiceChannelId zu haben
+        const updatedUnclaimLog = loadTickets(guildId);
+        const updatedUnclaimTicket = updatedUnclaimLog.find(t => t.id === ticket.id);
+
+        console.log(`🔍 Unclaim - Ticket #${ticket.id} voiceChannelId:`, updatedUnclaimTicket?.voiceChannelId);
+
+        await i.update({ components: buttonRows(false, guildId, updatedUnclaimTicket) });
         logEvent(i.guild, t(guildId, 'logs.ticket_unclaimed', { id: ticket.id, user: `<@${i.user.id}>` }));
         return;
       }
@@ -3187,21 +3224,27 @@ client.on(Events.InteractionCreate, async i => {
         case 'claim':
           ticket.claimer = i.user.id; saveTickets(guildId, log);
 
+          // Lade Ticket neu, um aktuelle voiceChannelId zu haben
+          const updatedLog = loadTickets(guildId);
+          const updatedTicket = updatedLog.find(t => t.id === ticket.id);
+
+          console.log(`🔍 Claim - Ticket #${ticket.id} voiceChannelId:`, updatedTicket?.voiceChannelId);
+
           try {
             const permissions = [
               { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-              { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+              { id: updatedTicket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
               { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
             ];
 
-            if(ticket.addedUsers && Array.isArray(ticket.addedUsers)){
-              ticket.addedUsers.forEach(uid => {
+            if(updatedTicket.addedUsers && Array.isArray(updatedTicket.addedUsers)){
+              updatedTicket.addedUsers.forEach(uid => {
                 permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
               });
             }
 
             // Priority-Rollen: Sehen aber nicht schreiben
-            const currentPriority = ticket.priority || 0;
+            const currentPriority = updatedTicket.priority || 0;
             const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, currentPriority);
             for(const roleId of hierarchicalRoles){
               if(roleId && roleId.trim()){
@@ -3225,7 +3268,7 @@ client.on(Events.InteractionCreate, async i => {
               .setTitle('✨ Ticket übernommen')
               .setDescription(`<@${i.user.id}> hat das Ticket übernommen und wird sich um dein Anliegen kümmern.`)
               .addFields(
-                { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+                { name: '🎫 Ticket', value: `#${updatedTicket.id}`, inline: true },
                 { name: '👤 Übernommen von', value: `<@${i.user.id}>`, inline: true },
                 { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
               )
@@ -3237,8 +3280,8 @@ client.on(Events.InteractionCreate, async i => {
             console.error('Fehler beim Setzen der Berechtigungen:', err);
           }
 
-          await i.update({ components: buttonRows(true, guildId, ticket) });
-          logEvent(i.guild, t(guildId, 'logs.ticket_claimed', { id: ticket.id, user: `<@${i.user.id}>` }));
+          await i.update({ components: buttonRows(true, guildId, updatedTicket) });
+          logEvent(i.guild, t(guildId, 'logs.ticket_claimed', { id: updatedTicket.id, user: `<@${i.user.id}>` }));
           break;
         case 'priority_up': {
           ticket.priority = Math.min(2, (ticket.priority||0)+1);
@@ -3952,10 +3995,60 @@ async function createTicketChannel(interaction, topic, formData, cfg){
 
 async function updatePriority(interaction, ticket, log, dir, guildId){
   renameChannelIfNeeded(interaction.channel, ticket);
+
+  // SLA-Deadline neu berechnen bei Prioritätsänderung
+  const cfg = readCfg(guildId);
+  if (cfg.sla && cfg.sla.enabled && hasFeature(guildId, 'slaSystem')) {
+    const createdAt = ticket.timestamp || Date.now();
+    const newDeadline = calculateSLADeadline(guildId, ticket.priority, createdAt);
+    if (newDeadline) {
+      ticket.slaDeadline = newDeadline;
+      ticket.slaWarned = false; // Reset Warning-Status
+      ticket.slaEscalated = false; // Reset Escalation-Status
+    }
+  }
+
   const msg = await interaction.channel.messages.fetch({limit:10}).then(c=>c.find(m=>m.embeds.length)).catch(()=>null);
   const state = PRIORITY_STATES[ticket.priority||0];
-  if(msg){ const e = EmbedBuilder.from(msg.embeds[0]); e.setColor(state.embedColor); await msg.edit({embeds:[e]}); }
+
+  if(msg){
+    const e = EmbedBuilder.from(msg.embeds[0]);
+    e.setColor(state.embedColor);
+
+    // SLA-Deadline im Embed aktualisieren
+    if (ticket.slaDeadline && hasFeature(guildId, 'slaSystem')) {
+      const fields = e.data.fields || [];
+      const slaFieldIndex = fields.findIndex(f => f.name === '⏱️ SLA-Deadline');
+      const slaText = `<t:${Math.floor(ticket.slaDeadline / 1000)}:R>`;
+
+      if (slaFieldIndex !== -1) {
+        // Update existierendes SLA-Feld
+        fields[slaFieldIndex].value = slaText;
+        e.setFields(fields);
+      } else {
+        // Füge SLA-Feld hinzu
+        e.addFields({
+          name: '⏱️ SLA-Deadline',
+          value: slaText,
+          inline: true
+        });
+      }
+    }
+
+    await msg.edit({embeds:[e]});
+  }
+
   saveTickets(guildId, log);
+
+  // Sende Log-Nachricht über Prioritätsänderung
+  const priorityNames = ['🟢 Niedrig', '🟠 Mittel', '🔴 Hoch'];
+  const priorityEmbed = new EmbedBuilder()
+    .setColor(state.embedColor)
+    .setDescription(`📊 **Priorität geändert** → ${priorityNames[ticket.priority || 0]}`)
+    .setFooter({ text: `Geändert von ${interaction.user.tag}` })
+    .setTimestamp();
+
+  await interaction.channel.send({ embeds: [priorityEmbed] });
 
   try {
     const currentPriority = ticket.priority || 0;
