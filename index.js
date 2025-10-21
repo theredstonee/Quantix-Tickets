@@ -467,7 +467,7 @@ function nextTicket(guildId){
   return c.last;
 }
 
-function buttonRows(claimed, guildId = null){
+function buttonRows(claimed, guildId = null, ticket = null){
   const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('request_close')
@@ -516,12 +516,15 @@ function buttonRows(claimed, guildId = null){
   if (guildId && hasFeature(guildId, 'voiceSupport')) {
     const cfg = readCfg(guildId);
     if (cfg.voiceSupport && cfg.voiceSupport.enabled && cfg.voiceSupport.showButton !== false) {
+      // Prüfe ob Voice-Channel bereits existiert
+      const hasVoice = ticket && ticket.voiceChannelId;
+
       row3Components.push(
         new ButtonBuilder()
-          .setCustomId('request_voice')
-          .setEmoji('🎤')
-          .setLabel(t(guildId, 'voiceSupport.request_voice'))
-          .setStyle(ButtonStyle.Primary)
+          .setCustomId(hasVoice ? 'end_voice' : 'request_voice')
+          .setEmoji(hasVoice ? '🔇' : '🎤')
+          .setLabel(hasVoice ? t(guildId, 'voiceSupport.end_voice') : t(guildId, 'voiceSupport.request_voice'))
+          .setStyle(hasVoice ? ButtonStyle.Danger : ButtonStyle.Primary)
       );
     }
   }
@@ -2736,10 +2739,67 @@ client.on(Events.InteractionCreate, async i => {
             .setTimestamp();
 
           await i.editReply({ embeds: [successEmbed] });
+
+          // Aktualisiere Ticket-Embed mit neuen Buttons (zeigt jetzt "Voice beenden")
+          const ticketEmbed = i.message.embeds[0];
+          await i.message.edit({
+            embeds: [ticketEmbed],
+            components: buttonRows(ticket.claimedBy ? true : false, guildId, ticket)
+          });
         } catch (err) {
           console.error('Error creating voice channel:', err);
           await i.editReply({
             content: t(guildId, 'voiceSupport.create_failed'),
+            ephemeral: true
+          }).catch(() => {});
+        }
+        return;
+      }
+
+      // Voice-Support beenden
+      if (i.customId === 'end_voice') {
+        if (!hasFeature(guildId, 'voiceSupport')) {
+          const premiumEmbed = new EmbedBuilder()
+            .setColor(0xff9900)
+            .setTitle('⭐ Premium Feature')
+            .setDescription(t(guildId, 'voiceSupport.feature_locked'))
+            .setFooter({ text: 'Quantix Tickets • Premium' })
+            .setTimestamp();
+          return i.reply({ embeds: [premiumEmbed], ephemeral: true });
+        }
+
+        if (!ticket.voiceChannelId) {
+          return i.reply({
+            content: '❌ Kein Voice-Channel vorhanden!',
+            ephemeral: true
+          });
+        }
+
+        try {
+          await i.deferReply({ ephemeral: true });
+
+          // Lösche Voice-Channel
+          await deleteVoiceChannel(i.guild, ticket.voiceChannelId, guildId);
+
+          const successEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setTitle('🔇 ' + t(guildId, 'voiceSupport.ended'))
+            .setDescription(t(guildId, 'voiceSupport.ended_description'))
+            .setFooter({ text: 'Quantix Tickets • Voice Support' })
+            .setTimestamp();
+
+          await i.editReply({ embeds: [successEmbed] });
+
+          // Aktualisiere Ticket-Embed mit neuen Buttons
+          const ticketEmbed = i.message.embeds[0];
+          await i.message.edit({
+            embeds: [ticketEmbed],
+            components: buttonRows(ticket.claimedBy ? true : false, guildId, ticket)
+          });
+        } catch (err) {
+          console.error('Error ending voice channel:', err);
+          await i.editReply({
+            content: '❌ Voice-Channel konnte nicht gelöscht werden.',
             ephemeral: true
           }).catch(() => {});
         }
@@ -3084,7 +3144,7 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         delete ticket.claimer; saveTickets(guildId, log);
-        await i.update({ components: buttonRows(false, guildId) });
+        await i.update({ components: buttonRows(false, guildId, ticket) });
         logEvent(i.guild, t(guildId, 'logs.ticket_unclaimed', { id: ticket.id, user: `<@${i.user.id}>` }));
         return;
       }
@@ -3169,7 +3229,7 @@ client.on(Events.InteractionCreate, async i => {
             console.error('Fehler beim Setzen der Berechtigungen:', err);
           }
 
-          await i.update({ components: buttonRows(true, guildId) });
+          await i.update({ components: buttonRows(true, guildId, ticket) });
           logEvent(i.guild, t(guildId, 'logs.ticket_claimed', { id: ticket.id, user: `<@${i.user.id}>` }));
           break;
         case 'priority_up': {
@@ -3766,7 +3826,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   }
 
   try {
-    await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id) });
+    await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id, null) });
   } catch (err) {
     console.error('❌ Fehler beim Senden der Willkommens-Nachricht:', err.message || err);
     if (err.stack) console.error(err.stack);
