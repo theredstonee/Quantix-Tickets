@@ -48,7 +48,6 @@ const { sendDMNotification } = require('./dm-notifications');
 const { sanitizeUsername, validateDiscordId, sanitizeString } = require('./xss-protection');
 const { startAutoCloseService } = require('./auto-close-service');
 const { handleTagAdd, handleTagRemove } = require('./tag-handler');
-const { translateTicketMessage, isAutoTranslateEnabled } = require('./auto-translate');
 const { createVoiceChannel, deleteVoiceChannel, hasVoiceChannel } = require('./voice-support');
 const { handleTemplateUse } = require('./template-handler');
 const { handleDepartmentForward } = require('./department-handler');
@@ -3969,42 +3968,6 @@ client.on(Events.MessageCreate, async (message) => {
 
       if (ticket) {
         await appendToLiveTranscript(message, ticket, guildId);
-
-        // Auto-Translate für Ticket-Nachrichten (Pro Feature)
-        if (isAutoTranslateEnabled(guildId)) {
-          try {
-            const cfg = readCfg(guildId);
-            const TEAM_ROLE = cfg.teamRole || null;
-            const isTeamMember = TEAM_ROLE && message.member && message.member.roles.cache.has(TEAM_ROLE);
-
-            const translation = await translateTicketMessage(message, guildId, isTeamMember);
-
-            if (translation) {
-              const translationEmbed = new EmbedBuilder()
-                .setColor(0x0ea5e9)
-                .setAuthor({
-                  name: message.author.tag,
-                  iconURL: message.author.displayAvatarURL()
-                })
-                .setDescription(translation.translatedText)
-                .setFooter({
-                  text: `🌐 ${t(guildId, 'autoTranslate.translated_from', { lang: translation.sourceLang })} → ${translation.targetLang}`
-                })
-                .setTimestamp();
-
-              if (translation.showOriginal) {
-                translationEmbed.addFields({
-                  name: t(guildId, 'autoTranslate.original_message'),
-                  value: translation.originalText.substring(0, 1024)
-                });
-              }
-
-              await message.channel.send({ embeds: [translationEmbed] });
-            }
-          } catch (translateErr) {
-            console.error('Auto-Translate Error:', translateErr);
-          }
-        }
       }
     }
   }

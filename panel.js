@@ -2454,25 +2454,6 @@ module.exports = (client)=>{
         if (cfg.sla.escalateToRole === '') cfg.sla.escalateToRole = null;
       }
 
-      // Auto-Translate Configuration (Pro Feature)
-      if (!cfg.autoTranslate) {
-        cfg.autoTranslate = {
-          enabled: false,
-          teamLanguage: 'de',
-          showOriginal: false,
-          translateUserMessages: true,
-          translateTeamMessages: true
-        };
-      }
-
-      if (hasFeature(guildId, 'autoTranslate')) {
-        cfg.autoTranslate.enabled = req.body.autoTranslateEnabled === 'on';
-        cfg.autoTranslate.teamLanguage = sanitizeString(req.body.autoTranslateTeamLanguage, 5) || 'de';
-        cfg.autoTranslate.showOriginal = req.body.autoTranslateShowOriginal === 'on';
-        cfg.autoTranslate.translateUserMessages = req.body.autoTranslateUserMessages !== 'off';
-        cfg.autoTranslate.translateTeamMessages = req.body.autoTranslateTeamMessages !== 'off';
-      }
-
       // Voice-Support Configuration (Basic+ Feature)
       if (!cfg.voiceSupport) {
         cfg.voiceSupport = {

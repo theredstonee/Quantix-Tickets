@@ -46,7 +46,6 @@ function getDefaultConfig() {
         ratingSystem: true,
         fileUpload: false,
         autoAssignment: false,
-        autoTranslate: false,
         voiceSupport: false,
         ticketBlacklist: true
       }
@@ -79,7 +78,6 @@ const PREMIUM_TIERS = {
       customBranding: false,
       vipSystem: false,
       multiDepartment: false,
-      autoTranslate: false,
       voiceSupport: false,
       ticketBlacklist: true
     }
@@ -107,7 +105,6 @@ const PREMIUM_TIERS = {
       customBranding: false,
       vipSystem: true,
       multiDepartment: true,
-      autoTranslate: false,
       voiceSupport: true,
       ticketBlacklist: true
     }
@@ -137,7 +134,6 @@ const PREMIUM_TIERS = {
       ratingSystem: true,
       autoAssignment: true,
       customBranding: true,
-      autoTranslate: true,
       voiceSupport: true,
       ticketBlacklist: true
     }
@@ -167,7 +163,6 @@ const PREMIUM_TIERS = {
       ratingSystem: true,
       autoAssignment: true,
       customBranding: true,
-      autoTranslate: true,
       voiceSupport: true,
       ticketBlacklist: true
     }
