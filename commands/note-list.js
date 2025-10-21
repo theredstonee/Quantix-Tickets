@@ -59,7 +59,7 @@ module.exports = {
     .setDescription('List all internal notes for the current ticket (team only)')
     .setDescriptionLocalizations({
       de: 'Alle internen Notizen für das aktuelle Ticket auflisten (nur Team)',
-      es: 'Listar todas las notas internas del ticket actual (solo equipo)',
+      'es-ES': 'Listar todas las notas internas del ticket actual (solo equipo)',
       fr: 'Lister toutes les notes internes du ticket actuel (équipe uniquement)',
       pt: 'Listar todas as notas internas do ticket atual (apenas equipe)',
       ru: 'Список всех внутренних заметок текущего тикета (только команда)',

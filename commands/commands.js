@@ -1,8 +1,373 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { hasFeature } = require('../premium');
 
 // Owner and Founder IDs
 const OWNER_IDS = ['928901974106202113', '1159182333316968530', '1415387837359984740', '1048900200497954868'];
 const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
+
+function getCommandsList(userId, member, guildId) {
+  const isAdmin = member.permissions.has('Administrator');
+  const isOwner = OWNER_IDS.includes(userId);
+  const isFounder = FOUNDER_IDS.includes(userId);
+  const isTeam = member.roles.cache.some(role =>
+    role.permissions.has('ManageMessages') || role.permissions.has('Administrator')
+  );
+
+  // Check premium features
+  const hasBasic = hasFeature(guildId, 'statistics');
+  const hasPro = hasFeature(guildId, 'analytics');
+
+  const commands = [
+    {
+      category: '🎫 Ticket Management',
+      emoji: '🎫',
+      items: [
+        {
+          name: '/dashboard',
+          description: 'Web-Dashboard für Server-Konfiguration',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: null
+        },
+        {
+          name: '/mytickets',
+          description: 'Zeige alle deine eigenen Tickets',
+          permission: 'Alle',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/forward',
+          description: 'Leite ein Ticket an ein anderes Team-Mitglied weiter',
+          permission: 'Claimer',
+          canUse: isTeam,
+          premium: 'Pro'
+        },
+        {
+          name: '/tag',
+          description: 'Verwalte Tags für bessere Ticket-Organisation',
+          permission: 'Team',
+          canUse: isTeam,
+          premium: 'Basic+'
+        },
+        {
+          name: '/template',
+          description: 'Vordefinierte Antwort-Vorlagen verwenden',
+          permission: 'Team',
+          canUse: isTeam,
+          premium: 'Basic+'
+        },
+        {
+          name: '/department',
+          description: 'Abteilungsverwaltung und Ticket-Weiterleitung',
+          permission: 'Team',
+          canUse: isTeam,
+          premium: 'Basic+'
+        },
+        {
+          name: '/depart',
+          description: 'Verlasse deine aktuelle Abteilung',
+          permission: 'Team',
+          canUse: isTeam,
+          premium: 'Basic+'
+        }
+      ]
+    },
+    {
+      category: '📝 Notizen & Organisation',
+      emoji: '📝',
+      items: [
+        {
+          name: '/note-add',
+          description: 'Füge eine interne Notiz zu einem Ticket hinzu',
+          permission: 'Team',
+          canUse: isTeam,
+          premium: 'Basic+'
+        },
+        {
+          name: '/note-list',
+          description: 'Zeige alle Notizen eines Tickets',
+          permission: 'Team',
+          canUse: isTeam,
+          premium: 'Basic+'
+        },
+        {
+          name: '/status',
+          description: 'Setze einen benutzerdefinierten Ticket-Status',
+          permission: 'Team',
+          canUse: isTeam,
+          premium: null
+        }
+      ]
+    },
+    {
+      category: '🚫 Moderation',
+      emoji: '🚫',
+      items: [
+        {
+          name: '/ticket-blacklist add',
+          description: 'Blockiere User von der Ticket-Erstellung',
+          permission: 'Nachrichten verwalten',
+          canUse: isAdmin || member.permissions.has('ManageMessages'),
+          premium: null
+        },
+        {
+          name: '/ticket-blacklist remove',
+          description: 'Entferne User von der Blacklist',
+          permission: 'Nachrichten verwalten',
+          canUse: isAdmin || member.permissions.has('ManageMessages'),
+          premium: null
+        },
+        {
+          name: '/ticket-blacklist list',
+          description: 'Zeige alle blockierten User',
+          permission: 'Nachrichten verwalten',
+          canUse: isAdmin || member.permissions.has('ManageMessages'),
+          premium: null
+        },
+        {
+          name: '/ticket-blacklist check',
+          description: 'Prüfe ob ein User blockiert ist',
+          permission: 'Nachrichten verwalten',
+          canUse: isAdmin || member.permissions.has('ManageMessages'),
+          premium: null
+        },
+        {
+          name: '/vip',
+          description: 'VIP-User verwalten (Nur bestimmte Server)',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: null
+        }
+      ]
+    },
+    {
+      category: '⚙️ Server-Einstellungen',
+      emoji: '⚙️',
+      items: [
+        {
+          name: '/language',
+          description: 'Server-Sprache ändern (9 Sprachen verfügbar)',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: null
+        },
+        {
+          name: '/userlanguage',
+          description: 'Persönliche Sprache ändern',
+          permission: 'Alle',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/github-commits',
+          description: 'GitHub Commit-Benachrichtigungen toggle',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: null
+        },
+        {
+          name: '/togglemessage',
+          description: 'Startup-Benachrichtigungen toggle',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: null
+        }
+      ]
+    },
+    {
+      category: 'ℹ️ Information',
+      emoji: 'ℹ️',
+      items: [
+        {
+          name: '/version',
+          description: 'Bot-Version und Changelog anzeigen',
+          permission: 'Alle',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/commands',
+          description: 'Diese Command-Liste anzeigen',
+          permission: 'Alle',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/uptime',
+          description: 'Bot-Uptime und Statistiken anzeigen',
+          permission: 'Alle',
+          canUse: true,
+          premium: null
+        }
+      ]
+    }
+  ];
+
+  // System Commands (nur für Owner)
+  if (isOwner) {
+    commands.push({
+      category: '🔧 System-Commands',
+      emoji: '🔧',
+      items: [
+        {
+          name: '/reload',
+          description: 'Commands und Konfiguration neu laden',
+          permission: 'Owner',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/restart',
+          description: 'Bot neu starten',
+          permission: 'Owner',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/update',
+          description: 'Bot von GitHub aktualisieren',
+          permission: 'Owner',
+          canUse: true,
+          premium: null
+        }
+      ]
+    });
+
+    commands.push({
+      category: '👑 Owner-Commands',
+      emoji: '👑',
+      items: [
+        {
+          name: '/broadcast',
+          description: 'Nachricht an alle Server senden',
+          permission: 'Owner',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/lifetime-premium',
+          description: 'Lifetime Premium verwalten',
+          permission: 'Owner',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/betatester',
+          description: 'Betatester-Status verwalten',
+          permission: 'Owner',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/premium-role',
+          description: 'Premium-Rollen verwalten',
+          permission: 'Owner',
+          canUse: true,
+          premium: null
+        }
+      ]
+    });
+  }
+
+  // Founder Commands
+  if (isFounder) {
+    commands.push({
+      category: '⭐ Founder-Commands',
+      emoji: '⭐',
+      items: [
+        {
+          name: 'Founder Panel',
+          description: 'Zugriff auf /founder Web-Panel (Server verwalten)',
+          permission: 'Founder',
+          canUse: true,
+          premium: null
+        }
+      ]
+    });
+  }
+
+  return commands;
+}
+
+function buildCommandEmbed(commands, username) {
+  const embed = new EmbedBuilder()
+    .setColor(0x00ff88)
+    .setAuthor({
+      name: 'Quantix Tickets - Command Übersicht',
+      iconURL: 'https://cdn.discordapp.com/attachments/1234567890/icon.png' // Optional: Bot icon
+    })
+    .setDescription(
+      '**Hier findest du alle verfügbaren Bot-Commands.**\n\n' +
+      '**Legende:**\n' +
+      '✅ = Du kannst diesen Command verwenden\n' +
+      '❌ = Keine Berechtigung\n' +
+      '⭐ **Basic+** = Basic Premium erforderlich\n' +
+      '🌟 **Pro** = Pro Premium erforderlich\n\n' +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+    )
+    .setFooter({ text: `Angefordert von ${username} • Quantix Tickets` })
+    .setTimestamp();
+
+  // Add fields for each category
+  for (const category of commands) {
+    let fieldValue = '';
+
+    for (const cmd of category.items) {
+      const icon = cmd.canUse ? '✅' : '❌';
+      const premiumBadge = cmd.premium
+        ? cmd.premium === 'Pro' ? ' 🌟' : ' ⭐'
+        : '';
+
+      fieldValue += `${icon} **${cmd.name}**${premiumBadge}\n`;
+      fieldValue += `   └ ${cmd.description}\n`;
+      fieldValue += `   └ *${cmd.permission}*\n\n`;
+    }
+
+    embed.addFields({
+      name: `${category.emoji} ${category.category}`,
+      value: fieldValue || 'Keine Commands',
+      inline: false
+    });
+  }
+
+  // Add helpful information
+  embed.addFields({
+    name: '💡 Hilfreiche Tipps',
+    value:
+      '• Commands können auch mit **!commands** im Chat aufgerufen werden\n' +
+      '• Verwende **/dashboard** für detaillierte Konfiguration\n' +
+      '• Brauchst du Hilfe? Klicke auf den **Support** Button!',
+    inline: false
+  });
+
+  return embed;
+}
+
+function buildButtonRow() {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setURL('https://quantixtickets.theredstonee.de/panel')
+      .setStyle(ButtonStyle.Link)
+      .setLabel('Dashboard')
+      .setEmoji('🎛️'),
+    new ButtonBuilder()
+      .setURL('https://quantixtickets.theredstonee.de/premium')
+      .setStyle(ButtonStyle.Link)
+      .setLabel('Premium')
+      .setEmoji('⭐'),
+    new ButtonBuilder()
+      .setURL('https://discord.com/invite/mnYbnpyyBS')
+      .setStyle(ButtonStyle.Link)
+      .setLabel('Support')
+      .setEmoji('💬'),
+    new ButtonBuilder()
+      .setURL('https://quantixtickets.theredstonee.de')
+      .setStyle(ButtonStyle.Link)
+      .setLabel('Website')
+      .setEmoji('🌐')
+  );
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -18,197 +383,16 @@ module.exports = {
 
       const userId = interaction.user.id;
       const member = interaction.member;
-      const isAdmin = member.permissions.has('Administrator');
-      const isOwner = OWNER_IDS.includes(userId);
-      const isFounder = FOUNDER_IDS.includes(userId);
+      const guildId = interaction.guild?.id;
 
-      // Define all commands with their info
-      const commands = [
-        {
-          category: '📋 Allgemeine Commands',
-          items: [
-            {
-              name: '/dashboard',
-              description: 'Öffnet das Web-Dashboard',
-              permission: 'Alle',
-              canUse: true
-            },
-            {
-              name: '/version',
-              description: 'Zeigt die Bot-Version und Changelog',
-              permission: 'Alle',
-              canUse: true
-            },
-            {
-              name: '/commands',
-              description: 'Zeigt diese Command-Liste',
-              permission: 'Alle',
-              canUse: true
-            },
-            {
-              name: '/forward',
-              description: 'Leitet ein Ticket an ein anderes Team-Mitglied weiter (Pro Feature)',
-              permission: 'Claimer',
-              canUse: true
-            },
-            {
-              name: '/tag',
-              description: 'Verwaltet Tags für Tickets (Basic+ Feature)',
-              permission: 'Team',
-              canUse: true
-            },
-            {
-              name: '/template',
-              description: 'Verwendet vordefinierte Antwort-Vorlagen (Basic+ Feature)',
-              permission: 'Team',
-              canUse: true
-            },
-            {
-              name: '/department',
-              description: 'Verwaltet Abteilungen und leitet Tickets weiter (Basic+ Feature)',
-              permission: 'Team',
-              canUse: true
-            },
-            {
-              name: '/vip',
-              description: 'Verwaltet VIP-User (Nur auf bestimmten Servern)',
-              permission: 'Administrator',
-              canUse: isAdmin
-            }
-          ]
-        },
-        {
-          category: '⚙️ Server-Einstellungen',
-          items: [
-            {
-              name: '/language',
-              description: 'Ändert die Server-Sprache',
-              permission: 'Administrator',
-              canUse: isAdmin
-            },
-            {
-              name: '/userlanguage',
-              description: 'Ändert deine persönliche Sprache',
-              permission: 'Alle',
-              canUse: true
-            },
-            {
-              name: '/github-commits',
-              description: 'Toggle GitHub Commit-Benachrichtigungen',
-              permission: 'Administrator',
-              canUse: isAdmin
-            },
-            {
-              name: '/togglemessage',
-              description: 'Toggle Startup-Benachrichtigungen',
-              permission: 'Administrator',
-              canUse: isAdmin
-            }
-          ]
-        },
-        {
-          category: '🔧 System-Commands',
-          items: [
-            {
-              name: '/reload',
-              description: 'Lädt Commands neu',
-              permission: 'Owner',
-              canUse: isOwner
-            },
-            {
-              name: '/restart',
-              description: 'Startet den Bot neu',
-              permission: 'Owner',
-              canUse: isOwner
-            },
-            {
-              name: '/update',
-              description: 'Updated den Bot von GitHub',
-              permission: 'Owner',
-              canUse: isOwner
-            }
-          ]
-        },
-        {
-          category: '👑 Owner-Commands',
-          items: [
-            {
-              name: '/broadcast',
-              description: 'Sendet eine Nachricht an alle Server',
-              permission: 'Owner',
-              canUse: isOwner
-            },
-            {
-              name: '/lifetime-premium',
-              description: 'Verwaltet Lifetime Premium',
-              permission: 'Owner',
-              canUse: isOwner
-            },
-            {
-              name: '/betatester',
-              description: 'Verwaltet Betatester-Status',
-              permission: 'Owner',
-              canUse: isOwner
-            },
-            {
-              name: '/premium-role',
-              description: 'Verwaltet Premium-Rollen',
-              permission: 'Owner',
-              canUse: isOwner
-            }
-          ]
-        }
-      ];
+      const commands = getCommandsList(userId, member, guildId);
+      const embed = buildCommandEmbed(commands, interaction.user.username);
+      const buttonRow = buildButtonRow();
 
-      // Add Founder category if user is founder
-      if (isFounder) {
-        commands.push({
-          category: '⭐ Founder-Commands',
-          items: [
-            {
-              name: 'Founder Panel',
-              description: 'Zugriff auf /founder Web-Panel',
-              permission: 'Founder',
-              canUse: isFounder
-            }
-          ]
-        });
-      }
-
-      // Build embed
-      const embed = new EmbedBuilder()
-        .setColor(0x00ff88)
-        .setTitle('📚 Quantix Tickets - Command Liste')
-        .setDescription('Hier findest du alle verfügbaren Bot-Commands.\n✅ = Du kannst diesen Command verwenden\n❌ = Keine Berechtigung')
-        .setFooter({ text: 'Quantix Tickets' })
-        .setTimestamp();
-
-      // Add fields for each category
-      for (const category of commands) {
-        let fieldValue = '';
-
-        for (const cmd of category.items) {
-          const icon = cmd.canUse ? '✅' : '❌';
-          fieldValue += `${icon} **${cmd.name}**\n`;
-          fieldValue += `└ ${cmd.description}\n`;
-          fieldValue += `└ *Berechtigung: ${cmd.permission}*\n\n`;
-        }
-
-        embed.addFields({
-          name: category.category,
-          value: fieldValue || 'Keine Commands',
-          inline: false
-        });
-      }
-
-      // Add usage info
-      embed.addFields({
-        name: '💡 Hinweis',
-        value: 'Du kannst Commands auch mit `!commands` im Chat aufrufen.\nFür mehr Informationen besuche das Dashboard mit `/dashboard`.',
-        inline: false
+      await interaction.editReply({
+        embeds: [embed],
+        components: [buttonRow]
       });
-
-      await interaction.editReply({ embeds: [embed] });
 
     } catch (err) {
       console.error('Error in commands command:', err);
@@ -223,5 +407,10 @@ module.exports = {
         });
       }
     }
-  }
+  },
+
+  // Export helper functions for message command
+  getCommandsList,
+  buildCommandEmbed,
+  buildButtonRow
 };
