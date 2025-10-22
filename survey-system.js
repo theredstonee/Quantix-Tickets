@@ -358,6 +358,22 @@ function getSurveyAnalytics(tickets, days = 30) {
   const avgRating = calculateAverageRating(allResponses);
   const npsData = calculateNPS(allResponses);
 
+  // Count responses with feedback (text responses)
+  const withFeedback = allResponses.filter(r => 
+    r.type === QUESTION_TYPES.TEXT && 
+    r.value && 
+    r.value.trim().length > 0
+  ).length;
+
+  // Rating distribution (for star ratings)
+  const ratingDistribution = {};
+  allResponses
+    .filter(r => r.type === QUESTION_TYPES.RATING && typeof r.value === 'number')
+    .forEach(r => {
+      const rating = Math.round(r.value);
+      ratingDistribution[rating] = (ratingDistribution[rating] || 0) + 1;
+    });
+
   // Trend data (daily averages)
   const trendData = calculateTrend(ticketsWithSurvey, days);
 
@@ -392,22 +408,30 @@ function getSurveyAnalytics(tickets, days = 30) {
 
   const teamAnalytics = {};
   Object.keys(byTeam).forEach(userId => {
+    const responses = byTeam[userId];
     teamAnalytics[userId] = {
-      avgRating: calculateAverageRating(byTeam[userId]),
-      nps: calculateNPS(byTeam[userId]),
-      count: byTeam[userId].length
+      avgRating: calculateAverageRating(responses),
+      averageRating: parseFloat(calculateAverageRating(responses)), // Add alias for template
+      nps: calculateNPS(responses),
+      count: responses.length,
+      username: userId // Will be overwritten in panel.js
     };
   });
 
   return {
     responseRate,
     avgRating,
+    averageRating: parseFloat(avgRating), // Add alias for template compatibility
     nps: npsData,
     totalResponses: ticketsWithSurvey.length,
     totalTickets: relevantTickets.length,
+    totalEligible: relevantTickets.length, // Add alias for template
+    withFeedback,
+    ratingDistribution,
     trend: trendData,
     byTopic: topicAnalytics,
-    byTeam: teamAnalytics
+    byTeam: teamAnalytics,
+    byTeamMember: teamAnalytics // Add alias for template compatibility
   };
 }
 
