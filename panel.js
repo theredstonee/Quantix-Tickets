@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express  = require('express');
 const session  = require('express-session');
+const RedisStore = require('connect-redis').default;
+const { createClient } = require('redis');
 const passport = require('passport');
 const { Strategy } = require('passport-discord');
 const fs = require('fs');
@@ -175,7 +177,46 @@ module.exports = (client)=>{
   router.use(express.json({ limit: '1mb' }));
   router.use(express.urlencoded({ extended: true, limit: '1mb' }));
   router.use(sanitizeBodyMiddleware);
-  router.use(session({
+
+  // Initialize Redis client for session store
+  let redisClient;
+  let sessionStore;
+
+  try {
+    redisClient = createClient({
+      url: process.env.REDIS_URL || 'redis://localhost:6379',
+      socket: {
+        reconnectStrategy: (retries) => {
+          if (retries > 10) {
+            console.warn('⚠️  Redis connection failed after 10 retries, falling back to MemoryStore');
+            return new Error('Redis connection failed');
+          }
+          return Math.min(retries * 100, 3000);
+        }
+      }
+    });
+
+    redisClient.on('error', (err) => {
+      console.error('❌ Redis Client Error:', err.message);
+    });
+
+    redisClient.on('connect', () => {
+      console.log('✅ Redis connected successfully');
+    });
+
+    redisClient.connect().then(() => {
+      sessionStore = new RedisStore({ client: redisClient });
+      console.log('✅ Redis session store initialized');
+    }).catch(err => {
+      console.warn('⚠️  Redis connection failed, using MemoryStore fallback:', err.message);
+      sessionStore = null;
+    });
+  } catch (err) {
+    console.warn('⚠️  Redis initialization failed, using MemoryStore fallback:', err.message);
+    sessionStore = null;
+  }
+
+  const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
     saveUninitialized: false,
@@ -185,7 +226,13 @@ module.exports = (client)=>{
       secure: /^https:\/\//i.test(BASE),
       maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days - Auto-login
     }
-  }));
+  };
+
+  if (sessionStore) {
+    sessionConfig.store = sessionStore;
+  }
+
+  router.use(session(sessionConfig));
 
   router.use(passport.initialize());
   router.use(passport.session());

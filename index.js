@@ -1107,7 +1107,7 @@ function startStatusRotation() {
   setInterval(updateStatus, 15000);
 }
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   await deployCommands();
   await cleanupOldServerData();
   initEmailService(); // Email-Benachrichtigungen initialisieren

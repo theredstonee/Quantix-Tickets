@@ -30,7 +30,7 @@ function initializeLogger(discordClient) {
   if (client.isReady()) {
     setupLogChannel();
   } else {
-    client.once('ready', () => {
+    client.once('clientReady', () => {
       setupLogChannel();
     });
   }
