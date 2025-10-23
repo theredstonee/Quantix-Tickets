@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express  = require('express');
 const session  = require('express-session');
+const FileStore = require('session-file-store')(session);
 const passport = require('passport');
 const { Strategy } = require('passport-discord');
 const fs = require('fs');
@@ -181,15 +182,16 @@ module.exports = (client)=>{
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
     saveUninitialized: false,
+    rolling: true, // Refresh session on every request
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
       secure: /^https:\/\//i.test(BASE),
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days - Auto-login
+      maxAge: 12 * 60 * 60 * 1000 // 12 hours (bis Mitternacht ca.)
     }
   };
 
-  // Only use Redis if REDIS_URL is explicitly set
+  // Choose session store: Redis > FileStore > MemoryStore
   if (process.env.REDIS_URL) {
     try {
       console.log('🔄 Initializing Redis session store...');
@@ -223,19 +225,59 @@ module.exports = (client)=>{
         sessionConfig.store = new RedisStore({ client: redisClient });
         console.log('✅ Redis session store initialized');
       }).catch(err => {
-        console.warn('⚠️  Redis connection failed, using MemoryStore:', err.message);
+        console.warn('⚠️  Redis connection failed, using FileStore fallback:', err.message);
+        sessionConfig.store = new FileStore({
+          path: './sessions',
+          ttl: 12 * 60 * 60, // 12 hours in seconds
+          retries: 0
+        });
+        console.log('✅ FileStore session store initialized');
       });
     } catch (err) {
-      console.warn('⚠️  Redis initialization failed, using MemoryStore:', err.message);
+      console.warn('⚠️  Redis initialization failed, using FileStore fallback:', err.message);
+      sessionConfig.store = new FileStore({
+        path: './sessions',
+        ttl: 12 * 60 * 60,
+        retries: 0
+      });
+      console.log('✅ FileStore session store initialized');
     }
   } else {
-    console.log('ℹ️  Using MemoryStore for sessions (set REDIS_URL to use Redis)');
+    // Use FileStore instead of MemoryStore (survives restarts)
+    sessionConfig.store = new FileStore({
+      path: './sessions',
+      ttl: 12 * 60 * 60, // 12 hours in seconds
+      retries: 0
+    });
+    console.log('✅ FileStore session store initialized (sessions survive restarts)');
   }
 
   router.use(session(sessionConfig));
 
   router.use(passport.initialize());
   router.use(passport.session());
+
+  // Middleware: Logout sessions created on a different day (midnight expiry)
+  router.use((req, res, next) => {
+    if (req.session && req.session.createdDate) {
+      const today = new Date().toDateString();
+      if (req.session.createdDate !== today) {
+        console.log(`⏰ Session expired (created ${req.session.createdDate}, now ${today})`);
+        req.logout(() => {
+          req.session.destroy(() => {
+            res.clearCookie('connect.sid');
+            next();
+          });
+        });
+        return;
+      }
+    } else if (req.session && req.isAuthenticated && req.isAuthenticated()) {
+      // Set creation date if not set
+      req.session.createdDate = new Date().toDateString();
+    }
+    next();
+  });
+
   router.use(checkUserBlacklist); // Check if user is blacklisted
   router.use(express.urlencoded({extended:true}));
   router.use(express.json());

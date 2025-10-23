@@ -11,6 +11,9 @@ transcript_*.html
 transcript_*.txt
 pnpm-lock.yaml
 
+# Session Files
+sessions/
+
 # Auto-Update Logs
 update.log
 
