@@ -27,7 +27,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/trs-bot/ticketbot/configs /home/trs-bot/ticketbot/transcripts /home/trs-bot/ticketbot/logs
+ReadWritePaths=/home/trs-bot/ticketbot
 
 # Logging
 StandardOutput=journal
