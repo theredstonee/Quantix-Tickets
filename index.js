@@ -2349,6 +2349,67 @@ client.on(Events.InteractionCreate, async i => {
       return await handleDepartmentForward(i);
     }
 
+    // Ticket Open-As Menu Handler
+    if(i.isStringSelectMenu() && i.customId.startsWith('ticket_openas_')) {
+      try {
+        await i.deferUpdate();
+
+        // Parse customId: ticket_openas_{userId}_{executorId}
+        const parts = i.customId.split('_');
+        const targetUserId = parts[2];
+        const executorId = parts[3];
+        const topicValue = i.values[0];
+
+        // Get reason from original message embed
+        const originalEmbed = i.message.embeds[0];
+        let reason = 'Vom Team eröffnet';
+        if (originalEmbed && originalEmbed.description) {
+          const reasonMatch = originalEmbed.description.match(/\*\*Grund:\*\* (.+)/);
+          if (reasonMatch) reason = reasonMatch[1].split('\n')[0];
+        }
+
+        // Get users
+        const targetUser = await client.users.fetch(targetUserId);
+        const executor = await client.users.fetch(executorId);
+
+        // Load ticket-open-as command module
+        const ticketOpenAsCmd = require('./commands/ticket-open-as.js');
+
+        // Create ticket
+        const result = await ticketOpenAsCmd.createTicketAs(
+          i.guild,
+          targetUser,
+          executor,
+          topicValue,
+          reason
+        );
+
+        if (result.success) {
+          await i.editReply({
+            content: `✅ Ticket #${result.ticketNumber} wurde erfolgreich für ${targetUser} erstellt und dir zugewiesen!\n🎫 ${result.channel}`,
+            embeds: [],
+            components: []
+          });
+        } else {
+          await i.editReply({
+            content: `❌ Fehler beim Erstellen des Tickets: ${result.error}`,
+            embeds: [],
+            components: []
+          });
+        }
+      } catch (err) {
+        console.error('Ticket open-as handler error:', err);
+        try {
+          await i.editReply({
+            content: '❌ Fehler beim Erstellen des Tickets. Bitte prüfe die Bot-Berechtigungen.',
+            embeds: [],
+            components: []
+          });
+        } catch {}
+      }
+      return;
+    }
+
     if(i.isModalSubmit() && i.customId.startsWith('modal_newticket:')){
       const topicValue = i.customId.split(':')[1];
       const topic = cfg.topics?.find(t=>t.value===topicValue);

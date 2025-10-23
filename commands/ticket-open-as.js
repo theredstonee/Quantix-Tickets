@@ -97,15 +97,6 @@ module.exports = {
         .setRequired(true)
       )
       .addStringOption(option => option
-        .setName('topic')
-        .setDescription('Ticket topic/category')
-        .setDescriptionLocalizations({
-          de: 'Ticket Thema/Kategorie'
-        })
-        .setRequired(true)
-        .setAutocomplete(true)
-      )
-      .addStringOption(option => option
         .setName('reason')
         .setDescription('Reason for opening the ticket')
         .setDescriptionLocalizations({
@@ -115,25 +106,6 @@ module.exports = {
       )
     )
     .setDMPermission(false),
-
-  async autocomplete(interaction) {
-    const cfg = readCfg(interaction.guild.id);
-    if (!cfg || !cfg.topics) {
-      return interaction.respond([]);
-    }
-
-    const focusedValue = interaction.options.getFocused();
-    const choices = cfg.topics
-      .filter(topic => topic.label && topic.value)
-      .map(topic => ({
-        name: topic.label,
-        value: topic.value
-      }))
-      .filter(choice => choice.name.toLowerCase().includes(focusedValue.toLowerCase()))
-      .slice(0, 25);
-
-    await interaction.respond(choices);
-  },
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -166,17 +138,7 @@ module.exports = {
     }
 
     const targetUser = interaction.options.getUser('user');
-    const topicValue = interaction.options.getString('topic');
     const reason = interaction.options.getString('reason') || 'Vom Team eröffnet';
-
-    // Find topic config
-    const topic = cfg.topics?.find(t => t.value === topicValue);
-    if (!topic) {
-      return interaction.reply({
-        content: '❌ Ungültiges Ticket-Thema gewählt.',
-        ephemeral: true
-      });
-    }
 
     // Check if target user is bot
     if (targetUser.bot) {
@@ -186,10 +148,71 @@ module.exports = {
       });
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    // Check if topics exist
+    if (!cfg.topics || cfg.topics.length === 0) {
+      return interaction.reply({
+        content: '❌ Keine Ticket-Themen konfiguriert. Nutze das Dashboard.',
+        ephemeral: true
+      });
+    }
+
+    // Build select menu with topics
+    const topicOptions = cfg.topics
+      .filter(t => t.label && t.value)
+      .slice(0, 25) // Discord limit
+      .map(topic => ({
+        label: topic.label,
+        value: topic.value,
+        description: topic.description ? topic.description.substring(0, 100) : undefined,
+        emoji: topic.emoji || '🎫'
+      }));
+
+    if (topicOptions.length === 0) {
+      return interaction.reply({
+        content: '❌ Keine gültigen Ticket-Themen gefunden.',
+        ephemeral: true
+      });
+    }
+
+    const selectMenu = new StringSelectMenuBuilder()
+      .setCustomId(`ticket_openas_${targetUser.id}_${interaction.user.id}`)
+      .setPlaceholder('Wähle ein Ticket-Thema aus')
+      .addOptions(topicOptions);
+
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+
+    const embed = new EmbedBuilder()
+      .setTitle('🎫 Ticket öffnen als anderer User')
+      .setDescription(
+        `**Für User:** ${targetUser}\n` +
+        `**Grund:** ${reason}\n\n` +
+        `Wähle unten ein Ticket-Thema aus:`
+      )
+      .setColor(0x00ff88)
+      .setTimestamp();
+
+    await interaction.reply({
+      embeds: [embed],
+      components: [row],
+      ephemeral: true
+    });
+
+    // Store reason in message for select menu handler
+    // Will be picked up by index.js when select menu is used
+  },
+
+  // Function to create the ticket (called from select menu handler in index.js)
+  async createTicketAs(guild, targetUser, executor, topicValue, reason) {
+    const guildId = guild.id;
+    const cfg = readCfg(guildId);
+
+    if (!cfg) throw new Error('Bot nicht konfiguriert');
+
+    // Find topic config
+    const topic = cfg.topics?.find(t => t.value === topicValue);
+    if (!topic) throw new Error('Ungültiges Ticket-Thema');
 
     try {
-      const guild = interaction.guild;
       const ticketNumber = getNextTicketNumber(guildId);
       const channelName = `ticket-${ticketNumber}`;
 
@@ -226,7 +249,7 @@ module.exports = {
             ]
           },
           {
-            id: interaction.user.id,
+            id: executor.id,
             allow: [
               PermissionFlagsBits.ViewChannel,
               PermissionFlagsBits.SendMessages,
@@ -265,12 +288,12 @@ module.exports = {
       }
 
       // Create ticket embed
-      const embed = new EmbedBuilder()
+      const ticketEmbed = new EmbedBuilder()
         .setTitle(`🎫 Ticket #${ticketNumber}`)
         .setDescription(
           `**Thema:** ${topic.label}\n` +
           `**Erstellt für:** ${targetUser}\n` +
-          `**Eröffnet von:** ${interaction.user}\n` +
+          `**Eröffnet von:** ${executor}\n` +
           `**Grund:** ${reason}\n\n` +
           `Ein Team-Mitglied wird sich zeitnah um dein Anliegen kümmern.`
         )
@@ -292,7 +315,7 @@ module.exports = {
 
       const ticketMessage = await channel.send({
         content: `${targetUser} | Dein Ticket wurde vom Team eröffnet.`,
-        embeds: [embed],
+        embeds: [ticketEmbed],
         components: [buttons]
       });
 
@@ -306,10 +329,10 @@ module.exports = {
         topic: topicValue,
         topicLabel: topic.label,
         status: 'open',
-        claimer: interaction.user.id,
+        claimer: executor.id,
         claimedAt: Date.now(),
         openedByTeam: true,
-        teamOpener: interaction.user.id,
+        teamOpener: executor.id,
         openReason: reason,
         messageId: ticketMessage.id,
         addedUsers: []
@@ -317,10 +340,6 @@ module.exports = {
 
       tickets.push(newTicket);
       saveTickets(guildId, tickets);
-
-      await interaction.editReply({
-        content: `✅ Ticket #${ticketNumber} wurde erfolgreich für ${targetUser} erstellt und dir zugewiesen!\n🎫 ${channel}`
-      });
 
       // Log event
       if (cfg.logChannelId) {
@@ -332,7 +351,7 @@ module.exports = {
                 `📋 **Ticket als anderer User eröffnet**\n\n` +
                 `**Ticket:** #${ticketNumber}\n` +
                 `**Für User:** ${targetUser}\n` +
-                `**Eröffnet von:** ${interaction.user}\n` +
+                `**Eröffnet von:** ${executor}\n` +
                 `**Thema:** ${topic.label}\n` +
                 `**Grund:** ${reason}\n` +
                 `**Status:** Automatisch claimed`
@@ -347,11 +366,20 @@ module.exports = {
         }
       }
 
+      // Return success data
+      return {
+        success: true,
+        ticketNumber,
+        channel,
+        ticket: newTicket
+      };
+
     } catch (err) {
       console.error('Ticket open-as error:', err);
-      await interaction.editReply({
-        content: '❌ Fehler beim Erstellen des Tickets. Bitte prüfe die Bot-Berechtigungen.'
-      });
+      return {
+        success: false,
+        error: err.message
+      };
     }
   }
 };
