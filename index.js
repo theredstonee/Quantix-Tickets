@@ -1832,7 +1832,7 @@ async function createTranscript(channel, ticket, opts = {}) {
   <div class="container">
     <div class="header">
       <h1>
-        🎫 <span class="ticket-badge">#${ticket.id.toString().padStart(5, '0')}</span>
+        🎫 <span class="ticket-badge">#${(ticket.id || 'N/A').toString().padStart(5, '0')}</span>
       </h1>
       <p style="opacity: 0.95; font-size: 1.1rem; margin-top: 0.5rem;">Ticket Transcript</p>
     </div>
@@ -2039,7 +2039,7 @@ async function appendToLiveTranscript(message, ticket, guildId) {
 <body>
   <div class="container">
     <div class="header">
-      <h1>🎫 <span class="ticket-badge">#${ticket.id.toString().padStart(5, '0')}</span></h1>
+      <h1>🎫 <span class="ticket-badge">#${(ticket.id || 'N/A').toString().padStart(5, '0')}</span></h1>
       <p style="opacity: 0.95; font-size: 1.1rem; margin-top: 0.5rem;">Live Transcript</p>
     </div>
     <div class="messages" id="messages">
