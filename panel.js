@@ -1,8 +1,6 @@
 require('dotenv').config();
 const express  = require('express');
 const session  = require('express-session');
-const RedisStore = require('connect-redis').default;
-const { createClient } = require('redis');
 const passport = require('passport');
 const { Strategy } = require('passport-discord');
 const fs = require('fs');
@@ -195,6 +193,11 @@ module.exports = (client)=>{
   if (process.env.REDIS_URL) {
     try {
       console.log('🔄 Initializing Redis session store...');
+
+      // Import Redis modules only when needed
+      const RedisStore = require('connect-redis').default;
+      const { createClient } = require('redis');
+
       const redisClient = createClient({
         url: process.env.REDIS_URL,
         socket: {
