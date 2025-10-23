@@ -178,44 +178,7 @@ module.exports = (client)=>{
   router.use(express.urlencoded({ extended: true, limit: '1mb' }));
   router.use(sanitizeBodyMiddleware);
 
-  // Initialize Redis client for session store
-  let redisClient;
-  let sessionStore;
-
-  try {
-    redisClient = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379',
-      socket: {
-        reconnectStrategy: (retries) => {
-          if (retries > 10) {
-            console.warn('⚠️  Redis connection failed after 10 retries, falling back to MemoryStore');
-            return new Error('Redis connection failed');
-          }
-          return Math.min(retries * 100, 3000);
-        }
-      }
-    });
-
-    redisClient.on('error', (err) => {
-      console.error('❌ Redis Client Error:', err.message);
-    });
-
-    redisClient.on('connect', () => {
-      console.log('✅ Redis connected successfully');
-    });
-
-    redisClient.connect().then(() => {
-      sessionStore = new RedisStore({ client: redisClient });
-      console.log('✅ Redis session store initialized');
-    }).catch(err => {
-      console.warn('⚠️  Redis connection failed, using MemoryStore fallback:', err.message);
-      sessionStore = null;
-    });
-  } catch (err) {
-    console.warn('⚠️  Redis initialization failed, using MemoryStore fallback:', err.message);
-    sessionStore = null;
-  }
-
+  // Session configuration
   const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'ticketbotsecret',
     resave: false,
@@ -228,8 +191,42 @@ module.exports = (client)=>{
     }
   };
 
-  if (sessionStore) {
-    sessionConfig.store = sessionStore;
+  // Only use Redis if REDIS_URL is explicitly set
+  if (process.env.REDIS_URL) {
+    try {
+      console.log('🔄 Initializing Redis session store...');
+      const redisClient = createClient({
+        url: process.env.REDIS_URL,
+        socket: {
+          reconnectStrategy: (retries) => {
+            if (retries > 10) {
+              console.warn('⚠️  Redis connection failed after 10 retries');
+              return new Error('Redis connection failed');
+            }
+            return Math.min(retries * 100, 3000);
+          }
+        }
+      });
+
+      redisClient.on('error', (err) => {
+        console.error('❌ Redis Client Error:', err.message);
+      });
+
+      redisClient.on('connect', () => {
+        console.log('✅ Redis connected successfully');
+      });
+
+      redisClient.connect().then(() => {
+        sessionConfig.store = new RedisStore({ client: redisClient });
+        console.log('✅ Redis session store initialized');
+      }).catch(err => {
+        console.warn('⚠️  Redis connection failed, using MemoryStore:', err.message);
+      });
+    } catch (err) {
+      console.warn('⚠️  Redis initialization failed, using MemoryStore:', err.message);
+    }
+  } else {
+    console.log('ℹ️  Using MemoryStore for sessions (set REDIS_URL to use Redis)');
   }
 
   router.use(session(sessionConfig));
