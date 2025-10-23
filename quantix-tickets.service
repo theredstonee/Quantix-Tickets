@@ -1,0 +1,42 @@
+[Unit]
+Description=Quantix Tickets Discord Bot & Web Panel
+After=network.target
+Documentation=https://github.com/theredstonee/quantix-tickets
+
+[Service]
+Type=simple
+User=ticketbot
+Group=ticketbot
+WorkingDirectory=/home/ticketbot/trs-bot
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=10s
+
+# Restart Limits - Verhindert Boot-Loops
+StartLimitBurst=5
+StartLimitIntervalSec=600
+
+# Environment
+Environment=NODE_ENV=production
+EnvironmentFile=/home/ticketbot/trs-bot/.env
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/ticketbot/trs-bot/configs /home/ticketbot/trs-bot/transcripts /home/ticketbot/trs-bot/logs
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=quantix-tickets
+
+# Process Management
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+SendSIGKILL=yes
+
+[Install]
+WantedBy=multi-user.target
