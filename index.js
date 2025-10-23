@@ -477,11 +477,15 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-const app = express();
-app.set('view engine','ejs');
-app.set('views', path.join(__dirname,'views'));
-app.use(express.urlencoded({ extended:true }));
-app.use(express.static('public'));
+// Express Server (nur wenn nicht BOT_ONLY Modus)
+let app;
+if (!process.env.BOT_ONLY) {
+  app = express();
+  app.set('view engine','ejs');
+  app.set('views', path.join(__dirname,'views'));
+  app.use(express.urlencoded({ extended:true }));
+  app.use(express.static('public'));
+}
 
 const client = new Client({
   intents: [
@@ -498,9 +502,15 @@ const client = new Client({
 const { initializeLogger } = require('./discord-logger');
 initializeLogger(client);
 
-app.set('trust proxy', 1);
-app.use('/', require('./panel')(client));
-app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
+// Panel nur starten wenn nicht BOT_ONLY Modus
+if (!process.env.BOT_ONLY && app) {
+  app.set('trust proxy', 1);
+  app.use('/', require('./panel')(client));
+  app.listen(3000, ()=>console.log('🌐 Panel listening on :3000'));
+  console.log('ℹ️  Running in FULL mode (Bot + Web Panel)');
+} else {
+  console.log('ℹ️  Running in BOT_ONLY mode (no Web Panel)');
+}
 
 const TOKEN = process.env.DISCORD_TOKEN;
 const PANEL_FIXED_URL = 'https://quantixtickets.theredstonee.de/panel';

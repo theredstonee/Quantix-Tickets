@@ -1,0 +1,8 @@
+[Unit]
+Description=Quantix Tickets - Complete System (Bot + Web)
+Documentation=https://github.com/theredstonee/quantix-tickets
+Requires=quantix-bot.service quantix-web.service
+After=network.target
+
+[Install]
+WantedBy=multi-user.target
