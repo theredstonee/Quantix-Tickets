@@ -10,8 +10,23 @@ const WHITELISTED_SERVER_ID = '1403053662825222388';
 
 const maintenanceFile = path.join(__dirname, '..', 'maintenance.json');
 
-// Import config functions
-const { readCfg } = require('../index.js');
+// Read guild config
+function readCfg(guildId) {
+  try {
+    const CONFIG_DIR = path.join(__dirname, '..', 'configs');
+    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+
+    if (!fs.existsSync(configPath)) {
+      return {};
+    }
+
+    const data = fs.readFileSync(configPath, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error(`Error reading config for guild ${guildId}:`, err);
+    return {};
+  }
+}
 
 function readMaintenanceState() {
   if (!fs.existsSync(maintenanceFile)) {

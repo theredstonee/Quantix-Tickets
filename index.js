@@ -1109,6 +1109,23 @@ function startStatusRotation() {
   let currentStatusIndex = 0;
 
   const updateStatus = () => {
+    // Check if maintenance mode is active
+    const maintenanceFile = path.join(__dirname, 'maintenance.json');
+    let maintenanceState = { enabled: false };
+    if (fs.existsSync(maintenanceFile)) {
+      try {
+        maintenanceState = JSON.parse(fs.readFileSync(maintenanceFile, 'utf8'));
+      } catch (err) {
+        console.error('Error reading maintenance state in status rotation:', err);
+      }
+    }
+
+    // Don't rotate status if maintenance mode is active
+    if (maintenanceState.enabled) {
+      console.log('⏭️ Status-Rotation übersprungen: Maintenance-Mode aktiv');
+      return;
+    }
+
     const serverCount = client.guilds.cache.size;
 
     // Berechne Gesamt-Member-Anzahl

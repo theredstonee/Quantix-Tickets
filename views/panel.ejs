@@ -3945,6 +3945,14 @@
               </div>
               <div class="card-body">
                 <div class="form-group">
+                  <label class="toggle-option <%= cfg.githubCommitsEnabled ? 'active' : '' %>" style="margin-bottom: 1rem;">
+                    <input type="checkbox" name="githubCommitsEnabled" value="true" <%= cfg.githubCommitsEnabled ? 'checked' : '' %> style="display: none;">
+                    <div class="toggle-content">
+                      <div class="toggle-icon"><i class="fas fa-check"></i></div>
+                      <span><%= lang === 'de' ? 'GitHub Commits aktivieren' : 'Enable GitHub Commits' %></span>
+                    </div>
+                  </label>
+
                   <select name="githubWebhookChannelId">
                     <option value=""><%= t.web.select_channel %></option>
                     <%

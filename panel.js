@@ -2457,6 +2457,9 @@ module.exports = (client)=>{
         cfg.githubWebhookChannelId = null;
       }
 
+      // GitHub Commits Enabled (checkbox)
+      cfg.githubCommitsEnabled = req.body.githubCommitsEnabled === 'true' || req.body.githubCommitsEnabled === 'on';
+
       // Ticket Archive Settings
       cfg.archiveEnabled = req.body.archiveEnabled === 'true';
       if(req.body.archiveCategoryId){
@@ -3614,6 +3617,7 @@ module.exports = (client)=>{
 
   router.post('/webhook/github', async (req, res) => {
     try {
+      // Immediately respond to GitHub
       res.status(200).send('OK');
 
       const payload = req.body;
@@ -3621,21 +3625,23 @@ module.exports = (client)=>{
 
       console.log(`📡 GitHub Webhook erhalten: Event=${event}, Repo=${payload.repository?.full_name || 'Unknown'}`);
 
+      // Only process push events
       if (event !== 'push') {
         console.log(`⏭️ Event ${event} ignoriert (nur push wird verarbeitet)`);
         return;
       }
 
-      const repository = payload.repository?.full_name || 'Unknown';
+      const repository = payload.repository?.full_name || 'Unknown Repository';
       const commits = payload.commits || [];
       const pusher = payload.pusher?.name || 'Unknown';
       const ref = payload.ref || '';
       const branch = ref.replace('refs/heads/', '');
 
-      console.log(`🔀 Push Event: ${commits.length} Commit(s) auf ${branch} von ${pusher}`);
+      console.log(`🔀 Push Event: ${commits.length} Commit(s) auf ${branch} von ${pusher} in ${repository}`);
 
-      if (!repository.toLowerCase().includes('trs-tickets-bot')) {
-        console.log(`⏭️ Repository ${repository} ist nicht TRS-Tickets-Bot, ignoriere Webhook`);
+      // Check if there are commits to process
+      if (commits.length === 0) {
+        console.log(`⏭️ Keine Commits im Push Event, ignoriere Webhook`);
         return;
       }
 
@@ -3643,17 +3649,21 @@ module.exports = (client)=>{
       console.log(`📤 Verarbeite Webhook für ${guilds.size} Server...`);
 
       let sentCount = 0;
+      let enabledCount = 0;
+
       for (const [guildId, guildData] of guilds) {
         try {
           const cfg = readCfg(guildId);
 
-          if (cfg.githubCommitsEnabled === false) {
-            console.log(`⏭️ Guild ${guildData.name || guildId} (${guildId}): GitHub Logs deaktiviert`);
+          // Check if GitHub commits are explicitly enabled
+          if (!cfg.githubCommitsEnabled || cfg.githubCommitsEnabled === false) {
             continue;
           }
 
+          enabledCount++;
+
           if (!cfg.githubWebhookChannelId) {
-            console.log(`⚠️ Guild ${guildData.name || guildId} (${guildId}): Kein Webhook Channel konfiguriert`);
+            console.log(`⚠️ Guild ${guildData.name || guildId} (${guildId}): GitHub aktiviert aber kein Channel konfiguriert`);
             continue;
           }
 
@@ -3664,39 +3674,55 @@ module.exports = (client)=>{
           }
 
           const channel = await guild.channels.fetch(cfg.githubWebhookChannelId).catch(() => null);
-          if (!channel) {
-            console.log(`❌ Guild ${guild.name} (${guildId}): Channel ${cfg.githubWebhookChannelId} nicht gefunden`);
+          if (!channel || !channel.isTextBased()) {
+            console.log(`❌ Guild ${guild.name} (${guildId}): Channel ${cfg.githubWebhookChannelId} nicht gefunden oder kein Text-Channel`);
             continue;
           }
 
           console.log(`✅ Guild ${guild.name} (${guildId}): Sende ${commits.length} Commit(s) zu #${channel.name}`);
 
+          // Send commits (max 5 individual embeds)
           for (const commit of commits.slice(0, 5)) {
-            const embed = new EmbedBuilder()
-              .setTitle('📝 New Commit')
-              .setDescription(commit.message || 'No commit message')
-              .setColor(0x00ff88)
-              .addFields(
-                { name: '👤 Author', value: commit.author?.name || 'Unknown', inline: true },
-                { name: '🌿 Branch', value: branch, inline: true },
-                { name: '📦 Repository', value: repository, inline: false }
-              )
-              .setTimestamp(new Date(commit.timestamp))
-              .setFooter({ text: 'Quantix Tickets Bot Updates' });
+            try {
+              const commitMessage = (commit.message || 'No commit message').substring(0, 4096);
+              const commitAuthor = commit.author?.name || commit.author?.username || 'Unknown';
 
-            if (commit.url) {
-              embed.setURL(commit.url);
+              const embed = new EmbedBuilder()
+                .setTitle('📝 New Commit')
+                .setDescription(commitMessage)
+                .setColor(0x00ff88)
+                .addFields(
+                  { name: '👤 Author', value: commitAuthor, inline: true },
+                  { name: '🌿 Branch', value: branch || 'main', inline: true },
+                  { name: '📦 Repository', value: repository, inline: false }
+                )
+                .setFooter({ text: 'Quantix Tickets Bot Updates' });
+
+              if (commit.timestamp) {
+                embed.setTimestamp(new Date(commit.timestamp));
+              }
+
+              if (commit.url) {
+                embed.setURL(commit.url);
+              }
+
+              await channel.send({ embeds: [embed] });
+            } catch (sendErr) {
+              console.error(`Fehler beim Senden von Commit ${commit.id}:`, sendErr);
             }
-
-            await channel.send({ embeds: [embed] });
           }
 
+          // Show "... and X more commits" if needed
           if (commits.length > 5) {
-            const moreEmbed = new EmbedBuilder()
-              .setDescription(`... und ${commits.length - 5} weitere Commit(s)`)
-              .setColor(0x00ff88)
-              .setFooter({ text: 'Quantix Tickets Bot Updates' });
-            await channel.send({ embeds: [moreEmbed] });
+            try {
+              const moreEmbed = new EmbedBuilder()
+                .setDescription(`... und ${commits.length - 5} weitere Commit(s)`)
+                .setColor(0x00ff88)
+                .setFooter({ text: 'Quantix Tickets Bot Updates' });
+              await channel.send({ embeds: [moreEmbed] });
+            } catch (moreErr) {
+              console.error('Fehler beim Senden des "mehr Commits" Embed:', moreErr);
+            }
           }
 
           sentCount++;
@@ -3706,7 +3732,11 @@ module.exports = (client)=>{
         }
       }
 
-      console.log(`✅ GitHub Webhook erfolgreich an ${sentCount} Server gesendet`);
+      console.log(`✅ GitHub Webhook erfolgreich verarbeitet:`);
+      console.log(`   📊 ${guilds.size} Server insgesamt`);
+      console.log(`   ✅ ${enabledCount} Server mit GitHub aktiviert`);
+      console.log(`   📤 ${sentCount} Server erfolgreich benachrichtigt`);
+      console.log(`   📝 ${commits.length} Commit(s) verarbeitet`);
 
     } catch (err) {
       console.error('GitHub Webhook Error:', err);
