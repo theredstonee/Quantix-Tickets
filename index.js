@@ -39,7 +39,7 @@ const {
   EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle,
   PermissionsBitField, ChannelType, Events, AttachmentBuilder,
-  StringSelectMenuBuilder, ActivityType, PresenceUpdateStatus
+  StringSelectMenuBuilder, ActivityType
 } = require('discord.js');
 const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
 const { VERSION, COPYRIGHT } = require('./version.config');
@@ -1143,7 +1143,7 @@ function startStatusRotation() {
 
     client.user.setPresence({
       activities: [{ name: status.name, type: status.type }],
-      status: PresenceUpdateStatus.Online
+      status: 'online'
     });
 
     currentStatusIndex = (currentStatusIndex + 1) % statuses.length;
@@ -1169,11 +1169,25 @@ client.once('clientReady', async () => {
       const maintenanceState = JSON.parse(fs.readFileSync(maintenanceFile, 'utf8'));
       if (maintenanceState.enabled) {
         console.log('🔧 Maintenance Mode ist aktiv - Setze Bot auf DND Status');
-        await client.user.setPresence({
-          activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Playing }],
-          status: PresenceUpdateStatus.DoNotDisturb
-        });
+
+        const presenceData = {
+          activities: [{
+            name: 'Custom Status',
+            type: 4,
+            state: '🔧 Wartungsmodus | Under Maintenance'
+          }],
+          status: 'dnd'
+        };
+
+        await client.user.setPresence(presenceData);
         console.log('✅ Bot Status: DND (Wartungsmodus aktiv seit ' + new Date(maintenanceState.enabledAt).toLocaleString('de-DE') + ')');
+        console.log('📊 Presence Data:', JSON.stringify(presenceData, null, 2));
+
+        // Force update after startup
+        setTimeout(async () => {
+          await client.user.setPresence(presenceData);
+          console.log('✅ Maintenance Status erneut gesetzt (Startup Force Update)');
+        }, 5000);
       }
     } catch (err) {
       console.error('Error checking maintenance state on startup:', err);
@@ -2366,26 +2380,50 @@ client.on(Events.InteractionCreate, async i => {
 
         // Update bot status - CRITICAL: Set DND status
         try {
-          await i.client.user.setPresence({
-            activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Playing }],
-            status: PresenceUpdateStatus.DoNotDisturb
-          });
-          console.log('✅ Bot Status gesetzt: DND mit Wartungsmodus-Activity');
+          const presenceData = {
+            activities: [{
+              name: 'Custom Status',
+              type: 4,
+              state: '🔧 Wartungsmodus | Under Maintenance'
+            }],
+            status: 'dnd'
+          };
 
-          // Force status update after 2 seconds to ensure it's applied
+          await i.client.user.setPresence(presenceData);
+          console.log('✅ Bot Status gesetzt: DND mit Wartungsmodus-Activity');
+          console.log('📊 Presence Data:', JSON.stringify(presenceData, null, 2));
+
+          // Force status update multiple times to ensure it's applied
           setTimeout(async () => {
             try {
-              await i.client.user.setPresence({
-                activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Playing }],
-                status: PresenceUpdateStatus.DoNotDisturb
-              });
-              console.log('✅ Bot Status erneut gesetzt (Force Update)');
+              await i.client.user.setPresence(presenceData);
+              console.log('✅ Bot Status erneut gesetzt (Force Update 1/3 - 2s)');
             } catch (retryErr) {
               console.error('❌ Error in retry setting bot status:', retryErr);
             }
           }, 2000);
+
+          setTimeout(async () => {
+            try {
+              await i.client.user.setPresence(presenceData);
+              console.log('✅ Bot Status erneut gesetzt (Force Update 2/3 - 5s)');
+            } catch (retryErr) {
+              console.error('❌ Error in retry setting bot status:', retryErr);
+            }
+          }, 5000);
+
+          setTimeout(async () => {
+            try {
+              await i.client.user.setPresence(presenceData);
+              console.log('✅ Bot Status erneut gesetzt (Force Update 3/3 - 10s)');
+              console.log('📊 Final Bot Status:', i.client.user.presence?.status || 'unknown');
+            } catch (retryErr) {
+              console.error('❌ Error in retry setting bot status:', retryErr);
+            }
+          }, 10000);
         } catch (err) {
           console.error('❌ Error setting bot status:', err);
+          console.error('Error Details:', err.stack);
         }
 
         const enableEmbed = new EmbedBuilder()
