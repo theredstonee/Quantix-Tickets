@@ -2003,7 +2003,7 @@ module.exports = (client)=>{
 
   router.get('/panel', isAuthOrTeam, async (req,res)=>{
     const guildId = req.session.selectedGuild;
-    const { getTicketSystem, getDefaultTicketSystem, migrateToTicketSystems } = require('./ticket-systems');
+    const { getTicketSystem, getDefaultTicketSystem, getAllTicketSystems, migrateToTicketSystems } = require('./ticket-systems');
 
     // Migrate config to multi-system if needed
     const cfg = migrateToTicketSystems(guildId);
@@ -2011,6 +2011,9 @@ module.exports = (client)=>{
     // Get selected system from query parameter or use default
     const selectedSystemId = req.query.system || 'default';
     const selectedSystem = getTicketSystem(guildId, selectedSystemId) || getDefaultTicketSystem(guildId);
+
+    // Get all systems for dropdown
+    const allSystems = getAllTicketSystems(guildId);
 
     // Auto-Migration: Convert old flat embed fields to nested structure
     let needsSave = false;
@@ -2083,6 +2086,7 @@ module.exports = (client)=>{
       cfg,
       system: selectedSystem, // Current ticket system
       selectedSystem: selectedSystemId, // ID of selected system
+      allSystems, // All ticket systems for dropdown
       msg: req.query.msg||null,
       channels,
       categories,

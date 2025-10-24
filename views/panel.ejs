@@ -1779,8 +1779,6 @@
             </label>
             <select id="systemSelector" onchange="switchSystem(this.value)" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid var(--glass-border); background: var(--bg-secondary); color: var(--text-color); font-size: 1rem;">
               <%
-              const { getAllTicketSystems } = require('../ticket-systems');
-              const allSystems = getAllTicketSystems(cfg.guildId || selectedGuild);
               const currentSystemId = typeof selectedSystem !== 'undefined' ? selectedSystem : 'default';
               %>
               <% allSystems.forEach(sys => { %>
