@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ActivityType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -153,11 +153,12 @@ module.exports = {
         // Restore bot status
         try {
           await interaction.client.user.setPresence({
-            activities: [{ name: '🎫 Tickets verwalten | quantix-bot.de', type: 3 }],
+            activities: [{ name: '🎫 Tickets verwalten | quantix-bot.de', type: ActivityType.Watching }],
             status: 'online'
           });
+          console.log('✅ Bot Status wiederhergestellt: Online mit normalem Status');
         } catch (err) {
-          console.error('Error restoring bot status:', err);
+          console.error('❌ Error restoring bot status:', err);
         }
 
         const disableEmbed = new EmbedBuilder()

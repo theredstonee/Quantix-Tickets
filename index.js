@@ -1162,7 +1162,25 @@ client.once('clientReady', async () => {
   initEmailService(); // Email-Benachrichtigungen initialisieren
   console.log(`🤖 ${client.user.tag} bereit`);
 
-  // Status-Rotation starten
+  // Check if maintenance mode is active on startup
+  const maintenanceFile = path.join(__dirname, 'maintenance.json');
+  if (fs.existsSync(maintenanceFile)) {
+    try {
+      const maintenanceState = JSON.parse(fs.readFileSync(maintenanceFile, 'utf8'));
+      if (maintenanceState.enabled) {
+        console.log('🔧 Maintenance Mode ist aktiv - Setze Bot auf DND Status');
+        await client.user.setPresence({
+          activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Custom }],
+          status: 'dnd'
+        });
+        console.log('✅ Bot Status: DND (Wartungsmodus aktiv seit ' + new Date(maintenanceState.enabledAt).toLocaleString('de-DE') + ')');
+      }
+    } catch (err) {
+      console.error('Error checking maintenance state on startup:', err);
+    }
+  }
+
+  // Status-Rotation starten (wird übersprungen wenn Maintenance aktiv)
   startStatusRotation();
 
   // Premium Expiry Checker - läuft jede Minute
@@ -2346,14 +2364,28 @@ client.on(Events.InteractionCreate, async i => {
 
         maintenanceCommand.writeMaintenanceState(newState);
 
-        // Update bot status
+        // Update bot status - CRITICAL: Set DND status
         try {
           await i.client.user.setPresence({
-            activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: 4 }],
+            activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Custom }],
             status: 'dnd'
           });
+          console.log('✅ Bot Status gesetzt: DND mit Wartungsmodus-Activity');
+
+          // Force status update after 2 seconds to ensure it's applied
+          setTimeout(async () => {
+            try {
+              await i.client.user.setPresence({
+                activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Custom }],
+                status: 'dnd'
+              });
+              console.log('✅ Bot Status erneut gesetzt (Force Update)');
+            } catch (retryErr) {
+              console.error('❌ Error in retry setting bot status:', retryErr);
+            }
+          }, 2000);
         } catch (err) {
-          console.error('Error setting bot status:', err);
+          console.error('❌ Error setting bot status:', err);
         }
 
         const enableEmbed = new EmbedBuilder()
