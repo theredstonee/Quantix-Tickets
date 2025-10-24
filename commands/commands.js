@@ -160,6 +160,13 @@ function getCommandsList(userId, member, guildId) {
           premium: null
         },
         {
+          name: '/send-application-panel',
+          description: 'Bewerbungs-Panel in einen Channel senden',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: 'Basic+'
+        },
+        {
           name: '/github-commits',
           description: 'GitHub Commit-Benachrichtigungen toggle',
           permission: 'Administrator',
