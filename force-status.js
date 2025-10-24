@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 
 const client = new Client({
@@ -8,35 +8,40 @@ const client = new Client({
   ]
 });
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   console.log('✅ Bot bereit:', client.user.tag);
+  console.log('📊 Aktueller Status:', client.user.presence?.status || 'unknown');
 
-  // Destroy and reconnect to force WebSocket refresh
-  console.log('🔄 Disconnecting...');
-  await client.destroy();
-
-  console.log('🔄 Reconnecting...');
-  await client.login(process.env.TOKEN);
-});
-
-client.on('ready', async () => {
-  console.log('✅ Reconnected:', client.user.tag);
-
-  console.log('🔴 Setze DND Status...');
+  console.log('\n🔴 Setze DND Status (Variante 1)...');
   await client.user.setPresence({
     activities: [{
       name: 'Custom Status',
       type: 4,
-      state: '🔧 FORCE UPDATE TEST'
+      state: '🔧 TEST DND STATUS'
     }],
     status: 'dnd'
   });
-
   console.log('✅ Status gesetzt!');
-  console.log('📊 Check Discord now - Bot should be RED/DND');
+  await new Promise(r => setTimeout(r, 2000));
 
-  // Keep alive
-  setTimeout(() => {}, 60000);
+  console.log('\n🔴 Setze DND Status nochmal (Force)...');
+  await client.user.setPresence({
+    activities: [{
+      name: 'Custom Status',
+      type: 4,
+      state: '🔧 WARTUNGSMODUS TEST'
+    }],
+    status: 'dnd'
+  });
+  console.log('✅ Status erneut gesetzt!');
+  await new Promise(r => setTimeout(r, 2000));
+
+  console.log('\n📊 Finaler Status:', client.user.presence?.status || 'unknown');
+  console.log('\n🎯 CHECK DISCORD JETZT - Bot sollte ROT/DND sein!');
+  console.log('   Wenn nicht → Discord Cache Problem');
+  console.log('   Wenn ja → `/maintenance` wird auch funktionieren');
+
+  console.log('\nDrücke Ctrl+C zum Beenden...');
 });
 
 client.login(process.env.TOKEN);
