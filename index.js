@@ -2695,14 +2695,20 @@ client.on(Events.InteractionCreate, async i => {
           });
         });
 
-        // Send embed with close button
-        const closeButton = new ButtonBuilder()
-          .setCustomId(`close_ticket_${guildId}`)
-          .setLabel('Bewerbung schließen')
-          .setStyle(ButtonStyle.Danger)
-          .setEmoji('🔒');
+        // Send embed with accept and reject buttons
+        const acceptButton = new ButtonBuilder()
+          .setCustomId(`accept_application_${guildId}`)
+          .setLabel('Annehmen')
+          .setStyle(ButtonStyle.Success)
+          .setEmoji('✅');
 
-        const buttonRow = new ActionRowBuilder().addComponents(closeButton);
+        const rejectButton = new ButtonBuilder()
+          .setCustomId(`reject_application_${guildId}`)
+          .setLabel('Ablehnen')
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji('❌');
+
+        const buttonRow = new ActionRowBuilder().addComponents(acceptButton, rejectButton);
 
         const ticketMessage = await channel.send({
           content: `<@${i.user.id}>`,
@@ -2761,6 +2767,245 @@ client.on(Events.InteractionCreate, async i => {
         } else {
           await i.editReply({
             content: '❌ Fehler beim Erstellen der Bewerbung. Bitte versuche es erneut.'
+          });
+        }
+      }
+      return;
+    }
+
+    // Application Accept Modal Submit Handler
+    if(i.isModalSubmit() && i.customId.startsWith('modal_accept_application:')){
+      try {
+        const parts = i.customId.split(':');
+        const guildId = parts[1];
+        const ticketId = parseInt(parts[2]);
+
+        if(guildId !== i.guild.id){
+          return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+        }
+
+        const cfg = readCfg(guildId);
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.id === ticketId && t.isApplication === true);
+
+        if(!ticket){
+          return i.reply({ephemeral:true,content:'❌ Bewerbung nicht gefunden.'});
+        }
+
+        await i.deferReply({ephemeral:true});
+
+        // Get inputs
+        const roleName = i.fields.getTextInputValue('role_name');
+        const reason = i.fields.getTextInputValue('reason') || 'Keine Angabe';
+
+        // Find role by name (case insensitive)
+        const roles = await i.guild.roles.fetch();
+        const targetRole = roles.find(r => r.name.toLowerCase() === roleName.toLowerCase());
+
+        if(!targetRole){
+          return i.editReply({
+            content: `❌ Rolle "${roleName}" nicht gefunden. Bitte überprüfe den Namen.`
+          });
+        }
+
+        // Get applicant
+        const applicant = await i.guild.members.fetch(ticket.userId).catch(() => null);
+        if(!applicant){
+          return i.editReply({
+            content: '❌ Bewerber nicht mehr auf dem Server.'
+          });
+        }
+
+        // Give role
+        try {
+          await applicant.roles.add(targetRole);
+        } catch(roleErr){
+          console.error('Error assigning role:', roleErr);
+          return i.editReply({
+            content: `❌ Fehler beim Zuweisen der Rolle. Bot-Rolle muss über "${targetRole.name}" stehen.`
+          });
+        }
+
+        // Update ticket
+        ticket.status = 'accepted';
+        ticket.acceptedBy = i.user.id;
+        ticket.acceptedAt = new Date().toISOString();
+        ticket.acceptReason = reason;
+        ticket.assignedRole = targetRole.id;
+        saveTickets(guildId, tickets);
+
+        // Send acceptance message in channel
+        const acceptEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('✅ Bewerbung angenommen')
+          .setDescription(
+            `**Bewerber:** <@${ticket.userId}>\n` +
+            `**Angenommen von:** <@${i.user.id}>\n` +
+            `**Zugewiesene Rolle:** <@&${targetRole.id}>\n\n` +
+            `**Grund:** ${reason}`
+          )
+          .addFields(
+            { name: '🎫 Bewerbung', value: `#${ticket.id}`, inline: true },
+            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+          )
+          .setFooter({ text: 'Quantix Tickets • Bewerbungssystem' })
+          .setTimestamp();
+
+        await i.channel.send({ embeds: [acceptEmbed] });
+
+        // Send DM to applicant
+        try {
+          const user = await client.users.fetch(ticket.userId);
+          const dmEmbed = new EmbedBuilder()
+            .setColor(0x00ff88)
+            .setTitle('🎉 Glückwunsch! Deine Bewerbung wurde angenommen!')
+            .setDescription(
+              `**Server:** ${i.guild.name}\n` +
+              `**Bewerbung:** #${String(ticket.id).padStart(5, '0')}\n` +
+              `**Zugewiesene Rolle:** ${targetRole.name}\n\n` +
+              `**Nachricht vom Team:**\n${reason}`
+            )
+            .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+            .setTimestamp();
+
+          await user.send({ embeds: [dmEmbed] }).catch(() => {});
+        } catch(dmErr){
+          console.error('DM notification error:', dmErr);
+        }
+
+        // Log event
+        await logEvent(i.guild, `✅ Bewerbung **#${ticket.id}** von <@${ticket.userId}> wurde angenommen von <@${i.user.id}>`);
+
+        await i.editReply({
+          content: `✅ Bewerbung angenommen! <@${ticket.userId}> hat die Rolle <@&${targetRole.id}> erhalten.`
+        });
+
+        // Delete ticket channel after 10 seconds
+        setTimeout(async () => {
+          try {
+            const channel = await i.guild.channels.fetch(ticket.channelId);
+            if(channel){
+              await channel.delete('Bewerbung angenommen');
+            }
+          } catch(delErr){
+            console.error('Error deleting application channel:', delErr);
+          }
+        }, 10000);
+
+      } catch(error){
+        console.error('Application accept error:', error);
+        if(!i.replied && !i.deferred){
+          await i.reply({
+            ephemeral:true,
+            content:'❌ Fehler beim Annehmen der Bewerbung.'
+          });
+        } else {
+          await i.editReply({
+            content:'❌ Fehler beim Annehmen der Bewerbung.'
+          });
+        }
+      }
+      return;
+    }
+
+    // Application Reject Modal Submit Handler
+    if(i.isModalSubmit() && i.customId.startsWith('modal_reject_application:')){
+      try {
+        const parts = i.customId.split(':');
+        const guildId = parts[1];
+        const ticketId = parseInt(parts[2]);
+
+        if(guildId !== i.guild.id){
+          return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+        }
+
+        const cfg = readCfg(guildId);
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.id === ticketId && t.isApplication === true);
+
+        if(!ticket){
+          return i.reply({ephemeral:true,content:'❌ Bewerbung nicht gefunden.'});
+        }
+
+        await i.deferReply({ephemeral:true});
+
+        // Get inputs
+        const reason = i.fields.getTextInputValue('reason') || 'Keine Angabe';
+
+        // Update ticket
+        ticket.status = 'rejected';
+        ticket.rejectedBy = i.user.id;
+        ticket.rejectedAt = new Date().toISOString();
+        ticket.rejectReason = reason;
+        saveTickets(guildId, tickets);
+
+        // Send rejection message in channel
+        const rejectEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Bewerbung abgelehnt')
+          .setDescription(
+            `**Bewerber:** <@${ticket.userId}>\n` +
+            `**Abgelehnt von:** <@${i.user.id}>\n\n` +
+            `**Grund:** ${reason}`
+          )
+          .addFields(
+            { name: '🎫 Bewerbung', value: `#${ticket.id}`, inline: true },
+            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+          )
+          .setFooter({ text: 'Quantix Tickets • Bewerbungssystem' })
+          .setTimestamp();
+
+        await i.channel.send({ embeds: [rejectEmbed] });
+
+        // Send DM to applicant
+        try {
+          const user = await client.users.fetch(ticket.userId);
+          const dmEmbed = new EmbedBuilder()
+            .setColor(0xff4444)
+            .setTitle('📄 Update zu deiner Bewerbung')
+            .setDescription(
+              `**Server:** ${i.guild.name}\n` +
+              `**Bewerbung:** #${String(ticket.id).padStart(5, '0')}\n\n` +
+              `Leider müssen wir dir mitteilen, dass deine Bewerbung abgelehnt wurde.\n\n` +
+              `**Nachricht vom Team:**\n${reason}`
+            )
+            .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+            .setTimestamp();
+
+          await user.send({ embeds: [dmEmbed] }).catch(() => {});
+        } catch(dmErr){
+          console.error('DM notification error:', dmErr);
+        }
+
+        // Log event
+        await logEvent(i.guild, `❌ Bewerbung **#${ticket.id}** von <@${ticket.userId}> wurde abgelehnt von <@${i.user.id}>`);
+
+        await i.editReply({
+          content: `✅ Bewerbung abgelehnt. <@${ticket.userId}> wurde benachrichtigt.`
+        });
+
+        // Delete ticket channel after 10 seconds
+        setTimeout(async () => {
+          try {
+            const channel = await i.guild.channels.fetch(ticket.channelId);
+            if(channel){
+              await channel.delete('Bewerbung abgelehnt');
+            }
+          } catch(delErr){
+            console.error('Error deleting application channel:', delErr);
+          }
+        }, 10000);
+
+      } catch(error){
+        console.error('Application reject error:', error);
+        if(!i.replied && !i.deferred){
+          await i.reply({
+            ephemeral:true,
+            content:'❌ Fehler beim Ablehnen der Bewerbung.'
+          });
+        } else {
+          await i.editReply({
+            content:'❌ Fehler beim Ablehnen der Bewerbung.'
           });
         }
       }
@@ -3147,6 +3392,114 @@ client.on(Events.InteractionCreate, async i => {
           return i.reply({ephemeral:true,content:'❌ Fehler beim Abbrechen der Löschung'});
         }
         return;
+      }
+
+      // Application System: Accept Button Handler
+      if(i.customId.startsWith('accept_application_')){
+        const guildId = i.customId.replace('accept_application_', '');
+        const cfg = readCfg(guildId);
+
+        // Find application ticket
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.channelId === i.channel.id && t.isApplication === true);
+
+        if(!ticket){
+          return i.reply({ephemeral:true,content:'❌ Dieses Ticket wurde nicht gefunden.'});
+        }
+
+        // Check if user has team role
+        const hasTeamRole = await hasAnyTeamRole(i.member, guildId);
+        if(!hasTeamRole){
+          return i.reply({
+            ephemeral:true,
+            content:'❌ Nur Team-Mitglieder können Bewerbungen annehmen.'
+          });
+        }
+
+        // Get all server roles for dropdown
+        const roles = await i.guild.roles.fetch();
+        const roleOptions = roles
+          .filter(role => role.id !== i.guild.id && !role.managed && role.position < i.guild.members.me.roles.highest.position)
+          .sort((a,b) => b.position - a.position)
+          .slice(0, 25) // Max 25 options
+          .map(role => ({
+            label: role.name.substring(0, 100),
+            value: role.id
+          }));
+
+        if(roleOptions.length === 0){
+          return i.reply({
+            ephemeral:true,
+            content:'❌ Keine Rollen verfügbar zum Zuweisen.'
+          });
+        }
+
+        // Show modal with role selection
+        const modal = new ModalBuilder()
+          .setCustomId(`modal_accept_application:${guildId}:${ticket.id}`)
+          .setTitle('Bewerbung annehmen');
+
+        const roleInput = new TextInputBuilder()
+          .setCustomId('role_name')
+          .setLabel('Rollenname (welche Rolle vergeben?)')
+          .setPlaceholder('z.B. Team-Mitglied')
+          .setRequired(true)
+          .setStyle(TextInputStyle.Short);
+
+        const reasonInput = new TextInputBuilder()
+          .setCustomId('reason')
+          .setLabel('Grund (optional)')
+          .setPlaceholder('z.B. Sehr gute Bewerbung, passende Qualifikationen')
+          .setRequired(false)
+          .setStyle(TextInputStyle.Paragraph);
+
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(roleInput),
+          new ActionRowBuilder().addComponents(reasonInput)
+        );
+
+        return i.showModal(modal);
+      }
+
+      // Application System: Reject Button Handler
+      if(i.customId.startsWith('reject_application_')){
+        const guildId = i.customId.replace('reject_application_', '');
+        const cfg = readCfg(guildId);
+
+        // Find application ticket
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.channelId === i.channel.id && t.isApplication === true);
+
+        if(!ticket){
+          return i.reply({ephemeral:true,content:'❌ Dieses Ticket wurde nicht gefunden.'});
+        }
+
+        // Check if user has team role
+        const hasTeamRole = await hasAnyTeamRole(i.member, guildId);
+        if(!hasTeamRole){
+          return i.reply({
+            ephemeral:true,
+            content:'❌ Nur Team-Mitglieder können Bewerbungen ablehnen.'
+          });
+        }
+
+        // Show modal with reason
+        const modal = new ModalBuilder()
+          .setCustomId(`modal_reject_application:${guildId}:${ticket.id}`)
+          .setTitle('Bewerbung ablehnen');
+
+        const reasonInput = new TextInputBuilder()
+          .setCustomId('reason')
+          .setLabel('Ablehnungsgrund (optional)')
+          .setPlaceholder('z.B. Bewerbung entspricht nicht unseren Anforderungen')
+          .setRequired(false)
+          .setStyle(TextInputStyle.Paragraph);
+
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(reasonInput)
+        );
+
+        return i.showModal(modal);
       }
 
       // Rating System: Handle star ratings
