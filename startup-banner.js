@@ -32,7 +32,7 @@ ${colors.cyan}${colors.bright}
 ║    ╚██████╔╝╚██████╔╝██║  ██║██║ ╚████║   ██║   ██║██╔╝ ██╗                ║
 ║     ╚══▀▀═╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚═╝  ╚═╝                ║
 ║                                                                            ║
-║                        ${colors.white}Quantix Tickets Bot${colors.cyan}    ║
+║                      ${colors.white}Quantix Tickets Bot${colors.cyan}    ║
 ║                                                                            ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 ${colors.reset}`;
