@@ -3409,7 +3409,7 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         // Check if user has team role
-        const hasTeamRole = await hasAnyTeamRole(i.member, guildId);
+        const hasTeamRole = hasAnyTeamRole(i.member, guildId);
         if(!hasTeamRole){
           return i.reply({
             ephemeral:true,
@@ -3419,8 +3419,11 @@ client.on(Events.InteractionCreate, async i => {
 
         // Get all server roles for dropdown
         const roles = await i.guild.roles.fetch();
+        const botMember = await i.guild.members.fetchMe().catch(() => null);
+        const botHighestPosition = botMember?.roles?.highest?.position || 0;
+
         const roleOptions = roles
-          .filter(role => role.id !== i.guild.id && !role.managed && role.position < i.guild.members.me.roles.highest.position)
+          .filter(role => role.id !== i.guild.id && !role.managed && role.position < botHighestPosition)
           .sort((a,b) => b.position - a.position)
           .slice(0, 25) // Max 25 options
           .map(role => ({
@@ -3476,7 +3479,7 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         // Check if user has team role
-        const hasTeamRole = await hasAnyTeamRole(i.member, guildId);
+        const hasTeamRole = hasAnyTeamRole(i.member, guildId);
         if(!hasTeamRole){
           return i.reply({
             ephemeral:true,
