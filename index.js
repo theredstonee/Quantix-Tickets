@@ -3418,11 +3418,11 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         // Get all server roles for dropdown
-        const roles = await i.guild.roles.fetch();
+        await i.guild.roles.fetch();
         const botMember = await i.guild.members.fetchMe().catch(() => null);
         const botHighestPosition = botMember?.roles?.highest?.position || 0;
 
-        const roleOptions = roles
+        const roleOptions = Array.from(i.guild.roles.cache.values())
           .filter(role => role.id !== i.guild.id && !role.managed && role.position < botHighestPosition)
           .sort((a,b) => b.position - a.position)
           .slice(0, 25) // Max 25 options
