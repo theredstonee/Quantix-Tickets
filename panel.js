@@ -3681,6 +3681,8 @@ module.exports = (client)=>{
       currentTier: premiumInfo.tier,
       currentTierName: premiumInfo.tierName,
       expiresAt: premiumInfo.expiresAt,
+      willCancel: premiumInfo.willCancel || false,
+      cancelledAt: premiumInfo.cancelledAt || null,
       version: VERSION
     });
   });
@@ -3842,22 +3844,26 @@ module.exports = (client)=>{
         return res.redirect('/premium?msg=no-active-premium');
       }
 
-      // Stripe Subscription kündigen
+      // Stripe Subscription kündigen (am Ende der Laufzeit)
       const stripeEnabled = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'your_stripe_secret_key_here';
 
       if (stripeEnabled && result.subscriptionId) {
         const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
         try {
-          await stripe.subscriptions.cancel(result.subscriptionId);
-          console.log(`🚫 Stripe Subscription ${result.subscriptionId} gekündigt für Guild ${guildId}`);
+          // Kündige am Ende der Laufzeit, nicht sofort
+          await stripe.subscriptions.update(result.subscriptionId, {
+            cancel_at_period_end: true
+          });
+          console.log(`🚫 Stripe Subscription ${result.subscriptionId} zur Kündigung markiert (läuft bis ${result.expiresAt}) für Guild ${guildId}`);
         } catch (stripeErr) {
           console.error('Stripe Cancellation Error:', stripeErr);
-          // Premium wurde bereits lokal gekündigt, auch wenn Stripe-Call fehlschlägt
+          // Premium wurde bereits lokal zur Kündigung markiert, auch wenn Stripe-Call fehlschlägt
         }
       }
 
-      await logEvent(guildId, '🚫 Premium wurde gekündigt', req.user);
+      const expiresDate = result.expiresAt ? new Date(result.expiresAt).toLocaleDateString('de-DE') : 'unbekannt';
+      await logEvent(guildId, `🚫 Premium zur Kündigung markiert - läuft bis ${expiresDate}`, req.user);
 
       res.redirect('/premium?msg=cancelled');
     } catch (err) {

@@ -920,25 +920,37 @@
       <h2>✨ Dein aktueller Plan</h2>
       <div class="badge"><%= currentTierName %></div>
       <% if (expiresAt) { %>
-        <p>
-          Verlängert sich automatisch am <%= new Date(expiresAt).toLocaleDateString('de-DE') %>
-        </p>
+        <% if (willCancel) { %>
+          <p style="color: #e74c3c;">
+            ⚠️ Zur Kündigung vorgemerkt - endet am <%= new Date(expiresAt).toLocaleDateString('de-DE') %>
+          </p>
+        <% } else { %>
+          <p>
+            Verlängert sich automatisch am <%= new Date(expiresAt).toLocaleDateString('de-DE') %>
+          </p>
+        <% } %>
       <% } %>
 
       <div class="action-buttons">
-        <% if (currentTier === 'pro') { %>
-          <form action="/downgrade-premium" method="POST" style="margin: 0;">
-            <button type="submit" class="btn-action btn-downgrade" onclick="return confirm('Möchtest du wirklich von Pro zu Basic+ downgraden? Du verlierst Zugriff auf Pro-Features.');">
-              ⬇️ Zu Basic+ downgraden
+        <% if (!willCancel) { %>
+          <% if (currentTier === 'pro') { %>
+            <form action="/downgrade-premium" method="POST" style="margin: 0;">
+              <button type="submit" class="btn-action btn-downgrade" onclick="return confirm('Möchtest du wirklich von Pro zu Basic+ downgraden? Du verlierst Zugriff auf Pro-Features.');">
+                ⬇️ Zu Basic+ downgraden
+              </button>
+            </form>
+          <% } %>
+
+          <form action="/cancel-premium" method="POST" style="margin: 0;">
+            <button type="submit" class="btn-action btn-cancel" onclick="return confirm('Möchtest du dein Premium-Abo wirklich kündigen? Du verlierst alle Premium-Features.');">
+              🚫 Premium kündigen
             </button>
           </form>
+        <% } else { %>
+          <p style="color: #95a5a6; font-size: 14px; margin-top: 10px;">
+            Dein Abo wurde zur Kündigung vorgemerkt und läuft noch bis zum Ablaufdatum.
+          </p>
         <% } %>
-
-        <form action="/cancel-premium" method="POST" style="margin: 0;">
-          <button type="submit" class="btn-action btn-cancel" onclick="return confirm('Möchtest du dein Premium-Abo wirklich kündigen? Du verlierst alle Premium-Features.');">
-            🚫 Premium kündigen
-          </button>
-        </form>
       </div>
     </div>
     <% } %>

@@ -325,7 +325,9 @@ function getPremiumInfo(guildId) {
     isLifetime: isLifetime,
     isTrial: isTrial,
     trialInfo: trialInfo,
-    subscriptionId: cfg.premium?.subscriptionId || null
+    subscriptionId: cfg.premium?.subscriptionId || null,
+    willCancel: cfg.premium?.willCancel || false,
+    cancelledAt: cfg.premium?.cancelledAt || null
   };
 }
 
@@ -457,6 +459,7 @@ function downgradePremium(guildId) {
 
 /**
  * Kündigt Premium (für manuelle Kündigung)
+ * Abo läuft bis expiresAt weiter, dann automatisch downgrade
  * @param {string} guildId - Discord Guild ID
  * @returns {object} Subscription Info für Stripe-Kündigung
  */
@@ -467,25 +470,29 @@ function cancelPremium(guildId) {
     return { success: false, message: 'Kein aktives Premium' };
   }
 
+  // Lifetime Premium kann nicht gekündigt werden
+  if (cfg.premium.lifetime === true) {
+    return { success: false, message: 'Lifetime Premium kann nicht gekündigt werden' };
+  }
+
   const subscriptionId = cfg.premium.subscriptionId;
   const customerId = cfg.premium.customerId;
 
-  // Setze auf Free
-  cfg.premium = {
-    tier: 'none',
-    expiresAt: null,
-    subscriptionId: null,
-    customerId: null,
-    features: { ...PREMIUM_TIERS.none.features }
-  };
+  // Markiere als gekündigt, aber behalte Zugriff bis expiresAt
+  cfg.premium.willCancel = true;
+  cfg.premium.cancelledAt = new Date().toISOString();
+
+  // NICHT sofort löschen - Premium läuft bis expiresAt weiter
+  // expiresAt und tier bleiben erhalten!
 
   saveCfg(guildId, cfg);
-  console.log(`🚫 Premium gekündigt für Guild ${guildId}`);
+  console.log(`🚫 Premium zur Kündigung markiert für Guild ${guildId} - läuft bis ${cfg.premium.expiresAt}`);
 
   return {
     success: true,
     subscriptionId: subscriptionId,
-    customerId: customerId
+    customerId: customerId,
+    expiresAt: cfg.premium.expiresAt
   };
 }
 
@@ -874,6 +881,65 @@ function wasWarningSent(guildId, daysRemaining) {
   return cfg.premium.trialWarningsSent.some(w => w.daysRemaining === daysRemaining);
 }
 
+/**
+ * Prüft alle Guilds auf abgelaufene, gekündigte Premium-Abos
+ * und stuft sie automatisch herab
+ * @returns {Array} Liste der herabgestuften Guilds
+ */
+function checkExpiredCancellations() {
+  const downgradedGuilds = [];
+
+  if (!fs.existsSync(CONFIG_DIR)) {
+    return downgradedGuilds;
+  }
+
+  const configFiles = fs.readdirSync(CONFIG_DIR)
+    .filter(file => file.endsWith('.json') && !file.includes('_tickets') && !file.includes('_counter'));
+
+  for (const file of configFiles) {
+    const guildId = file.replace('.json', '');
+    const cfg = readCfg(guildId);
+
+    // Prüfe ob Premium vorhanden und zur Kündigung markiert ist
+    if (!cfg.premium || !cfg.premium.willCancel) {
+      continue;
+    }
+
+    // Prüfe ob expiresAt erreicht ist
+    if (cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) <= new Date()) {
+      const oldTier = cfg.premium.tier;
+
+      // Downgrade zu 'none'
+      cfg.premium = {
+        tier: 'none',
+        expiresAt: null,
+        subscriptionId: null,
+        customerId: null,
+        lifetime: false,
+        willCancel: false,
+        cancelledAt: null,
+        features: { ...PREMIUM_TIERS.none.features }
+      };
+
+      saveCfg(guildId, cfg);
+
+      console.log(`⬇️ Automatischer Downgrade nach Kündigung: Guild ${guildId} (${oldTier} → none)`);
+
+      downgradedGuilds.push({
+        guildId,
+        oldTier,
+        downgradedAt: new Date().toISOString()
+      });
+    }
+  }
+
+  if (downgradedGuilds.length > 0) {
+    console.log(`✅ ${downgradedGuilds.length} gekündigte Abonnement(s) automatisch beendet`);
+  }
+
+  return downgradedGuilds;
+}
+
 module.exports = {
   PREMIUM_TIERS,
   isPremium,
@@ -886,6 +952,7 @@ module.exports = {
   getMaxCategories,
   downgradePremium,
   cancelPremium,
+  checkExpiredCancellations,
   activateLifetimePremium,
   removeLifetimePremium,
   listLifetimePremiumServers,

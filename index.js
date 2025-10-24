@@ -51,7 +51,7 @@ const { handleTagAdd, handleTagRemove } = require('./tag-handler');
 const { createVoiceChannel, deleteVoiceChannel, hasVoiceChannel } = require('./voice-support');
 const { handleTemplateUse } = require('./template-handler');
 const { handleDepartmentForward } = require('./department-handler');
-const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo, isTrialActive, activateAutoTrial } = require('./premium');
+const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo, isTrialActive, activateAutoTrial, checkExpiredCancellations } = require('./premium');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -766,6 +766,38 @@ function startPendingDeletionsChecker() {
   setInterval(checkPendingDeletions, 60 * 1000);
 }
 
+// Cancellation Checker - Prüft abgelaufene, gekündigte Abos
+function startCancellationChecker() {
+  const checkCancellations = () => {
+    try {
+      const downgradedGuilds = checkExpiredCancellations();
+
+      // Optional: Benachrichtige Guild-Admins über Downgrade
+      if (downgradedGuilds.length > 0) {
+        for (const { guildId, oldTier } of downgradedGuilds) {
+          // Hier könnte man eine Benachrichtigung an den Server senden
+          // z.B. über den Log-Channel
+          const guild = client.guilds.cache.get(guildId);
+          if (guild) {
+            logEvent(guild, `⬇️ Premium wurde nach Kündigung beendet (${oldTier} → Free)`).catch(err => {
+              console.error(`Fehler beim Senden der Downgrade-Benachrichtigung für Guild ${guildId}:`, err);
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('❌ Fehler beim Cancellation Check:', err);
+    }
+  };
+
+  // Initial check beim Start
+  console.log('🔍 Cancellation Checker gestartet (läuft jede Stunde)');
+  checkCancellations();
+
+  // Prüfung jede Stunde (3600000ms)
+  setInterval(checkCancellations, 60 * 60 * 1000);
+}
+
 // Trial Expiry Warning Checker
 function startTrialExpiryWarningChecker() {
   const checkTrialWarnings = async () => {
@@ -1124,6 +1156,9 @@ client.once('clientReady', async () => {
 
   // Pending Deletions Checker - läuft jede Minute
   startPendingDeletionsChecker();
+
+  // Cancellation Checker - läuft jede Stunde
+  startCancellationChecker();
 
   // Trial Expiry Warning Checker - läuft alle 6 Stunden
   startTrialExpiryWarningChecker();
