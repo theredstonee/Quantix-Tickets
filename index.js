@@ -2208,6 +2208,61 @@ function normalizeField(field, index){
 
 client.on(Events.InteractionCreate, async i => {
   try {
+    // Maintenance Mode Check
+    const maintenanceFile = path.join(__dirname, 'maintenance.json');
+    let maintenanceState = { enabled: false };
+    if (fs.existsSync(maintenanceFile)) {
+      try {
+        maintenanceState = JSON.parse(fs.readFileSync(maintenanceFile, 'utf8'));
+      } catch (err) {
+        console.error('Error reading maintenance state:', err);
+      }
+    }
+
+    // Block all interactions except on whitelisted server during maintenance
+    const WHITELISTED_SERVER_ID = '1403053662825222388';
+    const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
+
+    if (maintenanceState.enabled && i.guild && i.guild.id !== WHITELISTED_SERVER_ID) {
+      // Allow founders to use maintenance command on any server
+      const isFounder = FOUNDER_IDS.includes(i.user.id);
+      const isMaintenanceCommand = i.isChatInputCommand() && i.commandName === 'maintenance';
+
+      if (!isFounder || !isMaintenanceCommand) {
+        const maintenanceEmbed = new EmbedBuilder()
+          .setColor(0xff9500)
+          .setTitle('🔧 Wartungsmodus aktiv')
+          .setDescription(
+            '**Der Bot befindet sich derzeit im Wartungsmodus.**\n\n' +
+            'Alle Funktionen sind vorübergehend deaktiviert.\n' +
+            'Bitte versuche es später erneut.'
+          )
+          .addFields(
+            {
+              name: '📝 Grund',
+              value: maintenanceState.reason || 'Wartungsarbeiten',
+              inline: false
+            },
+            {
+              name: '⏰ Seit',
+              value: `<t:${Math.floor(maintenanceState.enabledAt / 1000)}:R>`,
+              inline: true
+            }
+          )
+          .setFooter({ text: 'Quantix Tickets • Maintenance Mode' })
+          .setTimestamp();
+
+        if (i.isCommand() || i.isButton() || i.isStringSelectMenu() || i.isModalSubmit()) {
+          if (i.deferred || i.replied) {
+            return i.editReply({ embeds: [maintenanceEmbed] }).catch(() => {});
+          } else {
+            return i.reply({ embeds: [maintenanceEmbed], ephemeral: true }).catch(() => {});
+          }
+        }
+        return;
+      }
+    }
+
     const cfg = readCfg(i.guild?.id) || {};
 
     if(i.isChatInputCommand()){
@@ -2251,6 +2306,83 @@ client.on(Events.InteractionCreate, async i => {
         }
         return;
       }
+    }
+
+    // Maintenance Enable Modal Handler
+    if(i.isModalSubmit() && i.customId === 'maintenance_enable_modal') {
+      try {
+        const maintenanceCommand = require('./commands/maintenance.js');
+
+        // Check if user is Founder
+        if (!maintenanceCommand.FOUNDER_IDS.includes(i.user.id)) {
+          return i.reply({ content: '❌ Keine Berechtigung', ephemeral: true });
+        }
+
+        const reason = i.fields.getTextInputValue('maintenance_reason') || 'Wartungsarbeiten';
+
+        const newState = {
+          enabled: true,
+          enabledAt: Date.now(),
+          enabledBy: i.user.id,
+          reason: reason
+        };
+
+        maintenanceCommand.writeMaintenanceState(newState);
+
+        // Update bot status
+        try {
+          await i.client.user.setPresence({
+            activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: 4 }],
+            status: 'dnd'
+          });
+        } catch (err) {
+          console.error('Error setting bot status:', err);
+        }
+
+        const enableEmbed = new EmbedBuilder()
+          .setColor(0xff9500)
+          .setTitle('🔧 Wartungsmodus aktiviert')
+          .setDescription(
+            '**Der Bot wurde in den Wartungsmodus versetzt.**\n\n' +
+            'Der Bot funktioniert nur noch auf dem whitelisted Server.'
+          )
+          .addFields(
+            {
+              name: '💡 Status',
+              value: '🔴 Nicht stören (DND)',
+              inline: true
+            },
+            {
+              name: '📝 Grund',
+              value: reason,
+              inline: true
+            },
+            {
+              name: '✅ Whitelisted Server',
+              value: `\`${maintenanceCommand.WHITELISTED_SERVER_ID}\``,
+              inline: false
+            }
+          )
+          .setFooter({ text: 'Quantix Tickets • Maintenance Mode' })
+          .setTimestamp();
+
+        await i.reply({ embeds: [enableEmbed] });
+
+        console.log(`🔧 Maintenance Mode ENABLED by ${i.user.tag} (${i.user.id})`);
+
+        // Send logs to all servers
+        await maintenanceCommand.sendMaintenanceLog(i.client, true, reason, i.user.id);
+
+      } catch (error) {
+        console.error('Error in maintenance modal handler:', error);
+        if (!i.replied && !i.deferred) {
+          await i.reply({
+            content: '❌ Ein Fehler ist aufgetreten.',
+            ephemeral: true
+          });
+        }
+      }
+      return;
     }
 
     if(i.isStringSelectMenu() && i.customId==='topic'){
