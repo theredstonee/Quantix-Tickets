@@ -3261,18 +3261,19 @@ client.on(Events.InteractionCreate, async i => {
           }
         }
 
-        // Check if user already has an open application ticket
+        // Check if user already has 2 or more open application tickets
         const tickets = loadTickets(guildId);
-        const existingApplication = tickets.find(t =>
+        const openApplications = tickets.filter(t =>
           t.userId === i.user.id &&
           t.status === 'open' &&
           t.isApplication === true
         );
 
-        if(existingApplication){
+        if(openApplications.length >= 2){
+          const channels = openApplications.map(t => `<#${t.channelId}>`).join(', ');
           return i.reply({
             ephemeral:true,
-            content:`❌ Du hast bereits eine offene Bewerbung: <#${existingApplication.channelId}>`
+            content:`❌ Du kannst maximal 2 Bewerbungen gleichzeitig offen haben.\n\n**Deine offenen Bewerbungen:**\n${channels}`
           });
         }
 
