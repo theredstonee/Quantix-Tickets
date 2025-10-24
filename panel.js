@@ -2040,6 +2040,7 @@ module.exports = (client)=>{
     }
 
     let channels = [];
+    let categories = [];
     let roles = [];
     let guildName = 'Server';
     try {
@@ -2050,6 +2051,12 @@ module.exports = (client)=>{
       channels = fetchedChannels
         .filter(ch => ch.type === 0 || ch.type === 4)
         .map(ch => ({ id: ch.id, name: ch.name, type: ch.type }))
+        .sort((a,b) => a.name.localeCompare(b.name));
+
+      // Extract categories separately for application system
+      categories = fetchedChannels
+        .filter(ch => ch.type === 4)
+        .map(ch => ({ id: ch.id, name: ch.name }))
         .sort((a,b) => a.name.localeCompare(b.name));
 
       const fetchedRoles = await guild.roles.fetch();
@@ -2067,6 +2074,7 @@ module.exports = (client)=>{
       cfg,
       msg: req.query.msg||null,
       channels,
+      categories,
       roles,
       version: VERSION,
       guildName,
