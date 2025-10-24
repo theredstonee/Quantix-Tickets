@@ -1847,12 +1847,10 @@
               <i class="fas fa-paper-plane"></i>
               <span>Panel</span>
             </button>
-            <% if (isPremium) { %>
             <button type="button" class="tab-btn" data-tab="premium">
-              <i class="fas fa-gem"></i>
+              <i class="fas fa-crown"></i>
               <span>Premium</span>
             </button>
-            <% } %>
           </div>
 
           <!-- Tab: Overview -->
@@ -2669,6 +2667,71 @@
                     </div>
                   <% } %>
                 </div>
+
+                <!-- Toggle CSS for Application System -->
+                <style>
+                  .app-toggle-option {
+                    display: flex;
+                    align-items: center;
+                    padding: 1rem 1.25rem;
+                    background: var(--glass-bg);
+                    border: 2px solid var(--glass-border);
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    margin-bottom: 0.75rem;
+                  }
+
+                  .app-toggle-option:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px var(--shadow-color);
+                    border-color: #3b82f6;
+                  }
+
+                  .app-toggle-option.active {
+                    border-color: #3b82f6;
+                    background: rgba(59, 130, 246, 0.05);
+                  }
+
+                  .app-toggle-option .toggle-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    width: 100%;
+                    color: var(--text-color);
+                  }
+
+                  .app-toggle-option.active .toggle-content {
+                    color: #3b82f6;
+                  }
+
+                  .app-toggle-option .toggle-icon {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 6px;
+                    background: rgba(148, 163, 184, 0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.3s ease;
+                    flex-shrink: 0;
+                  }
+
+                  .app-toggle-option.active .toggle-icon {
+                    background: #3b82f6;
+                  }
+
+                  .app-toggle-option .toggle-icon i {
+                    font-size: 12px;
+                    color: white;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                  }
+
+                  .app-toggle-option.active .toggle-icon i {
+                    opacity: 1;
+                  }
+                </style>
 
                 <!-- Toggle JavaScript for Application System -->
                 <script>
@@ -4536,7 +4599,6 @@
           </div>
 
           <!-- Tab: Premium -->
-          <% if (isPremium) { %>
           <div class="tab-content" id="tab-premium">
             <div class="alert alert-success" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-color: #667eea;">
               <i class="fas fa-gem"></i>
@@ -5254,7 +5316,6 @@
               </a>
             </div>
           </div>
-          <% } %>
 
         </div>
       </form>
