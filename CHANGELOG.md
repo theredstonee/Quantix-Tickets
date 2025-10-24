@@ -1,5 +1,79 @@
 # Changelog
 
+## [1.4.1] - 2025-10-24
+
+### 🚀 Multi-Ticket-System & UI Improvements
+
+Dieses Update bringt das langerwartete Multi-Ticket-System für größere Server sowie wichtige UI-Verbesserungen und Bugfixes.
+
+### Added
+
+#### 🎯 **Multi-Ticket-System** (Pro Feature)
+- **Mehrere unabhängige Ticket-Systeme pro Server**:
+  - Jedes System hat eigene Kategorie, Team-Rollen, Topics und Log-Channels
+  - Perfekt für Server mit mehreren Abteilungen (Support, Sales, HR, etc.)
+  - Unbegrenzte Anzahl an Systemen für Pro-Tier
+- **Dashboard Integration**:
+  - System-Selector Dropdown zur einfachen Verwaltung
+  - "Neues System" Button zum schnellen Erstellen
+  - System-spezifische Konfiguration für alle Einstellungen
+  - URL-Parameter `/panel?system=systemId` für direkten Zugriff
+- **Neuer Command**: `/send-panel-advanced`
+  - Sendet Panel für spezifisches Ticket-System
+  - Autocomplete-Unterstützung zur System-Auswahl
+  - Button-IDs enthalten System-ID: `ticket_create:systemId:topic`
+- **Backend**:
+  - Automatische Migration alter Configs zu neuem Format
+  - `ticket-systems.js` Modul mit vollständiger CRUD-API
+  - Globale Ticket-Nummerierung über alle Systeme (#0001, #0002...)
+  - Rückwärtskompatibilität mit bestehenden Configs
+
+#### 🖼️ **Server-Icon Anzeige**
+- **Admin-Panel**: Server-Icon wird im Dashboard-Header angezeigt
+  - Ersetzt generisches Server-Icon durch echtes Guild-Icon
+  - Runde Anzeige mit 128px Auflösung
+  - Fallback zu Font-Awesome Icon wenn kein Guild-Icon vorhanden
+- **Ticket-Panel**: Server-Icon erscheint als Thumbnail im Panel-Embed
+  - Oben rechts in allen Panel-Embeds
+  - Sowohl für normale Panels als auch Advanced-Panels
+  - Professionellere Optik für Server-Branding
+
+#### 📝 **Bewerbungslimit erhöht**
+- Benutzer können jetzt **2 gleichzeitige Bewerbungen** haben (vorher: 1)
+- Bessere Fehlermeldung zeigt alle offenen Bewerbungs-Channels
+
+### Fixed
+
+#### 🐛 **Application Accept Handler**
+- **hasAnyTeamRole Async-Fehler behoben**:
+  - Entfernt fälschlicherweise verwendetes `await` bei synchroner Funktion
+  - Verhindert "is not a function" Fehler bei Bewerbungs-Annahme
+- **Discord Collections Slice-Fehler behoben**:
+  - `Array.from()` verwendet statt direkt `.slice()` auf Collections
+  - Rolle-Dropdown funktioniert jetzt korrekt
+  - Sichere Bot-Member Fetching mit Fallback
+
+### Technical
+
+**Neue Dateien**:
+- `ticket-systems.js` - Multi-System Management mit Migration
+- `commands/send-panel-advanced.js` - Advanced Panel Command
+
+**Backend Änderungen**:
+- `panel.js`: Multi-System Routes (`/panel/system/create`, `/panel/system/:id/delete`)
+- `panel.js`: `buildPanelEmbed()` erweitert um Guild-Parameter für Icon
+- `index.js`: Button-Handler für `ticket_create:systemId:topic`
+- `index.js`: Modal-Handler für Multi-System Forms
+- `index.js`: Wrapper-Funktion `createTicketChannelMultiSystem()`
+- `premium.js`: Feature-Flag `multiTicketSystems` für Pro/Beta
+
+**Frontend Änderungen**:
+- `panel.ejs`: System-Selector mit Dropdown und "New System" Button
+- `panel.ejs`: JavaScript-Funktionen `switchSystem()`, `createNewSystem()`, `deleteSystem()`
+- `commands.js`: `/send-panel-advanced` zur Command-Liste hinzugefügt
+
+---
+
 ## [1.3.0] - 2025-10-20
 
 ### 🎉 Major Feature Update - Quality & Performance
