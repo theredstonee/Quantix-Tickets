@@ -3345,10 +3345,11 @@ module.exports = (client)=>{
       const guild = await client.guilds.fetch(guildId);
 
       // Statistiken berechnen
+      const closedStatuses = ['geschlossen', 'accepted', 'rejected'];
       const stats = {
         total: tickets.length,
-        closed: tickets.filter(t => t.status === 'geschlossen').length,
-        open: tickets.filter(t => t.status === 'offen' || t.status !== 'geschlossen').length,
+        closed: tickets.filter(t => closedStatuses.includes(t.status)).length,
+        open: tickets.filter(t => !closedStatuses.includes(t.status)).length,
         claimed: tickets.filter(t => t.claimer).length,
         byTopic: {},
         byPriority: { '0': 0, '1': 0, '2': 0 },
