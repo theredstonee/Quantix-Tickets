@@ -38,6 +38,29 @@ Dieses Update bringt das langerwartete Multi-Ticket-System für größere Server
   - Sowohl für normale Panels als auch Advanced-Panels
   - Professionellere Optik für Server-Branding
 
+#### 📤 **Avatar File-Upload System** (Basic+ Feature)
+- **Direkter Datei-Upload im Dashboard**:
+  - Drag & Drop UI mit File-Auswahl-Button
+  - Unterstützte Formate: PNG, JPG, GIF, WEBP
+  - Maximale Dateigröße: 5MB
+  - Automatische Client- und Server-seitige Validierung
+- **Avatar-Verwaltung**:
+  - Live-Preview des aktuellen Avatars
+  - Löschen-Button für schnelles Entfernen
+  - Automatisches Cleanup alter Avatar-Dateien
+  - Speicherung in `public/avatars/` Verzeichnis
+- **Alternative URL-Eingabe**:
+  - Direktlink-Option für externe Avatar-URLs
+  - Unterstützt sowohl lokale als auch externe Bilder
+- **Integration in Ticket-Embeds**:
+  - Avatar erscheint als Author-Icon in allen Ticket-Embeds
+  - Zeigt Server-Name mit Custom-Avatar
+  - Automatische URL-Konvertierung für Discord
+- **Premium-Features**:
+  - Basic+ Feature mit Premium-Check
+  - Logging aller Upload/Delete-Aktionen
+  - Upload-Tracking in Log-Channel
+
 #### 📝 **Bewerbungslimit erhöht**
 - Benutzer können jetzt **2 gleichzeitige Bewerbungen** haben (vorher: 1)
 - Bessere Fehlermeldung zeigt alle offenen Bewerbungs-Channels
@@ -62,14 +85,20 @@ Dieses Update bringt das langerwartete Multi-Ticket-System für größere Server
 **Backend Änderungen**:
 - `panel.js`: Multi-System Routes (`/panel/system/create`, `/panel/system/:id/delete`)
 - `panel.js`: `buildPanelEmbed()` erweitert um Guild-Parameter für Icon
+- `panel.js`: Multer-Integration für File-Uploads (Avatar-System)
+- `panel.js`: Avatar-Routes (`/panel/upload-avatar`, `/panel/delete-avatar`)
 - `index.js`: Button-Handler für `ticket_create:systemId:topic`
 - `index.js`: Modal-Handler für Multi-System Forms
 - `index.js`: Wrapper-Funktion `createTicketChannelMultiSystem()`
+- `index.js`: `buildTicketEmbed()` erweitert für Custom-Avatar-Unterstützung
 - `premium.js`: Feature-Flag `multiTicketSystems` für Pro/Beta
+- `package.json`: `multer` Dependency hinzugefügt
 
 **Frontend Änderungen**:
 - `panel.ejs`: System-Selector mit Dropdown und "New System" Button
+- `panel.ejs`: Avatar-Upload UI mit Preview, File-Input und Buttons
 - `panel.ejs`: JavaScript-Funktionen `switchSystem()`, `createNewSystem()`, `deleteSystem()`
+- `panel.ejs`: JavaScript-Funktionen `uploadAvatar()`, `deleteAvatar()` für Avatar-Management
 - `commands.js`: `/send-panel-advanced` zur Command-Liste hinzugefügt
 
 ---

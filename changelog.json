@@ -9,6 +9,7 @@
           "🎯 Multi-Ticket-System - Mehrere unabhängige Systeme pro Server mit eigenem Team & Topics (Pro)",
           "📋 /send-panel-advanced Command - Panel für spezifisches System senden mit Autocomplete",
           "🖼️ Server-Icon Anzeige - Im Dashboard-Header & Panel-Embed als Thumbnail",
+          "📤 Avatar File-Upload - Direkt Bilder hochladen im Dashboard (PNG, JPG, GIF, WEBP, max. 5MB)",
           "📝 Bewerbungslimit erhöht - Jetzt 2 gleichzeitige Bewerbungen möglich (vorher: 1)",
           "🐛 Application-Bugs behoben - hasAnyTeamRole & Collections.slice Fehler repariert"
         ],
@@ -16,6 +17,7 @@
           "🎯 Multi-Ticket-System - Multiple independent systems per server with own team & topics (Pro)",
           "📋 /send-panel-advanced Command - Send panel for specific system with autocomplete",
           "🖼️ Server Icon Display - In dashboard header & panel embed as thumbnail",
+          "📤 Avatar File Upload - Direct image upload in dashboard (PNG, JPG, GIF, WEBP, max. 5MB)",
           "📝 Application Limit Increased - Now 2 simultaneous applications possible (before: 1)",
           "🐛 Application Bugs Fixed - hasAnyTeamRole & Collections.slice errors repaired"
         ],
@@ -23,6 +25,7 @@
           "🎯 מערכת כרטיסים מרובה - מערכות עצמאיות מרובות לכל שרת עם צוות ונושאים משלו (Pro)",
           "📋 פקודה /send-panel-advanced - שליחת פאנל למערכת ספציפית עם השלמה אוטומטית",
           "🖼️ הצגת אייקון השרת - בכותרת הדשבורד ובפאנל כתמונה ממוזערת",
+          "📤 העלאת קובץ אווטאר - העלאת תמונות ישירה בדשבורד (PNG, JPG, GIF, WEBP, מקס 5MB)",
           "📝 גבול הבקשות הוגדל - כעת אפשר 2 בקשות במקביל (קודם: 1)",
           "🐛 באגים בבקשות תוקנו - שגיאות hasAnyTeamRole ו-Collections.slice תוקנו"
         ],
@@ -30,6 +33,7 @@
           "🎯マルチチケットシステム - サーバーごとに独自のチームとトピックを持つ複数の独立システム（Pro）",
           "📋 /send-panel-advancedコマンド - オートコンプリート付きで特定システムのパネルを送信",
           "🖼️サーバーアイコン表示 - ダッシュボードヘッダーとパネル埋め込みにサムネイルとして",
+          "📤アバターファイルアップロード - ダッシュボードで画像を直接アップロード（PNG, JPG, GIF, WEBP, 最大5MB）",
           "📝応募制限増加 - 同時に2つの応募が可能に（以前：1）",
           "🐛応募バグ修正 - hasAnyTeamRoleとCollections.sliceエラーを修正"
         ],
@@ -37,6 +41,7 @@
           "🎯 Мульти-Тикет Система - Несколько независимых систем на сервер со своей командой и темами (Pro)",
           "📋 Команда /send-panel-advanced - Отправка панели для конкретной системы с автозаполнением",
           "🖼️ Отображение иконки сервера - В заголовке панели управления и эмбеде панели как миниатюра",
+          "📤 Загрузка файла аватара - Прямая загрузка изображений в панели управления (PNG, JPG, GIF, WEBP, макс. 5MB)",
           "📝 Лимит заявок увеличен - Теперь возможны 2 одновременные заявки (раньше: 1)",
           "🐛 Баги заявок исправлены - Ошибки hasAnyTeamRole и Collections.slice устранены"
         ],
@@ -44,6 +49,7 @@
           "🎯 Sistema Multi-Ticket - Múltiplos sistemas independentes por servidor com equipe e tópicos próprios (Pro)",
           "📋 Comando /send-panel-advanced - Enviar painel para sistema específico com autocompletar",
           "🖼️ Exibição de Ícone do Servidor - No cabeçalho do painel e embed do painel como miniatura",
+          "📤 Upload de Arquivo de Avatar - Upload direto de imagens no painel (PNG, JPG, GIF, WEBP, máx. 5MB)",
           "📝 Limite de Inscrições Aumentado - Agora 2 inscrições simultâneas possíveis (antes: 1)",
           "🐛 Bugs de Inscrição Corrigidos - Erros hasAnyTeamRole e Collections.slice reparados"
         ],
@@ -51,6 +57,7 @@
           "🎯 Sistema Multi-Ticket - Múltiples sistemas independientes por servidor con equipo y temas propios (Pro)",
           "📋 Comando /send-panel-advanced - Enviar panel para sistema específico con autocompletado",
           "🖼️ Visualización de Icono del Servidor - En encabezado del panel y embed del panel como miniatura",
+          "📤 Carga de Archivo de Avatar - Carga directa de imágenes en el panel (PNG, JPG, GIF, WEBP, máx. 5MB)",
           "📝 Límite de Solicitudes Aumentado - Ahora 2 solicitudes simultáneas posibles (antes: 1)",
           "🐛 Bugs de Solicitudes Corregidos - Errores hasAnyTeamRole y Collections.slice reparados"
         ],
@@ -58,6 +65,7 @@
           "🎯 Sistem Multi-Tiket - Beberapa sistem independen per server dengan tim & topik sendiri (Pro)",
           "📋 Perintah /send-panel-advanced - Kirim panel untuk sistem spesifik dengan pelengkapan otomatis",
           "🖼️ Tampilan Ikon Server - Di header dashboard & panel embed sebagai thumbnail",
+          "📤 Upload File Avatar - Upload gambar langsung di dashboard (PNG, JPG, GIF, WEBP, maks. 5MB)",
           "📝 Batas Lamaran Ditingkatkan - Sekarang 2 lamaran simultan dimungkinkan (sebelumnya: 1)",
           "🐛 Bug Lamaran Diperbaiki - Kesalahan hasAnyTeamRole & Collections.slice diperbaiki"
         ],
@@ -65,6 +73,7 @@
           "🎯 نظام التذاكر المتعددة - أنظمة مستقلة متعددة لكل خادم مع فريق ومواضيع خاصة (Pro)",
           "📋 أمر /send-panel-advanced - إرسال لوحة لنظام محدد مع الإكمال التلقائي",
           "🖼️ عرض أيقونة الخادم - في رأس لوحة التحكم وتضمين اللوحة كصورة مصغرة",
+          "📤 تحميل ملف الصورة الرمزية - تحميل الصور مباشرة في لوحة التحكم (PNG, JPG, GIF, WEBP, حد أقصى 5MB)",
           "📝 زيادة حد الطلبات - الآن 2 طلبات متزامنة ممكنة (سابقاً: 1)",
           "🐛 إصلاح أخطاء الطلبات - إصلاح أخطاء hasAnyTeamRole و Collections.slice"
         ]

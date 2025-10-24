@@ -1455,6 +1455,15 @@ function buildTicketEmbed(cfg, i, topic, nr){
   const e = new EmbedBuilder().setTitle(rep(t.title) || '🎫 Ticket').setDescription(rep(t.description) || `<@${i.user.id}>`);
   if(t.color && /^#?[0-9a-fA-F]{6}$/.test(t.color)) e.setColor(parseInt(t.color.replace('#',''),16));
   if(t.footer) e.setFooter({ text: rep(t.footer) });
+
+  // Add custom avatar if configured
+  if(cfg.customAvatarUrl) {
+    const avatarUrl = cfg.customAvatarUrl.startsWith('/')
+      ? `${process.env.BASE_URL || 'https://quantixtickets.theredstonee.de'}${cfg.customAvatarUrl}`
+      : cfg.customAvatarUrl;
+    e.setAuthor({ name: i.guild.name, iconURL: avatarUrl });
+  }
+
   return e;
 }
 

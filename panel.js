@@ -6,6 +6,7 @@ const passport = require('passport');
 const { Strategy } = require('passport-discord');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { getTranslations, t, getLanguageName } = require('./translations');
 const cookieParser = require('cookie-parser');
@@ -919,6 +920,50 @@ module.exports = (client)=>{
       return res.status(403).send('Keine Berechtigung. Du brauchst Administrator-Rechte oder die Team-Rolle.');
     }
   }
+
+  // ============================================================
+  // MULTER FILE UPLOAD CONFIGURATION
+  // ============================================================
+
+  // Ensure avatars directory exists
+  const avatarsDir = path.join(__dirname, 'public', 'avatars');
+  if (!fs.existsSync(avatarsDir)) {
+    fs.mkdirSync(avatarsDir, { recursive: true });
+  }
+
+  // Configure multer storage
+  const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, avatarsDir);
+    },
+    filename: function (req, file, cb) {
+      const guildId = req.session.selectedGuild;
+      const ext = path.extname(file.originalname);
+      cb(null, `avatar_${guildId}_${Date.now()}${ext}`);
+    }
+  });
+
+  // File filter for images only
+  const fileFilter = (req, file, cb) => {
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Nur Bilder sind erlaubt (PNG, JPG, GIF, WEBP)'), false);
+    }
+  };
+
+  const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+  });
+
+  // ============================================================
+  // ROUTES
+  // ============================================================
 
   router.get('/', (req,res)=>{
     const lang = req.cookies.lang || 'de';
@@ -2107,6 +2152,85 @@ module.exports = (client)=>{
       lang: res.locals.lang, // Language code
       hasFeature: hasFeature // Add hasFeature function
     });
+  });
+
+  // ============================================================
+  // AVATAR UPLOAD ROUTE
+  // ============================================================
+
+  router.post('/panel/upload-avatar', isAuth, upload.single('avatar'), async (req, res) => {
+    const guildId = req.session.selectedGuild;
+
+    // Check Basic+ feature
+    if (!hasFeature(guildId, 'customAvatar')) {
+      if (req.file) {
+        // Delete uploaded file if no permission
+        fs.unlinkSync(req.file.path);
+      }
+      return res.json({ success: false, error: 'Basic+ Premium erforderlich' });
+    }
+
+    try {
+      if (!req.file) {
+        return res.json({ success: false, error: 'Keine Datei hochgeladen' });
+      }
+
+      // Generate public URL for avatar
+      const avatarUrl = `/avatars/${req.file.filename}`;
+
+      // Update config
+      const cfg = readCfg(guildId);
+
+      // Delete old avatar file if it exists and is a local file
+      if (cfg.customAvatarUrl && cfg.customAvatarUrl.startsWith('/avatars/')) {
+        const oldFilename = path.basename(cfg.customAvatarUrl);
+        const oldFilePath = path.join(avatarsDir, oldFilename);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+
+      cfg.customAvatarUrl = avatarUrl;
+      writeCfg(guildId, cfg);
+
+      await logEvent(guildId, `✅ Custom Avatar hochgeladen von <@${req.user.id}>`, req.user);
+
+      res.json({ success: true, avatarUrl });
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      res.json({ success: false, error: 'Upload fehlgeschlagen' });
+    }
+  });
+
+  // Delete Avatar Route
+  router.post('/panel/delete-avatar', isAuth, async (req, res) => {
+    const guildId = req.session.selectedGuild;
+
+    try {
+      const cfg = readCfg(guildId);
+
+      // Delete avatar file if it's a local file
+      if (cfg.customAvatarUrl && cfg.customAvatarUrl.startsWith('/avatars/')) {
+        const filename = path.basename(cfg.customAvatarUrl);
+        const filePath = path.join(avatarsDir, filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      cfg.customAvatarUrl = null;
+      writeCfg(guildId, cfg);
+
+      await logEvent(guildId, `🗑️ Custom Avatar gelöscht von <@${req.user.id}>`, req.user);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Avatar delete error:', error);
+      res.json({ success: false, error: 'Löschen fehlgeschlagen' });
+    }
   });
 
   // Multi-Ticket-System: Create new system

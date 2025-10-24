@@ -4667,10 +4667,52 @@
                 </div>
               </div>
               <div class="card-body">
+                <!-- Avatar Preview -->
+                <% if (cfg.customAvatarUrl) { %>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                  <div class="form-label">
+                    <i class="fas fa-eye"></i>
+                    <span><%= lang === 'de' ? 'Aktueller Avatar' : 'Current Avatar' %></span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 1rem;">
+                    <img src="<%= cfg.customAvatarUrl %>" alt="Avatar" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--glass-border);">
+                    <button type="button" onclick="deleteAvatar()" class="btn" style="background: #ef4444; color: white;">
+                      <i class="fas fa-trash"></i>
+                      <%= lang === 'de' ? 'Löschen' : 'Delete' %>
+                    </button>
+                  </div>
+                </div>
+                <% } %>
+
+                <!-- File Upload -->
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                  <div class="form-label">
+                    <i class="fas fa-upload"></i>
+                    <span><%= lang === 'de' ? 'Avatar hochladen' : 'Upload Avatar' %></span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 1rem;">
+                    <input type="file" id="avatarFile" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="display: none;">
+                    <button type="button" onclick="document.getElementById('avatarFile').click()" class="btn btn-primary">
+                      <i class="fas fa-folder-open"></i>
+                      <%= lang === 'de' ? 'Datei wählen' : 'Choose File' %>
+                    </button>
+                    <span id="avatarFileName" style="color: var(--text-color); opacity: 0.7;"><%= lang === 'de' ? 'Keine Datei gewählt' : 'No file chosen' %></span>
+                    <button type="button" id="uploadAvatarBtn" onclick="uploadAvatar()" class="btn" style="background: #10b981; color: white; display: none;">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <%= lang === 'de' ? 'Hochladen' : 'Upload' %>
+                    </button>
+                  </div>
+                  <div class="help-text">
+                    <i class="fas fa-info-circle"></i>
+                    <span><%= lang === 'de' ? 'PNG, JPG, GIF, WEBP - Max. 5MB' : 'PNG, JPG, GIF, WEBP - Max. 5MB' %></span>
+                  </div>
+                </div>
+
+                <!-- URL Input (Alternative) -->
                 <div class="form-group">
                   <div class="form-label">
                     <i class="fas fa-link"></i>
-                    <span><%= lang === 'de' ? 'Avatar-URL' : 'Avatar URL' %></span>
+                    <span><%= lang === 'de' ? 'Oder Avatar-URL eingeben' : 'Or enter Avatar URL' %></span>
                   </div>
                   <input
                     type="url"
@@ -6214,6 +6256,102 @@
           window.location.href = '/panel?system=default';
         } else {
           alert('<%= lang === "de" ? "Fehler beim Löschen" : "Error deleting system" %>');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('<%= lang === "de" ? "Netzwerkfehler" : "Network error" %>');
+      });
+    }
+
+    // Avatar Upload Functions
+    document.getElementById('avatarFile')?.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const fileNameSpan = document.getElementById('avatarFileName');
+      const uploadBtn = document.getElementById('uploadAvatarBtn');
+
+      if (file) {
+        // Check file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('<%= lang === "de" ? "Datei zu groß! Max. 5MB erlaubt." : "File too large! Max. 5MB allowed." %>');
+          e.target.value = '';
+          fileNameSpan.textContent = '<%= lang === "de" ? "Keine Datei gewählt" : "No file chosen" %>';
+          uploadBtn.style.display = 'none';
+          return;
+        }
+
+        // Check file type
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+          alert('<%= lang === "de" ? "Ungültiger Dateityp! Nur PNG, JPG, GIF, WEBP erlaubt." : "Invalid file type! Only PNG, JPG, GIF, WEBP allowed." %>');
+          e.target.value = '';
+          fileNameSpan.textContent = '<%= lang === "de" ? "Keine Datei gewählt" : "No file chosen" %>';
+          uploadBtn.style.display = 'none';
+          return;
+        }
+
+        fileNameSpan.textContent = file.name;
+        uploadBtn.style.display = 'inline-flex';
+      } else {
+        fileNameSpan.textContent = '<%= lang === "de" ? "Keine Datei gewählt" : "No file chosen" %>';
+        uploadBtn.style.display = 'none';
+      }
+    });
+
+    function uploadAvatar() {
+      const fileInput = document.getElementById('avatarFile');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('<%= lang === "de" ? "Bitte wähle eine Datei aus" : "Please choose a file" %>');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const uploadBtn = document.getElementById('uploadAvatarBtn');
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <%= lang === "de" ? "Hochladen..." : "Uploading..." %>';
+
+      fetch('/panel/upload-avatar', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('<%= lang === "de" ? "Avatar erfolgreich hochgeladen!" : "Avatar uploaded successfully!" %>');
+          window.location.reload();
+        } else {
+          alert('<%= lang === "de" ? "Fehler: " : "Error: " %>' + (data.error || 'Upload fehlgeschlagen'));
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> <%= lang === "de" ? "Hochladen" : "Upload" %>';
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('<%= lang === "de" ? "Netzwerkfehler beim Hochladen" : "Network error during upload" %>');
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> <%= lang === "de" ? "Hochladen" : "Upload" %>';
+      });
+    }
+
+    function deleteAvatar() {
+      if (!confirm('<%= lang === "de" ? "Avatar wirklich löschen?" : "Really delete avatar?" %>')) {
+        return;
+      }
+
+      fetch('/panel/delete-avatar', {
+        method: 'POST'
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('<%= lang === "de" ? "Avatar gelöscht!" : "Avatar deleted!" %>');
+          window.location.reload();
+        } else {
+          alert('<%= lang === "de" ? "Fehler beim Löschen" : "Error deleting avatar" %>');
         }
       })
       .catch(err => {
