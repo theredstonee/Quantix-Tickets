@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ActivityType } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ActivityType, PresenceUpdateStatus } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -154,7 +154,7 @@ module.exports = {
         try {
           await interaction.client.user.setPresence({
             activities: [{ name: '🎫 Tickets verwalten | quantix-bot.de', type: ActivityType.Watching }],
-            status: 'online'
+            status: PresenceUpdateStatus.Online
           });
           console.log('✅ Bot Status wiederhergestellt: Online mit normalem Status');
         } catch (err) {

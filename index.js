@@ -39,7 +39,7 @@ const {
   EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle,
   PermissionsBitField, ChannelType, Events, AttachmentBuilder,
-  StringSelectMenuBuilder, ActivityType
+  StringSelectMenuBuilder, ActivityType, PresenceUpdateStatus
 } = require('discord.js');
 const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
 const { VERSION, COPYRIGHT } = require('./version.config');
@@ -1143,7 +1143,7 @@ function startStatusRotation() {
 
     client.user.setPresence({
       activities: [{ name: status.name, type: status.type }],
-      status: 'online'
+      status: PresenceUpdateStatus.Online
     });
 
     currentStatusIndex = (currentStatusIndex + 1) % statuses.length;
@@ -1170,8 +1170,8 @@ client.once('clientReady', async () => {
       if (maintenanceState.enabled) {
         console.log('🔧 Maintenance Mode ist aktiv - Setze Bot auf DND Status');
         await client.user.setPresence({
-          activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Custom }],
-          status: 'dnd'
+          activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Playing }],
+          status: PresenceUpdateStatus.DoNotDisturb
         });
         console.log('✅ Bot Status: DND (Wartungsmodus aktiv seit ' + new Date(maintenanceState.enabledAt).toLocaleString('de-DE') + ')');
       }
@@ -2367,8 +2367,8 @@ client.on(Events.InteractionCreate, async i => {
         // Update bot status - CRITICAL: Set DND status
         try {
           await i.client.user.setPresence({
-            activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Custom }],
-            status: 'dnd'
+            activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Playing }],
+            status: PresenceUpdateStatus.DoNotDisturb
           });
           console.log('✅ Bot Status gesetzt: DND mit Wartungsmodus-Activity');
 
@@ -2376,8 +2376,8 @@ client.on(Events.InteractionCreate, async i => {
           setTimeout(async () => {
             try {
               await i.client.user.setPresence({
-                activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Custom }],
-                status: 'dnd'
+                activities: [{ name: '🔧 Wartungsmodus | Under Maintenance', type: ActivityType.Playing }],
+                status: PresenceUpdateStatus.DoNotDisturb
               });
               console.log('✅ Bot Status erneut gesetzt (Force Update)');
             } catch (retryErr) {
