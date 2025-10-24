@@ -105,6 +105,12 @@ module.exports = {
         .setFooter({ text: 'Quantix Tickets • Multi-System' })
         .setTimestamp();
 
+      // Add server icon as thumbnail
+      const guildIconURL = interaction.guild.iconURL({ size: 128, extension: 'png' });
+      if (guildIconURL) {
+        embed.setThumbnail(guildIconURL);
+      }
+
       // Add topics as fields
       for (const topic of system.topics.slice(0, 25)) {
         embed.addFields({

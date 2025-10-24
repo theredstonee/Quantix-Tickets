@@ -2955,7 +2955,7 @@ module.exports = (client)=>{
       const guild   = await client.guilds.fetch(guildId);
       const channel = await guild.channels.fetch(cfg.panelChannelId);
       const row = buildPanelSelect(cfg);
-      let embed = buildPanelEmbed(cfg);
+      let embed = buildPanelEmbed(cfg, guild);
       const sent = await channel.send({ embeds: embed? [embed]: undefined, components:[row] });
       cfg.panelMessageId = sent.id;
       writeCfg(guildId, cfg);
@@ -3051,7 +3051,7 @@ module.exports = (client)=>{
       const channel = await guild.channels.fetch(cfg.panelChannelId);
       const msg     = await channel.messages.fetch(cfg.panelMessageId);
       const row     = buildPanelSelect(cfg);
-      const embed   = buildPanelEmbed(cfg);
+      const embed   = buildPanelEmbed(cfg, guild);
       await msg.edit({ embeds: embed? [embed]: undefined, components:[row] });
 
       await logEvent(guildId, t(guildId, 'logs.panel_edited', { channel: `<#${cfg.panelChannelId}>` }), req.user);
@@ -5682,13 +5682,20 @@ function buildPanelSelect(cfg){
   );
 }
 
-function buildPanelEmbed(cfg){
+function buildPanelEmbed(cfg, guild = null){
   if(!cfg.panelEmbed || (!cfg.panelEmbed.title && !cfg.panelEmbed.description)) return null;
   const e = new EmbedBuilder();
   if(cfg.panelEmbed.title) e.setTitle(cfg.panelEmbed.title);
   if(cfg.panelEmbed.description) e.setDescription(cfg.panelEmbed.description);
   if(cfg.panelEmbed.color && /^#?[0-9a-fA-F]{6}$/.test(cfg.panelEmbed.color)) e.setColor(parseInt(cfg.panelEmbed.color.replace('#',''),16));
   if(cfg.panelEmbed.footer) e.setFooter({ text: cfg.panelEmbed.footer });
+
+  // Add server icon as thumbnail
+  if(guild) {
+    const iconURL = guild.iconURL({ size: 128, extension: 'png' });
+    if(iconURL) e.setThumbnail(iconURL);
+  }
+
   return e;
 }
 
