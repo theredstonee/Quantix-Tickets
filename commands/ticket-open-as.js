@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChannelType, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { SlashCommandBuilder, ChannelType, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder, TextInputStyle } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -73,6 +73,27 @@ function hasAnyTeamRole(member, guildId) {
   }
 
   return teamRoles.some(roleId => member.roles.cache.has(roleId));
+}
+
+function getFormFieldsForTopic(cfg, topicValue) {
+  const all = Array.isArray(cfg.formFields) ? cfg.formFields : [];
+  return all.filter(f => {
+    if (!f) return false;
+    if (!f.topic) return true;
+    if (Array.isArray(f.topic)) return f.topic.includes(topicValue);
+    return f.topic === topicValue;
+  }).slice(0, 5);
+}
+
+function normalizeField(field, index) {
+  return {
+    label: (field.label || `Feld ${index + 1}`).substring(0, 45),
+    id: (field.id || `f${index}`),
+    required: field.required ? true : false,
+    style: field.style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short,
+    placeholder: field.placeholder || '',
+    isNumber: field.style === 'number'
+  };
 }
 
 module.exports = {
@@ -202,7 +223,7 @@ module.exports = {
   },
 
   // Function to create the ticket (called from select menu handler in index.js)
-  async createTicketAs(guild, targetUser, executor, topicValue, reason) {
+  async createTicketAs(guild, targetUser, executor, topicValue, reason, formData = {}) {
     const guildId = guild.id;
     const cfg = readCfg(guildId);
 
@@ -301,6 +322,22 @@ module.exports = {
         .setTimestamp()
         .setFooter({ text: `Ticket #${ticketNumber}` });
 
+      // Add form fields to embed
+      const formKeys = Object.keys(formData || {});
+      if (formKeys.length) {
+        const formFields = getFormFieldsForTopic(cfg, topicValue).map(normalizeField);
+        const fields = formKeys.slice(0, 25).map(k => {
+          const field = formFields.find(f => f.id === k);
+          const label = field ? field.label : k;
+          return {
+            name: label,
+            value: formData[k] ? (formData[k].substring(0, 1024) || '—') : '—',
+            inline: false
+          };
+        });
+        ticketEmbed.addFields(fields);
+      }
+
       // Buttons
       const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -335,7 +372,8 @@ module.exports = {
         teamOpener: executor.id,
         openReason: reason,
         messageId: ticketMessage.id,
-        addedUsers: []
+        addedUsers: [],
+        formData: formData || {}
       };
 
       tickets.push(newTicket);

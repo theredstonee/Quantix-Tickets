@@ -2352,13 +2352,17 @@ client.on(Events.InteractionCreate, async i => {
     // Ticket Open-As Menu Handler
     if(i.isStringSelectMenu() && i.customId.startsWith('ticket_openas_')) {
       try {
-        await i.deferUpdate();
-
         // Parse customId: ticket_openas_{userId}_{executorId}
         const parts = i.customId.split('_');
         const targetUserId = parts[2];
         const executorId = parts[3];
         const topicValue = i.values[0];
+
+        // Find topic
+        const topic = cfg.topics?.find(t => t.value === topicValue);
+        if (!topic) {
+          return i.reply({ content: '❌ Ungültiges Ticket-Thema', ephemeral: true });
+        }
 
         // Get reason from original message embed
         const originalEmbed = i.message.embeds[0];
@@ -2368,6 +2372,41 @@ client.on(Events.InteractionCreate, async i => {
           if (reasonMatch) reason = reasonMatch[1].split('\n')[0];
         }
 
+        // Check for form fields
+        const formFields = getFormFieldsForTopic(cfg, topicValue);
+
+        if (formFields.length > 0) {
+          // Show modal with form fields
+          const modal = new ModalBuilder()
+            .setCustomId(`modal_openas:${targetUserId}:${executorId}:${topicValue}:${reason}`)
+            .setTitle(`Ticket: ${topic.label}`.substring(0, 45));
+
+          formFields.forEach((f, idx) => {
+            const nf = normalizeField(f, idx);
+            const inputBuilder = new TextInputBuilder()
+              .setCustomId(nf.id)
+              .setLabel(nf.label)
+              .setRequired(nf.required)
+              .setStyle(nf.style);
+
+            // Add placeholder with number hint if applicable
+            let placeholder = nf.placeholder;
+            if (nf.isNumber) {
+              placeholder = placeholder ? `${placeholder} (Nur Zahlen)` : 'Nur Zahlen erlaubt';
+            }
+            if (placeholder) {
+              inputBuilder.setPlaceholder(placeholder.substring(0, 100));
+            }
+
+            modal.addComponents(new ActionRowBuilder().addComponents(inputBuilder));
+          });
+
+          return i.showModal(modal);
+        }
+
+        // No form fields - create ticket directly
+        await i.deferUpdate();
+
         // Get users
         const targetUser = await client.users.fetch(targetUserId);
         const executor = await client.users.fetch(executorId);
@@ -2375,13 +2414,14 @@ client.on(Events.InteractionCreate, async i => {
         // Load ticket-open-as command module
         const ticketOpenAsCmd = require('./commands/ticket-open-as.js');
 
-        // Create ticket
+        // Create ticket without form fields
         const result = await ticketOpenAsCmd.createTicketAs(
           i.guild,
           targetUser,
           executor,
           topicValue,
-          reason
+          reason,
+          {}
         );
 
         if (result.success) {
@@ -2479,6 +2519,85 @@ client.on(Events.InteractionCreate, async i => {
         await createTicketChannel(i, topic, answers, cfg);
       } catch (createErr) {
         console.error('❌ Error creating ticket channel:', createErr);
+        if (!i.replied && !i.deferred) {
+          await i.reply({
+            content: '❌ Fehler beim Erstellen des Tickets. Bitte versuche es erneut.',
+            ephemeral: true
+          });
+        }
+      }
+      return;
+    }
+
+    // Ticket Open-As Modal Submit Handler
+    if(i.isModalSubmit() && i.customId.startsWith('modal_openas:')){
+      try {
+        // Parse customId: modal_openas:{targetUserId}:{executorId}:{topicValue}:{reason}
+        const parts = i.customId.split(':');
+        const targetUserId = parts[1];
+        const executorId = parts[2];
+        const topicValue = parts[3];
+        const reason = parts.slice(4).join(':'); // Rejoin in case reason contains colons
+
+        // Find topic
+        const topic = cfg.topics?.find(t => t.value === topicValue);
+        if (!topic) {
+          return i.reply({
+            content: '❌ Ungültiges Ticket-Thema',
+            ephemeral: true
+          });
+        }
+
+        // Get form fields and extract answers
+        const formFields = getFormFieldsForTopic(cfg, topicValue).map(normalizeField);
+        const answers = {};
+        formFields.forEach(f => {
+          answers[f.id] = i.fields.getTextInputValue(f.id);
+        });
+
+        // Validate number fields
+        for (const field of formFields) {
+          if (field.isNumber && answers[field.id]) {
+            const value = answers[field.id].trim();
+            if (value && !/^\d+([.,]\d+)?$/.test(value)) {
+              return i.reply({
+                ephemeral: true,
+                content: `❌ **${field.label}** muss eine Zahl sein! (z.B. 123 oder 45.67)`
+              });
+            }
+          }
+        }
+
+        await i.deferReply({ ephemeral: true });
+
+        // Get users
+        const targetUser = await client.users.fetch(targetUserId);
+        const executor = await client.users.fetch(executorId);
+
+        // Load ticket-open-as command module
+        const ticketOpenAsCmd = require('./commands/ticket-open-as.js');
+
+        // Create ticket with form field answers
+        const result = await ticketOpenAsCmd.createTicketAs(
+          i.guild,
+          targetUser,
+          executor,
+          topicValue,
+          reason,
+          answers
+        );
+
+        if (result.success) {
+          await i.editReply({
+            content: `✅ Ticket #${result.ticketNumber} wurde erfolgreich für ${targetUser} erstellt und dir zugewiesen!\n🎫 ${result.channel}`
+          });
+        } else {
+          await i.editReply({
+            content: `❌ Fehler beim Erstellen des Tickets: ${result.error}`
+          });
+        }
+      } catch (err) {
+        console.error('Ticket open-as modal submit error:', err);
         if (!i.replied && !i.deferred) {
           await i.reply({
             content: '❌ Fehler beim Erstellen des Tickets. Bitte versuche es erneut.',
