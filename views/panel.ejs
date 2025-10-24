@@ -2377,6 +2377,370 @@
               </div>
             </div>
 
+            <!-- Application System -->
+            <div class="card" style="margin-top: 24px;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon">
+                      <i class="fas fa-user-tie"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '📝 Bewerbungssystem' : '📝 Application System' %></span>
+                    <% if (!hasFeature(cfg.guildId || selectedGuild, 'applicationSystem')) { %>
+                      <span class="premium-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px;">
+                        <i class="fas fa-star"></i> BASIC+
+                      </span>
+                    <% } %>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Separates Bewerbungs-Panel mit eigenem Formular und speziellen Bewerbungs-Tickets'
+                      : 'Separate application panel with custom form and special application tickets'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <!-- Application System Settings -->
+                <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 12px; backdrop-filter: blur(10px);">
+                  <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <i class="fas fa-user-tie" style="font-size: 1.25rem; color: #3b82f6;"></i>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;"><%= lang === 'de' ? 'Bewerbungssystem Einstellungen' : 'Application System Settings' %></h3>
+                  </div>
+
+                  <!-- Enable Application System -->
+                  <label class="app-toggle-option <%= (cfg.applicationSystem && cfg.applicationSystem.enabled) ? 'active' : '' %>" data-option="enabled">
+                    <input
+                      type="checkbox"
+                      name="applicationSystemEnabled"
+                      <%= (cfg.applicationSystem && cfg.applicationSystem.enabled) ? 'checked' : '' %>
+                      style="display: none;"
+                      <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                    <div class="toggle-content">
+                      <div class="toggle-icon">
+                        <i class="fas fa-check"></i>
+                      </div>
+                      <span style="font-weight: 500;"><%= lang === 'de' ? 'Bewerbungssystem aktivieren' : 'Enable Application System' %></span>
+                    </div>
+                  </label>
+
+                  <!-- Application Panel Channel -->
+                  <div style="margin-top: 1.25rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                      <i class="fas fa-hashtag" style="margin-right: 0.5rem; color: #3b82f6;"></i>
+                      <%= lang === 'de' ? 'Bewerbungs-Panel Channel' : 'Application Panel Channel' %>
+                    </label>
+                    <select name="applicationPanelChannelId" class="form-control" style="width: 100%; padding: 0.75rem; border: 2px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); backdrop-filter: blur(10px);" <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                      <option value=""><%= lang === 'de' ? 'Channel auswählen...' : 'Select channel...' %></option>
+                      <% if (channels && channels.length > 0) { %>
+                        <% channels.forEach(channel => { %>
+                          <option value="<%= channel.id %>" <%= (cfg.applicationSystem && cfg.applicationSystem.panelChannelId === channel.id) ? 'selected' : '' %>>
+                            #<%= channel.name %>
+                          </option>
+                        <% }); %>
+                      <% } %>
+                    </select>
+                  </div>
+
+                  <!-- Application Category -->
+                  <div style="margin-top: 1.25rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                      <i class="fas fa-folder" style="margin-right: 0.5rem; color: #3b82f6;"></i>
+                      <%= lang === 'de' ? 'Bewerbungs-Ticket Kategorie' : 'Application Ticket Category' %>
+                    </label>
+                    <select name="applicationCategoryId" class="form-control" style="width: 100%; padding: 0.75rem; border: 2px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); backdrop-filter: blur(10px);" <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                      <option value=""><%= lang === 'de' ? 'Kategorie auswählen...' : 'Select category...' %></option>
+                      <% if (categories && categories.length > 0) { %>
+                        <% categories.forEach(category => { %>
+                          <option value="<%= category.id %>" <%= (cfg.applicationSystem && cfg.applicationSystem.categoryId === category.id) ? 'selected' : '' %>>
+                            <%= category.name %>
+                          </option>
+                        <% }); %>
+                      <% } %>
+                    </select>
+                  </div>
+
+                  <!-- Application Team Role -->
+                  <div style="margin-top: 1.25rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                      <i class="fas fa-user-shield" style="margin-right: 0.5rem; color: #3b82f6;"></i>
+                      <%= lang === 'de' ? 'Bewerbungs-Team Rolle (wer Bewerbungen sieht)' : 'Application Team Role (who sees applications)' %>
+                    </label>
+                    <select name="applicationTeamRoleId" class="form-control" style="width: 100%; padding: 0.75rem; border: 2px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); backdrop-filter: blur(10px);" <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                      <option value=""><%= lang === 'de' ? 'Rolle auswählen...' : 'Select role...' %></option>
+                      <% if (roles && roles.length > 0) { %>
+                        <% roles.forEach(role => { %>
+                          <option value="<%= role.id %>" <%= (cfg.applicationSystem && cfg.applicationSystem.teamRoleId === role.id) ? 'selected' : '' %>>
+                            <%= role.name %>
+                          </option>
+                        <% }); %>
+                      <% } %>
+                    </select>
+                  </div>
+
+                  <!-- Panel Embed Configuration -->
+                  <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--glass-border);">
+                    <h4 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: var(--text-color);">
+                      <i class="fas fa-image" style="margin-right: 0.5rem; color: #3b82f6;"></i>
+                      <%= lang === 'de' ? 'Bewerbungs-Panel Embed' : 'Application Panel Embed' %>
+                    </h4>
+
+                    <!-- Panel Title -->
+                    <div style="margin-bottom: 1rem;">
+                      <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                        <%= lang === 'de' ? 'Panel Titel' : 'Panel Title' %>
+                      </label>
+                      <input
+                        type="text"
+                        name="applicationPanelTitle"
+                        class="form-control"
+                        value="<%= (cfg.applicationSystem && cfg.applicationSystem.panelTitle) || (lang === 'de' ? '📝 Bewerbungen' : '📝 Applications') %>"
+                        placeholder="<%= lang === 'de' ? 'z.B. Bewerbungen für unser Team' : 'e.g. Apply to our Team' %>"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); backdrop-filter: blur(10px);"
+                        <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                    </div>
+
+                    <!-- Panel Description -->
+                    <div style="margin-bottom: 1rem;">
+                      <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                        <%= lang === 'de' ? 'Panel Beschreibung' : 'Panel Description' %>
+                      </label>
+                      <textarea
+                        name="applicationPanelDescription"
+                        class="form-control"
+                        rows="3"
+                        placeholder="<%= lang === 'de' ? 'Klicke auf den Button, um dich zu bewerben...' : 'Click the button to apply...' %>"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); backdrop-filter: blur(10px); resize: vertical;"
+                        <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>><%= (cfg.applicationSystem && cfg.applicationSystem.panelDescription) || (lang === 'de' ? 'Möchtest du Teil unseres Teams werden? Klicke auf den Button unten und fülle das Bewerbungsformular aus!' : 'Want to join our team? Click the button below and fill out the application form!') %></textarea>
+                    </div>
+
+                    <!-- Panel Color -->
+                    <div style="margin-bottom: 1rem;">
+                      <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                        <%= lang === 'de' ? 'Panel Farbe' : 'Panel Color' %>
+                      </label>
+                      <input
+                        type="color"
+                        name="applicationPanelColor"
+                        value="<%= (cfg.applicationSystem && cfg.applicationSystem.panelColor) || '#3b82f6' %>"
+                        style="width: 100px; height: 40px; border: 2px solid var(--glass-border); border-radius: 8px; cursor: pointer;"
+                        <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                    </div>
+
+                    <!-- Button Text -->
+                    <div style="margin-bottom: 1rem;">
+                      <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                        <%= lang === 'de' ? 'Button Text' : 'Button Text' %>
+                      </label>
+                      <input
+                        type="text"
+                        name="applicationButtonText"
+                        class="form-control"
+                        value="<%= (cfg.applicationSystem && cfg.applicationSystem.buttonText) || (lang === 'de' ? '📝 Jetzt bewerben' : '📝 Apply Now') %>"
+                        placeholder="<%= lang === 'de' ? 'z.B. Jetzt bewerben' : 'e.g. Apply Now' %>"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); backdrop-filter: blur(10px);"
+                        <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                    </div>
+                  </div>
+
+                  <!-- Ticket Embed Configuration -->
+                  <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--glass-border);">
+                    <h4 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: var(--text-color);">
+                      <i class="fas fa-ticket-alt" style="margin-right: 0.5rem; color: #3b82f6;"></i>
+                      <%= lang === 'de' ? 'Bewerbungs-Ticket Embed' : 'Application Ticket Embed' %>
+                    </h4>
+
+                    <!-- Ticket Title -->
+                    <div style="margin-bottom: 1rem;">
+                      <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                        <%= lang === 'de' ? 'Ticket Titel' : 'Ticket Title' %>
+                      </label>
+                      <input
+                        type="text"
+                        name="applicationTicketTitle"
+                        class="form-control"
+                        value="<%= (cfg.applicationSystem && cfg.applicationSystem.ticketTitle) || (lang === 'de' ? '📝 Bewerbung von {username}' : '📝 Application from {username}') %>"
+                        placeholder="<%= lang === 'de' ? 'z.B. Bewerbung von {username}' : 'e.g. Application from {username}' %>"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); backdrop-filter: blur(10px);"
+                        <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                      <small style="display: block; margin-top: 0.25rem; color: #6b7280;">
+                        <%= lang === 'de' ? 'Platzhalter: {username}, {userId}, {userTag}' : 'Placeholders: {username}, {userId}, {userTag}' %>
+                      </small>
+                    </div>
+
+                    <!-- Ticket Description -->
+                    <div style="margin-bottom: 1rem;">
+                      <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                        <%= lang === 'de' ? 'Ticket Beschreibung' : 'Ticket Description' %>
+                      </label>
+                      <textarea
+                        name="applicationTicketDescription"
+                        class="form-control"
+                        rows="3"
+                        placeholder="<%= lang === 'de' ? 'Willkommen {username}! Unser Team wird deine Bewerbung prüfen...' : 'Welcome {username}! Our team will review your application...' %>"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid var(--glass-border); border-radius: 8px; background: var(--glass-bg); color: var(--text-color); backdrop-filter: blur(10px); resize: vertical;"
+                        <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>><%= (cfg.applicationSystem && cfg.applicationSystem.ticketDescription) || (lang === 'de' ? 'Willkommen {username}! Vielen Dank für deine Bewerbung. Unser Team wird sie prüfen und sich zeitnah bei dir melden.' : 'Welcome {username}! Thank you for your application. Our team will review it and get back to you soon.') %></textarea>
+                      <small style="display: block; margin-top: 0.25rem; color: #6b7280;">
+                        <%= lang === 'de' ? 'Platzhalter: {username}, {userId}, {userTag}' : 'Placeholders: {username}, {userId}, {userTag}' %>
+                      </small>
+                    </div>
+
+                    <!-- Ticket Color -->
+                    <div style="margin-bottom: 1rem;">
+                      <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">
+                        <%= lang === 'de' ? 'Ticket Farbe' : 'Ticket Color' %>
+                      </label>
+                      <input
+                        type="color"
+                        name="applicationTicketColor"
+                        value="<%= (cfg.applicationSystem && cfg.applicationSystem.ticketColor) || '#10b981' %>"
+                        style="width: 100px; height: 40px; border: 2px solid var(--glass-border); border-radius: 8px; cursor: pointer;"
+                        <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                    </div>
+                  </div>
+
+                  <!-- Application Form Fields -->
+                  <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--glass-border);">
+                    <h4 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: var(--text-color);">
+                      <i class="fas fa-list" style="margin-right: 0.5rem; color: #3b82f6;"></i>
+                      <%= lang === 'de' ? 'Bewerbungsformular Felder' : 'Application Form Fields' %>
+                    </h4>
+
+                    <div id="applicationFieldsList" style="margin-bottom: 1rem;">
+                      <%
+                        const appFields = (cfg.applicationSystem && cfg.applicationSystem.formFields) || [
+                          { label: lang === 'de' ? 'Wie alt bist du?' : 'How old are you?', id: 'age', style: 'short', required: true },
+                          { label: lang === 'de' ? 'Warum möchtest du Teil unseres Teams werden?' : 'Why do you want to join our team?', id: 'motivation', style: 'paragraph', required: true },
+                          { label: lang === 'de' ? 'Hast du Erfahrung in diesem Bereich?' : 'Do you have experience in this field?', id: 'experience', style: 'paragraph', required: true }
+                        ];
+                      %>
+                      <% appFields.forEach((field, index) => { %>
+                        <div class="form-field-item" data-index="<%= index %>" style="margin-bottom: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--glass-border); border-radius: 8px;">
+                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <span style="font-weight: 600; color: var(--text-color);"><%= lang === 'de' ? 'Feld' : 'Field' %> <%= index + 1 %></span>
+                            <button type="button" class="remove-app-field-btn" data-index="<%= index %>" style="padding: 0.25rem 0.75rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem;" <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                              <i class="fas fa-trash"></i> <%= lang === 'de' ? 'Entfernen' : 'Remove' %>
+                            </button>
+                          </div>
+
+                          <input type="text" name="applicationFields[<%= index %>][label]" value="<%= field.label %>" placeholder="<%= lang === 'de' ? 'Feldbezeichnung' : 'Field Label' %>" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--glass-bg); color: var(--text-color);" <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+
+                          <input type="text" name="applicationFields[<%= index %>][id]" value="<%= field.id %>" placeholder="<%= lang === 'de' ? 'Feld-ID (nur Buchstaben/Zahlen)' : 'Field ID (letters/numbers only)' %>" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--glass-bg); color: var(--text-color);" <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+
+                          <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <select name="applicationFields[<%= index %>][style]" style="flex: 1; padding: 0.5rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--glass-bg); color: var(--text-color);" <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                              <option value="short" <%= field.style === 'short' ? 'selected' : '' %>><%= lang === 'de' ? 'Kurze Antwort' : 'Short Answer' %></option>
+                              <option value="paragraph" <%= field.style === 'paragraph' ? 'selected' : '' %>><%= lang === 'de' ? 'Lange Antwort' : 'Long Answer' %></option>
+                              <option value="number" <%= field.style === 'number' ? 'selected' : '' %>><%= lang === 'de' ? 'Nur Zahlen' : 'Number Only' %></option>
+                            </select>
+
+                            <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-color);">
+                              <input type="checkbox" name="applicationFields[<%= index %>][required]" <%= field.required ? 'checked' : '' %> <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                              <%= lang === 'de' ? 'Pflichtfeld' : 'Required' %>
+                            </label>
+                          </div>
+                        </div>
+                      <% }); %>
+                    </div>
+
+                    <button type="button" id="addApplicationFieldBtn" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s;" <%= !hasFeature(cfg.guildId || selectedGuild, 'applicationSystem') ? 'disabled' : '' %>>
+                      <i class="fas fa-plus"></i> <%= lang === 'de' ? 'Feld hinzufügen' : 'Add Field' %>
+                    </button>
+                  </div>
+
+                  <!-- Premium Upgrade Message -->
+                  <% if (!hasFeature(cfg.guildId || selectedGuild, 'applicationSystem')) { %>
+                    <div style="margin-top: 1.5rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1)); border: 2px solid rgba(245, 158, 11, 0.3); border-radius: 12px;">
+                      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <i class="fas fa-crown" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                        <h4 style="margin: 0; color: var(--text-color); font-weight: 600;">
+                          <%= lang === 'de' ? 'Premium Basic+ erforderlich' : 'Premium Basic+ Required' %>
+                        </h4>
+                      </div>
+                      <p style="margin: 0 0 1rem 0; color: var(--text-color); opacity: 0.9;">
+                        <%= lang === 'de'
+                          ? 'Das Bewerbungssystem ist ein Premium Basic+ Feature. Upgrade jetzt, um professionelle Bewerbungen zu verwalten!'
+                          : 'The Application System is a Premium Basic+ feature. Upgrade now to manage professional applications!'
+                        %>
+                      </p>
+                      <a href="/premium" style="display: inline-block; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; transition: all 0.2s;">
+                        <i class="fas fa-crown"></i> <%= lang === 'de' ? 'Jetzt upgraden' : 'Upgrade Now' %>
+                      </a>
+                    </div>
+                  <% } %>
+                </div>
+
+                <!-- Toggle JavaScript for Application System -->
+                <script>
+                  document.querySelectorAll('.app-toggle-option').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      const checkbox = this.querySelector('input[type="checkbox"]');
+                      if (checkbox.disabled) return;
+
+                      checkbox.checked = !checkbox.checked;
+
+                      if (checkbox.checked) {
+                        this.classList.add('active');
+                      } else {
+                        this.classList.remove('active');
+                      }
+                    });
+                  });
+
+                  // Application Field Management
+                  let appFieldIndex = <%= (cfg.applicationSystem && cfg.applicationSystem.formFields) ? cfg.applicationSystem.formFields.length : 3 %>;
+
+                  document.getElementById('addApplicationFieldBtn')?.addEventListener('click', function() {
+                    const container = document.getElementById('applicationFieldsList');
+                    const lang = '<%= lang %>';
+                    const newField = document.createElement('div');
+                    newField.className = 'form-field-item';
+                    newField.setAttribute('data-index', appFieldIndex);
+                    newField.innerHTML = `
+                      <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--glass-border); border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                          <span style="font-weight: 600; color: var(--text-color);">${lang === 'de' ? 'Feld' : 'Field'} ${appFieldIndex + 1}</span>
+                          <button type="button" class="remove-app-field-btn" data-index="${appFieldIndex}" style="padding: 0.25rem 0.75rem; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem;">
+                            <i class="fas fa-trash"></i> ${lang === 'de' ? 'Entfernen' : 'Remove'}
+                          </button>
+                        </div>
+                        <input type="text" name="applicationFields[${appFieldIndex}][label]" placeholder="${lang === 'de' ? 'Feldbezeichnung' : 'Field Label'}" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--glass-bg); color: var(--text-color);">
+                        <input type="text" name="applicationFields[${appFieldIndex}][id]" placeholder="${lang === 'de' ? 'Feld-ID (nur Buchstaben/Zahlen)' : 'Field ID (letters/numbers only)'}" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--glass-bg); color: var(--text-color);">
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                          <select name="applicationFields[${appFieldIndex}][style]" style="flex: 1; padding: 0.5rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--glass-bg); color: var(--text-color);">
+                            <option value="short">${lang === 'de' ? 'Kurze Antwort' : 'Short Answer'}</option>
+                            <option value="paragraph">${lang === 'de' ? 'Lange Antwort' : 'Long Answer'}</option>
+                            <option value="number">${lang === 'de' ? 'Nur Zahlen' : 'Number Only'}</option>
+                          </select>
+                          <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-color);">
+                            <input type="checkbox" name="applicationFields[${appFieldIndex}][required]" checked>
+                            ${lang === 'de' ? 'Pflichtfeld' : 'Required'}
+                          </label>
+                        </div>
+                      </div>
+                    `;
+                    container.appendChild(newField);
+                    appFieldIndex++;
+
+                    // Attach remove event to new button
+                    newField.querySelector('.remove-app-field-btn').addEventListener('click', function() {
+                      newField.remove();
+                    });
+                  });
+
+                  // Remove field buttons
+                  document.querySelectorAll('.remove-app-field-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                      this.closest('.form-field-item').remove();
+                    });
+                  });
+                </script>
+              </div>
+            </div>
+
             <!-- Advanced Survey System -->
             <div class="card" style="margin-top: 24px;">
               <div class="card-header">

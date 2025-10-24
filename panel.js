@@ -2663,6 +2663,67 @@ module.exports = (client)=>{
 
       cfg.autoResponses.responses = autoResponses;
 
+      // Application System Configuration (Basic+ Feature)
+      if (!cfg.applicationSystem) {
+        cfg.applicationSystem = {
+          enabled: false,
+          panelChannelId: null,
+          categoryId: null,
+          teamRoleId: null,
+          panelTitle: lang === 'de' ? '📝 Bewerbungen' : '📝 Applications',
+          panelDescription: lang === 'de' ? 'Möchtest du Teil unseres Teams werden? Klicke auf den Button unten und fülle das Bewerbungsformular aus!' : 'Want to join our team? Click the button below and fill out the application form!',
+          panelColor: '#3b82f6',
+          buttonText: lang === 'de' ? '📝 Jetzt bewerben' : '📝 Apply Now',
+          ticketTitle: lang === 'de' ? '📝 Bewerbung von {username}' : '📝 Application from {username}',
+          ticketDescription: lang === 'de' ? 'Willkommen {username}! Vielen Dank für deine Bewerbung. Unser Team wird sie prüfen und sich zeitnah bei dir melden.' : 'Welcome {username}! Thank you for your application. Our team will review it and get back to you soon.',
+          ticketColor: '#10b981',
+          formFields: [
+            { label: lang === 'de' ? 'Wie alt bist du?' : 'How old are you?', id: 'age', style: 'short', required: true },
+            { label: lang === 'de' ? 'Warum möchtest du Teil unseres Teams werden?' : 'Why do you want to join our team?', id: 'motivation', style: 'paragraph', required: true },
+            { label: lang === 'de' ? 'Hast du Erfahrung in diesem Bereich?' : 'Do you have experience in this field?', id: 'experience', style: 'paragraph', required: true }
+          ]
+        };
+      }
+
+      if (hasFeature(guildId, 'applicationSystem')) {
+        cfg.applicationSystem.enabled = req.body.applicationSystemEnabled === 'on';
+        cfg.applicationSystem.panelChannelId = sanitizeDiscordId(req.body.applicationPanelChannelId) || null;
+        cfg.applicationSystem.categoryId = sanitizeDiscordId(req.body.applicationCategoryId) || null;
+        cfg.applicationSystem.teamRoleId = sanitizeDiscordId(req.body.applicationTeamRoleId) || null;
+        cfg.applicationSystem.panelTitle = sanitizeString(req.body.applicationPanelTitle, 256) || cfg.applicationSystem.panelTitle;
+        cfg.applicationSystem.panelDescription = sanitizeString(req.body.applicationPanelDescription, 2048) || cfg.applicationSystem.panelDescription;
+        cfg.applicationSystem.panelColor = sanitizeString(req.body.applicationPanelColor, 7) || '#3b82f6';
+        cfg.applicationSystem.buttonText = sanitizeString(req.body.applicationButtonText, 80) || cfg.applicationSystem.buttonText;
+        cfg.applicationSystem.ticketTitle = sanitizeString(req.body.applicationTicketTitle, 256) || cfg.applicationSystem.ticketTitle;
+        cfg.applicationSystem.ticketDescription = sanitizeString(req.body.applicationTicketDescription, 2048) || cfg.applicationSystem.ticketDescription;
+        cfg.applicationSystem.ticketColor = sanitizeString(req.body.applicationTicketColor, 7) || '#10b981';
+
+        // Process Application Form Fields
+        const appFormFields = [];
+        if (req.body.applicationFields) {
+          for (let i = 0; i < 20; i++) { // Max 20 fields
+            const label = req.body.applicationFields?.[i]?.label;
+            const id = req.body.applicationFields?.[i]?.id;
+            const style = req.body.applicationFields?.[i]?.style;
+            const required = req.body.applicationFields?.[i]?.required;
+
+            if (label && id) {
+              appFormFields.push({
+                label: sanitizeString(label, 256),
+                id: sanitizeString(id, 100).replace(/[^a-zA-Z0-9_]/g, ''),
+                style: ['short', 'paragraph', 'number'].includes(style) ? style : 'short',
+                required: required === 'on' || required === true
+              });
+            }
+          }
+        }
+
+        // If no fields were provided, keep the existing fields
+        if (appFormFields.length > 0) {
+          cfg.applicationSystem.formFields = appFormFields;
+        }
+      }
+
       writeCfg(guildId, cfg);
 
       await logEvent(guildId, t(guildId, 'logs.config_updated'), req.user);

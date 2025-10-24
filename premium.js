@@ -47,7 +47,8 @@ function getDefaultConfig() {
         fileUpload: false,
         autoAssignment: false,
         voiceSupport: false,
-        ticketBlacklist: true
+        ticketBlacklist: true,
+        applicationSystem: false
       }
     }
   };
@@ -79,7 +80,8 @@ const PREMIUM_TIERS = {
       vipSystem: false,
       multiDepartment: false,
       voiceSupport: false,
-      ticketBlacklist: true
+      ticketBlacklist: true,
+      applicationSystem: false
     }
   },
   basic: {
@@ -106,7 +108,8 @@ const PREMIUM_TIERS = {
       vipSystem: true,
       multiDepartment: true,
       voiceSupport: true,
-      ticketBlacklist: true
+      ticketBlacklist: true,
+      applicationSystem: true
     }
   },
   pro: {
@@ -135,7 +138,8 @@ const PREMIUM_TIERS = {
       autoAssignment: true,
       customBranding: true,
       voiceSupport: true,
-      ticketBlacklist: true
+      ticketBlacklist: true,
+      applicationSystem: true
     }
   },
   beta: {
@@ -164,7 +168,8 @@ const PREMIUM_TIERS = {
       autoAssignment: true,
       customBranding: true,
       voiceSupport: true,
-      ticketBlacklist: true
+      ticketBlacklist: true,
+      applicationSystem: true
     }
   }
 };

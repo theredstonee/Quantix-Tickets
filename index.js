@@ -2527,6 +2527,213 @@ client.on(Events.InteractionCreate, async i => {
       return;
     }
 
+    // Application Modal Submit Handler
+    if(i.isModalSubmit() && i.customId.startsWith('modal_application:')){
+      const guildId = i.customId.split(':')[1];
+      if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+
+      const cfg = readCfg(guildId);
+      if(!cfg || !cfg.applicationSystem || !cfg.applicationSystem.enabled){
+        return i.reply({
+          ephemeral:true,
+          content:'❌ Das Bewerbungssystem ist nicht aktiviert.'
+        });
+      }
+
+      const formFields = cfg.applicationSystem.formFields || [];
+      const answers = {};
+      formFields.forEach(f=>{
+        try{
+          answers[f.id] = i.fields.getTextInputValue(f.id);
+        } catch(e) {
+          answers[f.id] = '';
+        }
+      });
+
+      // Validate number fields
+      for (const field of formFields) {
+        if (field.style === 'number' && answers[field.id]) {
+          const value = answers[field.id].trim();
+          if (value && !/^\d+([.,]\d+)?$/.test(value)) {
+            return i.reply({
+              ephemeral: true,
+              content: `❌ **${field.label}** muss eine Zahl sein! (z.B. 123 oder 45.67)`
+            });
+          }
+        }
+      }
+
+      try {
+        await i.deferReply({ ephemeral: true });
+
+        // Create application ticket channel
+        const tickets = loadTickets(guildId);
+        let counter = readCounter(guildId);
+        counter++;
+        saveCounter(guildId, counter);
+
+        const categoryId = cfg.applicationSystem.categoryId;
+        if(!categoryId){
+          return i.editReply({
+            content: '❌ Keine Bewerbungs-Kategorie konfiguriert. Bitte kontaktiere einen Administrator.'
+          });
+        }
+
+        // Channel name format: bewerbung-{ticketNumber}-{username}
+        const sanitizedUsername = i.user.username.replace(/[^a-zA-Z0-9]/g, '').substring(0,15).toLowerCase() || 'user';
+        const channelName = `${PREFIX}bewerbung-${counter}-${sanitizedUsername}`;
+
+        const channel = await i.guild.channels.create({
+          name: channelName,
+          type: ChannelType.GuildText,
+          parent: categoryId,
+          topic: `Bewerbung #${counter} von ${i.user.tag}`,
+          permissionOverwrites: [
+            {
+              id: i.guild.roles.everyone.id,
+              deny: [PermissionsBitField.Flags.ViewChannel]
+            },
+            {
+              id: i.user.id,
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+                PermissionsBitField.Flags.ReadMessageHistory,
+                PermissionsBitField.Flags.AttachFiles
+              ]
+            },
+            {
+              id: i.client.user.id,
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+                PermissionsBitField.Flags.ManageChannels,
+                PermissionsBitField.Flags.ReadMessageHistory
+              ]
+            }
+          ]
+        });
+
+        // Add team role permissions
+        if(cfg.applicationSystem.teamRoleId){
+          await channel.permissionOverwrites.create(cfg.applicationSystem.teamRoleId, {
+            ViewChannel: true,
+            SendMessages: true,
+            ReadMessageHistory: true,
+            AttachFiles: true,
+            ManageMessages: true
+          });
+        }
+
+        // Build ticket embed with placeholders replaced
+        const ticketColor = cfg.applicationSystem.ticketColor || '#10b981';
+        const ticketColorInt = parseInt(ticketColor.replace('#', ''), 16);
+
+        let ticketTitle = cfg.applicationSystem.ticketTitle || '📝 Bewerbung von {username}';
+        let ticketDescription = cfg.applicationSystem.ticketDescription || 'Willkommen {username}! Vielen Dank für deine Bewerbung.';
+
+        // Replace placeholders
+        ticketTitle = ticketTitle.replace(/\{username\}/g, i.user.username)
+                                 .replace(/\{userId\}/g, i.user.id)
+                                 .replace(/\{userTag\}/g, i.user.tag);
+
+        ticketDescription = ticketDescription.replace(/\{username\}/g, i.user.username)
+                                             .replace(/\{userId\}/g, i.user.id)
+                                             .replace(/\{userTag\}/g, i.user.tag);
+
+        const ticketEmbed = new EmbedBuilder()
+          .setColor(ticketColorInt)
+          .setTitle(ticketTitle)
+          .setDescription(ticketDescription)
+          .setThumbnail(i.user.displayAvatarURL({ size: 128 }))
+          .setFooter({
+            text: `Bewerbung #${counter} • ${i.guild.name}`,
+            iconURL: i.guild.iconURL({ size: 64 })
+          })
+          .setTimestamp();
+
+        // Add form field answers to embed
+        formFields.forEach(field => {
+          const answer = answers[field.id] || 'Nicht beantwortet';
+          ticketEmbed.addFields({
+            name: field.label,
+            value: answer.substring(0, 1024),
+            inline: false
+          });
+        });
+
+        // Send embed with close button
+        const closeButton = new ButtonBuilder()
+          .setCustomId(`close_ticket_${guildId}`)
+          .setLabel('Bewerbung schließen')
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji('🔒');
+
+        const buttonRow = new ActionRowBuilder().addComponents(closeButton);
+
+        const ticketMessage = await channel.send({
+          content: `<@${i.user.id}>`,
+          embeds: [ticketEmbed],
+          components: [buttonRow]
+        });
+
+        // Save ticket to database
+        const newTicket = {
+          id: counter,
+          userId: i.user.id,
+          username: i.user.username,
+          channelId: channel.id,
+          messageId: ticketMessage.id,
+          status: 'open',
+          createdAt: new Date().toISOString(),
+          closedAt: null,
+          claimer: null,
+          addedUsers: [],
+          isApplication: true,
+          applicationAnswers: answers
+        };
+
+        tickets.push(newTicket);
+        saveTickets(guildId, tickets);
+
+        // Initialize live transcript
+        const transcriptDir = path.join(__dirname, 'transcripts', guildId);
+        if (!fs.existsSync(transcriptDir)) {
+          fs.mkdirSync(transcriptDir, { recursive: true });
+        }
+
+        const txtPath = path.join(transcriptDir, `transcript_${counter}.txt`);
+        const htmlPath = path.join(transcriptDir, `transcript_${counter}.html`);
+
+        const transcriptHeader = `Bewerbung #${counter} - ${i.user.tag}\nErstellt am: ${new Date().toLocaleString('de-DE')}\n\n`;
+        fs.writeFileSync(txtPath, transcriptHeader, 'utf8');
+
+        const htmlHeader = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bewerbung #${counter}</title><style>body{background:#1e1e1e;color:#fff;font-family:Arial,sans-serif;padding:20px;}.msg{margin:10px 0;padding:10px;background:#2e2e2e;border-radius:8px;}</style></head><body><h1>Bewerbung #${counter}</h1><p>Erstellt von: ${i.user.tag}</p><p>Datum: ${new Date().toLocaleString('de-DE')}</p><hr>`;
+        fs.writeFileSync(htmlPath, htmlHeader, 'utf8');
+
+        await i.editReply({
+          content: `✅ Deine Bewerbung wurde erfolgreich eingereicht!\n🎫 Bewerbungs-Ticket: <#${channel.id}>`
+        });
+
+        // Log event
+        await logEvent(i.guild, `📝 Bewerbung #${counter} wurde von <@${i.user.id}> eingereicht.`, i.user);
+
+      } catch(error) {
+        console.error('Application ticket creation error:', error);
+        if (!i.replied && !i.deferred) {
+          await i.reply({
+            content: '❌ Fehler beim Erstellen der Bewerbung. Bitte versuche es erneut.',
+            ephemeral: true
+          });
+        } else {
+          await i.editReply({
+            content: '❌ Fehler beim Erstellen der Bewerbung. Bitte versuche es erneut.'
+          });
+        }
+      }
+      return;
+    }
+
     // Ticket Open-As Modal Submit Handler
     if(i.isModalSubmit() && i.customId.startsWith('modal_openas:')){
       try {
@@ -2712,6 +2919,117 @@ client.on(Events.InteractionCreate, async i => {
             components: []
           });
         }
+        return;
+      }
+
+      // Application System Button Handler
+      if(i.customId.startsWith('application_start_')){
+        const guildId = i.customId.replace('application_start_', '');
+        if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+
+        const cfg = readCfg(guildId);
+        if(!cfg || !cfg.applicationSystem || !cfg.applicationSystem.enabled){
+          return i.reply({
+            ephemeral:true,
+            content:'❌ Das Bewerbungssystem ist nicht aktiviert.'
+          });
+        }
+
+        // Check if user has applicationSystem feature (Basic+)
+        if(!hasFeature(guildId, 'applicationSystem')){
+          const upgradeEmbed = new EmbedBuilder()
+            .setColor(0xf59e0b)
+            .setTitle('⭐ Premium Basic+ erforderlich')
+            .setDescription(
+              '**Das Bewerbungssystem ist ein Premium Basic+ Feature!**\n\n' +
+              'Upgrade jetzt, um professionelle Bewerbungen zu verwalten:\n' +
+              '• Separates Bewerbungs-Panel\n' +
+              '• Anpassbare Formularfelder\n' +
+              '• Dedizierte Bewerbungs-Tickets\n' +
+              '• Team-spezifische Berechtigungen'
+            )
+            .setFooter({ text: 'Quantix Tickets • Premium Feature' })
+            .setTimestamp();
+
+          return i.reply({embeds:[upgradeEmbed],ephemeral:true});
+        }
+
+        // Check blacklist
+        if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
+          const now = new Date();
+          const blacklist = cfg.ticketBlacklist.find(b => b.userId === i.user.id);
+
+          if (blacklist) {
+            if (!blacklist.isPermanent && new Date(blacklist.expiresAt) <= now) {
+              cfg.ticketBlacklist = cfg.ticketBlacklist.filter(b => b.userId !== i.user.id);
+              writeCfg(guildId, cfg);
+            } else {
+              const expiryText = blacklist.isPermanent
+                ? t(guildId, 'ticketBlacklist.permanent')
+                : `<t:${Math.floor(new Date(blacklist.expiresAt).getTime() / 1000)}:R>`;
+
+              const blacklistEmbed = new EmbedBuilder()
+                .setColor(0xff4444)
+                .setTitle('🚫 ' + t(guildId, 'ticketBlacklist.user_blacklisted'))
+                .setDescription(t(guildId, 'ticketBlacklist.blocked_error', {
+                  reason: blacklist.reason,
+                  expires: expiryText
+                }))
+                .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+                .setTimestamp();
+
+              return i.reply({ embeds: [blacklistEmbed], ephemeral: true });
+            }
+          }
+        }
+
+        // Check if user already has an open application ticket
+        const tickets = loadTickets(guildId);
+        const existingApplication = tickets.find(t =>
+          t.userId === i.user.id &&
+          t.status === 'open' &&
+          t.isApplication === true
+        );
+
+        if(existingApplication){
+          return i.reply({
+            ephemeral:true,
+            content:`❌ Du hast bereits eine offene Bewerbung: <#${existingApplication.channelId}>`
+          });
+        }
+
+        // Build modal with configured fields
+        const formFields = cfg.applicationSystem.formFields || [];
+        if(formFields.length === 0){
+          return i.reply({
+            ephemeral:true,
+            content:'❌ Keine Formularfelder konfiguriert. Bitte kontaktiere einen Administrator.'
+          });
+        }
+
+        const modal = new ModalBuilder()
+          .setCustomId(`modal_application:${guildId}`)
+          .setTitle('Bewerbung'.substring(0,45));
+
+        // Add fields (max 5 per modal)
+        const fieldsToAdd = formFields.slice(0, 5);
+        fieldsToAdd.forEach((field, idx) => {
+          const inputStyle = field.style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short;
+          const placeholder = field.style === 'number' ? '(Nur Zahlen)' : '';
+
+          const input = new TextInputBuilder()
+            .setCustomId(field.id)
+            .setLabel(field.label.substring(0,45))
+            .setStyle(inputStyle)
+            .setRequired(field.required !== false)
+            .setMaxLength(field.style === 'paragraph' ? 1024 : 256);
+
+          if(placeholder) input.setPlaceholder(placeholder);
+
+          modal.addComponents(new ActionRowBuilder().addComponents(input));
+        });
+
+        await i.showModal(modal);
         return;
       }
 
