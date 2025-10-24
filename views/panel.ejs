@@ -1662,7 +1662,11 @@
         <% } else if (typeof guildId !== 'undefined' && guildId) { %>
         <div class="server-info">
           <div class="server-icon">
-            <i class="fas fa-server"></i>
+            <% if (typeof guildIcon !== 'undefined' && guildIcon) { %>
+              <img src="<%= guildIcon %>" alt="<%= guildName %>" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+            <% } else { %>
+              <i class="fas fa-server"></i>
+            <% } %>
           </div>
           <div class="server-details">
             <h3>
@@ -1763,6 +1767,38 @@
           <% } %>
         </div>
       </div>
+
+      <!-- Multi-Ticket-System Selector (Pro Feature) -->
+      <% if (hasFeature(cfg.guildId || selectedGuild, 'multiTicketSystems')) { %>
+      <div class="system-selector-container" style="margin: 1.5rem 0;">
+        <div style="display: flex; align-items: center; gap: 1rem; background: var(--glass-bg); padding: 1rem; border-radius: 12px; border: 2px solid var(--glass-border); backdrop-filter: blur(10px);">
+          <div style="flex: 1;">
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-color);">
+              <i class="fas fa-layer-group"></i>
+              <%= lang === 'de' ? 'Ticket-System auswählen' : 'Select Ticket System' %>
+            </label>
+            <select id="systemSelector" onchange="switchSystem(this.value)" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid var(--glass-border); background: var(--bg-secondary); color: var(--text-color); font-size: 1rem;">
+              <%
+              const { getAllTicketSystems } = require('../ticket-systems');
+              const allSystems = getAllTicketSystems(cfg.guildId || selectedGuild);
+              const currentSystemId = typeof selectedSystem !== 'undefined' ? selectedSystem : 'default';
+              %>
+              <% allSystems.forEach(sys => { %>
+                <option value="<%= sys.id %>" <%= currentSystemId === sys.id ? 'selected' : '' %>>
+                  <%= sys.name %> <%= sys.enabled ? '' : '(Deaktiviert)' %>
+                </option>
+              <% }); %>
+            </select>
+          </div>
+          <div>
+            <button type="button" class="btn btn-primary" onclick="createNewSystem()" style="white-space: nowrap; margin-top: 1.5rem;">
+              <i class="fas fa-plus"></i>
+              <%= lang === 'de' ? 'Neues System' : 'New System' %>
+            </button>
+          </div>
+        </div>
+      </div>
+      <% } %>
 
       <!-- Read-Only Mode Notice -->
       <% if (typeof isAdmin !== 'undefined' && !isAdmin) { %>
@@ -6127,6 +6163,65 @@
       if (emptyMessage) emptyMessage.remove();
 
       container.insertAdjacentHTML('beforeend', deptHtml);
+    }
+
+    // Multi-Ticket-System Functions
+    function switchSystem(systemId) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('system', systemId);
+      window.location.href = url.toString();
+    }
+
+    function createNewSystem() {
+      const name = prompt('<%= lang === "de" ? "Name des neuen Ticket-Systems:" : "Name of the new ticket system:" %>');
+      if (!name || name.trim() === '') return;
+
+      fetch('/panel/system/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim() })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('<%= lang === "de" ? "System erfolgreich erstellt!" : "System created successfully!" %>');
+          window.location.href = `/panel?system=${data.systemId}`;
+        } else {
+          alert('<%= lang === "de" ? "Fehler beim Erstellen des Systems" : "Error creating system" %>');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('<%= lang === "de" ? "Netzwerkfehler" : "Network error" %>');
+      });
+    }
+
+    function deleteSystem(systemId, systemName) {
+      if (systemId === 'default') {
+        alert('<%= lang === "de" ? "Das Standard-System kann nicht gelöscht werden!" : "The default system cannot be deleted!" %>');
+        return;
+      }
+
+      if (!confirm(`<%= lang === "de" ? "Ticket-System \\\"" : "Delete ticket system \\\"" %>${systemName}<%= lang === "de" ? "\\\" wirklich löschen?" : "\\\" permanently?" %>`)) {
+        return;
+      }
+
+      fetch(`/panel/system/${systemId}/delete`, {
+        method: 'POST'
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('<%= lang === "de" ? "System gelöscht!" : "System deleted!" %>');
+          window.location.href = '/panel?system=default';
+        } else {
+          alert('<%= lang === "de" ? "Fehler beim Löschen" : "Error deleting system" %>');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('<%= lang === "de" ? "Netzwerkfehler" : "Network error" %>');
+      });
     }
   </script>
 </body>

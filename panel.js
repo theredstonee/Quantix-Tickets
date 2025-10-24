@@ -2003,7 +2003,14 @@ module.exports = (client)=>{
 
   router.get('/panel', isAuthOrTeam, async (req,res)=>{
     const guildId = req.session.selectedGuild;
-    const cfg = readCfg(guildId);
+    const { getTicketSystem, getDefaultTicketSystem, migrateToTicketSystems } = require('./ticket-systems');
+
+    // Migrate config to multi-system if needed
+    const cfg = migrateToTicketSystems(guildId);
+
+    // Get selected system from query parameter or use default
+    const selectedSystemId = req.query.system || 'default';
+    const selectedSystem = getTicketSystem(guildId, selectedSystemId) || getDefaultTicketSystem(guildId);
 
     // Auto-Migration: Convert old flat embed fields to nested structure
     let needsSave = false;
@@ -2043,9 +2050,11 @@ module.exports = (client)=>{
     let categories = [];
     let roles = [];
     let guildName = 'Server';
+    let guildIcon = null;
     try {
       const guild = await client.guilds.fetch(guildId);
       guildName = guild.name;
+      guildIcon = guild.iconURL({ size: 128, extension: 'png' });
 
       const fetchedChannels = await guild.channels.fetch();
       channels = fetchedChannels
@@ -2072,6 +2081,8 @@ module.exports = (client)=>{
 
     res.render('panel', {
       cfg,
+      system: selectedSystem, // Current ticket system
+      selectedSystem: selectedSystemId, // ID of selected system
       msg: req.query.msg||null,
       channels,
       categories,
@@ -2079,6 +2090,7 @@ module.exports = (client)=>{
       version: VERSION,
       guildName,
       guildId,
+      guildIcon,
       selectedGuild: guildId, // Add selectedGuild for hasFeature checks
       premiumTier: premiumInfo.tier,
       premiumTierName: premiumInfo.tierName,
@@ -2091,6 +2103,57 @@ module.exports = (client)=>{
       lang: res.locals.lang, // Language code
       hasFeature: hasFeature // Add hasFeature function
     });
+  });
+
+  // Multi-Ticket-System: Create new system
+  router.post('/panel/system/create', isAuth, async (req, res) => {
+    const guildId = req.session.selectedGuild;
+
+    // Check Pro feature
+    if (!hasFeature(guildId, 'multiTicketSystems')) {
+      return res.json({ success: false, error: 'Pro feature required' });
+    }
+
+    const { name } = req.body;
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return res.json({ success: false, error: 'Invalid name' });
+    }
+
+    try {
+      const { createTicketSystem } = require('./ticket-systems');
+      const newSystem = createTicketSystem(guildId, { name: name.trim() });
+
+      res.json({ success: true, systemId: newSystem.id });
+    } catch (error) {
+      console.error('Error creating ticket system:', error);
+      res.json({ success: false, error: 'Internal error' });
+    }
+  });
+
+  // Multi-Ticket-System: Delete system
+  router.post('/panel/system/:systemId/delete', isAuth, async (req, res) => {
+    const guildId = req.session.selectedGuild;
+    const { systemId } = req.params;
+
+    // Check Pro feature
+    if (!hasFeature(guildId, 'multiTicketSystems')) {
+      return res.json({ success: false, error: 'Pro feature required' });
+    }
+
+    // Cannot delete default system
+    if (systemId === 'default') {
+      return res.json({ success: false, error: 'Cannot delete default system' });
+    }
+
+    try {
+      const { deleteTicketSystem } = require('./ticket-systems');
+      const success = deleteTicketSystem(guildId, systemId);
+
+      res.json({ success });
+    } catch (error) {
+      console.error('Error deleting ticket system:', error);
+      res.json({ success: false, error: 'Internal error' });
+    }
   });
 
   router.post('/panel', isAuth, async (req,res)=>{
@@ -2169,6 +2232,59 @@ module.exports = (client)=>{
 </body>
 </html>
       `);
+    }
+
+    // Check if updating a specific ticket system (Multi-System)
+    const selectedSystemId = req.body.systemId || req.query.system;
+    if (selectedSystemId && selectedSystemId !== 'default' && hasFeature(guildId, 'multiTicketSystems')) {
+      try {
+        const { getTicketSystem, updateTicketSystem, migrateToTicketSystems } = require('./ticket-systems');
+        migrateToTicketSystems(guildId);
+
+        const system = getTicketSystem(guildId, selectedSystemId);
+        if (!system) {
+          return res.redirect('/panel?msg=error&system=' + selectedSystemId);
+        }
+
+        // Update system-specific fields
+        const systemUpdates = {
+          name: sanitizeString(req.body.systemName || system.name, 100),
+          enabled: req.body.systemEnabled === 'true' || req.body.systemEnabled === true,
+          topics: system.topics, // Keep existing topics (will be updated separately)
+          teamRoleId: sanitizeDiscordId(req.body.teamRoleId),
+          categoryId: sanitizeDiscordId(req.body.categoryId),
+          logChannelId: Array.isArray(req.body.logChannelId)
+            ? req.body.logChannelId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
+            : (req.body.logChannelId ? [sanitizeDiscordId(req.body.logChannelId) || req.body.logChannelId.trim()] : []),
+          transcriptChannelId: Array.isArray(req.body.transcriptChannelId)
+            ? req.body.transcriptChannelId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
+            : (req.body.transcriptChannelId ? [sanitizeDiscordId(req.body.transcriptChannelId) || req.body.transcriptChannelId.trim()] : []),
+          embedTitle: sanitizeString(req.body.embedTitle || system.embedTitle, 256),
+          embedDescription: sanitizeString(req.body.embedDescription || system.embedDescription, 4096),
+          embedColor: req.body.embedColor || system.embedColor,
+          notifyUserOnStatusChange: req.body.notifyUserOnStatusChange !== 'false'
+        };
+
+        // Priority roles
+        const priorityRoles = {};
+        for (let i = 0; i <= 2; i++) {
+          const rolesStr = req.body[`priorityRole${i}`];
+          if (rolesStr) {
+            priorityRoles[i] = rolesStr.split(',')
+              .map(id => id.trim())
+              .filter(id => id)
+              .map(id => sanitizeDiscordId(id) || id);
+          }
+        }
+        systemUpdates.priorityRoles = priorityRoles;
+
+        updateTicketSystem(guildId, selectedSystemId, systemUpdates);
+
+        return res.redirect('/panel?msg=saved&system=' + selectedSystemId);
+      } catch (error) {
+        console.error('Error updating ticket system:', error);
+        return res.redirect('/panel?msg=error&system=' + selectedSystemId);
+      }
     }
 
     try {

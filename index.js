@@ -2562,6 +2562,90 @@ client.on(Events.InteractionCreate, async i => {
       return;
     }
 
+    // Multi-System Modal Submit Handler
+    if(i.isModalSubmit() && i.customId.startsWith('modal_multisystem:')){
+      try {
+        const parts = i.customId.split(':');
+        const systemId = parts[1];
+        const topicValue = parts[2];
+
+        const { getTicketSystem } = require('./ticket-systems');
+        const system = getTicketSystem(guildId, systemId);
+
+        if(!system || !system.enabled){
+          return i.reply({
+            ephemeral:true,
+            content:'❌ Dieses Ticket-System ist nicht mehr verfügbar.'
+          });
+        }
+
+        const topic = system.topics?.find(t => t.value === topicValue);
+        if(!topic){
+          return i.reply({
+            ephemeral:true,
+            content:'❌ Ungültiges Ticket-Thema.'
+          });
+        }
+
+        // Blacklist-Check
+        if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
+          const now = new Date();
+          const blacklist = cfg.ticketBlacklist.find(b => b.userId === i.user.id);
+
+          if (blacklist) {
+            if (!blacklist.isPermanent && new Date(blacklist.expiresAt) <= now) {
+              cfg.ticketBlacklist = cfg.ticketBlacklist.filter(b => b.userId !== i.user.id);
+              writeCfg(guildId, cfg);
+            } else {
+              const expiryText = blacklist.isPermanent
+                ? t(guildId, 'ticketBlacklist.permanent')
+                : `<t:${Math.floor(new Date(blacklist.expiresAt).getTime() / 1000)}:R>`;
+
+              const blacklistEmbed = new EmbedBuilder()
+                .setColor(0xff4444)
+                .setTitle('🚫 ' + t(guildId, 'ticketBlacklist.user_blacklisted'))
+                .setDescription(t(guildId, 'ticketBlacklist.blocked_error', {
+                  reason: blacklist.reason,
+                  expires: expiryText
+                }))
+                .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+                .setTimestamp();
+
+              return i.reply({ embeds: [blacklistEmbed], ephemeral: true });
+            }
+          }
+        }
+
+        const formFields = getFormFieldsForTopic(system, topic.value).map(normalizeField);
+        const answers = {};
+        formFields.forEach(f=>{ answers[f.id] = i.fields.getTextInputValue(f.id); });
+
+        // Validate number fields
+        for (const field of formFields) {
+          if (field.isNumber && answers[field.id]) {
+            const value = answers[field.id].trim();
+            if (value && !/^\d+([.,]\d+)?$/.test(value)) {
+              return i.reply({
+                ephemeral: true,
+                content: `❌ **${field.label}** muss eine Zahl sein! (z.B. 123 oder 45.67)`
+              });
+            }
+          }
+        }
+
+        await createTicketChannelMultiSystem(i, system, topic, answers, cfg);
+      } catch (createErr) {
+        console.error('❌ Error creating multi-system ticket channel:', createErr);
+        if (!i.replied && !i.deferred) {
+          await i.reply({
+            content: '❌ Fehler beim Erstellen des Tickets. Bitte versuche es erneut.',
+            ephemeral: true
+          });
+        }
+      }
+      return;
+    }
+
     // Application Modal Submit Handler
     if(i.isModalSubmit() && i.customId.startsWith('modal_application:')){
       const guildId = i.customId.split(':')[1];
@@ -3139,6 +3223,110 @@ client.on(Events.InteractionCreate, async i => {
           .setTimestamp();
 
         await i.update({ embeds: [successEmbed], components: [] });
+        return;
+      }
+
+      // Multi-Ticket-System: Button Handler for ticket_create:systemId:topicValue
+      if(i.customId.startsWith('ticket_create:')){
+        try {
+          const parts = i.customId.split(':');
+          const systemId = parts[1];
+          const topicValue = parts[2];
+
+          const { getTicketSystem } = require('./ticket-systems');
+          const system = getTicketSystem(guildId, systemId);
+
+          if(!system || !system.enabled){
+            return i.reply({
+              ephemeral:true,
+              content:'❌ Dieses Ticket-System ist nicht verfügbar.'
+            });
+          }
+
+          const topic = system.topics?.find(t => t.value === topicValue);
+          if(!topic){
+            return i.reply({
+              ephemeral:true,
+              content:'❌ Ungültiges Ticket-Thema.'
+            });
+          }
+
+          // Check blacklist
+          if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
+            const now = new Date();
+            const blacklist = cfg.ticketBlacklist.find(b => b.userId === i.user.id);
+
+            if (blacklist) {
+              if (!blacklist.isPermanent && new Date(blacklist.expiresAt) <= now) {
+                cfg.ticketBlacklist = cfg.ticketBlacklist.filter(b => b.userId !== i.user.id);
+                writeCfg(guildId, cfg);
+              } else {
+                const expiryText = blacklist.isPermanent
+                  ? t(guildId, 'ticketBlacklist.permanent')
+                  : `<t:${Math.floor(new Date(blacklist.expiresAt).getTime() / 1000)}:R>`;
+
+                const blacklistEmbed = new EmbedBuilder()
+                  .setColor(0xff4444)
+                  .setTitle('🚫 ' + t(guildId, 'ticketBlacklist.user_blacklisted'))
+                  .setDescription(t(guildId, 'ticketBlacklist.blocked_error', {
+                    reason: blacklist.reason,
+                    expires: expiryText
+                  }))
+                  .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+                  .setTimestamp();
+
+                return i.reply({ embeds: [blacklistEmbed], ephemeral: true });
+              }
+            }
+          }
+
+          // Check for form fields
+          const formFields = getFormFieldsForTopic(system, topic.value);
+
+          if(formFields.length){
+            // Show modal with form fields
+            const modal = new ModalBuilder()
+              .setCustomId(`modal_multisystem:${systemId}:${topic.value}`)
+              .setTitle(`Ticket: ${topic.label}`.substring(0,45));
+
+            formFields.forEach((f,idx)=>{
+              const nf = normalizeField(f,idx);
+              const inputBuilder = new TextInputBuilder()
+                .setCustomId(nf.id)
+                .setLabel(nf.label)
+                .setRequired(nf.required)
+                .setStyle(nf.style);
+
+              let placeholder = nf.placeholder;
+              if (nf.isNumber) {
+                placeholder = placeholder ? `${placeholder} (Nur Zahlen)` : 'Nur Zahlen erlaubt';
+              }
+              if (placeholder) {
+                inputBuilder.setPlaceholder(placeholder.substring(0, 100));
+              }
+
+              modal.addComponents(new ActionRowBuilder().addComponents(inputBuilder));
+            });
+
+            return i.showModal(modal);
+          }
+
+          // No form fields, create ticket directly
+          await i.deferReply({ ephemeral: true });
+          try {
+            return await createTicketChannelMultiSystem(i, system, topic, {}, cfg);
+          } catch (createErr) {
+            console.error('❌ Error creating multi-system ticket channel:', createErr);
+            await i.editReply({
+              content: '❌ Fehler beim Erstellen des Tickets. Bitte versuche es erneut.'
+            });
+          }
+        } catch(error){
+          console.error('Error in ticket_create handler:', error);
+          if(!i.replied && !i.deferred){
+            return i.reply({ephemeral:true,content:'❌ Fehler beim Verarbeiten des Buttons.'});
+          }
+        }
         return;
       }
 
@@ -5310,6 +5498,39 @@ function canUserCreateTicket(guildId, userId){
     };
   }
   return { allowed: true, current: openTickets.length, max: maxTickets };
+}
+
+/**
+ * Creates ticket channel for Multi-Ticket-System
+ * Wrapper that integrates system-specific config with global config
+ */
+async function createTicketChannelMultiSystem(interaction, system, topic, formData, globalCfg){
+  // Create merged config with system-specific settings
+  const mergedCfg = {
+    ...globalCfg,
+    topics: system.topics,
+    teamRoleId: system.teamRoleId,
+    priorityRoles: system.priorityRoles,
+    categoryId: system.categoryId,
+    logChannelId: system.logChannelId,
+    transcriptChannelId: system.transcriptChannelId,
+    embedTitle: system.embedTitle,
+    embedDescription: system.embedDescription,
+    embedColor: system.embedColor,
+    notifyUserOnStatusChange: system.notifyUserOnStatusChange,
+    autoClose: system.autoClose,
+    sla: system.sla,
+    autoAssignment: system.autoAssignment,
+    ticketEmbed: {
+      title: system.embedTitle || '🎫 Ticket #{ticketNumber}',
+      description: system.embedDescription || 'Hallo {userMention}\n**Thema:** {topicLabel}',
+      color: system.embedColor || '#2b90d9',
+      footer: COPYRIGHT
+    }
+  };
+
+  // Call standard createTicketChannel with merged config
+  return await createTicketChannel(interaction, topic, formData, mergedCfg);
 }
 
 async function createTicketChannel(interaction, topic, formData, cfg){

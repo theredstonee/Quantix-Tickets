@@ -167,6 +167,13 @@ function getCommandsList(userId, member, guildId) {
           premium: 'Basic+'
         },
         {
+          name: '/send-panel-advanced',
+          description: 'Erweitertes Ticket-Panel mit System-Auswahl',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: 'Pro'
+        },
+        {
           name: '/github-commits',
           description: 'GitHub Commit-Benachrichtigungen toggle',
           permission: 'Administrator',
