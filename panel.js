@@ -2672,23 +2672,24 @@ module.exports = (client)=>{
       cfg.autoResponses.responses = autoResponses;
 
       // Application System Configuration (Basic+ Feature)
+      const serverLang = cfg.language || 'de';
       if (!cfg.applicationSystem) {
         cfg.applicationSystem = {
           enabled: false,
           panelChannelId: null,
           categoryId: null,
           teamRoleId: null,
-          panelTitle: lang === 'de' ? '📝 Bewerbungen' : '📝 Applications',
-          panelDescription: lang === 'de' ? 'Möchtest du Teil unseres Teams werden? Klicke auf den Button unten und fülle das Bewerbungsformular aus!' : 'Want to join our team? Click the button below and fill out the application form!',
+          panelTitle: serverLang === 'de' ? '📝 Bewerbungen' : '📝 Applications',
+          panelDescription: serverLang === 'de' ? 'Möchtest du Teil unseres Teams werden? Klicke auf den Button unten und fülle das Bewerbungsformular aus!' : 'Want to join our team? Click the button below and fill out the application form!',
           panelColor: '#3b82f6',
-          buttonText: lang === 'de' ? '📝 Jetzt bewerben' : '📝 Apply Now',
-          ticketTitle: lang === 'de' ? '📝 Bewerbung von {username}' : '📝 Application from {username}',
-          ticketDescription: lang === 'de' ? 'Willkommen {username}! Vielen Dank für deine Bewerbung. Unser Team wird sie prüfen und sich zeitnah bei dir melden.' : 'Welcome {username}! Thank you for your application. Our team will review it and get back to you soon.',
+          buttonText: serverLang === 'de' ? '📝 Jetzt bewerben' : '📝 Apply Now',
+          ticketTitle: serverLang === 'de' ? '📝 Bewerbung von {username}' : '📝 Application from {username}',
+          ticketDescription: serverLang === 'de' ? 'Willkommen {username}! Vielen Dank für deine Bewerbung. Unser Team wird sie prüfen und sich zeitnah bei dir melden.' : 'Welcome {username}! Thank you for your application. Our team will review it and get back to you soon.',
           ticketColor: '#10b981',
           formFields: [
-            { label: lang === 'de' ? 'Wie alt bist du?' : 'How old are you?', id: 'age', style: 'short', required: true },
-            { label: lang === 'de' ? 'Warum möchtest du Teil unseres Teams werden?' : 'Why do you want to join our team?', id: 'motivation', style: 'paragraph', required: true },
-            { label: lang === 'de' ? 'Hast du Erfahrung in diesem Bereich?' : 'Do you have experience in this field?', id: 'experience', style: 'paragraph', required: true }
+            { label: serverLang === 'de' ? 'Wie alt bist du?' : 'How old are you?', id: 'age', style: 'short', required: true },
+            { label: serverLang === 'de' ? 'Warum möchtest du Teil unseres Teams werden?' : 'Why do you want to join our team?', id: 'motivation', style: 'paragraph', required: true },
+            { label: serverLang === 'de' ? 'Hast du Erfahrung in diesem Bereich?' : 'Do you have experience in this field?', id: 'experience', style: 'paragraph', required: true }
           ]
         };
       }
