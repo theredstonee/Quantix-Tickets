@@ -5575,7 +5575,12 @@ async function createTicketChannel(interaction, topic, formData, cfg){
       .setFooter({ text: 'Quantix Tickets • AntiSpam System' })
       .setTimestamp();
 
-    await interaction.reply({ embeds: [spamEmbed], ephemeral: true });
+    // Use editReply if already deferred/replied, otherwise use reply
+    if (interaction.deferred || interaction.replied) {
+      await interaction.editReply({ embeds: [spamEmbed] });
+    } else {
+      await interaction.reply({ embeds: [spamEmbed], ephemeral: true });
+    }
     return;
   }
 
@@ -5587,7 +5592,13 @@ async function createTicketChannel(interaction, topic, formData, cfg){
       current: limitCheck.current,
       max: limitCheck.max
     });
-    await interaction.reply({ content: errorMsg, ephemeral: true });
+
+    // Use editReply if already deferred/replied, otherwise use reply
+    if (interaction.deferred || interaction.replied) {
+      await interaction.editReply({ content: errorMsg });
+    } else {
+      await interaction.reply({ content: errorMsg, ephemeral: true });
+    }
     return;
   }
 
@@ -5700,10 +5711,9 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     await ch.send({ content: `${mentions.join(' ')} ${t(guildId, 'ticket.created')}` });
   }
 
-  if(interaction.deferred){
+  // Use editReply if already deferred/replied, otherwise use reply
+  if(interaction.deferred || interaction.replied){
     await interaction.editReply({ content:`Ticket erstellt: ${ch}` });
-  } else if(interaction.isModalSubmit()){
-    await interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
   } else {
     await interaction.reply({ content:`Ticket erstellt: ${ch}`, ephemeral:true });
   }
