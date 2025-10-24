@@ -2568,9 +2568,7 @@ client.on(Events.InteractionCreate, async i => {
 
         // Create application ticket channel
         const tickets = loadTickets(guildId);
-        let counter = readCounter(guildId);
-        counter++;
-        saveCounter(guildId, counter);
+        const counter = nextTicket(guildId);
 
         const categoryId = cfg.applicationSystem.categoryId;
         if(!categoryId){
