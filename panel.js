@@ -2096,6 +2096,7 @@ module.exports = (client)=>{
 
     let channels = [];
     let categories = [];
+    let voiceChannels = [];
     let roles = [];
     let guildName = 'Server';
     let guildIcon = null;
@@ -2113,6 +2114,12 @@ module.exports = (client)=>{
       // Extract categories separately for application system
       categories = fetchedChannels
         .filter(ch => ch.type === 4)
+        .map(ch => ({ id: ch.id, name: ch.name }))
+        .sort((a,b) => a.name.localeCompare(b.name));
+
+      // Extract voice channels for voice support system
+      voiceChannels = fetchedChannels
+        .filter(ch => ch.type === 2)
         .map(ch => ({ id: ch.id, name: ch.name }))
         .sort((a,b) => a.name.localeCompare(b.name));
 
@@ -2135,6 +2142,7 @@ module.exports = (client)=>{
       msg: req.query.msg||null,
       channels,
       categories,
+      voiceChannels,
       roles,
       version: VERSION,
       guildName,

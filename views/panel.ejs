@@ -4588,13 +4588,18 @@
                   <%= lang === 'de' ? 'Wartezimmer Voice-Channel' : 'Waiting Room Voice Channel' %>
                   <span class="required">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="voiceWaitingRoomChannelId"
-                  class="form-control"
-                  placeholder="<%= lang === 'de' ? 'Voice-Channel ID' : 'Voice Channel ID' %>"
-                  value="<%= cfg.voiceSupport?.waitingRoomChannelId || '' %>"
-                >
+                <select name="voiceWaitingRoomChannelId" class="form-control">
+                  <option value=""><%= lang === 'de' ? 'Voice-Channel auswählen...' : 'Select voice channel...' %></option>
+                  <% if (voiceChannels && voiceChannels.length > 0) { %>
+                    <% voiceChannels.forEach(channel => { %>
+                      <option value="<%= channel.id %>" <%= (cfg.voiceSupport?.waitingRoomChannelId === channel.id) ? 'selected' : '' %>>
+                        🔊 <%= channel.name %>
+                      </option>
+                    <% }); %>
+                  <% } else { %>
+                    <option value="" disabled><%= lang === 'de' ? 'Keine Voice-Channels gefunden' : 'No voice channels found' %></option>
+                  <% } %>
+                </select>
                 <small class="form-help">
                   <%= lang === 'de'
                     ? 'Voice-Channel, in den User joinen um Support anzufordern'
@@ -4608,13 +4613,18 @@
                   <%= lang === 'de' ? 'Support Text-Channel (für Embeds)' : 'Support Text Channel (for Embeds)' %>
                   <span class="required">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="voiceSupportChannelId"
-                  class="form-control"
-                  placeholder="<%= lang === 'de' ? 'Text-Channel ID' : 'Text Channel ID' %>"
-                  value="<%= cfg.voiceSupport?.supportChannelId || '' %>"
-                >
+                <select name="voiceSupportChannelId" class="form-control">
+                  <option value=""><%= lang === 'de' ? 'Text-Channel auswählen...' : 'Select text channel...' %></option>
+                  <% if (channels && channels.length > 0) { %>
+                    <% channels.forEach(channel => { %>
+                      <option value="<%= channel.id %>" <%= (cfg.voiceSupport?.supportChannelId === channel.id) ? 'selected' : '' %>>
+                        #<%= channel.name %>
+                      </option>
+                    <% }); %>
+                  <% } else { %>
+                    <option value="" disabled><%= lang === 'de' ? 'Keine Text-Channels gefunden' : 'No text channels found' %></option>
+                  <% } %>
+                </select>
                 <small class="form-help">
                   <%= lang === 'de'
                     ? 'Text-Channel, in dem die Support-Embeds erscheinen (nur bei Kategorie-Modus)'
@@ -4627,13 +4637,18 @@
                 <label>
                   <%= lang === 'de' ? 'Kategorie für Voice-Channels' : 'Category for Voice Channels' %>
                 </label>
-                <input
-                  type="text"
-                  name="voiceCategoryId"
-                  class="form-control"
-                  placeholder="<%= lang === 'de' ? 'Kategorie ID' : 'Category ID' %>"
-                  value="<%= cfg.voiceSupport?.categoryId || '' %>"
-                >
+                <select name="voiceCategoryId" class="form-control">
+                  <option value=""><%= lang === 'de' ? 'Kategorie auswählen...' : 'Select category...' %></option>
+                  <% if (categories && categories.length > 0) { %>
+                    <% categories.forEach(category => { %>
+                      <option value="<%= category.id %>" <%= (cfg.voiceSupport?.categoryId === category.id) ? 'selected' : '' %>>
+                        📁 <%= category.name %>
+                      </option>
+                    <% }); %>
+                  <% } else { %>
+                    <option value="" disabled><%= lang === 'de' ? 'Keine Kategorien gefunden' : 'No categories found' %></option>
+                  <% } %>
+                </select>
                 <small class="form-help">
                   <%= lang === 'de'
                     ? 'Kategorie, in der neue Voice-Channels erstellt werden (nur bei Custom-Channel-Modus)'
@@ -4646,13 +4661,16 @@
                 <label>
                   <%= lang === 'de' ? 'Benachrichtigungs-Channel' : 'Notification Channel' %>
                 </label>
-                <input
-                  type="text"
-                  name="voiceNotificationChannelId"
-                  class="form-control"
-                  placeholder="<%= lang === 'de' ? 'Text-Channel ID (optional)' : 'Text Channel ID (optional)' %>"
-                  value="<%= cfg.voiceSupport?.notificationChannelId || '' %>"
-                >
+                <select name="voiceNotificationChannelId" class="form-control">
+                  <option value=""><%= lang === 'de' ? 'Standard (Log-Channel)' : 'Default (Log Channel)' %></option>
+                  <% if (channels && channels.length > 0) { %>
+                    <% channels.forEach(channel => { %>
+                      <option value="<%= channel.id %>" <%= (cfg.voiceSupport?.notificationChannelId === channel.id) ? 'selected' : '' %>>
+                        #<%= channel.name %>
+                      </option>
+                    <% }); %>
+                  <% } %>
+                </select>
                 <small class="form-help">
                   <%= lang === 'de'
                     ? 'Channel für Team-Benachrichtigungen (optional, sonst wird Log-Channel verwendet)'
