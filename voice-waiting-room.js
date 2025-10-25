@@ -125,14 +125,34 @@ function getDefaultSupportHours() {
 
 async function playWaitingMusic(voiceChannel, guildId) {
   try {
-    const cfg = readCfg(guildId);
-    const musicPath = cfg.voiceSupport?.customMusicPath || DEFAULT_WAITING_MUSIC;
+    console.log(`🎵 Attempting to play waiting music in ${voiceChannel.name} (${voiceChannel.id})`);
 
-    if (!fs.existsSync(musicPath)) {
-      console.log(`⚠️ Waiting music file not found: ${musicPath}`);
+    // Check if bot has permission to join voice channel
+    const guild = voiceChannel.guild;
+    const botMember = await guild.members.fetch(guild.client.user.id).catch(() => null);
+    if (!botMember) {
+      console.log('⚠️ Bot member not found');
       return null;
     }
 
+    const permissions = voiceChannel.permissionsFor(botMember);
+    if (!permissions || !permissions.has(PermissionFlagsBits.Connect) || !permissions.has(PermissionFlagsBits.Speak)) {
+      console.log(`⚠️ Bot has no permission to join/speak in voice channel ${voiceChannel.name}`);
+      return null;
+    }
+
+    const cfg = readCfg(guildId);
+    const musicPath = cfg.voiceSupport?.customMusicPath || DEFAULT_WAITING_MUSIC;
+
+    console.log(`🎵 Using music file: ${musicPath}`);
+
+    if (!fs.existsSync(musicPath)) {
+      console.log(`⚠️ Waiting music file not found: ${musicPath}`);
+      console.log(`📂 Please add a music file to: ${AUDIO_DIR}/waiting-music.mp3`);
+      return null;
+    }
+
+    console.log(`🔗 Joining voice channel...`);
     const connection = joinVoiceChannel({
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
@@ -140,8 +160,10 @@ async function playWaitingMusic(voiceChannel, guildId) {
       selfDeaf: false
     });
 
+    console.log(`⏳ Waiting for connection to be ready...`);
     await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
 
+    console.log(`🎧 Creating audio player...`);
     const player = createAudioPlayer();
     const resource = createAudioResource(musicPath, {
       inlineVolume: true
@@ -153,23 +175,29 @@ async function playWaitingMusic(voiceChannel, guildId) {
     connection.subscribe(player);
 
     player.on(AudioPlayerStatus.Idle, () => {
+      console.log(`🔁 Audio finished, looping...`);
       const newResource = createAudioResource(musicPath, { inlineVolume: true });
       newResource.volume.setVolume(0.3);
       player.play(newResource);
     });
 
     player.on('error', error => {
-      console.error('Audio player error:', error);
+      console.error('❌ Audio player error:', error);
+    });
+
+    connection.on('error', error => {
+      console.error('❌ Voice connection error:', error);
     });
 
     activeConnections.set(voiceChannel.id, connection);
     activePlayers.set(voiceChannel.id, player);
 
-    console.log(`🎵 Playing waiting music in voice channel ${voiceChannel.id}`);
+    console.log(`✅ Successfully playing waiting music in voice channel ${voiceChannel.name}`);
     return { connection, player };
 
   } catch (err) {
-    console.error('Error playing waiting music:', err);
+    console.error('❌ Error playing waiting music:', err);
+    console.error('Stack:', err.stack);
     return null;
   }
 }
@@ -207,6 +235,19 @@ async function sendSupportCaseEmbed(guild, member, guildId, caseId) {
     const supportChannel = await guild.channels.fetch(supportChannelId).catch(() => null);
     if (!supportChannel) {
       console.log('⚠️ Support channel not found');
+      return null;
+    }
+
+    // Check if bot has permission to send messages
+    const botMember = await guild.members.fetch(guild.client.user.id).catch(() => null);
+    if (!botMember) {
+      console.log('⚠️ Bot member not found');
+      return null;
+    }
+
+    const permissions = supportChannel.permissionsFor(botMember);
+    if (!permissions || !permissions.has(PermissionFlagsBits.SendMessages) || !permissions.has(PermissionFlagsBits.ViewChannel)) {
+      console.log(`⚠️ Bot has no permission to send messages in channel ${supportChannel.name}`);
       return null;
     }
 
@@ -387,6 +428,16 @@ async function closeVoiceCase(guild, member, guildId, reason = 'User left') {
         if (supportChannelId) {
           const supportChannel = await guild.channels.fetch(supportChannelId).catch(() => null);
           if (supportChannel) {
+            // Check permissions before fetching message
+            const botMember = await guild.members.fetch(guild.client.user.id).catch(() => null);
+            if (!botMember) return;
+
+            const permissions = supportChannel.permissionsFor(botMember);
+            if (!permissions || !permissions.has(PermissionFlagsBits.ViewChannel)) {
+              console.log(`⚠️ Bot has no permission to view channel ${supportChannel.name}`);
+              return;
+            }
+
             const message = await supportChannel.messages.fetch(voiceCase.messageId).catch(() => null);
             if (message) {
               const updatedEmbed = EmbedBuilder.from(message.embeds[0])
@@ -464,6 +515,16 @@ async function notifyTeam(guild, member, guildId) {
     const notificationChannel = await guild.channels.fetch(notificationChannelId).catch(() => null);
     if (!notificationChannel) return;
 
+    // Check if bot has permission to send messages
+    const botMember = await guild.members.fetch(guild.client.user.id).catch(() => null);
+    if (!botMember) return;
+
+    const permissions = notificationChannel.permissionsFor(botMember);
+    if (!permissions || !permissions.has(PermissionFlagsBits.SendMessages) || !permissions.has(PermissionFlagsBits.ViewChannel)) {
+      console.log(`⚠️ Bot has no permission to send notifications in channel ${notificationChannel.name}`);
+      return;
+    }
+
     const teamRole = cfg.teamRoleId || cfg.priorityRoles?.['2']?.[0];
 
     const embed = new EmbedBuilder()
@@ -494,6 +555,16 @@ async function logVoiceEvent(guild, member, event, channelId) {
 
     const logChannel = await guild.channels.fetch(logChannelId).catch(() => null);
     if (!logChannel) return;
+
+    // Check if bot has permission to send messages
+    const botMember = await guild.members.fetch(guild.client.user.id).catch(() => null);
+    if (!botMember) return;
+
+    const permissions = logChannel.permissionsFor(botMember);
+    if (!permissions || !permissions.has(PermissionFlagsBits.SendMessages) || !permissions.has(PermissionFlagsBits.ViewChannel)) {
+      console.log(`⚠️ Bot has no permission to log in channel ${logChannel.name}`);
+      return;
+    }
 
     let emoji = '🎤';
     let color = 0x00ff88;

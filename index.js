@@ -494,7 +494,8 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildPresences  // Für Online-Status-Erkennung
+    GatewayIntentBits.GuildPresences,  // Für Online-Status-Erkennung
+    GatewayIntentBits.GuildVoiceStates // Für Voice-Support System
   ],
   partials: [Partials.Channel, Partials.Message]
 });
@@ -3382,13 +3383,19 @@ client.on(Events.InteractionCreate, async i => {
         if(logChannelId){
           const logChannel = await i.guild.channels.fetch(logChannelId).catch(() => null);
           if(logChannel){
-            const logEmbed = new EmbedBuilder()
-              .setColor(0x3b82f6)
-              .setAuthor({ name: i.user.tag, iconURL: i.user.displayAvatarURL() })
-              .setDescription(`💬 Kommentar zu Fall #${caseId}:`)
-              .addFields({ name: 'Kommentar', value: commentText })
-              .setTimestamp();
-            await logChannel.send({ embeds: [logEmbed] });
+            // Check permissions
+            const permissions = logChannel.permissionsFor(i.guild.members.me);
+            if(permissions && permissions.has('SendMessages') && permissions.has('ViewChannel')){
+              const logEmbed = new EmbedBuilder()
+                .setColor(0x3b82f6)
+                .setAuthor({ name: i.user.tag, iconURL: i.user.displayAvatarURL() })
+                .setDescription(`💬 Kommentar zu Fall #${caseId}:`)
+                .addFields({ name: 'Kommentar', value: commentText })
+                .setTimestamp();
+              await logChannel.send({ embeds: [logEmbed] }).catch(err => {
+                console.error('Error sending log message:', err);
+              });
+            }
           }
         }
 
@@ -3595,11 +3602,17 @@ client.on(Events.InteractionCreate, async i => {
           if(logChannelId){
             const logChannel = await i.guild.channels.fetch(logChannelId).catch(() => null);
             if(logChannel){
-              const logEmbed = new EmbedBuilder()
-                .setColor(0x00ff88)
-                .setDescription(`✅ ${t(guildId, 'voiceWaitingRoom.actions.claimedDescription', { claimer: `<@${i.user.id}>` })} (Fall #${caseId})`)
-                .setTimestamp();
-              await logChannel.send({ embeds: [logEmbed] });
+              // Check permissions
+              const permissions = logChannel.permissionsFor(i.guild.members.me);
+              if(permissions && permissions.has('SendMessages') && permissions.has('ViewChannel')){
+                const logEmbed = new EmbedBuilder()
+                  .setColor(0x00ff88)
+                  .setDescription(`✅ ${t(guildId, 'voiceWaitingRoom.actions.claimedDescription', { claimer: `<@${i.user.id}>` })} (Fall #${caseId})`)
+                  .setTimestamp();
+                await logChannel.send({ embeds: [logEmbed] }).catch(err => {
+                  console.error('Error sending log message:', err);
+                });
+              }
             }
           }
 
