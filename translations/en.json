@@ -339,5 +339,88 @@
     "new_ticket_forwarded": "New ticket has been forwarded to your department!",
     "no_team": "No Team",
     "feature_locked": "Multi-Department Support is only available with Premium Basic+."
+  },
+  "voiceSupport": {
+    "channel_created": "Voice channel created",
+    "channel_description": "A voice channel has been created for this ticket: {channel}",
+    "created_by": "Created by",
+    "created_at": "Created at",
+    "request_voice": "Voice Support",
+    "end_voice": "End Voice",
+    "joined": "Joined the voice channel",
+    "left": "Left the voice channel",
+    "muted": "Was muted in voice channel",
+    "unmuted": "Was unmuted in voice channel",
+    "deafened": "Was deafened in voice channel",
+    "undeafened": "Was undeafened in voice channel",
+    "voice_active": "Voice channel active",
+    "voice_deleted": "Voice channel deleted",
+    "feature_locked": "Voice Support is only available with Premium Basic+.",
+    "already_exists": "A voice channel already exists for this ticket!",
+    "create_failed": "Voice channel could not be created.",
+    "ended": "Voice support ended",
+    "ended_description": "The voice channel has been deleted.",
+    "configuration_title": "Voice Support Configuration",
+    "enable_voice_support": "Enable voice support",
+    "show_voice_button": "Show voice button in tickets",
+    "description": "Automatically create voice channels for tickets. Users and team can then communicate via voice."
+  },
+  "voiceWaitingRoom": {
+    "outsideHours": {
+      "title": "🔴 Support currently unavailable",
+      "description": "Our voice support is currently unavailable. Please check back during our support hours or create a text ticket."
+    },
+    "welcome": {
+      "title": "🎤 Welcome to Voice Support!",
+      "description": "A team member will assist you shortly. Please wait a moment."
+    },
+    "teamNotification": {
+      "title": "New user in voice waiting room",
+      "description": "{user} is waiting for voice support!",
+      "user": "User",
+      "time": "Since"
+    },
+    "log": {
+      "joined": "{user} joined the voice waiting room {channel}",
+      "left": "{user} left the voice waiting room {channel}",
+      "outsideHours": "{user} attempted to join outside support hours"
+    },
+    "config": {
+      "title": "Voice Waiting Room Configuration",
+      "enabled": "Enable voice waiting room",
+      "waitingChannel": "Waiting room voice channel",
+      "notificationChannel": "Notification channel",
+      "enforceHours": "Enforce support hours",
+      "supportHours": "Support hours",
+      "customMusic": "Custom waiting music (URL or path)",
+      "description": "Automatic voice support system with waiting room and waiting music. Users join a voice channel and the bot automatically plays music."
+    },
+    "caseEmbed": {
+      "title": "New Voice Support Case",
+      "description": "{user} is waiting for voice support!",
+      "caseId": "Case ID",
+      "user": "User",
+      "created": "Created",
+      "claimedBy": "Claimed by",
+      "duration": "Duration"
+    },
+    "buttons": {
+      "claim": "Claim",
+      "transfer": "Transfer",
+      "comment": "Comment",
+      "close": "Close",
+      "unclaim": "Release"
+    },
+    "actions": {
+      "claimed": "Case claimed",
+      "claimedDescription": "{claimer} has claimed the support case",
+      "unclaimed": "Case released",
+      "unclaimedDescription": "{claimer} has released the support case",
+      "closed": "Case closed",
+      "closedDescription": "The support case was closed by {closer}",
+      "commented": "Comment added",
+      "transferred": "Case transferred",
+      "transferredDescription": "Case was transferred from {from} to {to}"
+    }
   }
 }

@@ -49,6 +49,7 @@ const { sanitizeUsername, validateDiscordId, sanitizeString } = require('./xss-p
 const { startAutoCloseService } = require('./auto-close-service');
 const { handleTagAdd, handleTagRemove } = require('./tag-handler');
 const { createVoiceChannel, deleteVoiceChannel, hasVoiceChannel } = require('./voice-support');
+const { handleVoiceJoin, handleVoiceLeave } = require('./voice-waiting-room');
 const { handleTemplateUse } = require('./template-handler');
 const { handleDepartmentForward } = require('./department-handler');
 const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo, isTrialActive, activateAutoTrial, checkExpiredCancellations } = require('./premium');
@@ -2255,6 +2256,21 @@ function normalizeField(field, index){
   };
 }
 
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+  try {
+    if (oldState.channelId !== newState.channelId) {
+      if (newState.channelId) {
+        await handleVoiceJoin(oldState, newState);
+      }
+      if (oldState.channelId) {
+        await handleVoiceLeave(oldState, newState);
+      }
+    }
+  } catch (err) {
+    console.error('Error in VoiceStateUpdate event:', err);
+  }
+});
+
 client.on(Events.InteractionCreate, async i => {
   try {
     // Maintenance Mode Check
@@ -3324,6 +3340,67 @@ client.on(Events.InteractionCreate, async i => {
       return;
     }
 
+    // Voice Comment Modal Submit Handler
+    if(i.isModalSubmit() && i.customId.startsWith('voice_comment_modal_')){
+      try {
+        const caseId = parseInt(i.customId.replace('voice_comment_modal_', ''));
+        const guildId = i.guild.id;
+        const { loadVoiceCases, saveVoiceCases } = require('./voice-waiting-room');
+
+        const commentText = i.fields.getTextInputValue('comment_text');
+
+        const cases = loadVoiceCases(guildId);
+        const caseIndex = cases.findIndex(c => c.id === caseId);
+
+        if(caseIndex === -1){
+          return i.reply({ content: '❌ Fall nicht gefunden.', ephemeral: true });
+        }
+
+        const voiceCase = cases[caseIndex];
+
+        if(!voiceCase.comments){
+          voiceCase.comments = [];
+        }
+
+        voiceCase.comments.push({
+          userId: i.user.id,
+          username: i.user.tag,
+          text: commentText,
+          timestamp: new Date().toISOString()
+        });
+
+        cases[caseIndex] = voiceCase;
+        saveVoiceCases(guildId, cases);
+
+        await i.reply({
+          content: `✅ Kommentar wurde zu Fall #${String(caseId).padStart(5, '0')} hinzugefügt.`,
+          ephemeral: true
+        });
+
+        const cfg = readCfg(guildId);
+        const logChannelId = cfg.logChannelId;
+        if(logChannelId){
+          const logChannel = await i.guild.channels.fetch(logChannelId).catch(() => null);
+          if(logChannel){
+            const logEmbed = new EmbedBuilder()
+              .setColor(0x3b82f6)
+              .setAuthor({ name: i.user.tag, iconURL: i.user.displayAvatarURL() })
+              .setDescription(`💬 Kommentar zu Fall #${caseId}:`)
+              .addFields({ name: 'Kommentar', value: commentText })
+              .setTimestamp();
+            await logChannel.send({ embeds: [logEmbed] });
+          }
+        }
+
+        console.log(`💬 Comment added to voice case #${caseId} by ${i.user.tag}`);
+
+      } catch(err){
+        console.error('Error in voice_comment_modal:', err);
+        await i.reply({ content: '❌ Ein Fehler ist aufgetreten.', ephemeral: true });
+      }
+      return;
+    }
+
     // Ticket Open-As Modal Submit Handler
     if(i.isModalSubmit() && i.customId.startsWith('modal_openas:')){
       try {
@@ -3451,6 +3528,229 @@ client.on(Events.InteractionCreate, async i => {
           .setTimestamp();
 
         await i.update({ embeds: [successEmbed], components: [] });
+        return;
+      }
+
+      // Voice Support Button Handlers
+      if(i.customId.startsWith('voice_claim_')){
+        try {
+          const caseId = parseInt(i.customId.replace('voice_claim_', ''));
+          const guildId = i.guild.id;
+          const { loadVoiceCases, saveVoiceCases } = require('./voice-waiting-room');
+
+          const cases = loadVoiceCases(guildId);
+          const caseIndex = cases.findIndex(c => c.id === caseId);
+
+          if(caseIndex === -1){
+            return i.reply({ content: '❌ Fall nicht gefunden.', ephemeral: true });
+          }
+
+          const voiceCase = cases[caseIndex];
+
+          if(voiceCase.status !== 'open'){
+            return i.reply({ content: '❌ Dieser Fall wurde bereits geschlossen.', ephemeral: true });
+          }
+
+          if(voiceCase.claimedBy){
+            return i.reply({ content: `❌ Dieser Fall wurde bereits von <@${voiceCase.claimedBy}> übernommen.`, ephemeral: true });
+          }
+
+          voiceCase.claimedBy = i.user.id;
+          voiceCase.claimedAt = new Date().toISOString();
+          cases[caseIndex] = voiceCase;
+          saveVoiceCases(guildId, cases);
+
+          const updatedEmbed = EmbedBuilder.from(i.message.embeds[0])
+            .setColor('#00ff88')
+            .addFields({ name: t(guildId, 'voiceWaitingRoom.caseEmbed.claimedBy'), value: `<@${i.user.id}>`, inline: true });
+
+          const unclaimButton = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setCustomId(`voice_unclaim_${caseId}`)
+                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.unclaim'))
+                .setEmoji('🔓')
+                .setStyle(ButtonStyle.Secondary),
+              new ButtonBuilder()
+                .setCustomId(`voice_transfer_${caseId}`)
+                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.transfer'))
+                .setEmoji('🔄')
+                .setStyle(ButtonStyle.Primary),
+              new ButtonBuilder()
+                .setCustomId(`voice_comment_${caseId}`)
+                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.comment'))
+                .setEmoji('💬')
+                .setStyle(ButtonStyle.Secondary),
+              new ButtonBuilder()
+                .setCustomId(`voice_close_${caseId}`)
+                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.close'))
+                .setEmoji('🔒')
+                .setStyle(ButtonStyle.Danger)
+            );
+
+          await i.update({ embeds: [updatedEmbed], components: [unclaimButton] });
+
+          const cfg = readCfg(guildId);
+          const logChannelId = cfg.logChannelId;
+          if(logChannelId){
+            const logChannel = await i.guild.channels.fetch(logChannelId).catch(() => null);
+            if(logChannel){
+              const logEmbed = new EmbedBuilder()
+                .setColor(0x00ff88)
+                .setDescription(`✅ ${t(guildId, 'voiceWaitingRoom.actions.claimedDescription', { claimer: `<@${i.user.id}>` })} (Fall #${caseId})`)
+                .setTimestamp();
+              await logChannel.send({ embeds: [logEmbed] });
+            }
+          }
+
+          console.log(`✅ Voice case #${caseId} claimed by ${i.user.tag}`);
+
+        } catch(err){
+          console.error('Error in voice_claim button:', err);
+          await i.reply({ content: '❌ Ein Fehler ist aufgetreten.', ephemeral: true });
+        }
+        return;
+      }
+
+      if(i.customId.startsWith('voice_unclaim_')){
+        try {
+          const caseId = parseInt(i.customId.replace('voice_unclaim_', ''));
+          const guildId = i.guild.id;
+          const { loadVoiceCases, saveVoiceCases } = require('./voice-waiting-room');
+
+          const cases = loadVoiceCases(guildId);
+          const caseIndex = cases.findIndex(c => c.id === caseId);
+
+          if(caseIndex === -1){
+            return i.reply({ content: '❌ Fall nicht gefunden.', ephemeral: true });
+          }
+
+          const voiceCase = cases[caseIndex];
+
+          if(voiceCase.claimedBy !== i.user.id){
+            return i.reply({ content: '❌ Du kannst nur deine eigenen Claims freigeben.', ephemeral: true });
+          }
+
+          voiceCase.claimedBy = null;
+          voiceCase.claimedAt = null;
+          cases[caseIndex] = voiceCase;
+          saveVoiceCases(guildId, cases);
+
+          const updatedEmbed = EmbedBuilder.from(i.message.embeds[0])
+            .setColor('#3b82f6')
+            .setFields(i.message.embeds[0].fields.filter(f => f.name !== t(guildId, 'voiceWaitingRoom.caseEmbed.claimedBy')));
+
+          const claimButton = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setCustomId(`voice_claim_${caseId}`)
+                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.claim'))
+                .setEmoji('✅')
+                .setStyle(ButtonStyle.Success),
+              new ButtonBuilder()
+                .setCustomId(`voice_transfer_${caseId}`)
+                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.transfer'))
+                .setEmoji('🔄')
+                .setStyle(ButtonStyle.Primary),
+              new ButtonBuilder()
+                .setCustomId(`voice_comment_${caseId}`)
+                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.comment'))
+                .setEmoji('💬')
+                .setStyle(ButtonStyle.Secondary),
+              new ButtonBuilder()
+                .setCustomId(`voice_close_${caseId}`)
+                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.close'))
+                .setEmoji('🔒')
+                .setStyle(ButtonStyle.Danger)
+            );
+
+          await i.update({ embeds: [updatedEmbed], components: [claimButton] });
+
+          console.log(`🔓 Voice case #${caseId} unclaimed by ${i.user.tag}`);
+
+        } catch(err){
+          console.error('Error in voice_unclaim button:', err);
+          await i.reply({ content: '❌ Ein Fehler ist aufgetreten.', ephemeral: true });
+        }
+        return;
+      }
+
+      if(i.customId.startsWith('voice_close_')){
+        try {
+          const caseId = parseInt(i.customId.replace('voice_close_', ''));
+          const guildId = i.guild.id;
+          const { loadVoiceCases, saveVoiceCases } = require('./voice-waiting-room');
+
+          const cases = loadVoiceCases(guildId);
+          const caseIndex = cases.findIndex(c => c.id === caseId);
+
+          if(caseIndex === -1){
+            return i.reply({ content: '❌ Fall nicht gefunden.', ephemeral: true });
+          }
+
+          const voiceCase = cases[caseIndex];
+
+          if(voiceCase.status !== 'open'){
+            return i.reply({ content: '❌ Dieser Fall wurde bereits geschlossen.', ephemeral: true });
+          }
+
+          voiceCase.status = 'closed';
+          voiceCase.closedAt = new Date().toISOString();
+          voiceCase.closedBy = i.user.id;
+          voiceCase.closeReason = `Closed by ${i.user.tag}`;
+          cases[caseIndex] = voiceCase;
+          saveVoiceCases(guildId, cases);
+
+          const updatedEmbed = EmbedBuilder.from(i.message.embeds[0])
+            .setColor('#95a5a6')
+            .setTitle(t(guildId, 'voiceWaitingRoom.actions.closed'))
+            .setDescription(t(guildId, 'voiceWaitingRoom.actions.closedDescription', { closer: `<@${i.user.id}>` }));
+
+          if(voiceCase.claimedBy){
+            updatedEmbed.addFields({ name: t(guildId, 'voiceWaitingRoom.caseEmbed.claimedBy'), value: `<@${voiceCase.claimedBy}>`, inline: true });
+          }
+
+          const duration = Math.floor((new Date(voiceCase.closedAt) - new Date(voiceCase.createdAt)) / 1000);
+          const minutes = Math.floor(duration / 60);
+          const seconds = duration % 60;
+          updatedEmbed.addFields({ name: t(guildId, 'voiceWaitingRoom.caseEmbed.duration'), value: `${minutes}m ${seconds}s`, inline: true });
+
+          await i.update({ embeds: [updatedEmbed], components: [] });
+
+          console.log(`🔒 Voice case #${caseId} closed by ${i.user.tag}`);
+
+        } catch(err){
+          console.error('Error in voice_close button:', err);
+          await i.reply({ content: '❌ Ein Fehler ist aufgetreten.', ephemeral: true });
+        }
+        return;
+      }
+
+      if(i.customId.startsWith('voice_comment_')){
+        try {
+          const caseId = parseInt(i.customId.replace('voice_comment_', ''));
+
+          const modal = new ModalBuilder()
+            .setCustomId(`voice_comment_modal_${caseId}`)
+            .setTitle('Kommentar hinzufügen');
+
+          const commentInput = new TextInputBuilder()
+            .setCustomId('comment_text')
+            .setLabel('Kommentar')
+            .setStyle(TextInputStyle.Paragraph)
+            .setPlaceholder('Schreibe einen Kommentar zu diesem Fall...')
+            .setRequired(true)
+            .setMaxLength(1000);
+
+          const actionRow = new ActionRowBuilder().addComponents(commentInput);
+          modal.addComponents(actionRow);
+
+          await i.showModal(modal);
+
+        } catch(err){
+          console.error('Error in voice_comment button:', err);
+          await i.reply({ content: '❌ Ein Fehler ist aufgetreten.', ephemeral: true });
+        }
         return;
       }
 

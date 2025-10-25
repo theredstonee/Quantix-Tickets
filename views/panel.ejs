@@ -1530,6 +1530,130 @@
     ::-webkit-scrollbar-thumb:hover {
       background: var(--accent-hover);
     }
+
+    /* Voice Support Styles */
+    .support-hours-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .support-hours-day {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 1rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .day-header {
+      margin-bottom: 0.75rem;
+    }
+
+    .day-times {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.3s ease;
+    }
+
+    .time-input {
+      flex: 1;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--glass-border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    .time-separator {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--text-secondary);
+    }
+
+    .toggle-switch.small {
+      font-size: 0.9rem;
+    }
+
+    .toggle-switch.small .toggle-slider {
+      width: 40px;
+      height: 20px;
+    }
+
+    .toggle-switch.small .toggle-slider:before {
+      width: 14px;
+      height: 14px;
+    }
+
+    .toggle-switch.small input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .feature-header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .feature-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-title i {
+      font-size: 2rem;
+      color: var(--accent-color);
+    }
+
+    .feature-title h3 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+
+    .feature-description {
+      color: var(--text-secondary);
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .color-input {
+      height: 50px;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 2px solid var(--glass-border);
+    }
+
+    .color-input::-webkit-color-swatch-wrapper {
+      padding: 4px;
+    }
+
+    .color-input::-webkit-color-swatch {
+      border: none;
+      border-radius: 6px;
+    }
+
+    .save-footer {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--glass-border);
+      text-align: center;
+    }
+
+    .tab-badge.active-badge {
+      background: linear-gradient(135deg, #00ff88, #00cc6a);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
   </style>
 </head>
 <body>
@@ -1872,6 +1996,13 @@
             <button type="button" class="tab-btn" data-tab="forms">
               <i class="fas fa-clipboard-question"></i>
               <span><%= lang === 'de' ? 'Formulare' : 'Forms' %></span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="voice">
+              <i class="fas fa-microphone"></i>
+              <span>Voice</span>
+              <% if (cfg.voiceSupport && cfg.voiceSupport.enabled) { %>
+                <span class="tab-badge active-badge">✓</span>
+              <% } %>
             </button>
             <button type="button" class="tab-btn" data-tab="embeds">
               <i class="fas fa-palette"></i>
@@ -4393,6 +4524,281 @@
             </div>
           </div>
 
+          <!-- Tab: Voice -->
+          <div class="tab-content" id="tab-voice">
+            <div class="feature-header">
+              <div class="feature-title">
+                <i class="fas fa-microphone"></i>
+                <h3><%= lang === 'de' ? 'Voice Support System' : 'Voice Support System' %></h3>
+              </div>
+              <p class="feature-description">
+                <%= lang === 'de'
+                  ? 'Automatisches Voice-Support System mit Wartezimmer, Wartemusik und Support-Zeiten. Wähle zwischen Custom-Channels oder Kategorie-basierten Embeds.'
+                  : 'Automatic voice support system with waiting room, waiting music and support hours. Choose between custom channels or category-based embeds.'
+                %>
+              </p>
+            </div>
+
+            <!-- Voice Support Mode -->
+            <fieldset class="glass-box">
+              <legend>
+                <i class="fas fa-sliders-h"></i>
+                <%= lang === 'de' ? 'Support-Modus' : 'Support Mode' %>
+              </legend>
+
+              <div class="form-group">
+                <label class="toggle-switch">
+                  <input type="checkbox" name="voiceSupportEnabled" <%= cfg.voiceSupport?.enabled ? 'checked' : '' %>>
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-label">
+                    <i class="fas fa-microphone"></i>
+                    <%= lang === 'de' ? 'Voice Support aktivieren' : 'Enable Voice Support' %>
+                  </span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label><%= lang === 'de' ? 'Support-Modus auswählen' : 'Select Support Mode' %></label>
+                <select name="voiceSupportMode" class="form-control" id="voiceSupportMode">
+                  <option value="custom_channels" <%= (cfg.voiceSupport?.mode || 'custom_channels') === 'custom_channels' ? 'selected' : '' %>>
+                    🔊 <%= lang === 'de' ? 'Custom Voice-Channels erstellen (Pro User)' : 'Create Custom Voice Channels (Per User)' %>
+                  </option>
+                  <option value="category_embed" <%= (cfg.voiceSupport?.mode || 'custom_channels') === 'category_embed' ? 'selected' : '' %>>
+                    📋 <%= lang === 'de' ? 'Kategorie mit Embeds (Galaxy Bot Style)' : 'Category with Embeds (Galaxy Bot Style)' %>
+                  </option>
+                </select>
+                <small class="form-help">
+                  <%= lang === 'de'
+                    ? 'Custom Channels: Erstellt für jeden User einen eigenen Voice-Channel. Kategorie-Embeds: User joinen Wartezimmer, Embed erscheint im Support-Channel.'
+                    : 'Custom Channels: Creates individual voice channel for each user. Category Embeds: Users join waiting room, embed appears in support channel.'
+                  %>
+                </small>
+              </div>
+            </fieldset>
+
+            <!-- Channel Configuration -->
+            <fieldset class="glass-box">
+              <legend>
+                <i class="fas fa-hashtag"></i>
+                <%= lang === 'de' ? 'Channel-Konfiguration' : 'Channel Configuration' %>
+              </legend>
+
+              <div class="form-group">
+                <label>
+                  <%= lang === 'de' ? 'Wartezimmer Voice-Channel' : 'Waiting Room Voice Channel' %>
+                  <span class="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="voiceWaitingRoomChannelId"
+                  class="form-control"
+                  placeholder="<%= lang === 'de' ? 'Voice-Channel ID' : 'Voice Channel ID' %>"
+                  value="<%= cfg.voiceSupport?.waitingRoomChannelId || '' %>"
+                >
+                <small class="form-help">
+                  <%= lang === 'de'
+                    ? 'Voice-Channel, in den User joinen um Support anzufordern'
+                    : 'Voice channel where users join to request support'
+                  %>
+                </small>
+              </div>
+
+              <div class="form-group" id="supportChannelGroup">
+                <label>
+                  <%= lang === 'de' ? 'Support Text-Channel (für Embeds)' : 'Support Text Channel (for Embeds)' %>
+                  <span class="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="voiceSupportChannelId"
+                  class="form-control"
+                  placeholder="<%= lang === 'de' ? 'Text-Channel ID' : 'Text Channel ID' %>"
+                  value="<%= cfg.voiceSupport?.supportChannelId || '' %>"
+                >
+                <small class="form-help">
+                  <%= lang === 'de'
+                    ? 'Text-Channel, in dem die Support-Embeds erscheinen (nur bei Kategorie-Modus)'
+                    : 'Text channel where support embeds appear (only in category mode)'
+                  %>
+                </small>
+              </div>
+
+              <div class="form-group" id="categoryGroup">
+                <label>
+                  <%= lang === 'de' ? 'Kategorie für Voice-Channels' : 'Category for Voice Channels' %>
+                </label>
+                <input
+                  type="text"
+                  name="voiceCategoryId"
+                  class="form-control"
+                  placeholder="<%= lang === 'de' ? 'Kategorie ID' : 'Category ID' %>"
+                  value="<%= cfg.voiceSupport?.categoryId || '' %>"
+                >
+                <small class="form-help">
+                  <%= lang === 'de'
+                    ? 'Kategorie, in der neue Voice-Channels erstellt werden (nur bei Custom-Channel-Modus)'
+                    : 'Category where new voice channels are created (only in custom channel mode)'
+                  %>
+                </small>
+              </div>
+
+              <div class="form-group">
+                <label>
+                  <%= lang === 'de' ? 'Benachrichtigungs-Channel' : 'Notification Channel' %>
+                </label>
+                <input
+                  type="text"
+                  name="voiceNotificationChannelId"
+                  class="form-control"
+                  placeholder="<%= lang === 'de' ? 'Text-Channel ID (optional)' : 'Text Channel ID (optional)' %>"
+                  value="<%= cfg.voiceSupport?.notificationChannelId || '' %>"
+                >
+                <small class="form-help">
+                  <%= lang === 'de'
+                    ? 'Channel für Team-Benachrichtigungen (optional, sonst wird Log-Channel verwendet)'
+                    : 'Channel for team notifications (optional, otherwise log channel is used)'
+                  %>
+                </small>
+              </div>
+            </fieldset>
+
+            <!-- Support Hours -->
+            <fieldset class="glass-box">
+              <legend>
+                <i class="fas fa-clock"></i>
+                <%= lang === 'de' ? 'Support-Zeiten' : 'Support Hours' %>
+              </legend>
+
+              <div class="form-group">
+                <label class="toggle-switch">
+                  <input type="checkbox" name="voiceEnforceHours" <%= cfg.voiceSupport?.enforceHours !== false ? 'checked' : '' %>>
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-label">
+                    <i class="fas fa-clock"></i>
+                    <%= lang === 'de' ? 'Support-Zeiten durchsetzen' : 'Enforce Support Hours' %>
+                  </span>
+                </label>
+                <small class="form-help">
+                  <%= lang === 'de'
+                    ? 'User werden außerhalb der Zeiten abgewiesen'
+                    : 'Users will be rejected outside support hours'
+                  %>
+                </small>
+              </div>
+
+              <div class="support-hours-grid">
+                <%
+                  const days = [
+                    { key: 'monday', name: lang === 'de' ? 'Montag' : 'Monday', defaultStart: '13:00', defaultEnd: '22:00' },
+                    { key: 'tuesday', name: lang === 'de' ? 'Dienstag' : 'Tuesday', defaultStart: '13:00', defaultEnd: '22:00' },
+                    { key: 'wednesday', name: lang === 'de' ? 'Mittwoch' : 'Wednesday', defaultStart: '13:00', defaultEnd: '22:00' },
+                    { key: 'thursday', name: lang === 'de' ? 'Donnerstag' : 'Thursday', defaultStart: '13:00', defaultEnd: '22:00' },
+                    { key: 'friday', name: lang === 'de' ? 'Freitag' : 'Friday', defaultStart: '13:00', defaultEnd: '22:00' },
+                    { key: 'saturday', name: lang === 'de' ? 'Samstag' : 'Saturday', defaultStart: '07:00', defaultEnd: '22:00' },
+                    { key: 'sunday', name: lang === 'de' ? 'Sonntag' : 'Sunday', defaultStart: '07:00', defaultEnd: '22:00' }
+                  ];
+
+                  const hours = cfg.voiceSupport?.supportHours || {};
+                %>
+
+                <% days.forEach(day => {
+                  const dayConfig = hours[day.key] || { enabled: true, start: day.defaultStart, end: day.defaultEnd };
+                %>
+                  <div class="support-hours-day">
+                    <div class="day-header">
+                      <label class="toggle-switch small">
+                        <input
+                          type="checkbox"
+                          name="voiceHours_<%= day.key %>_enabled"
+                          <%= dayConfig.enabled !== false ? 'checked' : '' %>
+                          onchange="toggleDayInputs(this, '<%= day.key %>')"
+                        >
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label"><%= day.name %></span>
+                      </label>
+                    </div>
+                    <div class="day-times" id="dayTimes_<%= day.key %>" style="<%= dayConfig.enabled === false ? 'opacity: 0.5; pointer-events: none;' : '' %>">
+                      <input
+                        type="time"
+                        name="voiceHours_<%= day.key %>_start"
+                        value="<%= dayConfig.start || day.defaultStart %>"
+                        class="form-control time-input"
+                      >
+                      <span class="time-separator">–</span>
+                      <input
+                        type="time"
+                        name="voiceHours_<%= day.key %>_end"
+                        value="<%= dayConfig.end || day.defaultEnd %>"
+                        class="form-control time-input"
+                      >
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            </fieldset>
+
+            <!-- Waiting Music -->
+            <fieldset class="glass-box">
+              <legend>
+                <i class="fas fa-music"></i>
+                <%= lang === 'de' ? 'Wartemusik' : 'Waiting Music' %>
+              </legend>
+
+              <div class="form-group">
+                <label><%= lang === 'de' ? 'Musik-Datei' : 'Music File' %></label>
+                <input
+                  type="text"
+                  name="voiceCustomMusicPath"
+                  class="form-control"
+                  placeholder="<%= lang === 'de' ? 'Pfad zur MP3-Datei (optional)' : 'Path to MP3 file (optional)' %>"
+                  value="<%= cfg.voiceSupport?.customMusicPath || '' %>"
+                >
+                <small class="form-help">
+                  <%= lang === 'de'
+                    ? 'Standard: audio/waiting-music.mp3. Kann auch URL sein.'
+                    : 'Default: audio/waiting-music.mp3. Can also be a URL.'
+                  %>
+                </small>
+              </div>
+            </fieldset>
+
+            <!-- Embed Configuration (Category Mode) -->
+            <fieldset class="glass-box" id="embedConfigGroup">
+              <legend>
+                <i class="fas fa-paint-brush"></i>
+                <%= lang === 'de' ? 'Embed-Design' : 'Embed Design' %>
+              </legend>
+
+              <div class="form-group">
+                <label><%= lang === 'de' ? 'Embed-Titel' : 'Embed Title' %></label>
+                <input
+                  type="text"
+                  name="voiceEmbedTitle"
+                  class="form-control"
+                  placeholder="<%= lang === 'de' ? 'Support Fall beendet' : 'Support Case Closed' %>"
+                  value="<%= cfg.voiceSupport?.embedTitle || (lang === 'de' ? 'Neuer Voice Support Fall' : 'New Voice Support Case') %>"
+                >
+              </div>
+
+              <div class="form-group">
+                <label><%= lang === 'de' ? 'Embed-Farbe' : 'Embed Color' %></label>
+                <input
+                  type="color"
+                  name="voiceEmbedColor"
+                  class="form-control color-input"
+                  value="<%= cfg.voiceSupport?.embedColor || '#3b82f6' %>"
+                >
+              </div>
+            </fieldset>
+
+            <div class="save-footer">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                <%= lang === 'de' ? 'Voice-Konfiguration speichern' : 'Save Voice Configuration' %>
+              </button>
+            </div>
+          </div>
+
           <!-- Tab: Embeds -->
           <div class="tab-content" id="tab-embeds">
             <div class="grid grid-2">
@@ -6366,6 +6772,46 @@
         console.error(err);
         alert('<%= lang === "de" ? "Netzwerkfehler" : "Network error" %>');
       });
+    }
+
+    // Voice Support Mode Switcher
+    function toggleDayInputs(checkbox, dayKey) {
+      const dayTimesEl = document.getElementById(`dayTimes_${dayKey}`);
+      if (dayTimesEl) {
+        if (checkbox.checked) {
+          dayTimesEl.style.opacity = '1';
+          dayTimesEl.style.pointerEvents = 'auto';
+        } else {
+          dayTimesEl.style.opacity = '0.5';
+          dayTimesEl.style.pointerEvents = 'none';
+        }
+      }
+    }
+
+    // Handle Voice Support Mode Change
+    const voiceSupportModeSelect = document.getElementById('voiceSupportMode');
+    if (voiceSupportModeSelect) {
+      voiceSupportModeSelect.addEventListener('change', function() {
+        const mode = this.value;
+        const supportChannelGroup = document.getElementById('supportChannelGroup');
+        const categoryGroup = document.getElementById('categoryGroup');
+        const embedConfigGroup = document.getElementById('embedConfigGroup');
+
+        if (mode === 'category_embed') {
+          // Show support channel and embed config, hide category
+          if (supportChannelGroup) supportChannelGroup.style.display = 'block';
+          if (embedConfigGroup) embedConfigGroup.style.display = 'block';
+          if (categoryGroup) categoryGroup.style.display = 'none';
+        } else {
+          // Show category, hide support channel and embed config
+          if (supportChannelGroup) supportChannelGroup.style.display = 'none';
+          if (embedConfigGroup) embedConfigGroup.style.display = 'none';
+          if (categoryGroup) categoryGroup.style.display = 'block';
+        }
+      });
+
+      // Trigger on page load
+      voiceSupportModeSelect.dispatchEvent(new Event('change'));
     }
   </script>
 </body>

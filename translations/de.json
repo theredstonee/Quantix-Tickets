@@ -474,6 +474,64 @@
     "show_voice_button": "Voice-Button in Tickets anzeigen",
     "description": "Erstelle automatisch Voice-Channels für Tickets. User und Team können dann per Sprache kommunizieren."
   },
+  "voiceWaitingRoom": {
+    "outsideHours": {
+      "title": "🔴 Support aktuell nicht verfügbar",
+      "description": "Unser Voice-Support ist aktuell nicht verfügbar. Bitte schau zu unseren Support-Zeiten vorbei oder erstelle ein Text-Ticket."
+    },
+    "welcome": {
+      "title": "🎤 Willkommen im Voice-Support!",
+      "description": "Ein Team-Mitglied wird sich in Kürze um dich kümmern. Bitte warte einen Moment."
+    },
+    "teamNotification": {
+      "title": "Neuer User im Voice-Wartezimmer",
+      "description": "{user} wartet auf Voice-Support!",
+      "user": "Benutzer",
+      "time": "Seit"
+    },
+    "log": {
+      "joined": "{user} ist dem Voice-Wartezimmer beigetreten {channel}",
+      "left": "{user} hat das Voice-Wartezimmer verlassen {channel}",
+      "outsideHours": "{user} hat versucht, außerhalb der Support-Zeiten beizutreten"
+    },
+    "config": {
+      "title": "Voice-Wartezimmer Konfiguration",
+      "enabled": "Voice-Wartezimmer aktivieren",
+      "waitingChannel": "Wartezimmer Voice-Channel",
+      "notificationChannel": "Benachrichtigungs-Channel",
+      "enforceHours": "Support-Zeiten durchsetzen",
+      "supportHours": "Support-Zeiten",
+      "customMusic": "Eigene Wartemusik (URL oder Pfad)",
+      "description": "Automatisches Voice-Support System mit Wartezimmer und Wartemusik. User joinen einen Voice-Channel und der Bot spielt automatisch Musik ab."
+    },
+    "caseEmbed": {
+      "title": "Neuer Voice Support Fall",
+      "description": "{user} wartet auf Voice-Support!",
+      "caseId": "Fall-ID",
+      "user": "Benutzer",
+      "created": "Erstellt",
+      "claimedBy": "Übernommen von",
+      "duration": "Dauer"
+    },
+    "buttons": {
+      "claim": "Übernehmen",
+      "transfer": "Übertragen",
+      "comment": "Kommentar",
+      "close": "Schließen",
+      "unclaim": "Freigeben"
+    },
+    "actions": {
+      "claimed": "Fall übernommen",
+      "claimedDescription": "{claimer} hat den Support-Fall übernommen",
+      "unclaimed": "Fall freigegeben",
+      "unclaimedDescription": "{claimer} hat den Support-Fall freigegeben",
+      "closed": "Fall geschlossen",
+      "closedDescription": "Der Support-Fall wurde von {closer} geschlossen",
+      "commented": "Kommentar hinzugefügt",
+      "transferred": "Fall übertragen",
+      "transferredDescription": "Fall wurde von {from} an {to} übertragen"
+    }
+  },
   "ticketBlacklist": {
     "already_blacklisted": "❌ {user} ist bereits auf der Blacklist.",
     "user_blacklisted": "User auf Blacklist gesetzt",

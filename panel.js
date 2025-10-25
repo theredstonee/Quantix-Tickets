@@ -2980,6 +2980,38 @@ module.exports = (client)=>{
         }
       }
 
+      // Voice Support Configuration
+      if(!cfg.voiceSupport) cfg.voiceSupport = {};
+
+      cfg.voiceSupport.enabled = req.body.voiceSupportEnabled === 'on' || req.body.voiceSupportEnabled === 'true';
+      cfg.voiceSupport.mode = req.body.voiceSupportMode === 'category_embed' ? 'category_embed' : 'custom_channels';
+
+      cfg.voiceSupport.waitingRoomChannelId = sanitizeDiscordId(req.body.voiceWaitingRoomChannelId) || null;
+      cfg.voiceSupport.supportChannelId = sanitizeDiscordId(req.body.voiceSupportChannelId) || null;
+      cfg.voiceSupport.categoryId = sanitizeDiscordId(req.body.voiceCategoryId) || null;
+      cfg.voiceSupport.notificationChannelId = sanitizeDiscordId(req.body.voiceNotificationChannelId) || null;
+
+      cfg.voiceSupport.enforceHours = req.body.voiceEnforceHours !== 'false' && req.body.voiceEnforceHours !== false;
+      cfg.voiceSupport.customMusicPath = sanitizeString(req.body.voiceCustomMusicPath, 500) || null;
+      cfg.voiceSupport.embedTitle = sanitizeString(req.body.voiceEmbedTitle, 256) || 'Neuer Voice Support Fall';
+      cfg.voiceSupport.embedColor = sanitizeString(req.body.voiceEmbedColor, 7) || '#3b82f6';
+
+      // Support Hours
+      if(!cfg.voiceSupport.supportHours) cfg.voiceSupport.supportHours = {};
+
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      days.forEach(day => {
+        const enabled = req.body[`voiceHours_${day}_enabled`] === 'on';
+        const start = sanitizeString(req.body[`voiceHours_${day}_start`], 5) || '13:00';
+        const end = sanitizeString(req.body[`voiceHours_${day}_end`], 5) || '22:00';
+
+        cfg.voiceSupport.supportHours[day] = {
+          enabled: enabled,
+          start: start,
+          end: end
+        };
+      });
+
       writeCfg(guildId, cfg);
 
       await logEvent(guildId, t(guildId, 'logs.config_updated'), req.user);
