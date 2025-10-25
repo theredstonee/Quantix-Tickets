@@ -1164,6 +1164,86 @@ client.once('clientReady', async () => {
   initEmailService(); // Email-Benachrichtigungen initialisieren
   console.log(`🤖 ${client.user.tag} bereit`);
 
+  // ====== VOICE SUPPORT SYSTEM STARTUP VERIFICATION ======
+  console.log('\n' + '='.repeat(60));
+  console.log('🎤 VOICE SUPPORT SYSTEM - STARTUP CHECK');
+  console.log('='.repeat(60));
+
+  // 1. Check GuildVoiceStates Intent
+  const hasVoiceIntent = client.options.intents.has(GatewayIntentBits.GuildVoiceStates);
+  console.log(`\n1️⃣ GuildVoiceStates Intent: ${hasVoiceIntent ? '✅ AKTIVIERT' : '❌ FEHLT'}`);
+  if (!hasVoiceIntent) {
+    console.log('   ⚠️  WARNUNG: GuildVoiceStates Intent fehlt!');
+    console.log('   ➜  Bot kann keine Voice-Events empfangen!');
+    console.log('   ➜  Aktiviere das Intent im Discord Developer Portal:');
+    console.log('   ➜  https://discord.com/developers/applications');
+  }
+
+  // 2. Check Music File
+  const musicPath = path.join(__dirname, 'audio', 'waiting-music.mp3');
+  const musicExists = fs.existsSync(musicPath);
+  console.log(`\n2️⃣ Wartemusik-Datei: ${musicExists ? '✅ VORHANDEN' : '❌ FEHLT'}`);
+  if (musicExists) {
+    const stats = fs.statSync(musicPath);
+    const sizeInMB = (stats.size / 1024 / 1024).toFixed(2);
+    console.log(`   📊 Größe: ${sizeInMB} MB`);
+    if (stats.size === 0) {
+      console.log('   ⚠️  WARNUNG: Datei ist leer!');
+    }
+  } else {
+    console.log('   ⚠️  WARNUNG: audio/waiting-music.mp3 fehlt!');
+    console.log('   ➜  Siehe audio/README.md für Download-Links');
+  }
+
+  // 3. Check Voice Module
+  const voiceModulePath = path.join(__dirname, 'voice-waiting-room.js');
+  const voiceModuleExists = fs.existsSync(voiceModulePath);
+  console.log(`\n3️⃣ Voice-Modul: ${voiceModuleExists ? '✅ GELADEN' : '❌ FEHLT'}`);
+
+  // 4. Check Event Listeners
+  const voiceEventCount = client.listeners(Events.VoiceStateUpdate).length;
+  console.log(`\n4️⃣ VoiceStateUpdate Event: ${voiceEventCount > 0 ? '✅ REGISTRIERT' : '❌ NICHT REGISTRIERT'}`);
+  console.log(`   📊 Anzahl Listener: ${voiceEventCount}`);
+
+  // 5. Check NPM Packages
+  try {
+    require('@discordjs/voice');
+    console.log(`\n5️⃣ @discordjs/voice: ✅ INSTALLIERT`);
+  } catch (err) {
+    console.log(`\n5️⃣ @discordjs/voice: ❌ FEHLT`);
+    console.log('   ➜  Installiere mit: npm install @discordjs/voice');
+  }
+
+  try {
+    require('@discordjs/opus');
+    console.log(`6️⃣ @discordjs/opus: ✅ INSTALLIERT`);
+  } catch (err) {
+    console.log(`6️⃣ @discordjs/opus: ❌ FEHLT`);
+    console.log('   ➜  Installiere mit: npm install @discordjs/opus');
+  }
+
+  // 7. Summary
+  console.log('\n' + '='.repeat(60));
+  const allChecks = hasVoiceIntent && musicExists && voiceModuleExists && voiceEventCount > 0;
+  if (allChecks) {
+    console.log('✅ VOICE SUPPORT SYSTEM BEREIT');
+    console.log('   Alle Checks bestanden! System ist einsatzbereit.');
+  } else {
+    console.log('❌ VOICE SUPPORT SYSTEM NICHT BEREIT');
+    console.log('   Bitte behebe die oben genannten Fehler!');
+    console.log('\n📝 NÄCHSTE SCHRITTE:');
+    if (!hasVoiceIntent) {
+      console.log('   1. Aktiviere GuildVoiceStates Intent im Discord Developer Portal');
+      console.log('   2. Starte den Bot neu: pm2 restart quantix-tickets');
+    }
+    if (!musicExists) {
+      console.log('   3. Lade eine Musik-Datei herunter (siehe audio/README.md)');
+      console.log('   4. Speichere sie als: audio/waiting-music.mp3');
+    }
+  }
+  console.log('='.repeat(60) + '\n');
+  // ====== END VOICE SUPPORT VERIFICATION ======
+
   // Check if maintenance mode is active on startup
   const maintenanceFile = path.join(__dirname, 'maintenance.json');
   if (fs.existsSync(maintenanceFile)) {
@@ -2259,16 +2339,22 @@ function normalizeField(field, index){
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   try {
+    const member = newState.member || oldState.member;
+    console.log(`🎤 VoiceStateUpdate: ${member.user.tag} | Old: ${oldState.channelId} | New: ${newState.channelId}`);
+
     if (oldState.channelId !== newState.channelId) {
       if (newState.channelId) {
+        console.log(`✅ User joined channel: ${newState.channel?.name}`);
         await handleVoiceJoin(oldState, newState);
       }
       if (oldState.channelId) {
+        console.log(`❌ User left channel: ${oldState.channel?.name}`);
         await handleVoiceLeave(oldState, newState);
       }
     }
   } catch (err) {
-    console.error('Error in VoiceStateUpdate event:', err);
+    console.error('❌ Error in VoiceStateUpdate event:', err);
+    console.error('Stack:', err.stack);
   }
 });
 
