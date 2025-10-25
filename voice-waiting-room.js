@@ -344,20 +344,42 @@ async function createVoiceCase(guild, member, guildId) {
 async function handleVoiceJoin(oldState, newState) {
   try {
     if (!newState.channelId || oldState.channelId === newState.channelId) {
+      console.log(`⏭️ handleVoiceJoin: Skipped (no channel change)`);
       return;
     }
 
     const member = newState.member;
-    if (member.user.bot) return;
+    if (member.user.bot) {
+      console.log(`⏭️ handleVoiceJoin: Skipped (user is bot)`);
+      return;
+    }
 
     const guild = newState.guild;
     const guildId = guild.id;
     const cfg = readCfg(guildId);
 
-    if (!cfg.voiceSupport?.enabled) return;
+    console.log(`🔍 handleVoiceJoin: Checking Voice Support config for ${guild.name}`);
+    console.log(`   - Voice Support enabled: ${cfg.voiceSupport?.enabled}`);
+    console.log(`   - Configured Waiting Room ID: ${cfg.voiceSupport?.waitingRoomChannelId}`);
+    console.log(`   - User joined Channel ID: ${newState.channelId}`);
+
+    if (!cfg.voiceSupport?.enabled) {
+      console.log(`⏭️ handleVoiceJoin: Voice Support ist nicht aktiviert für ${guild.name}`);
+      console.log(`   ➜ Aktiviere es im Panel unter "Voice" Tab`);
+      return;
+    }
 
     const waitingRoomId = cfg.voiceSupport?.waitingRoomChannelId;
-    if (!waitingRoomId || newState.channelId !== waitingRoomId) {
+    if (!waitingRoomId) {
+      console.log(`⏭️ handleVoiceJoin: Kein Wartezimmer-Channel konfiguriert`);
+      console.log(`   ➜ Konfiguriere einen Channel im Panel unter "Voice" Tab`);
+      return;
+    }
+
+    if (newState.channelId !== waitingRoomId) {
+      console.log(`⏭️ handleVoiceJoin: User joined falschen Channel`);
+      console.log(`   - Erwartet: ${waitingRoomId}`);
+      console.log(`   - Erhalten: ${newState.channelId}`);
       return;
     }
 
