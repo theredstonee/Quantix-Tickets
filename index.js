@@ -3771,7 +3771,7 @@ client.on(Events.InteractionCreate, async i => {
 
           await i.update({ embeds: [updatedEmbed], components: [unclaimButton] });
 
-          const cfg = readCfg(guildId);
+          // cfg ist bereits oben deklariert (Zeile 3665)
           const logChannelId = cfg.logChannelId;
           if(logChannelId){
             const logChannel = await i.guild.channels.fetch(logChannelId).catch(() => null);
