@@ -3764,18 +3764,30 @@ client.on(Events.InteractionCreate, async i => {
             console.log(`⚠️ User ${caseUser.user.tag} is not in any voice channel`);
           }
 
+          // ========== BOT DISCONNECTEN ==========
+          // Bot verlässt den Support-Channel nachdem User gemoved wurden
+          try {
+            const botMember = await i.guild.members.fetch(i.client.user.id);
+            if(botMember.voice.channelId === supportChannel.id){
+              await botMember.voice.disconnect();
+              console.log(`🤖 Bot left support channel ${supportChannel.name}`);
+            }
+          } catch(err){
+            console.error(`❌ Error disconnecting bot:`, err);
+          }
+
           const updatedEmbed = EmbedBuilder.from(i.message.embeds[0])
             .setColor('#00ff88')
             .addFields({ name: t(guildId, 'voiceWaitingRoom.caseEmbed.claimedBy'), value: `<@${i.user.id}>`, inline: true });
 
-          // Nach Claim: Freigeben, Kommentar, Schließen (Transfer vorerst deaktiviert)
-          const unclaimButton = new ActionRowBuilder()
+          // Nach Claim: Übertragen, Kommentar, Schließen (kein Freigeben mehr)
+          const claimedButtons = new ActionRowBuilder()
             .addComponents(
               new ButtonBuilder()
-                .setCustomId(`voice_unclaim_${caseId}`)
-                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.unclaim'))
-                .setEmoji('🔓')
-                .setStyle(ButtonStyle.Secondary),
+                .setCustomId(`voice_transfer_${caseId}`)
+                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.transfer'))
+                .setEmoji('🔄')
+                .setStyle(ButtonStyle.Primary),
               new ButtonBuilder()
                 .setCustomId(`voice_comment_${caseId}`)
                 .setLabel(t(guildId, 'voiceWaitingRoom.buttons.comment'))
@@ -3788,7 +3800,7 @@ client.on(Events.InteractionCreate, async i => {
                 .setStyle(ButtonStyle.Danger)
             );
 
-          await i.update({ embeds: [updatedEmbed], components: [unclaimButton] });
+          await i.update({ embeds: [updatedEmbed], components: [claimedButtons] });
 
           // cfg ist bereits oben deklariert (Zeile 3665)
           const logChannelId = cfg.logChannelId;
@@ -3895,17 +3907,136 @@ client.on(Events.InteractionCreate, async i => {
             return i.reply({ content: '❌ Du kannst nur deine eigenen Fälle übertragen.', ephemeral: true });
           }
 
-          // TODO: Implementiere Transfer-Logik mit Team-Member-Auswahl
+          // ========== HOLE ALLE VOICE-USER IM SUPPORT-CHANNEL ==========
+          if(!voiceCase.supportChannelId){
+            return i.reply({ content: '❌ Kein Support-Channel gefunden.', ephemeral: true });
+          }
+
+          const supportChannel = await i.guild.channels.fetch(voiceCase.supportChannelId).catch(() => null);
+          if(!supportChannel){
+            return i.reply({ content: '❌ Support-Channel wurde gelöscht.', ephemeral: true });
+          }
+
+          // Alle User im Channel (außer Bot, aktueller Supporter, Ersteller)
+          const voiceMembers = supportChannel.members
+            .filter(m =>
+              !m.user.bot &&
+              m.id !== voiceCase.claimedBy &&
+              m.id !== voiceCase.userId
+            );
+
+          if(voiceMembers.size === 0){
+            return i.reply({
+              content: '❌ Keine anderen Team-Members im Voice-Channel gefunden.',
+              ephemeral: true
+            });
+          }
+
+          // Erstelle Select-Menü mit allen verfügbaren Team-Members
+          const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`voice_transfer_select_${caseId}`)
+            .setPlaceholder('Wähle einen Team-Member aus')
+            .addOptions(
+              voiceMembers.map(member => ({
+                label: member.user.username,
+                description: `Übertrage zu ${member.user.tag}`,
+                value: member.id,
+                emoji: '👤'
+              }))
+            );
+
+          const row = new ActionRowBuilder().addComponents(selectMenu);
+
           await i.reply({
-            content: '⚠️ Die Übertragen-Funktion ist noch in Entwicklung. Verwende vorerst "Freigeben" und der neue Supporter kann dann "Übernehmen" klicken.',
+            content: '🔄 **Fall übertragen**\n\nWähle den Team-Member aus, an den du diesen Fall übertragen möchtest:',
+            components: [row],
             ephemeral: true
           });
 
-          console.log(`🔄 Transfer requested for voice case #${caseId} by ${i.user.tag} (not implemented yet)`);
+          console.log(`🔄 Transfer menu shown for voice case #${caseId} by ${i.user.tag}`);
 
         } catch(err){
           console.error('Error in voice_transfer button:', err);
           await i.reply({ content: '❌ Ein Fehler ist aufgetreten.', ephemeral: true });
+        }
+        return;
+      }
+
+      // Voice Transfer Select Menu Handler
+      if(i.isStringSelectMenu() && i.customId.startsWith('voice_transfer_select_')){
+        try {
+          const caseId = parseInt(i.customId.replace('voice_transfer_select_', ''));
+          const guildId = i.guild.id;
+          const newSupporterId = i.values[0];
+          const { loadVoiceCases, saveVoiceCases } = require('./voice-waiting-room');
+
+          const cases = loadVoiceCases(guildId);
+          const caseIndex = cases.findIndex(c => c.id === caseId);
+
+          if(caseIndex === -1){
+            return i.update({ content: '❌ Fall nicht gefunden.', components: [] });
+          }
+
+          const voiceCase = cases[caseIndex];
+
+          // Hole neuen Supporter
+          const newSupporter = await i.guild.members.fetch(newSupporterId).catch(() => null);
+          if(!newSupporter){
+            return i.update({ content: '❌ Ausgewählter User nicht gefunden.', components: [] });
+          }
+
+          const oldSupporterId = voiceCase.claimedBy;
+
+          // Update Case
+          voiceCase.claimedBy = newSupporterId;
+          voiceCase.transfers = voiceCase.transfers || [];
+          voiceCase.transfers.push({
+            from: oldSupporterId,
+            to: newSupporterId,
+            timestamp: new Date().toISOString()
+          });
+          cases[caseIndex] = voiceCase;
+          saveVoiceCases(guildId, cases);
+
+          // Update Embed
+          const cfg = readCfg(guildId);
+          const supportChannelId = cfg.voiceSupport?.supportChannelId || cfg.logChannelId;
+
+          if(supportChannelId && voiceCase.messageId){
+            try {
+              const supportChannel = await i.guild.channels.fetch(supportChannelId).catch(() => null);
+              if(supportChannel){
+                const caseMessage = await supportChannel.messages.fetch(voiceCase.messageId).catch(() => null);
+                if(caseMessage){
+                  const updatedEmbed = EmbedBuilder.from(caseMessage.embeds[0]);
+
+                  // Update "Übernommen von" Field
+                  const fieldsWithoutClaimed = updatedEmbed.data.fields?.filter(f => f.name !== t(guildId, 'voiceWaitingRoom.caseEmbed.claimedBy')) || [];
+                  updatedEmbed.data.fields = fieldsWithoutClaimed;
+                  updatedEmbed.addFields({
+                    name: t(guildId, 'voiceWaitingRoom.caseEmbed.claimedBy'),
+                    value: `<@${newSupporterId}>`,
+                    inline: true
+                  });
+
+                  await caseMessage.edit({ embeds: [updatedEmbed] });
+                }
+              }
+            } catch(err){
+              console.error('Error updating embed after transfer:', err);
+            }
+          }
+
+          await i.update({
+            content: `✅ Fall #${String(caseId).padStart(5, '0')} wurde erfolgreich an <@${newSupporterId}> übertragen.`,
+            components: []
+          });
+
+          console.log(`🔄 Voice case #${caseId} transferred from ${oldSupporterId} to ${newSupporterId}`);
+
+        } catch(err){
+          console.error('Error in voice_transfer_select:', err);
+          await i.update({ content: '❌ Ein Fehler ist aufgetreten.', components: [] });
         }
         return;
       }
