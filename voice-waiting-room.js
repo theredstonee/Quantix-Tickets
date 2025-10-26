@@ -503,23 +503,60 @@ async function handleVoiceLeave(oldState, newState) {
     if (!cfg.voiceSupport?.enabled) return;
 
     const waitingRoomId = cfg.voiceSupport?.waitingRoomChannelId;
-    if (!waitingRoomId || oldState.channelId !== waitingRoomId) {
+
+    // ========== CHECK: User left WAITING ROOM ==========
+    if (waitingRoomId && oldState.channelId === waitingRoomId) {
+      const channel = oldState.channel;
+      if (channel) {
+        const nonBotMembers = channel.members.filter(m => !m.user.bot);
+
+        if (nonBotMembers.size === 0) {
+          console.log(`🎵 Waiting room ${channel.name} is now empty, stopping music`);
+          await stopWaitingMusic(channel.id);
+        }
+      }
+
+      const member = oldState.member;
+      if (member && !member.user.bot) {
+        await closeVoiceCase(guild, member, guildId, 'User left voice channel');
+        await logVoiceEvent(guild, member, 'left_waiting_room', waitingRoomId);
+      }
       return;
     }
 
-    const channel = oldState.channel;
-    if (channel) {
-      const nonBotMembers = channel.members.filter(m => !m.user.bot);
+    // ========== CHECK: User left SUPPORT CHANNEL ==========
+    // Prüfe ob der verlassene Channel ein Support-Channel ist
+    const cases = loadVoiceCases(guildId);
+    const relatedCase = cases.find(c => c.supportChannelId === oldState.channelId && c.status === 'open');
 
-      if (nonBotMembers.size === 0) {
-        await stopWaitingMusic(channel.id);
+    if (relatedCase) {
+      console.log(`👋 User left support channel for case #${relatedCase.id}`);
+
+      const supportChannel = oldState.channel;
+      if (supportChannel) {
+        const nonBotMembers = supportChannel.members.filter(m => !m.user.bot);
+
+        if (nonBotMembers.size === 0) {
+          console.log(`📭 Support channel ${supportChannel.name} is now empty, closing case and deleting channel`);
+
+          // Schließe den Case
+          const caseIndex = cases.findIndex(c => c.id === relatedCase.id);
+          if (caseIndex !== -1) {
+            cases[caseIndex].status = 'closed';
+            cases[caseIndex].closedAt = new Date().toISOString();
+            cases[caseIndex].closeReason = 'Support channel became empty';
+            saveVoiceCases(guildId, cases);
+          }
+
+          // Lösche den Channel
+          try {
+            await supportChannel.delete('Support channel became empty');
+            console.log(`🗑️ Deleted empty support voice channel: ${supportChannel.name}`);
+          } catch(err) {
+            console.error(`❌ Error deleting support channel:`, err);
+          }
+        }
       }
-    }
-
-    const member = oldState.member;
-    if (member && !member.user.bot) {
-      await closeVoiceCase(guild, member, guildId, 'User left voice channel');
-      await logVoiceEvent(guild, member, 'left_waiting_room', waitingRoomId);
     }
 
   } catch (err) {

@@ -3648,8 +3648,96 @@ client.on(Events.InteractionCreate, async i => {
             return i.reply({ content: `❌ Dieser Fall wurde bereits von <@${voiceCase.claimedBy}> übernommen.`, ephemeral: true });
           }
 
+          // ========== CHECK: Team-Member muss in Voice sein ==========
+          const teamMember = await i.guild.members.fetch(i.user.id);
+          const teamVoiceState = teamMember.voice;
+
+          if(!teamVoiceState || !teamVoiceState.channelId){
+            return i.reply({
+              content: '❌ Du musst in einem Voice-Channel sein, um diesen Fall zu übernehmen!',
+              ephemeral: true
+            });
+          }
+
+          console.log(`🔊 Team member ${i.user.tag} is in voice channel: ${teamVoiceState.channel.name}`);
+
+          // ========== ERSTELLE NEUEN SUPPORT-VOICE-CHANNEL ==========
+          const cfg = readCfg(guildId);
+          const waitingRoomChannel = await i.guild.channels.fetch(cfg.voiceSupport?.waitingRoomChannelId).catch(() => null);
+
+          // Hole User vom Case
+          const caseUser = await i.guild.members.fetch(voiceCase.userId).catch(() => null);
+          if(!caseUser){
+            return i.reply({ content: '❌ User nicht mehr auf dem Server gefunden.', ephemeral: true });
+          }
+
+          // Erstelle Channel-Name
+          const channelName = `🎧・Support - ${caseUser.user.username}`;
+
+          // Bestimme Kategorie (entweder vom Wartezimmer oder aus Config)
+          let categoryId = null;
+          if(waitingRoomChannel && waitingRoomChannel.parentId){
+            categoryId = waitingRoomChannel.parentId;
+          } else if(cfg.voiceSupport?.voiceCategoryId){
+            categoryId = cfg.voiceSupport.voiceCategoryId;
+          }
+
+          console.log(`📁 Creating support voice channel in category: ${categoryId || 'keine'}`);
+
+          // Erstelle neuen Voice-Channel
+          const supportChannel = await i.guild.channels.create({
+            name: channelName,
+            type: ChannelType.GuildVoice,
+            parent: categoryId,
+            permissionOverwrites: [
+              {
+                id: i.guild.id,
+                deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect]
+              },
+              {
+                id: i.user.id, // Team-Member
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak]
+              },
+              {
+                id: voiceCase.userId, // User
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak]
+              },
+              {
+                id: i.client.user.id, // Bot
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak]
+              }
+            ]
+          });
+
+          console.log(`✅ Created support voice channel: ${supportChannel.name} (${supportChannel.id})`);
+
+          // ========== MOVE BEIDE USER IN DEN NEUEN CHANNEL ==========
+
+          // Move Team-Member
+          try {
+            await teamMember.voice.setChannel(supportChannel.id);
+            console.log(`✅ Moved team member ${i.user.tag} to support channel`);
+          } catch(err){
+            console.error(`❌ Error moving team member:`, err);
+          }
+
+          // Move User (falls noch im Wartezimmer)
+          const userVoiceState = caseUser.voice;
+          if(userVoiceState && userVoiceState.channelId){
+            try {
+              await caseUser.voice.setChannel(supportChannel.id);
+              console.log(`✅ Moved user ${caseUser.user.tag} to support channel`);
+            } catch(err){
+              console.error(`❌ Error moving user:`, err);
+            }
+          } else {
+            console.log(`⚠️ User ${caseUser.user.tag} is not in any voice channel`);
+          }
+
+          // ========== UPDATE CASE ==========
           voiceCase.claimedBy = i.user.id;
           voiceCase.claimedAt = new Date().toISOString();
+          voiceCase.supportChannelId = supportChannel.id; // Speichere Channel-ID
           cases[caseIndex] = voiceCase;
           saveVoiceCases(guildId, cases);
 
@@ -3797,6 +3885,22 @@ client.on(Events.InteractionCreate, async i => {
           voiceCase.closedAt = new Date().toISOString();
           voiceCase.closedBy = i.user.id;
           voiceCase.closeReason = `Closed by ${i.user.tag}`;
+
+          // ========== LÖSCHE SUPPORT-VOICE-CHANNEL ==========
+          if(voiceCase.supportChannelId){
+            try {
+              const supportChannel = await i.guild.channels.fetch(voiceCase.supportChannelId).catch(() => null);
+              if(supportChannel){
+                await supportChannel.delete('Voice Support Fall geschlossen');
+                console.log(`🗑️ Deleted support voice channel: ${supportChannel.name}`);
+              } else {
+                console.log(`⚠️ Support channel ${voiceCase.supportChannelId} not found (already deleted?)`);
+              }
+            } catch(err){
+              console.error(`❌ Error deleting support voice channel:`, err);
+            }
+          }
+
           cases[caseIndex] = voiceCase;
           saveVoiceCases(guildId, cases);
 
