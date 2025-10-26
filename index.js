@@ -38,7 +38,7 @@ const {
   Routes, REST, SlashCommandBuilder,
   EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder,
   ModalBuilder, TextInputBuilder, TextInputStyle,
-  PermissionsBitField, ChannelType, Events, AttachmentBuilder,
+  PermissionsBitField, PermissionFlagsBits, ChannelType, Events, AttachmentBuilder,
   StringSelectMenuBuilder, ActivityType
 } = require('discord.js');
 const { getGuildLanguage, setGuildLanguage, t, getLanguageName } = require('./translations');
