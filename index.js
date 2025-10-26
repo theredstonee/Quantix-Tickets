@@ -3768,6 +3768,7 @@ client.on(Events.InteractionCreate, async i => {
             .setColor('#00ff88')
             .addFields({ name: t(guildId, 'voiceWaitingRoom.caseEmbed.claimedBy'), value: `<@${i.user.id}>`, inline: true });
 
+          // Nach Claim: Freigeben, Kommentar, Schließen (Transfer vorerst deaktiviert)
           const unclaimButton = new ActionRowBuilder()
             .addComponents(
               new ButtonBuilder()
@@ -3775,11 +3776,6 @@ client.on(Events.InteractionCreate, async i => {
                 .setLabel(t(guildId, 'voiceWaitingRoom.buttons.unclaim'))
                 .setEmoji('🔓')
                 .setStyle(ButtonStyle.Secondary),
-              new ButtonBuilder()
-                .setCustomId(`voice_transfer_${caseId}`)
-                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.transfer'))
-                .setEmoji('🔄')
-                .setStyle(ButtonStyle.Primary),
               new ButtonBuilder()
                 .setCustomId(`voice_comment_${caseId}`)
                 .setLabel(t(guildId, 'voiceWaitingRoom.buttons.comment'))
@@ -3850,6 +3846,7 @@ client.on(Events.InteractionCreate, async i => {
             .setColor('#3b82f6')
             .setFields(i.message.embeds[0].fields.filter(f => f.name !== t(guildId, 'voiceWaitingRoom.caseEmbed.claimedBy')));
 
+          // Nach Unclaim: Zurück zum initialen State (nur Übernehmen + Kommentar)
           const claimButton = new ActionRowBuilder()
             .addComponents(
               new ButtonBuilder()
@@ -3858,20 +3855,10 @@ client.on(Events.InteractionCreate, async i => {
                 .setEmoji('✅')
                 .setStyle(ButtonStyle.Success),
               new ButtonBuilder()
-                .setCustomId(`voice_transfer_${caseId}`)
-                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.transfer'))
-                .setEmoji('🔄')
-                .setStyle(ButtonStyle.Primary),
-              new ButtonBuilder()
                 .setCustomId(`voice_comment_${caseId}`)
                 .setLabel(t(guildId, 'voiceWaitingRoom.buttons.comment'))
                 .setEmoji('💬')
-                .setStyle(ButtonStyle.Secondary),
-              new ButtonBuilder()
-                .setCustomId(`voice_close_${caseId}`)
-                .setLabel(t(guildId, 'voiceWaitingRoom.buttons.close'))
-                .setEmoji('🔒')
-                .setStyle(ButtonStyle.Danger)
+                .setStyle(ButtonStyle.Secondary)
             );
 
           await i.update({ embeds: [updatedEmbed], components: [claimButton] });
@@ -3880,6 +3867,44 @@ client.on(Events.InteractionCreate, async i => {
 
         } catch(err){
           console.error('Error in voice_unclaim button:', err);
+          await i.reply({ content: '❌ Ein Fehler ist aufgetreten.', ephemeral: true });
+        }
+        return;
+      }
+
+      if(i.customId.startsWith('voice_transfer_')){
+        try {
+          const caseId = parseInt(i.customId.replace('voice_transfer_', ''));
+          const guildId = i.guild.id;
+          const { loadVoiceCases, saveVoiceCases } = require('./voice-waiting-room');
+
+          const cases = loadVoiceCases(guildId);
+          const caseIndex = cases.findIndex(c => c.id === caseId);
+
+          if(caseIndex === -1){
+            return i.reply({ content: '❌ Fall nicht gefunden.', ephemeral: true });
+          }
+
+          const voiceCase = cases[caseIndex];
+
+          if(!voiceCase.claimedBy){
+            return i.reply({ content: '❌ Dieser Fall wurde noch nicht übernommen.', ephemeral: true });
+          }
+
+          if(voiceCase.claimedBy !== i.user.id){
+            return i.reply({ content: '❌ Du kannst nur deine eigenen Fälle übertragen.', ephemeral: true });
+          }
+
+          // TODO: Implementiere Transfer-Logik mit Team-Member-Auswahl
+          await i.reply({
+            content: '⚠️ Die Übertragen-Funktion ist noch in Entwicklung. Verwende vorerst "Freigeben" und der neue Supporter kann dann "Übernehmen" klicken.',
+            ephemeral: true
+          });
+
+          console.log(`🔄 Transfer requested for voice case #${caseId} by ${i.user.tag} (not implemented yet)`);
+
+        } catch(err){
+          console.error('Error in voice_transfer button:', err);
           await i.reply({ content: '❌ Ein Fehler ist aufgetreten.', ephemeral: true });
         }
         return;

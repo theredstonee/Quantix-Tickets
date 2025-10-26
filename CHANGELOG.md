@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.4.2] - 2025-10-26
+
+### 🎤 Voice Support System
+
+Vollständiges Voice Support System mit automatischer Bot-Integration und Channel-Management.
+
+### Added
+
+#### 🎧 **Voice Support System** (Pro Feature)
+- **Automatische Voice-Integration**:
+  - Bot joint automatisch Wartezimmer und spielt Wartemusik
+  - Konfigurierbare Support-Zeiten pro Wochentag
+  - Support-Case-Embeds mit interaktiven Buttons
+  - Automatisches Moven in separate Support-Channels
+- **Case Management**:
+  - Claim-System mit Voice-Channel-Anforderung
+  - Support-Channels werden automatisch erstellt
+  - Team-Member und User werden automatisch gemoved
+  - Kommentare werden direkt im Case-Embed angezeigt
+- **Smart Channel Management**:
+  - Automatische Channel-Erstellung mit Permissions
+  - Support-Channels werden beim Schließen gelöscht
+  - Supporter wird in vorherigen Channel zurück gemoved
+  - User wird beim Schließen disconnected
+- **Button-Flow**:
+  - Initial: "Übernehmen" + "Kommentar"
+  - Nach Claim: "Freigeben" + "Kommentar" + "Schließen"
+  - Nur Team-Members in Voice können Claims übernehmen
+- **Debug-System**:
+  - Umfassendes Startup-Verification-System
+  - Detaillierte Logs für Voice-Events
+  - Automatic Intent & Package Checks
+
+### Changed
+
+- Voice Support Button-Flow vereinfacht (Transfer-Button entfernt)
+- Case-Close-Logik optimiert (nur manuelle Closes, kein Auto-Close mehr)
+
+### Fixed
+
+- Voice Case wird nicht mehr automatisch geschlossen beim Moven
+- Claim-Status wird vor dem User-Move gesetzt (Race-Condition behoben)
+- Transfer-Button Handler hinzugefügt (zeigt "in Entwicklung"-Nachricht)
+- PermissionFlagsBits Import-Fehler behoben
+- Doppelte cfg-Deklaration entfernt
+
 ## [1.4.1] - 2025-10-24
 
 ### 🚀 Multi-Ticket-System & UI Improvements

@@ -1,6 +1,75 @@
 {
-  "currentVersion": "1.4.1",
+  "currentVersion": "1.4.2",
   "versions": [
+    {
+      "version": "1.4.2",
+      "date": "2025-10-26",
+      "changes": {
+        "de": [
+          "🎧 Voice Support System - Bot joint automatisch Wartezimmer & spielt Musik (Pro)",
+          "📞 Smart Channel Management - Automatische Support-Channel-Erstellung mit Permissions",
+          "💬 Kommentare im Embed - Kommentare werden direkt im Case-Embed angezeigt",
+          "🔄 Team-Move System - Supporter wird beim Schließen zurück gemoved, User disconnected",
+          "🐛 Race-Condition behoben - Case wird vor dem User-Move als claimed markiert"
+        ],
+        "en": [
+          "🎧 Voice Support System - Bot automatically joins waiting room & plays music (Pro)",
+          "📞 Smart Channel Management - Automatic support channel creation with permissions",
+          "💬 Comments in Embed - Comments displayed directly in case embed",
+          "🔄 Team Move System - Supporter moved back on close, user disconnected",
+          "🐛 Race Condition Fixed - Case marked as claimed before user move"
+        ],
+        "he": [
+          "🎧 מערכת תמיכה קולית - הבוט מצטרף אוטומטית לחדר ההמתנה ומנגן מוזיקה (Pro)",
+          "📞 ניהול ערוצים חכם - יצירת ערוצי תמיכה אוטומטית עם הרשאות",
+          "💬 הערות בהטמעה - הערות מוצגות ישירות בהטמעת המקרה",
+          "🔄 מערכת העברת צוות - תומך מועבר חזרה בסגירה, משתמש מנותק",
+          "🐛 Race Condition תוקן - מקרה מסומן כנתפס לפני העברת משתמש"
+        ],
+        "ja": [
+          "🎧音声サポートシステム - ボットが自動的に待機室に参加して音楽を再生（Pro）",
+          "📞スマートチャンネル管理 - 権限付きサポートチャンネルの自動作成",
+          "💬埋め込みのコメント - コメントがケース埋め込みに直接表示",
+          "🔄チーム移動システム - クローズ時にサポーターを戻し、ユーザーを切断",
+          "🐛レースコンディション修正 - ユーザー移動前にケースをクレーム済みとしてマーク"
+        ],
+        "ru": [
+          "🎧 Система голосовой поддержки - Бот автоматически присоединяется к комнате ожидания и воспроизводит музыку (Pro)",
+          "📞 Умное управление каналами - Автоматическое создание каналов поддержки с правами",
+          "💬 Комментарии в эмбеде - Комментарии отображаются прямо в эмбеде кейса",
+          "🔄 Система перемещения команды - Саппорт возвращается при закрытии, пользователь отключается",
+          "🐛 Race Condition исправлен - Кейс помечается как claimed перед перемещением пользователя"
+        ],
+        "pt": [
+          "🎧 Sistema de Suporte por Voz - Bot entra automaticamente na sala de espera e toca música (Pro)",
+          "📞 Gerenciamento Inteligente de Canais - Criação automática de canais de suporte com permissões",
+          "💬 Comentários no Embed - Comentários exibidos diretamente no embed do caso",
+          "🔄 Sistema de Movimentação da Equipe - Suporte movido de volta ao fechar, usuário desconectado",
+          "🐛 Race Condition Corrigido - Caso marcado como claimed antes da movimentação do usuário"
+        ],
+        "es": [
+          "🎧 Sistema de Soporte de Voz - Bot se une automáticamente a la sala de espera y reproduce música (Pro)",
+          "📞 Gestión Inteligente de Canales - Creación automática de canales de soporte con permisos",
+          "💬 Comentarios en Embed - Comentarios mostrados directamente en el embed del caso",
+          "🔄 Sistema de Movimiento de Equipo - Soporte movido de vuelta al cerrar, usuario desconectado",
+          "🐛 Race Condition Corregido - Caso marcado como claimed antes del movimiento del usuario"
+        ],
+        "id": [
+          "🎧 Sistem Dukungan Suara - Bot otomatis bergabung ke ruang tunggu & memutar musik (Pro)",
+          "📞 Manajemen Saluran Pintar - Pembuatan saluran dukungan otomatis dengan izin",
+          "💬 Komentar di Embed - Komentar ditampilkan langsung di embed kasus",
+          "🔄 Sistem Pemindahan Tim - Pendukung dipindahkan kembali saat ditutup, pengguna terputus",
+          "🐛 Race Condition Diperbaiki - Kasus ditandai sebagai claimed sebelum pemindahan pengguna"
+        ],
+        "ar": [
+          "🎧 نظام الدعم الصوتي - ينضم البوت تلقائياً إلى غرفة الانتظار ويشغل الموسيقى (Pro)",
+          "📞 إدارة القنوات الذكية - إنشاء قنوات الدعم تلقائياً مع الأذونات",
+          "💬 التعليقات في التضمين - التعليقات معروضة مباشرة في تضمين الحالة",
+          "🔄 نظام نقل الفريق - يتم إرجاع الداعم عند الإغلاق، فصل المستخدم",
+          "🐛 Race Condition تم إصلاحه - تم وضع علامة على الحالة كمطالب بها قبل نقل المستخدم"
+        ]
+      }
+    },
     {
       "version": "1.4.1",
       "date": "2025-10-24",
