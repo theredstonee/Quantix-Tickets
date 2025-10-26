@@ -3676,6 +3676,16 @@ client.on(Events.InteractionCreate, async i => {
 
           console.log(`🔊 Team member ${i.user.tag} is in voice channel: ${teamVoiceState.channel.name}`);
 
+          // ========== UPDATE CASE SOFORT (VOR DEM MOVEN!) ==========
+          // KRITISCH: Case MUSS als claimed markiert werden BEVOR User gemoved werden
+          // Sonst triggert das Leave-Event die Close-Logik
+          voiceCase.claimedBy = i.user.id;
+          voiceCase.claimedAt = new Date().toISOString();
+          voiceCase.claimerPreviousChannelId = teamVoiceState.channelId; // Speichere vorherigen Channel
+          cases[caseIndex] = voiceCase;
+          saveVoiceCases(guildId, cases);
+          console.log(`✅ Case #${caseId} marked as claimed by ${i.user.tag} BEFORE moving users`);
+
           // ========== ERSTELLE NEUEN SUPPORT-VOICE-CHANNEL ==========
           const cfg = readCfg(guildId);
           const waitingRoomChannel = await i.guild.channels.fetch(cfg.voiceSupport?.waitingRoomChannelId).catch(() => null);
@@ -3726,6 +3736,11 @@ client.on(Events.InteractionCreate, async i => {
 
           console.log(`✅ Created support voice channel: ${supportChannel.name} (${supportChannel.id})`);
 
+          // Speichere Support-Channel-ID im Case
+          voiceCase.supportChannelId = supportChannel.id;
+          cases[caseIndex] = voiceCase;
+          saveVoiceCases(guildId, cases);
+
           // ========== MOVE BEIDE USER IN DEN NEUEN CHANNEL ==========
 
           // Move Team-Member
@@ -3748,14 +3763,6 @@ client.on(Events.InteractionCreate, async i => {
           } else {
             console.log(`⚠️ User ${caseUser.user.tag} is not in any voice channel`);
           }
-
-          // ========== UPDATE CASE ==========
-          voiceCase.claimedBy = i.user.id;
-          voiceCase.claimedAt = new Date().toISOString();
-          voiceCase.supportChannelId = supportChannel.id; // Speichere Support-Channel-ID
-          voiceCase.claimerPreviousChannelId = teamVoiceState.channelId; // Speichere vorherigen Channel des Supporters
-          cases[caseIndex] = voiceCase;
-          saveVoiceCases(guildId, cases);
 
           const updatedEmbed = EmbedBuilder.from(i.message.embeds[0])
             .setColor('#00ff88')
