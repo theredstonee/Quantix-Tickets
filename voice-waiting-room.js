@@ -509,46 +509,28 @@ async function handleVoiceLeave(oldState, newState) {
 
       const member = oldState.member;
       if (member && !member.user.bot) {
-        await closeVoiceCase(guild, member, guildId, 'User left voice channel');
+        // Nur Case schließen wenn er NICHT claimed ist
+        // Wenn claimed, ist der User im Support-Channel und soll dort bleiben
+        const cases = loadVoiceCases(guildId);
+        const userCase = cases.find(c => c.userId === member.id && c.status === 'open');
+
+        if (userCase && !userCase.claimedBy) {
+          // Fall wurde nicht übernommen, User hat wirklich das Wartezimmer verlassen
+          await closeVoiceCase(guild, member, guildId, 'User left waiting room before being claimed');
+          console.log(`🔒 Voice case #${userCase.id} closed because user left before being claimed`);
+        } else {
+          console.log(`✅ User left waiting room but case is claimed, keeping case open`);
+        }
+
         await logVoiceEvent(guild, member, 'left_waiting_room', waitingRoomId);
       }
       return;
     }
 
     // ========== CHECK: User left SUPPORT CHANNEL ==========
-    // Prüfe ob der verlassene Channel ein Support-Channel ist
-    const cases = loadVoiceCases(guildId);
-    const relatedCase = cases.find(c => c.supportChannelId === oldState.channelId && c.status === 'open');
-
-    if (relatedCase) {
-      console.log(`👋 User left support channel for case #${relatedCase.id}`);
-
-      const supportChannel = oldState.channel;
-      if (supportChannel) {
-        const nonBotMembers = supportChannel.members.filter(m => !m.user.bot);
-
-        if (nonBotMembers.size === 0) {
-          console.log(`📭 Support channel ${supportChannel.name} is now empty, closing case and deleting channel`);
-
-          // Schließe den Case
-          const caseIndex = cases.findIndex(c => c.id === relatedCase.id);
-          if (caseIndex !== -1) {
-            cases[caseIndex].status = 'closed';
-            cases[caseIndex].closedAt = new Date().toISOString();
-            cases[caseIndex].closeReason = 'Support channel became empty';
-            saveVoiceCases(guildId, cases);
-          }
-
-          // Lösche den Channel
-          try {
-            await supportChannel.delete('Support channel became empty');
-            console.log(`🗑️ Deleted empty support voice channel: ${supportChannel.name}`);
-          } catch(err) {
-            console.error(`❌ Error deleting support channel:`, err);
-          }
-        }
-      }
-    }
+    // Support-Channels werden NICHT automatisch geschlossen
+    // Nur manuelles Schließen über den Button ist erlaubt
+    console.log(`ℹ️ User left channel ${oldState.channelId}, but support channels are only closed manually`);
 
   } catch (err) {
     console.error('Error in handleVoiceLeave:', err);
