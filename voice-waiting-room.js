@@ -268,6 +268,7 @@ async function sendSupportCaseEmbed(guild, member, guildId, caseId) {
       .setFooter({ text: `User ID: ${member.id}` })
       .setTimestamp();
 
+    // Initial: Nur "Übernehmen" und "Kommentar" Buttons
     const buttons = new ActionRowBuilder()
       .addComponents(
         new ButtonBuilder()
@@ -276,20 +277,10 @@ async function sendSupportCaseEmbed(guild, member, guildId, caseId) {
           .setEmoji('✅')
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
-          .setCustomId(`voice_transfer_${caseId}`)
-          .setLabel(t(guildId, 'voiceWaitingRoom.buttons.transfer'))
-          .setEmoji('🔄')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
           .setCustomId(`voice_comment_${caseId}`)
           .setLabel(t(guildId, 'voiceWaitingRoom.buttons.comment'))
           .setEmoji('💬')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId(`voice_close_${caseId}`)
-          .setLabel(t(guildId, 'voiceWaitingRoom.buttons.close'))
-          .setEmoji('🔒')
-          .setStyle(ButtonStyle.Danger)
+          .setStyle(ButtonStyle.Secondary)
       );
 
     const message = await supportChannel.send({ embeds: [embed], components: [buttons] });

@@ -3459,31 +3459,46 @@ client.on(Events.InteractionCreate, async i => {
         cases[caseIndex] = voiceCase;
         saveVoiceCases(guildId, cases);
 
-        await i.reply({
-          content: `✅ Kommentar wurde zu Fall #${String(caseId).padStart(5, '0')} hinzugefügt.`,
-          ephemeral: true
-        });
-
+        // ========== UPDATE EMBED MIT KOMMENTAR ==========
         const cfg = readCfg(guildId);
-        const logChannelId = cfg.logChannelId;
-        if(logChannelId){
-          const logChannel = await i.guild.channels.fetch(logChannelId).catch(() => null);
-          if(logChannel){
-            // Check permissions
-            const permissions = logChannel.permissionsFor(i.guild.members.me);
-            if(permissions && permissions.has('SendMessages') && permissions.has('ViewChannel')){
-              const logEmbed = new EmbedBuilder()
-                .setColor(0x3b82f6)
-                .setAuthor({ name: i.user.tag, iconURL: i.user.displayAvatarURL() })
-                .setDescription(`💬 Kommentar zu Fall #${caseId}:`)
-                .addFields({ name: 'Kommentar', value: commentText })
-                .setTimestamp();
-              await logChannel.send({ embeds: [logEmbed] }).catch(err => {
-                console.error('Error sending log message:', err);
-              });
+        const supportChannelId = cfg.voiceSupport?.supportChannelId || cfg.logChannelId;
+
+        if(supportChannelId && voiceCase.messageId){
+          try {
+            const supportChannel = await i.guild.channels.fetch(supportChannelId).catch(() => null);
+            if(supportChannel){
+              const caseMessage = await supportChannel.messages.fetch(voiceCase.messageId).catch(() => null);
+              if(caseMessage){
+                const updatedEmbed = EmbedBuilder.from(caseMessage.embeds[0]);
+
+                // Entferne alte Kommentar-Fields
+                const fieldsWithoutComments = updatedEmbed.data.fields?.filter(f => !f.name.startsWith('💬')) || [];
+                updatedEmbed.data.fields = fieldsWithoutComments;
+
+                // Füge alle Kommentare als Fields hinzu (max 3 neueste)
+                const recentComments = voiceCase.comments.slice(-3);
+                recentComments.forEach((comment, index) => {
+                  const timeAgo = `<t:${Math.floor(new Date(comment.timestamp).getTime() / 1000)}:R>`;
+                  updatedEmbed.addFields({
+                    name: `💬 Kommentar von ${comment.username}`,
+                    value: `${comment.text}\n*${timeAgo}*`,
+                    inline: false
+                  });
+                });
+
+                await caseMessage.edit({ embeds: [updatedEmbed] });
+                console.log(`✅ Updated embed with comment for case #${caseId}`);
+              }
             }
+          } catch(err){
+            console.error('Error updating embed with comment:', err);
           }
         }
+
+        await i.reply({
+          content: `✅ Kommentar wurde zu Fall #${String(caseId).padStart(5, '0')} hinzugefügt und im Embed angezeigt.`,
+          ephemeral: true
+        });
 
         console.log(`💬 Comment added to voice case #${caseId} by ${i.user.tag}`);
 
@@ -3737,7 +3752,8 @@ client.on(Events.InteractionCreate, async i => {
           // ========== UPDATE CASE ==========
           voiceCase.claimedBy = i.user.id;
           voiceCase.claimedAt = new Date().toISOString();
-          voiceCase.supportChannelId = supportChannel.id; // Speichere Channel-ID
+          voiceCase.supportChannelId = supportChannel.id; // Speichere Support-Channel-ID
+          voiceCase.claimerPreviousChannelId = teamVoiceState.channelId; // Speichere vorherigen Channel des Supporters
           cases[caseIndex] = voiceCase;
           saveVoiceCases(guildId, cases);
 
@@ -3885,6 +3901,39 @@ client.on(Events.InteractionCreate, async i => {
           voiceCase.closedAt = new Date().toISOString();
           voiceCase.closedBy = i.user.id;
           voiceCase.closeReason = `Closed by ${i.user.tag}`;
+
+          // ========== MOVE USER ZURÜCK ==========
+          // 1. Supporter zurück in vorherigen Channel moven
+          if(voiceCase.claimedBy && voiceCase.claimerPreviousChannelId){
+            try {
+              const claimer = await i.guild.members.fetch(voiceCase.claimedBy).catch(() => null);
+              if(claimer && claimer.voice.channelId === voiceCase.supportChannelId){
+                const previousChannel = await i.guild.channels.fetch(voiceCase.claimerPreviousChannelId).catch(() => null);
+                if(previousChannel){
+                  await claimer.voice.setChannel(previousChannel.id);
+                  console.log(`↩️ Moved supporter ${claimer.user.tag} back to ${previousChannel.name}`);
+                } else {
+                  console.log(`⚠️ Previous channel ${voiceCase.claimerPreviousChannelId} not found, disconnecting supporter`);
+                  await claimer.voice.setChannel(null);
+                }
+              }
+            } catch(err){
+              console.error(`❌ Error moving supporter back:`, err);
+            }
+          }
+
+          // 2. User disconnecten
+          if(voiceCase.userId){
+            try {
+              const caseUser = await i.guild.members.fetch(voiceCase.userId).catch(() => null);
+              if(caseUser && caseUser.voice.channelId === voiceCase.supportChannelId){
+                await caseUser.voice.setChannel(null);
+                console.log(`🔌 Disconnected user ${caseUser.user.tag} from voice`);
+              }
+            } catch(err){
+              console.error(`❌ Error disconnecting user:`, err);
+            }
+          }
 
           // ========== LÖSCHE SUPPORT-VOICE-CHANNEL ==========
           if(voiceCase.supportChannelId){
