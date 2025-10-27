@@ -11,11 +11,11 @@ Group=trs-bot
 WorkingDirectory=/home/trs-bot/ticketbot
 ExecStart=/usr/bin/node web.js
 Restart=always
-RestartSec=10s
+RestartSec=1m
 
-# Restart Limits - Verhindert Boot-Loops
-StartLimitBurst=5
-StartLimitIntervalSec=600
+# Restart Limits - REDUZIERT um Discord Sessions zu schonen
+StartLimitBurst=3
+StartLimitIntervalSec=900
 
 # Environment
 Environment=NODE_ENV=production
