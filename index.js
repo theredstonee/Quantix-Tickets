@@ -2199,6 +2199,8 @@ async function appendToLiveTranscript(message, ticket, guildId) {
     .messages { padding: 2rem 2.5rem; }
     .message { display: flex; gap: 1rem; padding: 0.75rem 0; border-radius: 8px; transition: background 0.15s; }
     .message:hover { background: #32353b; padding-left: 0.5rem; margin-left: -0.5rem; padding-right: 0.5rem; margin-right: -0.5rem; }
+    .avatar-container { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3); }
+    .avatar-img { width: 100%; height: 100%; object-fit: cover; }
     .avatar-fallback { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #00ff88, #00b894); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.1rem; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3); }
     .message-content { flex: 1; min-width: 0; }
     .message-header { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.25rem; }
@@ -2274,9 +2276,15 @@ async function appendToLiveTranscript(message, ticket, guildId) {
       minute: '2-digit'
     });
 
+    // Discord Avatar URL abrufen
+    const avatarUrl = message.author?.displayAvatarURL({ size: 128, extension: 'png' }) || null;
+    const avatarHTML = avatarUrl
+      ? `<div class="avatar-container"><img src="${avatarUrl}" alt="${author}" class="avatar-img" onerror="this.parentElement.outerHTML='<div class=\\'avatar-fallback\\'>${authorInitial}</div>'"></div>`
+      : `<div class="avatar-fallback">${authorInitial}</div>`;
+
     let htmlMessage = `
       <div class="message">
-        <div class="avatar-fallback">${authorInitial}</div>
+        ${avatarHTML}
         <div class="message-content">
           <div class="message-header">
             <span class="author">${author}</span>
