@@ -176,37 +176,6 @@ const PREMIUM_TIERS = {
       applicationSystem: true,
       multiTicketSystems: true
     }
-  },
-  partner: {
-    name: 'Partner',
-    price: 0,
-    priceId: null,
-    features: {
-      // Alle Basic+ Features
-      noAds: true,
-      customAvatar: true,
-      statistics: true,
-      prioritySupport: true,
-      customTags: true,
-      templates: true,
-      fileUpload: true,
-      vipSystem: true,
-      multiDepartment: true,
-      // Pro-exklusive Features
-      slaSystem: true,
-      autoClose: true,
-      emailNotifications: true,
-      dmNotifications: true,
-      unlimitedCategories: true,
-      maxCategories: 999,
-      ratingSystem: true,
-      autoAssignment: true,
-      customBranding: true,
-      voiceSupport: true,
-      ticketBlacklist: true,
-      applicationSystem: true,
-      multiTicketSystems: true
-    }
   }
 };
 
@@ -773,103 +742,6 @@ function listBetatesterServers() {
 }
 
 /**
- * Aktiviert Partner-Status für einen Server
- * @param {string} guildId - Discord Guild ID
- * @param {string} partnerUserId - User ID des Partners
- * @param {string} partnerLink - Partner Server Link
- * @returns {object}
- */
-function activatePartner(guildId, partnerUserId, partnerLink = null) {
-  const cfg = readCfg(guildId);
-
-  cfg.premium = {
-    tier: 'partner',
-    expiresAt: null,
-    subscriptionId: 'partner_' + guildId,
-    customerId: 'partner_customer_' + guildId,
-    partnerUserId: partnerUserId,
-    partnerLink: partnerLink,
-    partner: true,
-    lifetime: true,
-    features: { ...PREMIUM_TIERS.partner.features }
-  };
-
-  saveCfg(guildId, cfg);
-  console.log(`🤝 Partner aktiviert für Guild ${guildId} (User: ${partnerUserId})`);
-
-  return {
-    success: true,
-    guildId: guildId,
-    partnerUserId: partnerUserId,
-    partnerLink: partnerLink
-  };
-}
-
-/**
- * Deaktiviert Partner-Status für einen Server
- * @param {string} guildId - Discord Guild ID
- * @returns {object}
- */
-function deactivatePartner(guildId) {
-  const cfg = readCfg(guildId);
-
-  if (!cfg.premium || cfg.premium.tier !== 'partner') {
-    return {
-      success: false,
-      message: 'Dieser Server ist kein Partner'
-    };
-  }
-
-  cfg.premium = {
-    tier: 'none',
-    expiresAt: null,
-    subscriptionId: null,
-    customerId: null,
-    partner: false,
-    features: { ...PREMIUM_TIERS.none.features }
-  };
-
-  saveCfg(guildId, cfg);
-  console.log(`🤝 Partner deaktiviert für Guild ${guildId}`);
-
-  return {
-    success: true,
-    guildId: guildId
-  };
-}
-
-/**
- * Listet alle Partner-Server auf
- * @returns {array}
- */
-function listPartnerServers() {
-  const partnerServers = [];
-
-  if (!fs.existsSync(CONFIG_DIR)) {
-    return partnerServers;
-  }
-
-  const files = fs.readdirSync(CONFIG_DIR);
-
-  for (const file of files) {
-    if (!file.endsWith('.json') || file.includes('_tickets')) continue;
-
-    const guildId = file.replace('.json', '');
-    const cfg = readCfg(guildId);
-
-    if (cfg.premium && cfg.premium.tier === 'partner') {
-      partnerServers.push({
-        guildId: guildId,
-        partnerUserId: cfg.premium.partnerUserId,
-        partnerLink: cfg.premium.partnerLink || null
-      });
-    }
-  }
-
-  return partnerServers;
-}
-
-/**
  * Aktiviert automatische 14-Tage Trial (Premium Pro) für neue Server
  * @param {string} guildId - Discord Guild ID
  * @returns {object}
@@ -1093,9 +965,6 @@ module.exports = {
   activateBetatester,
   deactivateBetatester,
   listBetatesterServers,
-  activatePartner,
-  deactivatePartner,
-  listPartnerServers,
   activateAutoTrial,
   isTrialActive,
   getTrialInfo,
