@@ -1159,7 +1159,7 @@ function startStatusRotation() {
 }
 
 client.once('clientReady', async () => {
-  await deployCommands(); // Commands werden beim Start automatisch geladen
+  await deployCommands(); // Commands werden beim Start für alle Server geladen
   await cleanupOldServerData();
   initEmailService(); // Email-Benachrichtigungen initialisieren
   console.log(`🤖 ${client.user.tag} bereit`);
