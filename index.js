@@ -52,7 +52,7 @@ const { createVoiceChannel, deleteVoiceChannel, hasVoiceChannel } = require('./v
 const { handleVoiceJoin, handleVoiceLeave } = require('./voice-waiting-room');
 const { handleTemplateUse } = require('./template-handler');
 const { handleDepartmentForward } = require('./department-handler');
-const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo, isTrialActive, activateAutoTrial, checkExpiredCancellations } = require('./premium');
+const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo, isTrialActive, activateAutoTrial, checkExpiredCancellations, activatePartner, deactivatePartner, listPartnerServers } = require('./premium');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -1159,7 +1159,7 @@ function startStatusRotation() {
 }
 
 client.once('clientReady', async () => {
-  await deployCommands();
+  await deployCommands(); // Commands werden beim Start automatisch geladen
   await cleanupOldServerData();
   initEmailService(); // Email-Benachrichtigungen initialisieren
   console.log(`🤖 ${client.user.tag} bereit`);
