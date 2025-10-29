@@ -15,7 +15,7 @@ const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 const { VERSION, COPYRIGHT } = require('./version.config');
 const { handleAutoUpdate, showUpdateLog } = require('./auto-update');
-const { isPremium, hasFeature, getPremiumTier, getPremiumInfo, activatePremium, deactivatePremium, renewPremium, downgradePremium, cancelPremium, PREMIUM_TIERS } = require('./premium');
+const { isPremium, hasFeature, getPremiumTier, getPremiumInfo, activatePremium, deactivatePremium, renewPremium, downgradePremium, cancelPremium, PREMIUM_TIERS, listPartnerServers } = require('./premium');
 const { getComprehensiveInsights } = require('./insights-analytics');
 const { generateCSVExport, generateStatsCSVExport } = require('./export-utils');
 const {
@@ -965,7 +965,7 @@ module.exports = (client)=>{
   // ROUTES
   // ============================================================
 
-  router.get('/', (req,res)=>{
+  router.get('/', async (req,res)=>{
     const lang = req.cookies.lang || 'de';
     const isAuthenticated = req.isAuthenticated && req.isAuthenticated();
 
@@ -1016,6 +1016,29 @@ module.exports = (client)=>{
       console.error('Error loading feedbacks:', err);
     }
 
+    // Load partner servers
+    let partnerServers = [];
+    try {
+      const partners = listPartnerServers();
+
+      for (const partner of partners) {
+        try {
+          const guild = await client.guilds.fetch(partner.guildId);
+          partnerServers.push({
+            guildId: partner.guildId,
+            name: guild.name,
+            icon: guild.iconURL({ size: 128, extension: 'png' }) || null,
+            link: partner.partnerLink || null,
+            partnerUserId: partner.partnerUserId
+          });
+        } catch (err) {
+          console.error(`Error fetching partner guild ${partner.guildId}:`, err);
+        }
+      }
+    } catch(err) {
+      console.error('Error loading partner servers:', err);
+    }
+
     res.render('home', {
       lang: lang,
       t: getTranslations(lang),
@@ -1025,7 +1048,8 @@ module.exports = (client)=>{
       totalTickets: totalTickets || 5000,
       feedbacks: feedbacks,
       averageRating: averageRating,
-      totalRatings: totalRatings
+      totalRatings: totalRatings,
+      partnerServers: partnerServers
     });
   });
 

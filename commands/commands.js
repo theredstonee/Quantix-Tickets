@@ -279,6 +279,13 @@ function getCommandsList(userId, member, guildId) {
           permission: 'Owner',
           canUse: true,
           premium: null
+        },
+        {
+          name: '/partner',
+          description: 'Partner-Status verwalten (add/remove/list)',
+          permission: 'Founder',
+          canUse: isFounder,
+          premium: null
         }
       ]
     });

@@ -852,6 +852,73 @@
       font-size: 0.9rem;
     }
 
+    /* Partners Section */
+    .partners-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .partner-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      transition: all 0.3s;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .partner-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px var(--shadow-color);
+      border-color: var(--accent-color);
+    }
+
+    .partner-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin: 0 auto 1.5rem;
+      overflow: hidden;
+      border: 3px solid var(--accent-color);
+      background: var(--glass-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+
+    .partner-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .partner-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--accent-color);
+    }
+
+    .partner-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent-color), #00cc99);
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
     /* FAQ Section */
     .faq-container {
       max-width: 800px;
@@ -2298,6 +2365,62 @@
       <% } %>
     </div>
   </section>
+
+  <!-- Partners Section -->
+  <% if (partnerServers && partnerServers.length > 0) { %>
+  <section class="section">
+    <h2 class="section-title"><%
+      const partnersTitle = {
+        de: 'Unsere Partner',
+        en: 'Our Partners',
+        he: 'השותפים שלנו',
+        ja: 'パートナー',
+        ru: 'Наши партнеры',
+        pt: 'Nossos Parceiros',
+        es: 'Nuestros Socios',
+        id: 'Mitra Kami',
+        ar: 'شركاؤنا'
+      };
+    %><%= partnersTitle[lang] || partnersTitle.de %></h2>
+    <p class="section-subtitle"><%
+      const partnersSubtitle = {
+        de: 'Großartige Communities, die Quantix Tickets verwenden',
+        en: 'Amazing communities using Quantix Tickets',
+        he: 'קהילות מדהימות המשתמשות ב-Quantix Tickets',
+        ja: 'Quantix Ticketsを使用している素晴らしいコミュニティ',
+        ru: 'Потрясающие сообщества, использующие Quantix Tickets',
+        pt: 'Comunidades incríveis usando Quantix Tickets',
+        es: 'Comunidades increíbles usando Quantix Tickets',
+        id: 'Komunitas luar biasa yang menggunakan Quantix Tickets',
+        ar: 'مجتمعات رائعة تستخدم Quantix Tickets'
+      };
+    %><%= partnersSubtitle[lang] || partnersSubtitle.de %></p>
+
+    <div class="partners-grid">
+      <% partnerServers.forEach(function(partner) { %>
+      <% if (partner.link) { %>
+        <a href="<%= partner.link %>" target="_blank" rel="noopener noreferrer" class="partner-card">
+      <% } else { %>
+        <div class="partner-card">
+      <% } %>
+          <div class="partner-icon">
+            <% if (partner.icon) { %>
+              <img src="<%= partner.icon %>" alt="<%= partner.name %>" onerror="this.style.display='none'; this.parentElement.innerHTML='<%= partner.name.charAt(0).toUpperCase() %>';">
+            <% } else { %>
+              <%= partner.name.charAt(0).toUpperCase() %>
+            <% } %>
+          </div>
+          <h3 class="partner-name"><%= partner.name %></h3>
+          <div class="partner-badge">🤝 Partner</div>
+      <% if (partner.link) { %>
+        </a>
+      <% } else { %>
+        </div>
+      <% } %>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
 
   <!-- FAQ Section -->
   <section class="section">

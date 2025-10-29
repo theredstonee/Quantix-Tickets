@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { activatePartner, deactivatePartner, listPartnerServers } = require('../premium');
+const premium = require('../premium');
+const { activatePartner, deactivatePartner, listPartnerServers } = premium;
 
 const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
 const PARTNER_ROLE_ID = '1432763693535465554';
