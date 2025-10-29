@@ -1158,7 +1158,7 @@ function startStatusRotation() {
   setInterval(updateStatus, 15000);
 }
 
-client.once('clientReady', async () => {
+client.once('ready', async () => {
   await deployCommands(); // Commands werden beim Start für alle Server geladen
   await cleanupOldServerData();
   initEmailService(); // Email-Benachrichtigungen initialisieren
