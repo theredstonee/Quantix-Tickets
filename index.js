@@ -1137,7 +1137,7 @@ function startStatusRotation() {
       { name: `auf ${serverCount} Servern`, type: ActivityType.Playing },
       { name: `Release v${VERSION}`, type: ActivityType.Playing },
       { name: `Quantix Development`, type: ActivityType.Playing },
-      { name: `!commands für Hilfe`, type: ActivityType.Playing },
+      { name: `!help für Hilfe`, type: ActivityType.Playing },
       { name: `${totalMembers} Members zu`, type: ActivityType.Watching }
     ];
 
