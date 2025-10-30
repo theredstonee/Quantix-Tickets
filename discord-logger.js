@@ -30,7 +30,7 @@ function initializeLogger(discordClient) {
   if (client.isReady()) {
     setupLogChannel();
   } else {
-    client.once('clientReady', () => {
+    client.once('ready', () => {
       setupLogChannel();
     });
   }
@@ -112,10 +112,9 @@ async function sendInitMessage() {
         title: '🚀 Bot erfolgreich gestartet',
         fields: [
           { name: '🎫 Quantix Tickets Bot', value: `v${VERSION}`, inline: true },
-          { name: '🤖 Discord Bot System', value: '$Release v{VERSION}', inline: true },
           { name: '📅 Startzeit', value: timestamp, inline: false },
-          { name: '⚡ Node.js Version', value: nodeVersion, inline: true },
-          { name: '🔷 Discord.js Version', value: discordVersion, inline: true }
+          { name: '⚡ Node.js', value: nodeVersion, inline: true },
+          { name: '🔷 Discord.js', value: `v${discordVersion}`, inline: true }
         ],
         timestamp: new Date(),
         footer: { text: 'Quantix Tickets Logger' }

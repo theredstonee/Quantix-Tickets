@@ -61,11 +61,17 @@ const client = new Client({
 
 const TOKEN = process.env.DISCORD_TOKEN;
 
+// Initialize Discord Logger to send all console logs to Discord channel
+const { initializeLogger } = require('./discord-logger');
+
 // Client Login (nur für Daten-Zugriff, keine Events)
 client.login(TOKEN)
   .then(() => {
     console.log('✅ Discord Client connected (data-fetch only mode)');
     console.log(`👤 Logged in as: ${client.user.tag}`);
+
+    // Initialize Discord Logger after client is ready
+    initializeLogger(client);
 
     // Panel Routes laden (nach Client-Login)
     app.use('/', require('./panel')(client));
