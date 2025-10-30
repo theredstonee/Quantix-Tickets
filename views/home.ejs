@@ -1,993 +1,2952 @@
-<!DOCTYPE html>
-<html lang="de">
-  <head>
-    <meta charset="utf-8" />
-    <title>Quantix Tickets - Professionelles Discord Ticket-System</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-      :root {
-        color-scheme: dark;
-        --bg-primary: #0a0e1a;
-        --bg-secondary: #0f172a;
-        --panel-bg: rgba(15, 23, 42, 0.6);
-        --border: rgba(148, 163, 184, 0.1);
-        --accent-purple: #8b5cf6;
-        --accent-blue: #3b82f6;
-        --accent-cyan: #06b6d4;
-        --text-primary: #f1f5f9;
-        --text-muted: #94a3b8;
-        --glow-purple: rgba(139, 92, 246, 0.4);
-        --glow-blue: rgba(59, 130, 246, 0.4);
-        font-family: 'Inter', -apple-system, system-ui, sans-serif;
+<!doctype html>
+<html lang="<%= lang %>" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+<head>
+  <!-- Theme Manager - Load before anything else -->
+  <script src="/js/theme-manager.js"></script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SLMX16ZJ6Y"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-SLMX16ZJ6Y');
+  </script>
+
+  <!-- SEO Meta Tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="description" content="<%
+    const metaDesc = {
+      de: 'Quantix Tickets - Professionelles Discord Ticket-System mit Web-Panel, Multi-Sprache Support und DSGVO-Konformität. Kostenlos starten!',
+      en: 'Quantix Tickets - Professional Discord Ticket System with Web Panel, Multi-Language Support and GDPR Compliance. Start for free!',
+      he: 'Quantix Tickets - מערכת כרטיסים מקצועית ל-Discord עם פאנל אינטרנט, תמיכה רב-לשונית ותאימות GDPR. התחל בחינם!',
+      ja: 'Quantix Tickets - Webパネル、多言語サポート、GDPR準拠を備えたプロフェッショナルなDiscordチケットシステム。無料で始めよう!',
+      ru: 'Quantix Tickets - Профессиональная система тикетов Discord с веб-панелью, многоязычной поддержкой и соответствием GDPR. Начните бесплатно!',
+      pt: 'Quantix Tickets - Sistema de Tickets Profissional para Discord com Painel Web, Suporte Multi-Idioma e Conformidade GDPR. Comece grátis!',
+      es: 'Quantix Tickets - Sistema de Tickets Profesional para Discord con Panel Web, Soporte Multi-Idioma y Cumplimiento GDPR. ¡Comienza gratis!',
+      id: 'Quantix Tickets - Sistem Tiket Discord Profesional dengan Panel Web, Dukungan Multi-Bahasa dan Kepatuhan GDPR. Mulai gratis!',
+      ar: 'Quantix Tickets - نظام تذاكر Discord احترافي مع لوحة ويب، دعم متعدد اللغات والامتثال لـ GDPR. ابدأ مجانًا!'
+    };
+  %><%= metaDesc[lang] || metaDesc.de %>">
+  <meta name="keywords" content="Discord Bot, Ticket System, Support Bot, Discord Tickets, Multi-Language, GDPR, Web Panel, Customer Support">
+  <meta name="author" content="Quantix Development">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://tickets.quantix-bot.de/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tickets.quantix-bot.de/">
+  <meta property="og:title" content="Quantix Tickets - Professional Discord Ticket System">
+  <meta property="og:description" content="Professional ticket system for Discord with web panel, multi-language support and GDPR compliance. Start for free!">
+  <meta property="og:image" content="https://tickets.quantix-bot.de/images/og-image.png">
+  <meta property="og:site_name" content="Quantix Tickets">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://tickets.quantix-bot.de/">
+  <meta name="twitter:title" content="Quantix Tickets - Professional Discord Ticket System">
+  <meta name="twitter:description" content="Professional ticket system for Discord with web panel, multi-language support and GDPR compliance.">
+  <meta name="twitter:image" content="https://tickets.quantix-bot.de/images/og-image.png">
+
+  <!-- Structured Data / JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Quantix Tickets",
+    "applicationCategory": "BusinessApplication",
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "EUR",
+      "lowPrice": "0",
+      "highPrice": "4.99"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "127"
+    },
+    "operatingSystem": "Discord",
+    "description": "Professional Discord ticket system with web panel and multi-language support"
+  }
+  </script>
+
+  <title>Quantix Tickets - Professional Discord Ticket System | Start Free</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.png">
+  <link rel="shortcut icon" href="/images/favicon.png">
+
+  <!-- Preload Critical Resources -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/markdown.css">
+
+  <style>
+    :root {
+      --bg-color: #0ee9e5;
+      --text-color: #1a1a2e;
+      --border-color: #bdd7ee;
+      --accent-color: #0ea5e9;
+      --accent-hover: #0284c7;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --hero-gradient-start: #0ee9e5;
+      --hero-gradient-end: #00507a;
+      --glass-bg: rgba(240, 248, 255, 0.7);
+      --glass-border: rgba(14, 165, 233, 0.3);
+      --shadow-color: rgba(14, 165, 233, 0.15);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #000000;
+      --text-color: #3b82f6;
+      --border-color: #1e293b;
+      --accent-color: #3b82f6;
+      --accent-hover: #60a5fa;
+      --card-bg: rgba(10, 10, 26, 0.9);
+      --hero-gradient-start: #0a0a0f;
+      --hero-gradient-end: #1e293b;
+      --glass-bg: rgba(10, 10, 20, 0.7);
+      --glass-border: rgba(59, 130, 246, 0.3);
+      --shadow-color: rgba(59, 130, 246, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: linear-gradient(135deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%);
+      opacity: 0.05;
+    }
+
+    [data-theme="dark"] .animated-bg {
+      opacity: 0.05;
+    }
+
+    .animated-bg::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, var(--accent-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: bgMove 20s linear infinite;
+      opacity: 0.3;
+    }
+
+    /* Dark Mode: Blaues animiertes Hintergrundmuster */
+    [data-theme="dark"] .animated-bg::before {
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 1px, transparent 1px);
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Sticky Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 1rem 2rem;
+      transform: translateY(-100%);
+      animation: slideDown 0.5s ease forwards;
+    }
+
+    @keyframes slideDown {
+      to { transform: translateY(0); }
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      height: 2.5rem;
+
+    }
+
+    .header-actions > * {
+      height: 2.5rem;
+    }
+
+    /* Language Selector Dropdown */
+    .language-selector {
+      position: relative;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .lang-current {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 80px;
+      height: 2.5rem;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    .lang-current:hover {
+      border-color: var(--accent-color);
+    }
+
+    .lang-current img {
+      width: 24px;
+      height: 18px;
+      border-radius: 2px;
+    }
+
+    .lang-current i {
+      margin-left: auto;
+      font-size: 0.8rem;
+      transition: transform 0.3s;
+    }
+
+    .language-selector.open .lang-current i {
+      transform: rotate(180deg);
+    }
+
+    .lang-dropdown {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border);
+      border-radius: 0.75rem;
+      padding: 0.5rem;
+      min-width: 200px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s;
+      box-shadow: 0 10px 40px var(--shadow-color);
+      z-index: 1000;
+    }
+
+    .language-selector.open .lang-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .lang-option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      color: var(--text-color);
+      transition: all 0.2s;
+    }
+
+    .lang-option:hover {
+      background: rgba(0, 184, 148, 0.1);
+      transform: translateX(5px);
+    }
+
+    [data-theme="dark"] .lang-option:hover {
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    .lang-option.active {
+      background: rgba(0, 184, 148, 0.15);
+      border-left: 3px solid var(--accent-color);
+    }
+
+    [data-theme="dark"] .lang-option.active {
+      background: rgba(0, 255, 136, 0.15);
+    }
+
+    .lang-option img {
+      width: 24px;
+      height: 18px;
+      border-radius: 2px;
+    }
+
+    .lang-option span {
+      font-weight: 500;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      background: var(--accent-color);
+      color: #000;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      box-sizing: border-box;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .theme-toggle i {
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1) rotate(20deg);
+    }
+
+    /* Dashboard Button */
+    .btn-dashboard {
+      background: var(--accent-color);
+      color: #000;
+      padding: 0 1.2rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s;
+      font-size: 0.95rem;
+      height: 2.5rem;
+      box-sizing: border-box;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 184, 148, 0.3);
+    }
+
+    .btn-dashboard:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+    }
+
+    [data-theme="dark"] .btn-dashboard {
+      background: var(--accent-color);
+      color: #000;
+      box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+    }
+
+    [data-theme="dark"] .btn-dashboard:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+    }
+
+    .btn-dashboard.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .btn-dashboard.loading i {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+      background: linear-gradient(135deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+      animation: float 20s linear infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-100px); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
       }
-      
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
-      
-      @keyframes gradientShift {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      color: white;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .hero h1 {
+      color: var(--accent-color);
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      color: rgba(255, 255, 255, 0.95);
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    [data-theme="dark"] .hero-subtitle {
+      color: var(--text-color);
+    }
+
+    .version-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      padding: 0.5rem 1.2rem;
+      border-radius: 2rem;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    [data-theme="dark"] .version-badge {
+      background: rgba(0, 255, 136, 0.2);
+      border-color: rgba(0, 255, 136, 0.3);
+      color: var(--accent-color);
+    }
+
+    .user-info {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 0.8rem 1.5rem;
+      border-radius: 2rem;
+      margin-bottom: 2rem;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    [data-theme="dark"] .user-info {
+      background: rgba(0, 255, 136, 0.15);
+      border-color: rgba(0, 255, 136, 0.2);
+      color: var(--text-color);
+    }
+
+    /* CTA Buttons */
+    .cta-container {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .btn-primary, .btn-secondary {
+      padding: 1.2rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 0.75rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--hero-gradient-start);
+      border: 2px solid white;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); }
+      50% { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 0 10px rgba(255, 255, 255, 0.1); }
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-3px);
+    }
+
+    [data-theme="dark"] .btn-primary {
+      background: var(--accent-color);
+      color: #000;
+      border-color: var(--accent-color);
+    }
+
+    [data-theme="dark"] .btn-secondary {
+      background: rgba(0, 255, 136, 0.2);
+      color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    /* Stats Section */
+    .stats-section {
+      padding: 4rem 2rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      margin: 2rem auto;
+      max-width: 1200px;
+      border-radius: 2rem;
+      border: 1px solid var(--glass-border);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .stat-item {
+      animation: fadeIn 1s ease;
+    }
+
+    .stat-number {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent-color);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+
+    /* Features Section */
+    .section {
+      max-width: 1400px;
+      margin: 6rem auto;
+      padding: 0 2rem;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin-bottom: 1rem;
+      color: var(--accent-color);
+    }
+
+    .section-subtitle {
+      text-align: center;
+      font-size: 1.2rem;
+      opacity: 0.8;
+      margin-bottom: 4rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.5rem;
+      padding: 2.5rem;
+      transition: all 0.3s;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .feature-card.visible {
+      animation: slideUp 0.6s ease forwards;
+    }
+
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
-      
-      @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
+    }
+
+    .feature-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 50px var(--shadow-color);
+      border-color: var(--accent-color);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      color: var(--accent-color);
+      margin-bottom: 1.5rem;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--accent-color);
+    }
+
+    .feature-card p {
+      opacity: 0.9;
+      line-height: 1.8;
+    }
+
+    /* Pricing Section */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .pricing-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border);
+      border-radius: 1.5rem;
+      padding: 2.5rem;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 50px rgba(0, 184, 148, 0.3);
+      transform: scale(1.05);
+    }
+
+    [data-theme="dark"] .pricing-card.featured {
+      box-shadow: 0 0 50px rgba(0, 255, 136, 0.3);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent-color);
+      color: white;
+      padding: 0.5rem 1.5rem;
+      border-radius: 2rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    [data-theme="dark"] .pricing-badge {
+      color: #000;
+    }
+
+    .pricing-card h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: var(--accent-color);
+    }
+
+    .pricing-price {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent-color);
+      margin: 1rem 0;
+    }
+
+    .pricing-price span {
+      font-size: 1.2rem;
+      opacity: 0.7;
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin: 2rem 0;
+      text-align: left;
+    }
+
+    .pricing-features li {
+      padding: 0.8rem 0;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pricing-features li:last-child {
+      border-bottom: none;
+    }
+
+    .pricing-features i {
+      color: var(--accent-color);
+    }
+
+    /* Testimonials Section */
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .testimonial-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      transition: all 0.3s;
+    }
+
+    .testimonial-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px var(--shadow-color);
+    }
+
+    .testimonial-rating {
+      color: #ffc107;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .testimonial-text {
+      font-style: italic;
+      margin-bottom: 1.5rem;
+      line-height: 1.8;
+      opacity: 0.9;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .testimonial-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+      font-weight: 700;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .testimonial-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .testimonial-info h4 {
+      margin-bottom: 0.2rem;
+      color: var(--accent-color);
+    }
+
+    .testimonial-info p {
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+
+    /* Partners Section */
+    .partners-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .partner-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      transition: all 0.3s;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .partner-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px var(--shadow-color);
+      border-color: var(--accent-color);
+    }
+
+    .partner-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin: 0 auto 1.5rem;
+      overflow: hidden;
+      border: 3px solid var(--accent-color);
+      background: var(--glass-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+
+    .partner-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .partner-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--accent-color);
+    }
+
+    .partner-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent-color), #00cc99);
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    /* FAQ Section */
+    .faq-container {
+      max-width: 800px;
+      margin: 3rem auto;
+    }
+
+    .faq-item {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 1rem;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .faq-question {
+      padding: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .faq-question:hover {
+      background: rgba(0, 184, 148, 0.05);
+    }
+
+    [data-theme="dark"] .faq-question:hover {
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .faq-icon {
+      color: var(--accent-color);
+      transition: transform 0.3s;
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      padding: 0 1.5rem;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 500px;
+      padding: 0 1.5rem 1.5rem;
+    }
+
+    .faq-answer p {
+      opacity: 0.9;
+      line-height: 1.8;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--glass-border);
+      padding: 3rem 2rem;
+      margin-top: 6rem;
+    }
+
+    .footer-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+    }
+
+    .footer-section h3 {
+      color: var(--accent-color);
+      margin-bottom: 1.5rem;
+      font-size: 1.3rem;
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 0.8rem;
+    }
+
+    .footer-links a {
+      color: var(--text-color);
+      text-decoration: none;
+      opacity: 0.8;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .footer-links a:hover {
+      opacity: 1;
+      color: var(--accent-color);
+      transform: translateX(5px);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      opacity: 0.7;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+    }
+
+    .loading-overlay.show {
+      display: flex;
+    }
+
+    .loading-content {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 3rem;
+      border-radius: 2rem;
+      border: 1px solid rgba(0, 255, 136, 0.2);
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(0, 255, 136, 0.1);
+      border-top: 6px solid var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 2rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 1.3rem;
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .header {
+        padding: 0.8rem 1rem;
       }
-      
-      @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-      }
-      
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      
-      html {
-        scroll-behavior: smooth;
-      }
-      
-      body {
-        margin: 0;
-        background: linear-gradient(135deg, #0a0e1a 0%, #1e1b4b 50%, #0f172a 100%);
-        background-size: 400% 400%;
-        animation: gradientShift 15s ease infinite;
-        color: var(--text-primary);
-        min-height: 100vh;
-        padding: 0;
-        position: relative;
-        overflow-x: hidden;
-      }
-      
-      body::before {
-        content: '';
-        position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: 
-          radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-          radial-gradient(circle at 40% 40%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
-        animation: float 20s ease-in-out infinite;
-        pointer-events: none;
-        z-index: 0;
-      }
-      
-      .particles {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        pointer-events: none;
-        z-index: 0;
-      }
-      
-      .particle {
-        position: absolute;
-        width: 4px;
-        height: 4px;
-        background: rgba(139, 92, 246, 0.6);
-        border-radius: 50%;
-        animation: pulse 3s ease-in-out infinite;
-      }
-      
-      .particle:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
-      .particle:nth-child(2) { top: 60%; left: 80%; animation-delay: 1s; }
-      .particle:nth-child(3) { top: 40%; left: 30%; animation-delay: 2s; }
-      .particle:nth-child(4) { top: 70%; left: 60%; animation-delay: 1.5s; }
-      .particle:nth-child(5) { top: 30%; left: 90%; animation-delay: 0.5s; }
-      
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 2rem;
-        position: relative;
-        z-index: 1;
-      }
-      
-      header {
-        padding: 2rem 0;
-        animation: fadeInUp 0.8s ease-out;
-        position: relative;
-        z-index: 100;
-      }
-      
-      .nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: var(--panel-bg);
-        backdrop-filter: blur(24px);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 1rem 1.5rem;
-      }
-      
-      .logo-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        text-decoration: none;
-      }
-      
-      .logo-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-        border-radius: 14px;
-        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4);
-      }
-      
-      .logo-icon i {
-        font-size: 1.5rem;
-        color: white;
-      }
-      
-      .logo-text {
-        font-size: 1.5rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-      
-      .nav-actions {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-      }
-      
-      .btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 0.95rem;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
+
+      .header-actions {
         gap: 0.5rem;
       }
-      
-      .btn-primary {
-        background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-        color: white;
-        box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+
+      .lang-current {
+        padding: 0.3rem 0.6rem;
       }
-      
-      .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+
+      .lang-current img {
+        width: 20px;
+        height: 15px;
       }
-      
-      .btn-secondary {
-        background: rgba(148, 163, 184, 0.1);
-        color: var(--text-primary);
-        border: 1px solid var(--border);
+
+      .lang-dropdown {
+        right: auto;
+        left: 0;
       }
-      
-      .btn-secondary:hover {
-        background: rgba(148, 163, 184, 0.15);
-        border-color: rgba(148, 163, 184, 0.3);
-        transform: translateY(-2px);
-      }
-      
-      main {
-        padding: 2rem 0 4rem;
-      }
-      
+
       .hero {
-        text-align: center;
-        padding: 4rem 0;
-        animation: fadeInUp 0.8s ease-out 0.2s both;
+        padding: 6rem 1.5rem 3rem;
+        min-height: auto;
       }
-      
-      .hero h1 {
-        font-size: clamp(2.5rem, 5vw, 4rem);
-        font-weight: 800;
-        margin-bottom: 1rem;
-        letter-spacing: -0.02em;
-        background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+
+      .cta-container {
+        flex-direction: column;
+        width: 100%;
       }
-      
-      .hero-subtitle {
-        font-size: clamp(1.1rem, 2vw, 1.5rem);
-        color: var(--text-muted);
-        margin-bottom: 1rem;
-        font-weight: 500;
-      }
-      
-      .version-badge {
-        display: inline-block;
-        background: rgba(139, 92, 246, 0.1);
-        border: 1px solid rgba(139, 92, 246, 0.3);
-        padding: 0.5rem 1.2rem;
-        border-radius: 2rem;
-        font-size: 0.9rem;
-        margin-bottom: 2rem;
-        color: var(--accent-purple);
-        font-weight: 600;
-      }
-      
-      .cta-group {
-        display: flex;
-        gap: 1rem;
+
+      .btn-primary, .btn-secondary {
+        width: 100%;
         justify-content: center;
-        flex-wrap: wrap;
-        margin-top: 2rem;
       }
-      
+
       .stats-section {
-        background: var(--panel-bg);
-        backdrop-filter: blur(24px);
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        padding: 3rem;
-        margin: 3rem 0;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        margin: 1rem;
+        padding: 2rem 1rem;
+        border-radius: 1rem;
       }
-      
+
       .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 2rem;
-        text-align: center;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
       }
-      
-      .stat-item {
-        animation: fadeInUp 1s ease;
-      }
-      
+
       .stat-number {
-        font-size: 3rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        display: block;
-        margin-bottom: 0.5rem;
-      }
-      
-      .stat-label {
-        font-size: 1rem;
-        color: var(--text-muted);
-      }
-      
-      .section {
-        margin: 6rem 0;
-      }
-      
-      .section-title {
-        text-align: center;
-        font-size: clamp(2rem, 4vw, 3rem);
-        margin-bottom: 1rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-      
-      .section-subtitle {
-        text-align: center;
-        font-size: 1.2rem;
-        color: var(--text-muted);
-        margin-bottom: 4rem;
-        max-width: 700px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      
-      .features-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-      }
-      
-      .feature-card {
-        background: var(--panel-bg);
-        backdrop-filter: blur(24px);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 2.5rem;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-      }
-      
-      .feature-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5) 50%, transparent);
-      }
-      
-      .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 60px rgba(139, 92, 246, 0.2);
-        border-color: rgba(139, 92, 246, 0.3);
-      }
-      
-      .feature-icon {
-        font-size: 3rem;
-        color: var(--accent-purple);
-        margin-bottom: 1.5rem;
-        display: block;
-      }
-      
-      .feature-card h3 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        color: var(--text-primary);
-        font-weight: 700;
-      }
-      
-      .feature-card p {
-        color: var(--text-muted);
-        line-height: 1.7;
-      }
-      
-      /* Testimonials */
-      .testimonials-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 3rem;
-      }
-      
-      .testimonial-card {
-        background: var(--panel-bg);
-        backdrop-filter: blur(24px);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 2rem;
-        transition: all 0.3s ease;
-      }
-      
-      .testimonial-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 60px rgba(139, 92, 246, 0.2);
-      }
-      
-      .testimonial-rating {
-        color: #ffc107;
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
-      }
-      
-      .testimonial-text {
-        font-style: italic;
-        margin-bottom: 1.5rem;
-        line-height: 1.8;
-        color: var(--text-muted);
-      }
-      
-      .testimonial-author {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-      
-      .testimonial-avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: var(--accent-purple);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        color: white;
-        font-weight: 700;
-        overflow: hidden;
-        flex-shrink: 0;
-      }
-      
-      .testimonial-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      
-      .testimonial-info h4 {
-        margin-bottom: 0.2rem;
-        color: var(--text-primary);
-      }
-      
-      .testimonial-info p {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-      }
-      
-      /* Partners */
-      .partners-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 2rem;
-        margin-top: 3rem;
-      }
-      
-      .partner-card {
-        background: var(--panel-bg);
-        backdrop-filter: blur(24px);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 2rem;
-        transition: all 0.3s ease;
-        text-align: center;
-        text-decoration: none;
-        color: inherit;
-        display: block;
-      }
-      
-      .partner-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 60px rgba(139, 92, 246, 0.2);
-        border-color: rgba(139, 92, 246, 0.3);
-      }
-      
-      .partner-icon {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        margin: 0 auto 1.5rem;
-        overflow: hidden;
-        border: 3px solid var(--accent-purple);
-        background: var(--panel-bg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
         font-size: 2rem;
-        font-weight: 700;
-        color: var(--accent-purple);
       }
-      
-      .partner-icon img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+
+      .section {
+        margin: 3rem auto;
+        padding: 0 1rem;
       }
-      
-      .partner-name {
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        color: var(--text-primary);
+
+      .features-grid,
+      .pricing-grid,
+      .testimonials-grid {
+        grid-template-columns: 1fr;
       }
-      
-      .partner-badge {
-        display: inline-block;
-        background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-        color: white;
-        padding: 0.4rem 1rem;
-        border-radius: 2rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-top: 0.5rem;
+
+      .pricing-card.featured {
+        transform: scale(1);
       }
-      
-      footer {
-        padding: 3rem 0;
-        text-align: center;
-        border-top: 1px solid var(--border);
-        margin-top: 6rem;
-        background: var(--panel-bg);
-        backdrop-filter: blur(24px);
-      }
-      
+
       .footer-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 2rem;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 3rem;
-        text-align: left;
+        grid-template-columns: 1fr;
+        gap: 2rem;
       }
-      
-      .footer-section h3 {
-        color: var(--text-primary);
-        margin-bottom: 1.5rem;
-        font-size: 1.3rem;
-        font-weight: 700;
+    }
+
+    /* Scroll animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
       }
-      
-      .footer-section p {
-        color: var(--text-muted);
-        line-height: 1.7;
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
-      
-      .footer-links {
-        list-style: none;
-      }
-      
-      .footer-links li {
-        margin-bottom: 0.8rem;
-      }
-      
-      .footer-links a {
-        color: var(--text-muted);
-        text-decoration: none;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 500;
-      }
-      
-      .footer-links a:hover {
-        color: var(--text-primary);
-        transform: translateX(5px);
-      }
-      
-      .footer-bottom {
-        text-align: center;
-        margin-top: 3rem;
-        padding-top: 2rem;
-        border-top: 1px solid var(--border);
-        color: var(--text-muted);
-      }
-      
-      @media (max-width: 768px) {
-        .nav {
-          flex-direction: column;
-          gap: 1rem;
-          align-items: flex-start;
-        }
-        
-        .nav-actions {
-          width: 100%;
-          justify-content: space-between;
-        }
-        
-        .hero {
-          padding: 2rem 0;
-        }
-        
-        .cta-group {
-          flex-direction: column;
-        }
-        
-        .btn {
-          width: 100%;
-          justify-content: center;
-        }
-        
-        .stats-grid {
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1.5rem;
-        }
-        
-        .features-grid,
-        .testimonials-grid,
-        .partners-grid {
-          grid-template-columns: 1fr;
-        }
-        
-        .footer-content {
-          grid-template-columns: 1fr;
-          gap: 2rem;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="particles">
-      <div class="particle"></div>
-      <div class="particle"></div>
-      <div class="particle"></div>
-      <div class="particle"></div>
-      <div class="particle"></div>
+    }
+  </style>
+</head>
+<body>
+  <div class="animated-bg"></div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text" id="loadingText">Wird geladen...</div>
     </div>
-    
-    <header>
-      <div class="container">
-        <nav class="nav">
-          <a href="/" class="logo-header">
-            <div class="logo-icon">
-              <i class="fas fa-ticket-alt"></i>
-            </div>
-            <span class="logo-text">Quantix Tickets</span>
+  </div>
+
+  <!-- Sticky Header -->
+  <header class="header">
+    <div class="header-content">
+      <a href="/" class="logo">
+        <i class="fas fa-ticket-alt"></i>
+        <span>Quantix Tickets</span>
+      </a>
+      <div class="header-actions">
+        <div class="language-selector" id="langSelector">
+          <div class="lang-current" onclick="toggleLanguageDropdown()">
+            <%
+              const langFlags = {
+                de: '/images/flags/de.svg',
+                en: '/images/flags/gb.svg',
+                he: '/images/flags/il.svg',
+                ja: '/images/flags/jp.svg',
+                ru: '/images/flags/ru.svg',
+                pt: '/images/flags/pt.svg',
+                es: '/images/flags/es.svg',
+                id: '/images/flags/id.svg',
+                ar: '/images/flags/ar.svg'
+              };
+            %>
+            <img src="<%= langFlags[lang] || langFlags.de %>" alt="<%= lang.toUpperCase() %>">
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="lang-dropdown">
+            <a href="/set-user-language/de" class="lang-option <%= lang === 'de' ? 'active' : '' %>">
+              <img src="/images/flags/de.svg" alt="DE">
+              <span>Deutsch</span>
+            </a>
+            <a href="/set-user-language/en" class="lang-option <%= lang === 'en' ? 'active' : '' %>">
+              <img src="/images/flags/gb.svg" alt="EN">
+              <span>English</span>
+            </a>
+            <a href="/set-user-language/he" class="lang-option <%= lang === 'he' ? 'active' : '' %>">
+              <img src="/images/flags/il.svg" alt="HE">
+              <span>עברית</span>
+            </a>
+            <a href="/set-user-language/ja" class="lang-option <%= lang === 'ja' ? 'active' : '' %>">
+              <img src="/images/flags/jp.svg" alt="JA">
+              <span>日本語</span>
+            </a>
+            <a href="/set-user-language/ru" class="lang-option <%= lang === 'ru' ? 'active' : '' %>">
+              <img src="/images/flags/ru.svg" alt="RU">
+              <span>Русский</span>
+            </a>
+            <a href="/set-user-language/pt" class="lang-option <%= lang === 'pt' ? 'active' : '' %>">
+              <img src="/images/flags/pt.svg" alt="PT">
+              <span>Português</span>
+            </a>
+            <a href="/set-user-language/es" class="lang-option <%= lang === 'es' ? 'active' : '' %>">
+              <img src="/images/flags/es.svg" alt="ES">
+              <span>Español</span>
+            </a>
+            <a href="/set-user-language/id" class="lang-option <%= lang === 'id' ? 'active' : '' %>">
+              <img src="/images/flags/id.svg" alt="ID">
+              <span>Bahasa Indonesia</span>
+            </a>
+            <a href="/set-user-language/ar" class="lang-option <%= lang === 'ar' ? 'active' : '' %>">
+              <img src="/images/flags/ar.svg" alt="AR">
+              <span>العربية</span>
+            </a>
+          </div>
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+          <i class="fas fa-moon"></i>
+        </button>
+        <a href="/panel" class="btn-dashboard" id="dashboardBtn">
+          <i class="fas fa-tachometer-alt"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>
+        <i class="fas fa-ticket-alt"></i>
+        Quantix Tickets
+      </h1>
+      <p class="hero-subtitle"><%
+        const heroTexts = {
+          de: 'Das modernste Discord Ticket-System mit Web-Panel und Multi-Sprache Support',
+          en: 'The most modern Discord ticket system with web panel and multi-language support',
+          he: 'מערכת הכרטיסים המודרנית ביותר ל-Discord עם פאנל אינטרנט ותמיכה רב-לשונית',
+          ja: 'Webパネルと多言語サポートを備えた最も近代的なDiscordチケットシステム',
+          ru: 'Самая современная система тикетов Discord с веб-панелью и многоязычной поддержкой',
+          pt: 'O sistema de tickets Discord mais moderno com painel web e suporte multi-idioma',
+          es: 'El sistema de tickets Discord más moderno con panel web y soporte multi-idioma',
+          id: 'Sistem tiket Discord paling modern dengan panel web dan dukungan multi-bahasa',
+          ar: 'نظام تذاكر Discord الأكثر حداثة مع لوحة ويب ودعم متعدد اللغات'
+        };
+      %><%= heroTexts[lang] || heroTexts.de %></p>
+
+      <div class="version-badge">
+        <i class="fas fa-star"></i> v1.3.0
+      </div>
+
+      <% if (isAuthenticated && user) { %>
+        <div class="user-info">
+          <i class="fas fa-user-check"></i>
+          <%
+            const loggedInTexts = {
+              de: 'Angemeldet als',
+              en: 'Logged in as',
+              he: 'מחובר בתור',
+              ja: 'ログイン中：',
+              ru: 'Вошли как',
+              pt: 'Conectado como',
+              es: 'Conectado como',
+              id: 'Login sebagai',
+              ar: 'تسجيل الدخول بصفتك'
+            };
+          %><%= loggedInTexts[lang] || loggedInTexts.de %> <strong><%= user.username %></strong>
+        </div>
+
+        <div class="cta-container">
+          <a href="/select-server" class="btn-primary">
+            <i class="fas fa-cog"></i>
+            <%
+              const adminPanelTexts = {
+                de: 'Zum Admin Panel',
+                en: 'Go to Admin Panel',
+                he: 'עבור לפאנל ניהול',
+                ja: '管理パネルへ',
+                ru: 'Перейти в админ-панель',
+                pt: 'Ir para Painel Admin',
+                es: 'Ir al Panel de Administración',
+                id: 'Buka Panel Admin',
+                ar: 'الذهاب إلى لوحة الإدارة'
+              };
+            %><%= adminPanelTexts[lang] || adminPanelTexts.de %>
           </a>
-          <div class="nav-actions">
-            <a href="https://tickets.quantix-bot.de/install" class="btn btn-secondary">
-              <i class="fas fa-download"></i>
-              Bot einladen
-            </a>
-            <a href="https://tickets.quantix-bot.de/panel" class="btn btn-primary">
-              <i class="fas fa-tachometer-alt"></i>
-              Dashboard
-            </a>
-          </div>
-        </nav>
-      </div>
-    </header>
-    
-    <main>
-      <div class="container">
-        <section class="hero">
-          <div class="version-badge">
-            <i class="fas fa-star"></i> v1.3.0
-          </div>
-          <h1>
-            <i class="fas fa-ticket-alt"></i>
-            Quantix Tickets
-          </h1>
-          <p class="hero-subtitle">
-            Das modernste Discord Ticket-System mit Web-Panel und Multi-Sprache Support
-          </p>
-          
-          <div class="cta-group">
-            <a href="https://tickets.quantix-bot.de/panel" class="btn btn-primary">
-              <i class="fas fa-cog"></i>
-              Kostenlos starten
-            </a>
-            <a href="https://tickets.quantix-bot.de/install" class="btn btn-secondary">
-              <i class="fas fa-download"></i>
-              Bot einladen
-            </a>
-            <a href="https://discord.gg/65S6EXesFC" class="btn btn-secondary">
-              <i class="fab fa-discord"></i>
-              Support Server
-            </a>
-          </div>
-        </section>
-        
-        <!-- Stats Section mit dynamischen Daten -->
-        <section class="stats-section">
-          <div class="stats-grid">
-            <div class="stat-item">
-              <span class="stat-number" data-target="<%= totalGuilds || 150 %>">0</span>
-              <span class="stat-label">Server</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number" data-target="<%= totalTickets || 5000 %>">0</span>
-              <span class="stat-label">Tickets</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number" data-target="9">0</span>
-              <span class="stat-label">Sprachen</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number" id="uptime-display">...</span>
-              <span class="stat-label">% Uptime</span>
-            </div>
-          </div>
-        </section>
-        
-        <section class="section">
-          <h2 class="section-title">Leistungsstarke Features</h2>
-          <p class="section-subtitle">
-            Alles was du für professionellen Discord Support brauchst
-          </p>
-          
-          <div class="features-grid">
-            <div class="feature-card">
-              <i class="fas fa-language feature-icon"></i>
-              <h3>Multi-Sprache</h3>
-              <p>
-                Vollständige Übersetzung in 9 Sprachen: Deutsch, Englisch, Hebräisch, Japanisch, Russisch, Portugiesisch, Spanisch, Indonesisch und Arabisch.
-              </p>
-            </div>
-            
-            <div class="feature-card">
-              <i class="fas fa-tools feature-icon"></i>
-              <h3>Web-Verwaltung</h3>
-              <p>
-                Umfassendes Admin-Panel zur einfachen Konfiguration von Topics, Formularen, Embeds und allen Bot-Einstellungen.
-              </p>
-            </div>
-            
-            <div class="feature-card">
-              <i class="fas fa-shield-alt feature-icon"></i>
-              <h3>DSGVO-konform</h3>
-              <p>
-                Vollständige Datenschutzerklärung und automatische Datenlöschung nach 2 Monaten. Deine Daten sind bei uns sicher!
-              </p>
-            </div>
-            
-            <div class="feature-card">
-              <i class="fas fa-tasks feature-icon"></i>
-              <h3>Ticket-Verwaltung</h3>
-              <p>
-                Erweiterte Ticket-Verwaltung mit Prioritäten, Claiming-System, Transkripten und vollständiger Historie im Web-Panel.
-              </p>
-            </div>
-            
-            <div class="feature-card">
-              <i class="fas fa-clipboard-list feature-icon"></i>
-              <h3>Dynamische Formulare</h3>
-              <p>
-                Erstelle benutzerdefinierte Formularfelder für jeden Ticket-Typ. Perfekt für strukturierte Support-Anfragen!
-              </p>
-            </div>
-            
-            <div class="feature-card">
-              <i class="fas fa-chart-line feature-icon"></i>
-              <h3>Analytics & Stats</h3>
-              <p>
-                Detaillierte Statistiken über Tickets, Team-Performance und Antwortzeiten. Optimiere deinen Support!
-              </p>
-            </div>
-          </div>
-        </section>
-        
-        <!-- Testimonials Section -->
-        <section class="section">
-          <h2 class="section-title">Was unsere Nutzer sagen</h2>
-          <p class="section-subtitle">
-            <% if (averageRating > 0) { %>
-              <%= averageRating.toFixed(1) %>⭐ Bewertung (<%= totalRatings %>) • <%= totalGuilds %> Discord Server • <%= totalTickets %> Tickets bearbeitet
-            <% } else { %>
-              <%= totalGuilds %> Discord Server • <%= totalTickets %> Tickets bearbeitet
-            <% } %>
-          </p>
-          
-          <div class="testimonials-grid">
-            <% if (feedbacks && feedbacks.length > 0) { %>
-              <% feedbacks.slice(0, 3).forEach(function(feedback) { %>
-                <div class="testimonial-card">
-                  <div class="testimonial-rating">
-                    <% const rating = feedback.rating || 5; %>
-                    <% for (let i = 1; i <= 5; i++) { %>
-                      <i class="<%= i <= rating ? 'fas' : 'far' %> fa-star"></i>
-                    <% } %>
-                  </div>
-                  <p class="testimonial-text">"<%= feedback.message %>"</p>
-                  <div class="testimonial-author">
-                    <div class="testimonial-avatar">
-                      <% if (feedback.avatar) { %>
-                        <img src="<%= feedback.avatar %>" alt="<%= feedback.name %>">
-                      <% } else { %>
-                        <%= feedback.name.charAt(0).toUpperCase() %>
-                      <% } %>
-                    </div>
-                    <div class="testimonial-info">
-                      <h4><%= feedback.name %></h4>
-                      <p><%= new Date(feedback.timestamp).toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
-                    </div>
-                  </div>
-                </div>
-              <% }); %>
-            <% } else { %>
-              <div class="testimonial-card">
-                <div class="testimonial-rating">
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star"></i>
-                </div>
-                <p class="testimonial-text">"Bestes Ticket-System für Discord! Das Web-Panel macht die Verwaltung so einfach."</p>
-                <div class="testimonial-author">
-                  <div class="testimonial-avatar">M</div>
-                  <div class="testimonial-info">
-                    <h4>MaxGaming</h4>
-                    <p>Community Manager</p>
-                  </div>
-                </div>
-              </div>
-            <% } %>
-          </div>
-          
-          <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 3rem; flex-wrap: wrap;">
-            <a href="/feedback" class="btn btn-primary">
-              <i class="fas fa-comment-alt"></i>
-              Feedback abgeben
-            </a>
-            <% if (feedbacks && feedbacks.length > 0) { %>
-              <a href="/all-feedbacks" class="btn btn-secondary">
-                <i class="fas fa-list"></i>
-                Alle Feedbacks anzeigen
-              </a>
-            <% } %>
-          </div>
-        </section>
-        
-        <!-- Partners Section -->
-        <% if (partnerServers && partnerServers.length > 0) { %>
-          <section class="section">
-            <h2 class="section-title">Unsere Partner</h2>
-            <p class="section-subtitle">
-              Großartige Communities, die Quantix Tickets verwenden
-            </p>
-            
-            <div class="partners-grid">
-              <% partnerServers.forEach(function(partner) { %>
-                <% if (partner.link) { %>
-                  <a href="<%= partner.link %>" target="_blank" rel="noopener noreferrer" class="partner-card">
-                <% } else { %>
-                  <div class="partner-card">
-                <% } %>
-                    <div class="partner-icon">
-                      <% if (partner.icon) { %>
-                        <img src="<%= partner.icon %>" alt="<%= partner.name %>">
-                      <% } else { %>
-                        <%= partner.name.charAt(0).toUpperCase() %>
-                      <% } %>
-                    </div>
-                    <h3 class="partner-name"><%= partner.name %></h3>
-                    <div class="partner-badge">🤝 Partner</div>
-                <% if (partner.link) { %>
-                  </a>
-                <% } else { %>
-                  </div>
-                <% } %>
-              <% }); %>
-            </div>
-          </section>
-        <% } %>
-      </div>
-    </main>
-    
-    <footer>
-      <div class="footer-content">
-        <div class="footer-section">
-          <h3>Quantix Tickets</h3>
-          <p>
-            Das professionelle Ticket-System für Discord mit Web-Panel und Multi-Sprache Support.
-          </p>
+          <a href="/logout" class="btn-secondary">
+            <i class="fas fa-sign-out-alt"></i>
+            <%
+              const logoutTexts = {
+                de: 'Abmelden',
+                en: 'Logout',
+                he: 'התנתק',
+                ja: 'ログアウト',
+                ru: 'Выйти',
+                pt: 'Sair',
+                es: 'Cerrar Sesión',
+                id: 'Keluar',
+                ar: 'تسجيل الخروج'
+              };
+            %><%= logoutTexts[lang] || logoutTexts.de %>
+          </a>
+          <a href="https://tickets.quantix-bot.de/install" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+            <i class="fas fa-download"></i>
+            <%
+              const inviteTexts2 = {
+                de: 'Bot einladen',
+                en: 'Invite Bot',
+                he: 'הזמן בוט',
+                ja: 'Botを招待',
+                ru: 'Пригласить бота',
+                pt: 'Convidar Bot',
+                es: 'Invitar Bot',
+                id: 'Undang Bot',
+                ar: 'دعوة البوت'
+              };
+            %><%= inviteTexts2[lang] || inviteTexts2.de %>
+          </a>
+          <a href="https://discord.gg/65S6EXesFC" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+            <i class="fab fa-discord"></i>
+            <%
+              const supportTexts = {
+                de: 'Support Server',
+                en: 'Support Server',
+                he: 'שרת תמיכה',
+                ja: 'サポートサーバー',
+                ru: 'Сервер поддержки',
+                pt: 'Servidor de Suporte',
+                es: 'Servidor de Soporte',
+                id: 'Server Dukungan',
+                ar: 'خادم الدعم'
+              };
+            %><%= supportTexts[lang] || supportTexts.de %>
+          </a>
         </div>
-        
-        <div class="footer-section">
-          <h3>Links</h3>
-          <ul class="footer-links">
-            <li>
-              <a href="/">
-                <i class="fas fa-home"></i>
-                Startseite
-              </a>
-            </li>
-            <li>
-              <a href="https://tickets.quantix-bot.de/panel">
-                <i class="fas fa-tachometer-alt"></i>
-                Dashboard
-              </a>
-            </li>
-            <li>
-              <a href="https://discord.gg/65S6EXesFC" target="_blank" rel="noopener">
-                <i class="fab fa-discord"></i>
-                Support Server
-              </a>
-            </li>
-          </ul>
+      <% } else { %>
+        <div class="cta-container">
+          <a href="/login" class="btn-primary">
+            <i class="fab fa-discord"></i>
+            <%
+              const loginTexts = {
+                de: 'Kostenlos starten',
+                en: 'Start for Free',
+                he: 'התחל בחינם',
+                ja: '無料で始める',
+                ru: 'Начать бесплатно',
+                pt: 'Comece grátis',
+                es: 'Comienza gratis',
+                id: 'Mulai Gratis',
+                ar: 'ابدأ مجانًا'
+              };
+            %><%= loginTexts[lang] || loginTexts.de %>
+          </a>
+          <a href="https://tickets.quantix-bot.de/install" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+            <i class="fas fa-download"></i>
+            <%
+              const inviteTexts = {
+                de: 'Bot einladen',
+                en: 'Invite Bot',
+                he: 'הזמן בוט',
+                ja: 'Botを招待',
+                ru: 'Пригласить бота',
+                pt: 'Convidar Bot',
+                es: 'Invitar Bot',
+                id: 'Undang Bot',
+                ar: 'دعوة البوت'
+              };
+            %><%= inviteTexts[lang] || inviteTexts.de %>
+          </a>
+          <a href="https://discord.gg/65S6EXesFC" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+            <i class="fab fa-discord"></i>
+            <%
+              const supportTexts = {
+                de: 'Support Server',
+                en: 'Support Server',
+                he: 'שרת תמיכה',
+                ja: 'サポートサーバー',
+                ru: 'Сервер поддержки',
+                pt: 'Servidor de Suporte',
+                es: 'Servidor de Soporte',
+                id: 'Server Dukungan',
+                ar: 'خادم الدعم'
+              };
+            %><%= supportTexts[lang] || supportTexts.de %>
+          </a>
         </div>
-        
-        <div class="footer-section">
-          <h3>Rechtliches</h3>
-          <ul class="footer-links">
-            <li>
-              <a href="/impressum">
-                <i class="fas fa-file-alt"></i>
-                Impressum
-              </a>
-            </li>
-            <li>
-              <a href="/datenschutz">
-                <i class="fas fa-lock"></i>
-                Datenschutz
-              </a>
-            </li>
-            <li>
-              <a href="/nutzungsbedingungen">
-                <i class="fas fa-file-contract"></i>
-                Nutzungsbedingungen
-              </a>
-            </li>
-            <li>
-              <a href="/allgemeine-geschaeftsbedingungen">
-                <i class="fas fa-balance-scale"></i>
-                AGB
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="footer-bottom">
-        <p>© <%= new Date().getFullYear() %> Quantix Tickets | Betrieben von Quantix Development. Alle Rechte vorbehalten.</p>
-      </div>
-    </footer>
-    
-    <script>
-      // Stats Counter Animation
-      function animateCounter(el) {
-        const targetStr = el.getAttribute('data-target');
-        const target = parseFloat(targetStr);
-        const duration = 2000;
-        const step = target / (duration / 16);
-        let current = 0;
+      <% } %>
+    </div>
+  </section>
 
-        const timer = setInterval(() => {
-          current += step;
-          if (current >= target) {
-            el.textContent = Math.floor(target);
-            clearInterval(timer);
-          } else {
-            el.textContent = Math.floor(current);
-          }
-        }, 16);
+  <!-- Stats Section -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-number" data-target="<%= totalGuilds || 150 %>">0</span>
+        <span class="stat-label"><%
+          const serversText = {
+            de: 'Server',
+            en: 'Servers',
+            he: 'שרתים',
+            ja: 'サーバー',
+            ru: 'Серверов',
+            pt: 'Servidores',
+            es: 'Servidores',
+            id: 'Server',
+            ar: 'خوادم'
+          };
+        %><%= serversText[lang] || serversText.de %></span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" data-target="<%= totalTickets || 5000 %>">0</span>
+        <span class="stat-label"><%
+          const ticketsText = {
+            de: 'Tickets',
+            en: 'Tickets',
+            he: 'כרטיסים',
+            ja: 'チケット',
+            ru: 'Тикетов',
+            pt: 'Tickets',
+            es: 'Tickets',
+            id: 'Tiket',
+            ar: 'تذاكر'
+          };
+        %><%= ticketsText[lang] || ticketsText.de %></span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" data-target="9">0</span>
+        <span class="stat-label"><%
+          const languagesText = {
+            de: 'Sprachen',
+            en: 'Languages',
+            he: 'שפות',
+            ja: '言語',
+            ru: 'Языков',
+            pt: 'Idiomas',
+            es: 'Idiomas',
+            id: 'Bahasa',
+            ar: 'لغات'
+          };
+        %><%= languagesText[lang] || languagesText.de %></span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number" id="uptime-display">...</span><span style="font-size: 1.5rem; color: var(--accent-color); font-weight: 700;">%</span>
+        <span class="stat-label">
+          <%
+            const uptimeText = {
+              de: 'Uptime',
+              en: 'Uptime',
+              he: 'זמן פעילות',
+              ja: '稼働時間',
+              ru: 'Аптайм',
+              pt: 'Tempo Ativo',
+              es: 'Tiempo Activo',
+              id: 'Waktu Aktif',
+              ar: 'وقت التشغيل'
+            };
+          %><%= uptimeText[lang] || uptimeText.de %>
+        </span>
+        <span id="uptime-status" style="display: block; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 600;"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="section">
+    <h2 class="section-title"><%
+      const featuresTitle = {
+        de: 'Leistungsstarke Features',
+        en: 'Powerful Features',
+        he: 'תכונות עוצמתיות',
+        ja: '強力な機能',
+        ru: 'Мощные функции',
+        pt: 'Recursos Poderosos',
+        es: 'Características Poderosas',
+        id: 'Fitur Canggih',
+        ar: 'ميزات قوية'
+      };
+    %><%= featuresTitle[lang] || featuresTitle.de %></h2>
+    <p class="section-subtitle"><%
+      const featuresSubtitle = {
+        de: 'Alles was du für professionellen Discord Support brauchst',
+        en: 'Everything you need for professional Discord support',
+        he: 'כל מה שאתה צריך לתמיכה מקצועית ב-Discord',
+        ja: 'プロフェッショナルなDiscordサポートに必要なすべて',
+        ru: 'Всё необходимое для профессиональной поддержки Discord',
+        pt: 'Tudo o que você precisa para suporte profissional no Discord',
+        es: 'Todo lo que necesitas para soporte profesional en Discord',
+        id: 'Semua yang Anda butuhkan untuk dukungan Discord profesional',
+        ar: 'كل ما تحتاجه للدعم الاحترافي على Discord'
+      };
+    %><%= featuresSubtitle[lang] || featuresSubtitle.de %></p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <i class="fas fa-language feature-icon"></i>
+        <h3><%
+          const multiLangTitle = {
+            de: 'Multi-Sprache',
+            en: 'Multi-Language',
+            he: 'רב-לשוני',
+            ja: '多言語対応',
+            ru: 'Мультиязычность',
+            pt: 'Multi-Idioma',
+            es: 'Multi-Idioma',
+            id: 'Multi-Bahasa',
+            ar: 'متعدد اللغات'
+          };
+        %><%= multiLangTitle[lang] || multiLangTitle.de %></h3>
+        <p><%
+          const multiLangDesc = {
+            de: 'Vollständige Übersetzung in 9 Sprachen: Deutsch, Englisch, Hebräisch, Japanisch, Russisch, Portugiesisch, Spanisch, Indonesisch und Arabisch.',
+            en: 'Complete translation in 9 languages: German, English, Hebrew, Japanese, Russian, Portuguese, Spanish, Indonesian and Arabic.',
+            he: 'תרגום מלא ל-9 שפות: גרמנית, אנגלית, עברית, יפנית, רוסית, פורטוגזית, ספרדית, אינדונזית וערבית.',
+            ja: '9言語で完全翻訳：ドイツ語、英語、ヘブライ語、日本語、ロシア語、ポルトガル語、スペイン語、インドネシア語、アラビア語。',
+            ru: 'Полный перевод на 9 языков: немецкий, английский, иврит, японский, русский, португальский, испанский, индонезийский и арабский.',
+            pt: 'Tradução completa em 9 idiomas: alemão, inglês, hebraico, japonês, russo, português, espanhol, indonésio e árabe.',
+            es: 'Traducción completa en 9 idiomas: alemán, inglés, hebreo, japonés, ruso, portugués, español, indonesio y árabe.',
+            id: 'Terjemahan lengkap dalam 9 bahasa: Jerman, Inggris, Ibrani, Jepang, Rusia, Portugis, Spanyol, Indonesia dan Arab.',
+            ar: 'ترجمة كاملة بـ 9 لغات: الألمانية والإنجليزية والعبرية واليابانية والروسية والبرتغالية والإسبانية والإندونيسية والعربية.'
+          };
+        %><%= multiLangDesc[lang] || multiLangDesc.de %></p>
+      </div>
+
+      <div class="feature-card">
+        <i class="fas fa-tools feature-icon"></i>
+        <h3><%
+          const webMgmtTitle = {
+            de: 'Web-Verwaltung',
+            en: 'Web Management',
+            he: 'ניהול אינטרנט',
+            ja: 'Web管理',
+            ru: 'Веб-управление',
+            pt: 'Gerenciamento Web',
+            es: 'Gestión Web',
+            id: 'Manajemen Web',
+            ar: 'إدارة الويب'
+          };
+        %><%= webMgmtTitle[lang] || webMgmtTitle.de %></h3>
+        <p><%
+          const webMgmtDesc = {
+            de: 'Umfassendes Admin-Panel zur einfachen Konfiguration von Topics, Formularen, Embeds und allen Bot-Einstellungen.',
+            en: 'Comprehensive admin panel for easy configuration of topics, forms, embeds and all bot settings.',
+            he: 'פאנל ניהול מקיף להגדרה קלה של נושאים, טפסים, הטבעות וכל הגדרות הבוט.',
+            ja: 'トピック、フォーム、埋め込み、すべてのBot設定を簡単に設定できる包括的な管理パネル。',
+            ru: 'Комплексная админ-панель для простой настройки тем, форм, встраиваний и всех настроек бота.',
+            pt: 'Painel de administração abrangente para fácil configuração de tópicos, formulários, embeds e todas as configurações do bot.',
+            es: 'Panel de administración completo para configurar fácilmente temas, formularios, incrustaciones y todas las configuraciones del bot.',
+            id: 'Panel admin komprehensif untuk konfigurasi mudah topik, formulir, embed dan semua pengaturan bot.',
+            ar: 'لوحة إدارة شاملة لتكوين سهل للمواضيع والنماذج والتضمينات وجميع إعدادات البوت.'
+          };
+        %><%= webMgmtDesc[lang] || webMgmtDesc.de %></p>
+      </div>
+
+      <div class="feature-card">
+        <i class="fas fa-shield-alt feature-icon"></i>
+        <h3><%
+          const gdprTitle = {
+            de: 'DSGVO-konform',
+            en: 'GDPR Compliant',
+            he: 'תואם GDPR',
+            ja: 'GDPR準拠',
+            ru: 'Соответствие GDPR',
+            pt: 'Compatível com GDPR',
+            es: 'Cumplimiento GDPR',
+            id: 'Sesuai GDPR',
+            ar: 'متوافق مع GDPR'
+          };
+        %><%= gdprTitle[lang] || gdprTitle.de %></h3>
+        <p><%
+          const gdprDesc = {
+            de: 'Vollständige Datenschutzerklärung und automatische Datenlöschung nach 2 Monaten. Deine Daten sind bei uns sicher!',
+            en: 'Complete privacy policy and automatic data deletion after 2 months. Your data is safe with us!',
+            he: 'מדיניות פרטיות מלאה ומחיקת נתונים אוטומטית לאחר חודשיים. הנתונים שלך בטוחים איתנו!',
+            ja: '完全なプライバシーポリシーと2ヶ月後の自動データ削除。あなたのデータは安全です！',
+            ru: 'Полная политика конфиденциальности и автоматическое удаление данных через 2 месяца. Ваши данные в безопасности!',
+            pt: 'Política de privacidade completa e exclusão automática de dados após 2 meses. Seus dados estão seguros conosco!',
+            es: 'Política de privacidad completa y eliminación automática de datos después de 2 meses. ¡Tus datos están seguros con nosotros!',
+            id: 'Kebijakan privasi lengkap dan penghapusan data otomatis setelah 2 bulan. Data Anda aman bersama kami!',
+            ar: 'سياسة خصوصية كاملة وحذف تلقائي للبيانات بعد شهرين. بياناتك آمنة معنا!'
+          };
+        %><%= gdprDesc[lang] || gdprDesc.de %></p>
+      </div>
+
+      <div class="feature-card">
+        <i class="fas fa-tasks feature-icon"></i>
+        <h3><%
+          const ticketMgmtTitle = {
+            de: 'Ticket-Verwaltung',
+            en: 'Ticket Management',
+            he: 'ניהול כרטיסים',
+            ja: 'チケット管理',
+            ru: 'Управление тикетами',
+            pt: 'Gerenciamento de Tickets',
+            es: 'Gestión de Tickets',
+            id: 'Manajemen Tiket',
+            ar: 'إدارة التذاكر'
+          };
+        %><%= ticketMgmtTitle[lang] || ticketMgmtTitle.de %></h3>
+        <p><%
+          const ticketMgmtDesc = {
+            de: 'Erweiterte Ticket-Verwaltung mit Prioritäten, Claiming-System, Transkripten und vollständiger Historie im Web-Panel.',
+            en: 'Advanced ticket management with priorities, claiming system, transcripts and complete history in the web panel.',
+            he: 'ניהול כרטיסים מתקדם עם עדיפויות, מערכת תפיסה, תמלילים והיסטוריה מלאה בפאנל האינטרנט.',
+            ja: '優先度、担当システム、トランスクリプト、完全な履歴を備えた高度なチケット管理。',
+            ru: 'Расширенное управление тикетами с приоритетами, системой назначения, транскриптами и полной историей.',
+            pt: 'Gerenciamento avançado de tickets com prioridades, sistema de atribuição, transcrições e histórico completo.',
+            es: 'Gestión avanzada de tickets con prioridades, sistema de asignación, transcripciones e historial completo.',
+            id: 'Manajemen tiket lanjutan dengan prioritas, sistem penugasan, transkrip dan riwayat lengkap.',
+            ar: 'إدارة تذاكر متقدمة مع الأولويات ونظام المطالبة والنصوص والتاريخ الكامل.'
+          };
+        %><%= ticketMgmtDesc[lang] || ticketMgmtDesc.de %></p>
+      </div>
+
+      <div class="feature-card">
+        <i class="fas fa-clipboard-list feature-icon"></i>
+        <h3><%
+          const formsTitle = {
+            de: 'Dynamische Formulare',
+            en: 'Dynamic Forms',
+            he: 'טפסים דינמיים',
+            ja: '動的フォーム',
+            ru: 'Динамические формы',
+            pt: 'Formulários Dinâmicos',
+            es: 'Formularios Dinámicos',
+            id: 'Formulir Dinamis',
+            ar: 'نماذج ديناميكية'
+          };
+        %><%= formsTitle[lang] || formsTitle.de %></h3>
+        <p><%
+          const formsDesc = {
+            de: 'Erstelle benutzerdefinierte Formularfelder für jeden Ticket-Typ. Perfekt für strukturierte Support-Anfragen!',
+            en: 'Create custom form fields for each ticket type. Perfect for structured support requests!',
+            he: 'צור שדות טופס מותאמים אישית לכל סוג כרטיס. מושלם לבקשות תמיכה מובנות!',
+            ja: '各チケットタイプのカスタムフォームフィールドを作成。構造化されたサポートリクエストに最適！',
+            ru: 'Создавайте пользовательские поля формы для каждого типа тикета. Идеально для структурированных запросов!',
+            pt: 'Crie campos de formulário personalizados para cada tipo de ticket. Perfeito para solicitações estruturadas!',
+            es: 'Crea campos de formulario personalizados para cada tipo de ticket. ¡Perfecto para solicitudes estructuradas!',
+            id: 'Buat bidang formulir kustom untuk setiap jenis tiket. Sempurna untuk permintaan dukungan terstruktur!',
+            ar: 'إنشاء حقول نموذج مخصصة لكل نوع تذكرة. مثالي لطلبات الدعم المنظمة!'
+          };
+        %><%= formsDesc[lang] || formsDesc.de %></p>
+      </div>
+
+      <div class="feature-card">
+        <i class="fas fa-chart-line feature-icon"></i>
+        <h3><%
+          const analyticsTitle = {
+            de: 'Analytics & Stats',
+            en: 'Analytics & Stats',
+            he: 'ניתוח וסטטיסטיקות',
+            ja: '分析と統計',
+            ru: 'Аналитика и статистика',
+            pt: 'Análises e Estatísticas',
+            es: 'Análisis y Estadísticas',
+            id: 'Analitik & Statistik',
+            ar: 'التحليلات والإحصائيات'
+          };
+        %><%= analyticsTitle[lang] || analyticsTitle.de %></h3>
+        <p><%
+          const analyticsDesc = {
+            de: 'Detaillierte Statistiken über Tickets, Team-Performance und Antwortzeiten. Optimiere deinen Support!',
+            en: 'Detailed statistics about tickets, team performance and response times. Optimize your support!',
+            he: 'סטטיסטיקות מפורטות על כרטיסים, ביצועי הצוות וזמני תגובה. בצע אופטימיזציה לתמיכה שלך!',
+            ja: 'チケット、チームパフォーマンス、応答時間に関する詳細な統計。サポートを最適化！',
+            ru: 'Детальная статистика по тикетам, производительности команды и времени ответа. Оптимизируйте поддержку!',
+            pt: 'Estatísticas detalhadas sobre tickets, desempenho da equipe e tempos de resposta. Otimize seu suporte!',
+            es: 'Estadísticas detalladas sobre tickets, rendimiento del equipo y tiempos de respuesta. ¡Optimiza tu soporte!',
+            id: 'Statistik terperinci tentang tiket, kinerja tim dan waktu respons. Optimalkan dukungan Anda!',
+            ar: 'إحصائيات مفصلة عن التذاكر وأداء الفريق وأوقات الاستجابة. قم بتحسين دعمك!'
+          };
+        %><%= analyticsDesc[lang] || analyticsDesc.de %></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="section">
+    <h2 class="section-title"><%
+      const pricingTitle = {
+        de: 'Flexible Preisgestaltung',
+        en: 'Flexible Pricing',
+        he: 'תמחור גמיש',
+        ja: 'フレキシブルな価格設定',
+        ru: 'Гибкие цены',
+        pt: 'Preços Flexíveis',
+        es: 'Precios Flexibles',
+        id: 'Harga Fleksibel',
+        ar: 'تسعير مرن'
+      };
+    %><%= pricingTitle[lang] || pricingTitle.de %></h2>
+    <p class="section-subtitle"><%
+      const pricingSubtitle = {
+        de: 'Wähle den perfekten Plan für deine Community',
+        en: 'Choose the perfect plan for your community',
+        he: 'בחר את התוכנית המושלמת לקהילה שלך',
+        ja: 'コミュニティに最適なプランを選択',
+        ru: 'Выберите идеальный план для вашего сообщества',
+        pt: 'Escolha o plano perfeito para sua comunidade',
+        es: 'Elige el plan perfecto para tu comunidad',
+        id: 'Pilih paket sempurna untuk komunitas Anda',
+        ar: 'اختر الخطة المثالية لمجتمعك'
+      };
+    %><%= pricingSubtitle[lang] || pricingSubtitle.de %></p>
+
+    <div class="pricing-grid">
+      <!-- Free Tier -->
+      <div class="pricing-card">
+        <h3><%
+          const freeTitle = {
+            de: 'Kostenlos',
+            en: 'Free',
+            he: 'חינם',
+            ja: '無料',
+            ru: 'Бесплатно',
+            pt: 'Grátis',
+            es: 'Gratis',
+            id: 'Gratis',
+            ar: 'مجانًا'
+          };
+        %><%= freeTitle[lang] || freeTitle.de %></h3>
+        <div class="pricing-price">€0<span>/<%
+          const monthText = {
+            de: 'Monat',
+            en: 'month',
+            he: 'חודש',
+            ja: '月',
+            ru: 'мес',
+            pt: 'mês',
+            es: 'mes',
+            id: 'bulan',
+            ar: 'شهر'
+          };
+        %><%= monthText[lang] || monthText.de %></span></div>
+        <ul class="pricing-features">
+          <li><i class="fas fa-check"></i> <%
+            const free1 = {
+              de: '5 Ticket-Kategorien',
+              en: '5 ticket categories',
+              he: '5 קטגוריות כרטיסים',
+              ja: '5つのチケットカテゴリ',
+              ru: '5 категории тикетов',
+              pt: '5 categorias de tickets',
+              es: '5 categorías de tickets',
+              id: '5 kategori tiket',
+              ar: '5 فئات تذاكر'
+            };
+          %><%= free1[lang] || free1.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const free2 = {
+              de: 'Web-Panel',
+              en: 'Web panel',
+              he: 'פאנל אינטרנט',
+              ja: 'Webパネル',
+              ru: 'Веб-панель',
+              pt: 'Painel web',
+              es: 'Panel web',
+              id: 'Panel web',
+              ar: 'لوحة ويب'
+            };
+          %><%= free2[lang] || free2.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const free3 = {
+              de: 'Multi-Sprache',
+              en: 'Multi-language',
+              he: 'רב-לשוני',
+              ja: '多言語',
+              ru: 'Многоязычность',
+              pt: 'Multi-idioma',
+              es: 'Multi-idioma',
+              id: 'Multi-bahasa',
+              ar: 'متعدد اللغات'
+            };
+          %><%= free3[lang] || free3.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const free4 = {
+              de: 'Basis-Support',
+              en: 'Basic support',
+              he: 'תמיכה בסיסית',
+              ja: '基本サポート',
+              ru: 'Базовая поддержка',
+              pt: 'Suporte básico',
+              es: 'Soporte básico',
+              id: 'Dukungan dasar',
+              ar: 'دعم أساسي'
+            };
+          %><%= free4[lang] || free4.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const free5 = {
+              de: 'Ticket-Bewertungssystem',
+              en: 'Ticket rating system',
+              he: 'מערכת דירוג כרטיסים',
+              ja: 'チケット評価システム',
+              ru: 'Система оценки тикетов',
+              pt: 'Sistema de avaliação de tickets',
+              es: 'Sistema de calificación de tickets',
+              id: 'Sistem rating tiket',
+              ar: 'نظام تقييم التذاكر'
+            };
+          %><%= free5[lang] || free5.de %></li>
+        </ul>
+        <a href="/login" class="btn-primary"><%
+          const startText = {
+            de: 'Jetzt starten',
+            en: 'Get Started',
+            he: 'התחל עכשיו',
+            ja: '今すぐ始める',
+            ru: 'Начать',
+            pt: 'Começar',
+            es: 'Empezar',
+            id: 'Mulai',
+            ar: 'ابدأ'
+          };
+        %><%= startText[lang] || startText.de %></a>
+      </div>
+
+      <!-- Basic Tier -->
+      <div class="pricing-card">
+        <h3>Basic</h3>
+        <div class="pricing-price">€2.99<span>/<%
+          const monthText2 = {
+            de: 'Monat',
+            en: 'month',
+            he: 'חודש',
+            ja: '月',
+            ru: 'мес',
+            pt: 'mês',
+            es: 'mes',
+            id: 'bulan',
+            ar: 'شهر'
+          };
+        %><%= monthText2[lang] || monthText2.de %></span></div>
+        <ul class="pricing-features">
+          <li><i class="fas fa-check"></i> <%
+            const basic1 = {
+              de: '7 Ticket-Kategorien',
+              en: '7 ticket categories',
+              he: '7 קטגוריות כרטיסים',
+              ja: '7つのチケットカテゴリ',
+              ru: '7 категорий тикетов',
+              pt: '7 categorias de tickets',
+              es: '7 categorías de tickets',
+              id: '7 kategori tiket',
+              ar: '7 فئات تذاكر'
+            };
+          %><%= basic1[lang] || basic1.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const basic2 = {
+              de: 'Custom Avatar',
+              en: 'Custom avatar',
+              he: 'אווטר מותאם אישית',
+              ja: 'カスタムアバター',
+              ru: 'Пользовательский аватар',
+              pt: 'Avatar personalizado',
+              es: 'Avatar personalizado',
+              id: 'Avatar kustom',
+              ar: 'صورة رمزية مخصصة'
+            };
+          %><%= basic2[lang] || basic2.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const basic3 = {
+              de: 'Statistiken',
+              en: 'Statistics',
+              he: 'סטטיסטיקות',
+              ja: '統計',
+              ru: 'Статистика',
+              pt: 'Estatísticas',
+              es: 'Estadísticas',
+              id: 'Statistik',
+              ar: 'إحصائيات'
+            };
+          %><%= basic3[lang] || basic3.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const basic4 = {
+              de: 'Prioritäts-Support',
+              en: 'Priority support',
+              he: 'תמיכה עדיפה',
+              ja: '優先サポート',
+              ru: 'Приоритетная поддержка',
+              pt: 'Suporte prioritário',
+              es: 'Soporte prioritario',
+              id: 'Dukungan prioritas',
+              ar: 'دعم ذو أولوية'
+            };
+          %><%= basic4[lang] || basic4.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const basic5 = {
+              de: 'Datei-Upload (bis 10MB)',
+              en: 'File upload (up to 10MB)',
+              he: 'העלאת קבצים (עד 10MB)',
+              ja: 'ファイルアップロード（最大10MB）',
+              ru: 'Загрузка файлов (до 10MB)',
+              pt: 'Upload de arquivos (até 10MB)',
+              es: 'Carga de archivos (hasta 10MB)',
+              id: 'Upload file (hingga 10MB)',
+              ar: 'تحميل الملفات (حتى 10 ميجابايت)'
+            };
+          %><%= basic5[lang] || basic5.de %></li>
+        </ul>
+        <a href="/premium" class="btn-primary"><%
+          const upgradeText = {
+            de: 'Jetzt upgraden',
+            en: 'Upgrade Now',
+            he: 'שדרג עכשיו',
+            ja: '今すぐアップグレード',
+            ru: 'Обновить',
+            pt: 'Atualizar',
+            es: 'Actualizar',
+            id: 'Tingkatkan',
+            ar: 'ترقية'
+          };
+        %><%= upgradeText[lang] || upgradeText.de %></a>
+      </div>
+
+      <!-- Pro Tier -->
+      <div class="pricing-card featured">
+        <div class="pricing-badge"><%
+          const popularText = {
+            de: 'Beliebt',
+            en: 'Popular',
+            he: 'פופולרי',
+            ja: '人気',
+            ru: 'Популярный',
+            pt: 'Popular',
+            es: 'Popular',
+            id: 'Populer',
+            ar: 'شائع'
+          };
+        %><%= popularText[lang] || popularText.de %></div>
+        <h3>Pro</h3>
+        <div class="pricing-price">€4.99<span>/<%
+          const monthText3 = {
+            de: 'Monat',
+            en: 'month',
+            he: 'חודש',
+            ja: '月',
+            ru: 'мес',
+            pt: 'mês',
+            es: 'mes',
+            id: 'bulan',
+            ar: 'شهر'
+          };
+        %><%= monthText3[lang] || monthText3.de %></span></div>
+        <ul class="pricing-features">
+          <li><i class="fas fa-check"></i> <%
+            const pro1 = {
+              de: 'Unbegrenzte Kategorien',
+              en: 'Unlimited categories',
+              he: 'קטגוריות בלתי מוגבלות',
+              ja: '無制限カテゴリ',
+              ru: 'Неограниченные категории',
+              pt: 'Categorias ilimitadas',
+              es: 'Categorías ilimitadas',
+              id: 'Kategori tak terbatas',
+              ar: 'فئات غير محدودة'
+            };
+          %><%= pro1[lang] || pro1.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const pro2 = {
+              de: 'DM-Benachrichtigungen',
+              en: 'DM notifications',
+              he: 'התראות DM',
+              ja: 'DM通知',
+              ru: 'Уведомления в ЛС',
+              pt: 'Notificações DM',
+              es: 'Notificaciones DM',
+              id: 'Notifikasi DM',
+              ar: 'إشعارات الرسائل المباشرة'
+            };
+          %><%= pro2[lang] || pro2.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const pro3 = {
+              de: 'Analytics Dashboard',
+              en: 'Analytics dashboard',
+              he: 'לוח מחוונים לניתוח',
+              ja: '分析ダッシュボード',
+              ru: 'Аналитическая панель',
+              pt: 'Painel de análise',
+              es: 'Panel de análisis',
+              id: 'Dashboard analitik',
+              ar: 'لوحة تحليلات'
+            };
+          %><%= pro3[lang] || pro3.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const pro4 = {
+              de: 'E-Mail-Benachrichtigungen',
+              en: 'Email notifications',
+              he: 'התראות אימייל',
+              ja: 'メール通知',
+              ru: 'Email-уведомления',
+              pt: 'Notificações por email',
+              es: 'Notificaciones por correo',
+              id: 'Notifikasi email',
+              ar: 'إشعارات البريد الإلكتروني'
+            };
+          %><%= pro4[lang] || pro4.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const pro5 = {
+              de: 'Auto-Close System',
+              en: 'Auto-close system',
+              he: 'מערכת סגירה אוטומטית',
+              ja: '自動クローズシステム',
+              ru: 'Автозакрытие',
+              pt: 'Sistema de fechamento automático',
+              es: 'Sistema de cierre automático',
+              id: 'Sistem penutupan otomatis',
+              ar: 'نظام الإغلاق التلقائي'
+            };
+          %><%= pro5[lang] || pro5.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const pro6 = {
+              de: 'Premium Support',
+              en: 'Premium support',
+              he: 'תמיכה פרימיום',
+              ja: 'プレミアムサポート',
+              ru: 'Премиум-поддержка',
+              pt: 'Suporte premium',
+              es: 'Soporte premium',
+              id: 'Dukungan premium',
+              ar: 'دعم متميز'
+            };
+          %><%= pro6[lang] || pro6.de %></li>
+          <li><i class="fas fa-check"></i> <%
+            const pro7 = {
+              de: 'SLA-System mit Countdown',
+              en: 'SLA system with countdown',
+              he: 'מערכת SLA עם ספירה לאחור',
+              ja: 'カウントダウン付きSLAシステム',
+              ru: 'SLA система с обратным отсчётом',
+              pt: 'Sistema SLA com contagem regressiva',
+              es: 'Sistema SLA con cuenta regresiva',
+              id: 'Sistem SLA dengan countdown',
+              ar: 'نظام SLA مع العد التنازلي'
+            };
+          %><%= pro7[lang] || pro7.de %></li>
+        </ul>
+        <a href="/premium" class="btn-primary"><%
+          const upgradeText2 = {
+            de: 'Jetzt upgraden',
+            en: 'Upgrade Now',
+            he: 'שדרג עכשיו',
+            ja: '今すぐアップグレード',
+            ru: 'Обновить',
+            pt: 'Atualizar',
+            es: 'Actualizar',
+            id: 'Tingkatkan',
+            ar: 'ترقية'
+          };
+        %><%= upgradeText2[lang] || upgradeText2.de %></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="section">
+    <h2 class="section-title"><%
+      const testimonialsTitle = {
+        de: 'Was unsere Nutzer sagen',
+        en: 'What Our Users Say',
+        he: 'מה המשתמשים שלנו אומרים',
+        ja: 'ユーザーの声',
+        ru: 'Что говорят наши пользователи',
+        pt: 'O que nossos usuários dizem',
+        es: 'Lo que dicen nuestros usuarios',
+        id: 'Apa Kata Pengguna Kami',
+        ar: 'ما يقوله مستخدمونا'
+      };
+    %><%= testimonialsTitle[lang] || testimonialsTitle.de %></h2>
+    <p class="section-subtitle"><%
+      const ratingText = averageRating > 0 ? `${averageRating}⭐` : '';
+      const ratingLabel = {
+        de: 'Bewertung',
+        en: 'Rating',
+        he: 'דירוג',
+        ja: '評価',
+        ru: 'Рейтинг',
+        pt: 'Avaliação',
+        es: 'Calificación',
+        id: 'Rating',
+        ar: 'تقييم'
+      };
+      const noRatingText = {
+        de: 'Noch keine Bewertungen',
+        en: 'No ratings yet',
+        he: 'אין דירוגים עדיין',
+        ja: 'まだ評価はありません',
+        ru: 'Пока нет оценок',
+        pt: 'Ainda sem avaliações',
+        es: 'Aún sin calificaciones',
+        id: 'Belum ada rating',
+        ar: 'لا توجد تقييمات بعد'
+      };
+
+      let subtitle = `${totalGuilds} Discord Server • ${totalTickets} Tickets`;
+
+      if (lang === 'de') {
+        subtitle += ` bearbeitet`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingText} ${ratingLabel.de} (${totalRatings})`;
+        }
+      } else if (lang === 'en') {
+        subtitle += ` Processed`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingText} ${ratingLabel.en} (${totalRatings})`;
+        }
+      } else if (lang === 'he') {
+        subtitle = `${totalGuilds} שרתי Discord • ${totalTickets} כרטיסים שטופלו`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.he} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'ja') {
+        subtitle = `${totalGuilds}台のDiscordサーバー • ${totalTickets}件のチケット処理済み`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingText} ${ratingLabel.ja} (${totalRatings})`;
+        }
+      } else if (lang === 'ru') {
+        subtitle = `${totalGuilds} Discord серверов • ${totalTickets} тикетов обработано`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.ru} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'pt') {
+        subtitle = `${totalGuilds} Servidores Discord • ${totalTickets} Tickets Processados`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.pt} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'es') {
+        subtitle = `${totalGuilds} Servidores Discord • ${totalTickets} Tickets Procesados`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.es} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'id') {
+        subtitle = `${totalGuilds} Server Discord • ${totalTickets} Tiket Diproses`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.id} ${ratingText} (${totalRatings})`;
+        }
+      } else if (lang === 'ar') {
+        subtitle = `${totalGuilds} خادم Discord • ${totalTickets} تذكرة معالجة`;
+        if (averageRating > 0) {
+          subtitle += ` • ${ratingLabel.ar} ${ratingText} (${totalRatings})`;
+        }
       }
+    %><%= subtitle %></p>
 
-      // Animate all stat numbers
-      document.querySelectorAll('.stat-number[data-target]').forEach(el => {
-        animateCounter(el);
+    <div class="testimonials-grid">
+      <% if (feedbacks && feedbacks.length > 0) { %>
+        <% feedbacks.slice(0, 3).forEach(function(feedback) { %>
+      <div class="testimonial-card">
+        <div class="testimonial-rating">
+          <% const rating = feedback.rating || 5; %>
+          <% for (let i = 1; i <= 5; i++) { %>
+            <i class="<%= i <= rating ? 'fas' : 'far' %> fa-star"></i>
+          <% } %>
+        </div>
+        <p class="testimonial-text">"<%= feedback.message %>"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">
+            <% if (feedback.avatar) { %>
+              <img src="<%= feedback.avatar %>" alt="<%= feedback.name %>" onerror="this.style.display='none'; this.parentElement.innerHTML='<%= feedback.name.charAt(0).toUpperCase() %>';">
+            <% } else { %>
+              <%= feedback.name.charAt(0).toUpperCase() %>
+            <% } %>
+          </div>
+          <div class="testimonial-info">
+            <h4><%= feedback.name %></h4>
+            <p><%= new Date(feedback.timestamp).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-US' : lang + '-' + lang.toUpperCase(), { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+          </div>
+        </div>
+      </div>
+        <% }); %>
+      <% } else { %>
+      <div class="testimonial-card">
+        <div class="testimonial-rating">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+        </div>
+        <p class="testimonial-text"><%
+          const test1 = {
+            de: '"Bestes Ticket-System für Discord! Das Web-Panel macht die Verwaltung so einfach und die Multi-Sprache Unterstützung ist perfekt für unsere internationale Community."',
+            en: '"Best ticket system for Discord! The web panel makes management so easy and the multi-language support is perfect for our international community."',
+            he: '"מערכת הכרטיסים הטובה ביותר ל-Discord! פאנל האינטרנט הופך את הניהול לקל כל כך והתמיכה הרב-לשונית מושלמת לקהילה הבינלאומית שלנו."',
+            ja: '"Discordに最適なチケットシステム！Webパネルで管理がとても簡単で、多言語サポートは国際的なコミュニティに最適です。"',
+            ru: '"Лучшая система тикетов для Discord! Веб-панель делает управление очень простым, а многоязычная поддержка идеальна для нашего международного сообщества."',
+            pt: '"Melhor sistema de tickets para Discord! O painel web torna a gestão muito fácil e o suporte multi-idioma é perfeito para nossa comunidade internacional."',
+            es: '"¡El mejor sistema de tickets para Discord! El panel web hace que la gestión sea muy fácil y el soporte multi-idioma es perfecto para nuestra comunidad internacional."',
+            id: '"Sistem tiket terbaik untuk Discord! Panel web membuat manajemen sangat mudah dan dukungan multi-bahasa sempurna untuk komunitas internasional kami."',
+            ar: '"أفضل نظام تذاكر لـ Discord! لوحة الويب تجعل الإدارة سهلة جدًا والدعم متعدد اللغات مثالي لمجتمعنا الدولي."'
+          };
+        %><%= test1[lang] || test1.de %></p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">M</div>
+          <div class="testimonial-info">
+            <h4>MaxGaming</h4>
+            <p><%
+              const test1Role = {
+                de: 'Community Manager',
+                en: 'Community Manager',
+                he: 'מנהל קהילה',
+                ja: 'コミュニティマネージャー',
+                ru: 'Менеджер сообщества',
+                pt: 'Gerente de Comunidade',
+                es: 'Gerente de Comunidad',
+                id: 'Manajer Komunitas',
+                ar: 'مدير المجتمع'
+              };
+            %><%= test1Role[lang] || test1Role.de %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-rating">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+        </div>
+        <p class="testimonial-text"><%
+          const test2 = {
+            de: '"Die Analytics-Funktion hat uns geholfen, unseren Support deutlich zu verbessern. Wir können jetzt genau sehen, wo wir optimieren müssen."',
+            en: '"The analytics feature helped us significantly improve our support. We can now see exactly where we need to optimize."',
+            he: '"תכונת הניתוח עזרה לנו לשפר את התמיכה שלנו באופן משמעותי. אנחנו יכולים עכשיו לראות בדיוק היכן אנחנו צריכים לבצע אופטימיזציה."',
+            ja: '"分析機能により、サポートを大幅に改善することができました。最適化が必要な場所を正確に確認できます。"',
+            ru: '"Функция аналитики помогла нам значительно улучшить нашу поддержку. Теперь мы можем точно видеть, где нужно оптимизировать."',
+            pt: '"O recurso de análise nos ajudou a melhorar significativamente nosso suporte. Agora podemos ver exatamente onde precisamos otimizar."',
+            es: '"La función de análisis nos ayudó a mejorar significativamente nuestro soporte. Ahora podemos ver exactamente dónde necesitamos optimizar."',
+            id: '"Fitur analitik membantu kami meningkatkan dukungan kami secara signifikan. Kami sekarang dapat melihat dengan tepat di mana kami perlu mengoptimalkan."',
+            ar: '"ساعدتنا ميزة التحليلات على تحسين دعمنا بشكل كبير. يمكننا الآن رؤية المكان الذي نحتاج إلى تحسينه بالضبط."'
+          };
+        %><%= test2[lang] || test2.de %></p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">S</div>
+          <div class="testimonial-info">
+            <h4>SupportPro</h4>
+            <p><%
+              const test2Role = {
+                de: 'Support Team Lead',
+                en: 'Support Team Lead',
+                he: 'מנהל צוות תמיכה',
+                ja: 'サポートチームリード',
+                ru: 'Руководитель команды поддержки',
+                pt: 'Líder da Equipe de Suporte',
+                es: 'Líder del Equipo de Soporte',
+                id: 'Pemimpin Tim Dukungan',
+                ar: 'قائد فريق الدعم'
+              };
+            %><%= test2Role[lang] || test2Role.de %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <div class="testimonial-rating">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+        </div>
+        <p class="testimonial-text"><%
+          const test3 = {
+            de: '"DSGVO-konform und einfach zu bedienen. Genau was wir gesucht haben! Der Support ist auch super schnell und hilfsbereit."',
+            en: '"GDPR compliant and easy to use. Exactly what we were looking for! The support is also super fast and helpful."',
+            he: '"תואם GDPR וקל לשימוש. בדיוק מה שחיפשנו! התמיכה גם מהירה מאוד ומועילה."',
+            ja: '"GDPR準拠で使いやすい。まさに私たちが探していたものです！サポートも非常に迅速で役立ちます。"',
+            ru: '"Соответствует GDPR и прост в использовании. Именно то, что мы искали! Поддержка также очень быстрая и полезная."',
+            pt: '"Compatível com GDPR e fácil de usar. Exatamente o que estávamos procurando! O suporte também é super rápido e útil."',
+            es: '"Cumple con GDPR y es fácil de usar. ¡Exactamente lo que estábamos buscando! El soporte también es super rápido y útil."',
+            id: '"Sesuai GDPR dan mudah digunakan. Persis apa yang kami cari! Dukungannya juga super cepat dan membantu."',
+            ar: '"متوافق مع GDPR وسهل الاستخدام. بالضبط ما كنا نبحث عنه! الدعم أيضًا سريع جدًا ومفيد."'
+          };
+        %><%= test3[lang] || test3.de %></p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">T</div>
+          <div class="testimonial-info">
+            <h4>TechCommunity</h4>
+            <p><%
+              const test3Role = {
+                de: 'Server Owner',
+                en: 'Server Owner',
+                he: 'בעל השרת',
+                ja: 'サーバーオーナー',
+                ru: 'Владелец сервера',
+                pt: 'Proprietário do Servidor',
+                es: 'Propietario del Servidor',
+                id: 'Pemilik Server',
+                ar: 'مالك الخادم'
+              };
+            %><%= test3Role[lang] || test3Role.de %></p>
+          </div>
+        </div>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Feedback Action Buttons -->
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 3rem; flex-wrap: wrap;">
+      <a href="/feedback" class="btn" style="background: var(--accent-color); color: #000; padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; box-shadow: 0 4px 12px var(--shadow-color);">
+        <i class="fas fa-comment-alt"></i>
+        <%
+          const feedbackBtnText = {
+            de: 'Feedback abgeben',
+            en: 'Submit Feedback',
+            he: 'שלח משוב',
+            ja: 'フィードバックを送る',
+            ru: 'Оставить отзыв',
+            pt: 'Enviar Feedback',
+            es: 'Enviar Comentarios',
+            id: 'Kirim Masukan',
+            ar: 'إرسال ملاحظات'
+          };
+        %><%= feedbackBtnText[lang] || feedbackBtnText.de %>
+      </a>
+      <% if (feedbacks && feedbacks.length > 0) { %>
+      <a href="/all-feedbacks" class="btn" style="background: transparent; border: 2px solid var(--accent-color); color: var(--accent-color); padding: 1rem 2rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s;">
+        <i class="fas fa-list"></i>
+        <%
+          const allFeedbacksText = {
+            de: 'Alle Feedbacks anzeigen',
+            en: 'Show All Feedbacks',
+            he: 'הצג את כל המשובים',
+            ja: 'すべてのフィードバックを表示',
+            ru: 'Показать все отзывы',
+            pt: 'Mostrar Todos os Feedbacks',
+            es: 'Mostrar Todos los Comentarios',
+            id: 'Tampilkan Semua Masukan',
+            ar: 'عرض جميع الملاحظات'
+          };
+        %><%= allFeedbacksText[lang] || allFeedbacksText.de %>
+      </a>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- Partners Section -->
+  <% if (partnerServers && partnerServers.length > 0) { %>
+  <section class="section">
+    <h2 class="section-title"><%
+      const partnersTitle = {
+        de: 'Unsere Partner',
+        en: 'Our Partners',
+        he: 'השותפים שלנו',
+        ja: 'パートナー',
+        ru: 'Наши партнеры',
+        pt: 'Nossos Parceiros',
+        es: 'Nuestros Socios',
+        id: 'Mitra Kami',
+        ar: 'شركاؤنا'
+      };
+    %><%= partnersTitle[lang] || partnersTitle.de %></h2>
+    <p class="section-subtitle"><%
+      const partnersSubtitle = {
+        de: 'Großartige Communities, die Quantix Tickets verwenden',
+        en: 'Amazing communities using Quantix Tickets',
+        he: 'קהילות מדהימות המשתמשות ב-Quantix Tickets',
+        ja: 'Quantix Ticketsを使用している素晴らしいコミュニティ',
+        ru: 'Потрясающие сообщества, использующие Quantix Tickets',
+        pt: 'Comunidades incríveis usando Quantix Tickets',
+        es: 'Comunidades increíbles usando Quantix Tickets',
+        id: 'Komunitas luar biasa yang menggunakan Quantix Tickets',
+        ar: 'مجتمعات رائعة تستخدم Quantix Tickets'
+      };
+    %><%= partnersSubtitle[lang] || partnersSubtitle.de %></p>
+
+    <div class="partners-grid">
+      <% partnerServers.forEach(function(partner) { %>
+      <% if (partner.link) { %>
+        <a href="<%= partner.link %>" target="_blank" rel="noopener noreferrer" class="partner-card">
+      <% } else { %>
+        <div class="partner-card">
+      <% } %>
+          <div class="partner-icon">
+            <% if (partner.icon) { %>
+              <img src="<%= partner.icon %>" alt="<%= partner.name %>" onerror="this.style.display='none'; this.parentElement.innerHTML='<%= partner.name.charAt(0).toUpperCase() %>';">
+            <% } else { %>
+              <%= partner.name.charAt(0).toUpperCase() %>
+            <% } %>
+          </div>
+          <h3 class="partner-name"><%= partner.name %></h3>
+          <div class="partner-badge">🤝 Partner</div>
+      <% if (partner.link) { %>
+        </a>
+      <% } else { %>
+        </div>
+      <% } %>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- FAQ Section -->
+  <section class="section">
+    <h2 class="section-title"><%
+      const faqTitle = {
+        de: 'Häufig gestellte Fragen',
+        en: 'Frequently Asked Questions',
+        he: 'שאלות נפוצות',
+        ja: 'よくある質問',
+        ru: 'Часто задаваемые вопросы',
+        pt: 'Perguntas Frequentes',
+        es: 'Preguntas Frecuentes',
+        id: 'Pertanyaan yang Sering Diajukan',
+        ar: 'الأسئلة الشائعة'
+      };
+    %><%= faqTitle[lang] || faqTitle.de %></h2>
+
+    <div class="faq-container">
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span><%
+            const faq1Q = {
+              de: 'Ist Quantix Tickets wirklich kostenlos?',
+              en: 'Is Quantix Tickets really free?',
+              he: 'האם Quantix Tickets באמת חינם?',
+              ja: 'Quantix Ticketsは本当に無料ですか？',
+              ru: 'Действительно ли Quantix Tickets бесплатен?',
+              pt: 'Quantix Tickets é realmente grátis?',
+              es: '¿Quantix Tickets es realmente gratis?',
+              id: 'Apakah Quantix Tickets benar-benar gratis?',
+              ar: 'هل Quantix Tickets مجاني حقًا؟'
+            };
+          %><%= faq1Q[lang] || faq1Q.de %></span>
+          <i class="fas fa-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p><%
+            const faq1A = {
+              de: 'Ja! Die Basis-Version ist komplett kostenlos und bietet alle grundlegenden Funktionen für ein professionelles Ticket-System. Für erweiterte Features wie unbegrenzte Kategorien und Analytics gibt es Premium-Pläne ab €2.99/Monat.',
+              en: 'Yes! The basic version is completely free and offers all essential features for a professional ticket system. For advanced features like unlimited categories and analytics, there are premium plans starting at €2.99/month.',
+              he: 'כן! הגרסה הבסיסית חינמית לחלוטין ומציעה את כל התכונות החיוניות למערכת כרטיסים מקצועית. לתכונות מתקדמות כמו קטגוריות בלתי מוגבלות וניתוח, יש תוכניות פרימיום החל מ-€2.99 לחודש.',
+              ja: 'はい！ベーシック版は完全無料で、プロフェッショナルなチケットシステムに必要な機能をすべて提供しています。無制限のカテゴリや分析などの高度な機能には、月額€2.99からのプレミアムプランがあります。',
+              ru: 'Да! Базовая версия полностью бесплатна и предлагает все необходимые функции для профессиональной системы тикетов. Для расширенных функций, таких как неограниченные категории и аналитика, есть премиум-планы от €2.99/месяц.',
+              pt: 'Sim! A versão básica é completamente gratuita e oferece todos os recursos essenciais para um sistema de tickets profissional. Para recursos avançados como categorias ilimitadas e análises, existem planos premium a partir de €2,99/mês.',
+              es: '¡Sí! La versión básica es completamente gratuita y ofrece todas las funciones esenciales para un sistema de tickets profesional. Para funciones avanzadas como categorías ilimitadas y análisis, hay planes premium desde €2,99/mes.',
+              id: 'Ya! Versi dasar benar-benar gratis dan menawarkan semua fitur penting untuk sistem tiket profesional. Untuk fitur lanjutan seperti kategori tak terbatas dan analitik, ada paket premium mulai dari €2,99/bulan.',
+              ar: 'نعم! الإصدار الأساسي مجاني تمامًا ويقدم جميع الميزات الأساسية لنظام تذاكر احترافي. للميزات المتقدمة مثل الفئات غير المحدودة والتحليلات، هناك خطط مميزة تبدأ من €2.99 شهريًا.'
+            };
+          %><%= faq1A[lang] || faq1A.de %></p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span><%
+            const faq2Q = {
+              de: 'Wie funktioniert die Multi-Sprache Unterstützung?',
+              en: 'How does multi-language support work?',
+              he: 'איך עובדת התמיכה הרב-לשונית?',
+              ja: '多言語サポートはどのように機能しますか？',
+              ru: 'Как работает многоязычная поддержка?',
+              pt: 'Como funciona o suporte multi-idioma?',
+              es: '¿Cómo funciona el soporte multi-idioma?',
+              id: 'Bagaimana cara kerja dukungan multi-bahasa?',
+              ar: 'كيف يعمل الدعم متعدد اللغات؟'
+            };
+          %><%= faq2Q[lang] || faq2Q.de %></span>
+          <i class="fas fa-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p><%
+            const faq2A = {
+              de: 'Quantix Tickets ist vollständig in 9 Sprachen übersetzt. Jeder Benutzer kann im Web-Panel seine bevorzugte Sprache wählen, und alle Bot-Nachrichten, Embeds und das Panel werden automatisch in der gewählten Sprache angezeigt.',
+              en: 'Quantix Tickets is fully translated into 9 languages. Each user can choose their preferred language in the web panel, and all bot messages, embeds, and the panel will automatically be displayed in the selected language.',
+              he: 'Quantix Tickets מתורגם במלואו ל-9 שפות. כל משתמש יכול לבחור את השפה המועדפת שלו בפאנל האינטרנט, וכל הודעות הבוט, ההטבעות והפאנל יוצגו אוטומטית בשפה שנבחרה.',
+              ja: 'Quantix Ticketsは9言語に完全翻訳されています。各ユーザーはWebパネルで希望の言語を選択でき、すべてのBotメッセージ、埋め込み、パネルが選択した言語で自動的に表示されます。',
+              ru: 'Quantix Tickets полностью переведен на 9 языков. Каждый пользователь может выбрать предпочитаемый язык на веб-панели, и все сообщения бота, встраивания и панель будут автоматически отображаться на выбранном языке.',
+              pt: 'Quantix Tickets está totalmente traduzido em 9 idiomas. Cada usuário pode escolher seu idioma preferido no painel web, e todas as mensagens do bot, embeds e o painel serão exibidos automaticamente no idioma selecionado.',
+              es: 'Quantix Tickets está completamente traducido a 9 idiomas. Cada usuario puede elegir su idioma preferido en el panel web, y todos los mensajes del bot, incrustaciones y el panel se mostrarán automáticamente en el idioma seleccionado.',
+              id: 'Quantix Tickets sepenuhnya diterjemahkan ke dalam 9 bahasa. Setiap pengguna dapat memilih bahasa pilihan mereka di panel web, dan semua pesan bot, embed, dan panel akan secara otomatis ditampilkan dalam bahasa yang dipilih.',
+              ar: 'تم ترجمة Quantix Tickets بالكامل إلى 9 لغات. يمكن لكل مستخدم اختيار لغته المفضلة في لوحة الويب، وسيتم عرض جميع رسائل البوت والتضمينات واللوحة تلقائيًا باللغة المختارة.'
+            };
+          %><%= faq2A[lang] || faq2A.de %></p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span><%
+            const faq3Q = {
+              de: 'Werden meine Daten sicher gespeichert?',
+              en: 'Are my data stored securely?',
+              he: 'האם הנתונים שלי מאוחסנים בצורה מאובטחת?',
+              ja: 'データは安全に保存されますか？',
+              ru: 'Хранятся ли мои данные безопасно?',
+              pt: 'Meus dados são armazenados com segurança?',
+              es: '¿Se almacenan mis datos de forma segura?',
+              id: 'Apakah data saya disimpan dengan aman?',
+              ar: 'هل يتم تخزين بياناتي بشكل آمن؟'
+            };
+          %><%= faq3Q[lang] || faq3Q.de %></span>
+          <i class="fas fa-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p><%
+            const faq3A = {
+              de: 'Ja! Alle Daten werden verschlüsselt auf Servern in Deutschland gespeichert und sind DSGVO-konform. Nach dem Entfernen des Bots werden alle Daten automatisch nach 2 Monaten gelöscht. Wir nehmen Datenschutz sehr ernst.',
+              en: 'Yes! All data is encrypted and stored on servers in Germany, compliant with GDPR. After removing the bot, all data is automatically deleted after 2 months. We take data protection very seriously.',
+              he: 'כן! כל הנתונים מוצפנים ומאוחסנים בשרתים בגרמניה, בהתאם ל-GDPR. לאחר הסרת הבוט, כל הנתונים נמחקים אוטומטית לאחר חודשיים. אנו לוקחים את הגנת הנתונים ברצינות רבה.',
+              ja: 'はい！すべてのデータは暗号化され、ドイツのサーバーに保存され、GDPRに準拠しています。Bot削除後、すべてのデータは2ヶ月後に自動的に削除されます。データ保護を非常に真剣に考えています。',
+              ru: 'Да! Все данные зашифрованы и хранятся на серверах в Германии в соответствии с GDPR. После удаления бота все данные автоматически удаляются через 2 месяца. Мы очень серьезно относимся к защите данных.',
+              pt: 'Sim! Todos os dados são criptografados e armazenados em servidores na Alemanha, em conformidade com GDPR. Após remover o bot, todos os dados são automaticamente excluídos após 2 meses. Levamos a proteção de dados muito a sério.',
+              es: '¡Sí! Todos los datos están encriptados y almacenados en servidores en Alemania, cumpliendo con GDPR. Después de eliminar el bot, todos los datos se eliminan automáticamente después de 2 meses. Nos tomamos muy en serio la protección de datos.',
+              id: 'Ya! Semua data dienkripsi dan disimpan di server di Jerman, sesuai dengan GDPR. Setelah menghapus bot, semua data secara otomatis dihapus setelah 2 bulan. Kami sangat serius tentang perlindungan data.',
+              ar: 'نعم! يتم تشفير جميع البيانات وتخزينها على خوادم في ألمانيا، متوافقة مع GDPR. بعد إزالة البوت، يتم حذف جميع البيانات تلقائيًا بعد شهرين. نحن نأخذ حماية البيانات على محمل الجد.'
+            };
+          %><%= faq3A[lang] || faq3A.de %></p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span><%
+            const faq4Q = {
+              de: 'Kann ich jederzeit kündigen?',
+              en: 'Can I cancel anytime?',
+              he: 'האם אוכל לבטל בכל עת?',
+              ja: 'いつでもキャンセルできますか？',
+              ru: 'Могу ли я отменить в любое время?',
+              pt: 'Posso cancelar a qualquer momento?',
+              es: '¿Puedo cancelar en cualquier momento?',
+              id: 'Bisakah saya membatalkan kapan saja?',
+              ar: 'هل يمكنني الإلغاء في أي وقت؟'
+            };
+          %><%= faq4Q[lang] || faq4Q.de %></span>
+          <i class="fas fa-chevron-down faq-icon"></i>
+        </div>
+        <div class="faq-answer">
+          <p><%
+            const faq4A = {
+              de: 'Ja! Premium-Abonnements können jederzeit über das Web-Panel oder Stripe gekündigt werden. Es gibt keine Kündigungsfrist oder versteckte Gebühren. Du zahlst nur für die Zeit, die du den Service nutzt.',
+              en: 'Yes! Premium subscriptions can be cancelled at any time via the web panel or Stripe. There is no cancellation period or hidden fees. You only pay for the time you use the service.',
+              he: 'כן! ניתן לבטל מנויי פרימיום בכל עת דרך פאנל האינטרנט או Stripe. אין תקופת ביטול או עמלות נסתרות. אתה משלם רק עבור הזמן שבו אתה משתמש בשירות.',
+              ja: 'はい！プレミアムサブスクリプションは、Webパネルまたは経由でいつでもキャンセルできます。キャンセル期間や隠れた料金はありません。サービスを利用した期間のみお支払いいただきます。',
+              ru: 'Да! Премиум-подписки можно отменить в любое время через веб-панель или Stripe. Нет периода отмены или скрытых платежей. Вы платите только за время использования сервиса.',
+              pt: 'Sim! Assinaturas premium podem ser canceladas a qualquer momento pelo painel web ou Stripe. Não há período de cancelamento ou taxas ocultas. Você paga apenas pelo tempo que usa o serviço.',
+              es: '¡Sí! Las suscripciones premium se pueden cancelar en cualquier momento a través del panel web o Stripe. No hay período de cancelación ni tarifas ocultas. Solo pagas por el tiempo que usas el servicio.',
+              id: 'Ya! Langganan premium dapat dibatalkan kapan saja melalui panel web atau Stripe. Tidak ada periode pembatalan atau biaya tersembunyi. Anda hanya membayar untuk waktu Anda menggunakan layanan.',
+              ar: 'نعم! يمكن إلغاء اشتراكات البريميوم في أي وقت عبر لوحة الويب أو Stripe. لا توجد فترة إلغاء أو رسوم خفية. تدفع فقط مقابل الوقت الذي تستخدم فيه الخدمة.'
+            };
+          %><%= faq4A[lang] || faq4A.de %></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Quantix Tickets</h3>
+        <p><%
+          const footerDesc = {
+            de: 'Das professionelle Ticket-System für Discord mit Web-Panel und Multi-Sprache Support.',
+            en: 'The professional ticket system for Discord with web panel and multi-language support.',
+            he: 'מערכת הכרטיסים המקצועית ל-Discord עם פאנל אינטרנט ותמיכה רב-לשונית.',
+            ja: 'Webパネルと多言語サポートを備えたDiscord用のプロフェッショナルなチケットシステム。',
+            ru: 'Профессиональная система тикетов для Discord с веб-панелью и многоязычной поддержкой.',
+            pt: 'O sistema de tickets profissional para Discord com painel web e suporte multi-idioma.',
+            es: 'El sistema de tickets profesional para Discord con panel web y soporte multi-idioma.',
+            id: 'Sistem tiket profesional untuk Discord dengan panel web dan dukungan multi-bahasa.',
+            ar: 'نظام التذاكر الاحترافي لـ Discord مع لوحة ويب ودعم متعدد اللغات.'
+          };
+        %><%= footerDesc[lang] || footerDesc.de %></p>
+      </div>
+
+      <div class="footer-section">
+        <h3><%
+          const linksTitle = {
+            de: 'Links',
+            en: 'Links',
+            he: 'קישורים',
+            ja: 'リンク',
+            ru: 'Ссылки',
+            pt: 'Links',
+            es: 'Enlaces',
+            id: 'Tautan',
+            ar: 'روابط'
+          };
+        %><%= linksTitle[lang] || linksTitle.de %></h3>
+        <ul class="footer-links">
+          <li><a href="/"><i class="fas fa-home"></i> <%
+            const homeText = {
+              de: 'Startseite',
+              en: 'Home',
+              he: 'דף הבית',
+              ja: 'ホーム',
+              ru: 'Главная',
+              pt: 'Início',
+              es: 'Inicio',
+              id: 'Beranda',
+              ar: 'الرئيسية'
+            };
+          %><%= homeText[lang] || homeText.de %></a></li>
+          <li><a href="/premium"><i class="fas fa-crown"></i> Premium</a></li>
+          <li><a href="https://discord.gg/65S6EXesFC" target="_blank" rel="noopener noreferrer"><i class="fab fa-discord"></i> <%
+            const supportText = {
+              de: 'Support Server',
+              en: 'Support Server',
+              he: 'שרת תמיכה',
+              ja: 'サポートサーバー',
+              ru: 'Сервер поддержки',
+              pt: 'Servidor de Suporte',
+              es: 'Servidor de Soporte',
+              id: 'Server Dukungan',
+              ar: 'خادم الدعم'
+            };
+          %><%= supportText[lang] || supportText.de %></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3><%
+          const legalTitle = {
+            de: 'Rechtliches',
+            en: 'Legal',
+            he: 'משפטי',
+            ja: '法的',
+            ru: 'Правовая информация',
+            pt: 'Legal',
+            es: 'Legal',
+            id: 'Hukum',
+            ar: 'قانوني'
+          };
+        %><%= legalTitle[lang] || legalTitle.de %></h3>
+        <ul class="footer-links">
+          <li><a href="/imprint"><i class="fas fa-file-alt"></i> <%
+            const imprintText = {
+              de: 'Impressum',
+              en: 'Legal Notice',
+              he: 'מידע משפטי',
+              ja: '法的通知',
+              ru: 'Правовая информация',
+              pt: 'Aviso Legal',
+              es: 'Aviso Legal',
+              id: 'Pemberitahuan Hukum',
+              ar: 'إشعار قانوني'
+            };
+          %><%= imprintText[lang] || imprintText.de %></a></li>
+          <li><a href="/terms-of-service"><i class="fas fa-file-contract"></i> <%
+            const tosText = {
+              de: 'Nutzungsbedingungen',
+              en: 'Terms of Service',
+              he: 'תנאי שימוש',
+              ja: '利用規約',
+              ru: 'Условия использования',
+              pt: 'Termos de Uso',
+              es: 'Términos de Servicio',
+              id: 'Ketentuan Layanan',
+              ar: 'شروط الخدمة'
+            };
+          %><%= tosText[lang] || tosText.de %></a></li>
+          <li><a href="/privacy-policy"><i class="fas fa-lock"></i> <%
+            const privacyText = {
+              de: 'Datenschutzerklärung',
+              en: 'Privacy Policy',
+              he: 'מדיניות פרטיות',
+              ja: 'プライバシーポリシー',
+              ru: 'Политика конфиденциальности',
+              pt: 'Política de Privacidade',
+              es: 'Política de Privacidad',
+              id: 'Kebijakan Privasi',
+              ar: 'سياسة الخصوصية'
+            };
+          %><%= privacyText[lang] || privacyText.de %></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>Quantix Tickets © <%= new Date().getFullYear() %> | <%
+        const operatedByText = {
+          de: 'Betrieben von',
+          en: 'Operated by',
+          he: 'מופעל על ידי',
+          ja: '運営',
+          ru: 'Управляется',
+          pt: 'Operado por',
+          es: 'Operado por',
+          id: 'Dioperasikan oleh',
+          ar: 'يديره'
+        };
+      %><%= operatedByText[lang] || operatedByText.de %> Quantix Development</p>
+    </div>
+  </footer>
+
+  <script>
+    // Language Dropdown Toggle
+    function toggleLanguageDropdown() {
+      const selector = document.getElementById('langSelector');
+      selector.classList.toggle('open');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const selector = document.getElementById('langSelector');
+      const isClickInside = selector.contains(event.target);
+      if (!isClickInside && selector.classList.contains('open')) {
+        selector.classList.remove('open');
+      }
+    });
+
+    // Theme is managed by /js/theme-manager.js (Cookie-based)
+
+    // Dashboard Button Loading Animation
+    const dashboardBtn = document.getElementById('dashboardBtn');
+    if (dashboardBtn) {
+      dashboardBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        this.classList.add('loading');
+        setTimeout(() => {
+          window.location.href = href;
+        }, 300);
+      });
+    }
+
+    // Stats Counter Animation
+    function animateCounter(el) {
+      const targetStr = el.getAttribute('data-target');
+      const target = parseFloat(targetStr);
+      const hasDecimal = targetStr.includes('.');
+      const duration = 2000;
+      const step = target / (duration / 16);
+      let current = 0;
+
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          el.textContent = hasDecimal ? target.toFixed(1) : target;
+          clearInterval(timer);
+        } else {
+          el.textContent = hasDecimal ? current.toFixed(1) : Math.floor(current);
+        }
+      }, 16);
+    }
+
+    // Intersection Observer for scroll animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+
+          // Animate stats when visible
+          if (entry.target.classList.contains('stat-number')) {
+            animateCounter(entry.target);
+          }
+        }
+      });
+    }, observerOptions);
+
+    // Observe all feature cards and stats
+    document.querySelectorAll('.feature-card, .stat-number, .pricing-card, .testimonial-card').forEach(el => {
+      observer.observe(el);
+    });
+
+    // FAQ Toggle
+    function toggleFaq(element) {
+      const faqItem = element.parentElement;
+      const wasActive = faqItem.classList.contains('active');
+
+      // Close all FAQs
+      document.querySelectorAll('.faq-item').forEach(item => {
+        item.classList.remove('active');
       });
 
-      // Load real uptime
-      async function loadUptime() {
-        try {
-          const response = await fetch('/api/uptime');
-          if (!response.ok) throw new Error('HTTP error');
-          
-          const data = await response.json();
-          if (data.success && data.uptime) {
-            const uptimePercent = parseFloat(data.uptime.day30) || 99.5;
-            document.getElementById('uptime-display').textContent = uptimePercent.toFixed(1);
-          } else {
-            document.getElementById('uptime-display').textContent = '99.5';
+      // Open clicked FAQ if it wasn't active
+      if (!wasActive) {
+        faqItem.classList.add('active');
+      }
+    }
+
+    // Load real uptime from UptimeRobot API and display as percentage
+    async function loadUptime() {
+      try {
+        console.log('[Uptime] Fetching uptime data...');
+        const response = await fetch('/api/uptime');
+
+        if (!response.ok) {
+          console.error('[Uptime] HTTP error:', response.status, response.statusText);
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('[Uptime] Response data:', data);
+        console.log('[Uptime] data.success:', data.success);
+        console.log('[Uptime] data.uptime:', data.uptime);
+        console.log('[Uptime] data.status:', data.status);
+
+        if (data.success && data.uptime) {
+          // Use real 30-day uptime from UptimeRobot
+          const uptimePercent = parseFloat(data.uptime.day30) || 0;
+
+          console.log('[Uptime] Raw day30 value:', data.uptime.day30);
+          console.log('[Uptime] Parsed uptimePercent:', uptimePercent);
+
+          // Display with 1 decimal place
+          const displayValue = uptimePercent.toFixed(1);
+          document.getElementById('uptime-display').textContent = displayValue;
+          console.log('[Uptime] ✅ Displayed:', displayValue + '%');
+
+          // Update status indicator if exists
+          const statusEl = document.getElementById('uptime-status');
+          if (statusEl) {
+            if (data.status === 'online') {
+              statusEl.textContent = '🟢 Online';
+              statusEl.style.color = 'var(--accent-color)';
+            } else if (data.status === 'down') {
+              statusEl.textContent = '🔴 Down';
+              statusEl.style.color = '#e74c3c';
+            } else {
+              statusEl.textContent = '🟡 Unknown';
+              statusEl.style.color = '#f39c12';
+            }
           }
-        } catch (err) {
-          console.error('Failed to load uptime:', err);
+        } else {
+          // Fallback to default if UptimeRobot is not configured
+          console.warn('[Uptime] ⚠️ UptimeRobot not configured or error:', data.error || 'No success flag');
           document.getElementById('uptime-display').textContent = '99.5';
+
+          const statusEl = document.getElementById('uptime-status');
+          if (statusEl) {
+            statusEl.textContent = '⚙️ Nicht konfiguriert';
+            statusEl.style.color = '#95a5a6';
+          }
+        }
+      } catch (err) {
+        console.error('[Uptime] ❌ Failed to load uptime:', err);
+        // Fallback to default value
+        document.getElementById('uptime-display').textContent = '99.5';
+
+        const statusEl = document.getElementById('uptime-status');
+        if (statusEl) {
+          statusEl.textContent = '⚠️ Fehler';
+          statusEl.style.color = '#e74c3c';
         }
       }
+    }
 
-      // Load uptime on page load
-      loadUptime();
+    // Load uptime on page load
+    loadUptime();
 
-      // Update uptime every 30 seconds
-      setInterval(loadUptime, 30000);
-    </script>
-  </body>
+    // Update uptime every 30 seconds
+    setInterval(loadUptime, 30000);
+
+    // Loading overlay
+    function showLoading(text) {
+      const overlay = document.getElementById('loadingOverlay');
+      const loadingText = document.getElementById('loadingText');
+      loadingText.textContent = text;
+      overlay.classList.add('show');
+    }
+
+    // Add loading to CTA buttons
+    document.querySelectorAll('a[href="/login"], a[href="/select-server"], a[href="/logout"]').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+
+        const lang = '<%= lang %>';
+        const texts = {
+          '/login': {
+            de: 'Anmeldung läuft...',
+            en: 'Logging in...',
+            he: 'מתחבר...',
+            ja: 'ログイン中...',
+            ru: 'Вход...',
+            pt: 'Entrando...',
+            es: 'Iniciando sesión...',
+            id: 'Masuk...',
+            ar: 'جاري تسجيل الدخول...'
+          },
+          '/select-server': {
+            de: 'Serverliste wird geladen...',
+            en: 'Loading server list...',
+            he: 'טוען רשימת שרתים...',
+            ja: 'サーバーリストを読み込み中...',
+            ru: 'Загрузка списка серверов...',
+            pt: 'Carregando lista de servidores...',
+            es: 'Cargando lista de servidores...',
+            id: 'Memuat daftar server...',
+            ar: 'تحميل قائمة الخوادم...'
+          },
+          '/logout': {
+            de: 'Abmeldung läuft...',
+            en: 'Logging out...',
+            he: 'מתנתק...',
+            ja: 'ログアウト中...',
+            ru: 'Выход...',
+            pt: 'Saindo...',
+            es: 'Cerrando sesión...',
+            id: 'Keluar...',
+            ar: 'جاري تسجيل الخروج...'
+          }
+        };
+
+        showLoading(texts[href]?.[lang] || texts[href]?.de || 'Wird geladen...');
+
+        setTimeout(() => {
+          window.location.href = href;
+        }, 100);
+      });
+    });
+
+    // Lazy load images
+    if ('loading' in HTMLImageElement.prototype) {
+      const images = document.querySelectorAll('img[loading="lazy"]');
+      images.forEach(img => {
+        img.src = img.src;
+      });
+    }
+  </script>
+</body>
 </html>
