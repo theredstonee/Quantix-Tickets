@@ -885,7 +885,11 @@
                   <i class="fas fa-crown"></i> Verwalten
                 </button>
               </div>
-              <% if (guild.premiumExpires) { %>
+              <% if (guild.premium === 'partner') { %>
+                <div style="font-size: 0.75rem; opacity: 0.6; margin-top: 0.25rem;">
+                  🤝 Partner (Lifetime Pro)
+                </div>
+              <% } else if (guild.premiumExpires) { %>
                 <div style="font-size: 0.75rem; opacity: 0.6; margin-top: 0.25rem;">
                   <% if (guild.premiumLifetime) { %>
                     ♾️ Lifetime
@@ -1453,7 +1457,7 @@
         iconColor = '#e74c3c';
         title = 'Premium wirklich entfernen?';
         message = `<strong style="color: #e74c3c;">Achtung:</strong> Alle Premium-Features werden deaktiviert!<br><br>` +
-                  `✗ Entfernt <strong>Lifetime Premium</strong>, Betatester und alle anderen Premium-Typen<br>` +
+                  `✗ Entfernt <strong>Lifetime Premium</strong>, Betatester, Partner und alle anderen Premium-Typen<br>` +
                   `✗ Kategorien-Limit wird auf Free (5) wiederhergestellt<br>` +
                   `✗ Alle Pro-Features werden sofort deaktiviert<br>` +
                   `✗ Diese Aktion ist <strong>sofort wirksam</strong> und kann nicht rückgängig gemacht werden`;

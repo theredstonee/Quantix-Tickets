@@ -4765,8 +4765,8 @@ module.exports = (client)=>{
           return res.redirect('/owner?success=premium-activated');
         }
       } else if (action === 'remove') {
-        // Remove Premium - works for ALL premium types (Lifetime, Beta, Trial, Regular)
-        const { deactivatePremium, getPremiumInfo } = require('./premium');
+        // Remove Premium - works for ALL premium types (Lifetime, Beta, Trial, Regular, Partner)
+        const { deactivatePremium, deactivatePartner, getPremiumInfo } = require('./premium');
         const premiumInfo = getPremiumInfo(serverId);
 
         // Check if server has any premium
@@ -4774,12 +4774,17 @@ module.exports = (client)=>{
           return res.redirect('/owner?error=no-premium-to-remove');
         }
 
-        // Deactivate any premium type (Lifetime, Beta, Trial, Regular)
-        deactivatePremium(serverId);
+        // Deactivate premium - use specific function for Partner
+        if (premiumInfo.tier === 'partner') {
+          deactivatePartner(serverId);
+        } else {
+          deactivatePremium(serverId);
+        }
 
         const premiumType = premiumInfo.isTrial ? 'Trial' :
                            premiumInfo.isLifetime ? 'Lifetime' :
                            premiumInfo.tier === 'beta' ? 'Beta' :
+                           premiumInfo.tier === 'partner' ? 'Partner' :
                            premiumInfo.tier;
 
         console.log(`🚫 ${premiumType} Premium removed for ${sanitizeString(guild.name, 100)} (${serverId}) by ${sanitizeUsername(req.user.username || req.user.id)}`);
