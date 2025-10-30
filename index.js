@@ -7150,6 +7150,30 @@ client.on(Events.MessageCreate, async (message) => {
     }
   }
 
+  // Handle !help message command
+  if (message.content.toLowerCase() === '!help') {
+    try {
+      const helpCommand = require('./commands/help.js');
+
+      // Create a fake interaction object for the help command
+      const fakeInteraction = {
+        guild: message.guild,
+        user: message.author,
+        client: message.client,
+        reply: async (options) => {
+          return await message.reply(options);
+        }
+      };
+
+      await helpCommand.execute(fakeInteraction);
+      return;
+    } catch (err) {
+      console.error('Error in !help message command:', err);
+      await message.reply('❌ Ein Fehler ist aufgetreten beim Laden der Hilfe.').catch(() => {});
+      return;
+    }
+  }
+
   if(!message.channel.name || !message.channel.name.startsWith(PREFIX)) return;
 
   try {

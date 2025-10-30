@@ -1,6 +1,84 @@
 {
-  "currentVersion": "1.4.2",
+  "currentVersion": "1.4.5",
   "versions": [
+    {
+      "version": "1.4.5",
+      "date": "2025-10-30",
+      "changes": {
+        "de": [
+          "🤝 Partner System - Neue Premium-Stufe mit Lifetime Pro-Features (Founder-only)",
+          "🎖️ Automatische Rollenverwaltung - Partner erhalten automatisch Rolle auf Theredstonee Projects",
+          "📚 /help Command - Professioneller Help-Command mit 9 Sprachen Support",
+          "💬 !help Message Command - Identische Funktionalität wie Slash Command",
+          "📊 Commands Update - /commands und !commands mit allen neuen Features erweitert",
+          "👑 Owner Dashboard - Partner-Verwaltung im Dashboard mit Statistiken",
+          "🎨 Partner Badge - Grünes Design (#00ff88) mit Handshake-Icon"
+        ],
+        "en": [
+          "🤝 Partner System - New premium tier with lifetime Pro features (Founder-only)",
+          "🎖️ Automatic Role Management - Partners automatically receive role on Theredstonee Projects",
+          "📚 /help Command - Professional help command with 9 language support",
+          "💬 !help Message Command - Identical functionality as slash command",
+          "📊 Commands Update - /commands and !commands extended with all new features",
+          "👑 Owner Dashboard - Partner management in dashboard with statistics",
+          "🎨 Partner Badge - Green design (#00ff88) with handshake icon"
+        ],
+        "tr": [
+          "🤝 Partner Sistemi - Ömür boyu Pro özelliklere sahip yeni premium seviyesi (Founder-only)",
+          "🎖️ Otomatik Rol Yönetimi - Partnerlar Theredstonee Projects'te otomatik rol alır",
+          "📚 /help Komutu - 9 dil desteği ile profesyonel yardım komutu",
+          "💬 !help Mesaj Komutu - Slash komutuyla aynı işlevsellik",
+          "📊 Komutlar Güncellemesi - /commands ve !commands tüm yeni özelliklerle genişletildi",
+          "👑 Sahip Kontrol Paneli - İstatistiklerle panelde partner yönetimi",
+          "🎨 Partner Rozeti - Handshake simgesiyle yeşil tasarım (#00ff88)"
+        ],
+        "ja": [
+          "🤝パートナーシステム - 生涯Proフィーチャーを持つ新しいプレミアム層（Founder専用）",
+          "🎖️自動ロール管理 - パートナーはTheredstonee Projectsで自動的にロールを受け取る",
+          "📚 /helpコマンド - 9言語サポート付きプロフェッショナルヘルプコマンド",
+          "💬 !helpメッセージコマンド - スラッシュコマンドと同一の機能",
+          "📊コマンド更新 - /commandsと!commandsをすべての新機能で拡張",
+          "👑オーナーダッシュボード - 統計付きダッシュボードでのパートナー管理",
+          "🎨パートナーバッジ - ハンドシェイクアイコン付きグリーンデザイン（#00ff88）"
+        ],
+        "ru": [
+          "🤝 Система партнёров - Новый премиум-уровень с пожизненными Pro функциями (только Founder)",
+          "🎖️ Автоматическое управление ролями - Партнёры автоматически получают роль на Theredstonee Projects",
+          "📚 /help команда - Профессиональная команда помощи с поддержкой 9 языков",
+          "💬 !help команда в сообщениях - Идентичная функциональность как у слэш-команды",
+          "📊 Обновление команд - /commands и !commands расширены всеми новыми функциями",
+          "👑 Панель владельца - Управление партнёрами в панели со статистикой",
+          "🎨 Значок партнёра - Зелёный дизайн (#00ff88) с иконкой рукопожатия"
+        ],
+        "pt": [
+          "🤝 Sistema de Parceiros - Novo nível premium com recursos Pro vitalícios (apenas Founder)",
+          "🎖️ Gerenciamento Automático de Cargos - Parceiros recebem cargo automaticamente no Theredstonee Projects",
+          "📚 Comando /help - Comando de ajuda profissional com suporte a 9 idiomas",
+          "💬 Comando de Mensagem !help - Funcionalidade idêntica ao comando slash",
+          "📊 Atualização de Comandos - /commands e !commands estendidos com todos os novos recursos",
+          "👑 Painel do Proprietário - Gerenciamento de parceiros no painel com estatísticas",
+          "🎨 Badge de Parceiro - Design verde (#00ff88) com ícone de aperto de mão"
+        ],
+        "es": [
+          "🤝 Sistema de Partners - Nuevo nivel premium con características Pro de por vida (solo Founder)",
+          "🎖️ Gestión Automática de Roles - Los partners reciben automáticamente rol en Theredstonee Projects",
+          "📚 Comando /help - Comando de ayuda profesional con soporte para 9 idiomas",
+          "💬 Comando de Mensaje !help - Funcionalidad idéntica al comando slash",
+          "📊 Actualización de Comandos - /commands y !commands ampliados con todas las nuevas características",
+          "👑 Panel del Propietario - Gestión de partners en el panel con estadísticas",
+          "🎨 Badge de Partner - Diseño verde (#00ff88) con icono de apretón de manos"
+        ],
+        "id": [
+          "🤝 Sistem Partner - Tingkat premium baru dengan fitur Pro seumur hidup (hanya Founder)",
+          "🎖️ Manajemen Peran Otomatis - Partner otomatis menerima peran di Theredstonee Projects",
+          "📚 Perintah /help - Perintah bantuan profesional dengan dukungan 9 bahasa",
+          "💬 Perintah Pesan !help - Fungsionalitas identik dengan perintah slash",
+          "📊 Pembaruan Perintah - /commands dan !commands diperluas dengan semua fitur baru",
+          "👑 Dashboard Pemilik - Manajemen partner di dashboard dengan statistik",
+          "🎨 Badge Partner - Desain hijau (#00ff88) dengan ikon jabat tangan"
+        ]
+      }
+    },
     {
       "version": "1.4.2",
       "date": "2025-10-26",

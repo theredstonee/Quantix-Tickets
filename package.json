@@ -1,6 +1,6 @@
 {
   "name": "bot",
-  "version": "1.4.2",
+  "version": "1.4.5",
   "private": true,
   "description": "Quantix Tickets Discord Bot",
   "main": "index.js",

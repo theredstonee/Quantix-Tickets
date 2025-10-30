@@ -1,5 +1,116 @@
 # Changelog
 
+## [1.4.5] - 2025-10-30
+
+### 🤝 Partner System & Help Command
+
+Vollständiges Partner-System mit automatischer Rollenverwaltung und professionellem Help-Command.
+
+### Added
+
+#### 🤝 **Partner System** (Founder Feature)
+- **Partner-Tier**: Neue Premium-Stufe mit Lifetime Pro-Features
+  - Partner erhalten alle Pro-Features ohne Ablaufdatum
+  - Spezielle grüne Badge-Farbe (#00ff88) und Handshake-Icon (🤝)
+  - Partner-Status wird in Owner Dashboard und Premium-Seiten angezeigt
+- **Partner Commands**:
+  - `/partner add` - Partner-Status zu Server hinzufügen (Founder-only)
+  - `/partner remove` - Partner-Status entfernen (Founder-only)
+  - `/partner list` - Alle Partner-Server auflisten (Founder-only)
+  - Autocomplete-Unterstützung für Server-Auswahl
+- **Automatische Rollenverwaltung**:
+  - Partner erhalten automatisch Rolle 1432763693535465554 auf Theredstonee Projects Server (1403053662825222388)
+  - Rolle wird bei Partner-Entfernung automatisch entfernt
+  - Funktioniert sowohl über Owner Dashboard als auch Partner-Commands
+  - Status-Feedback in Embeds und Logs
+- **Owner Dashboard Integration**:
+  - Partner-Card mit Statistiken im Dashboard
+  - Partner-Option im Premium-Management-Modal
+  - Bestätigungs-Dialog für Partner-Aktivierung
+  - Professional Styling mit grünen Akzentfarben
+- **Premium System Updates**:
+  - `activatePartner()` und `deactivatePartner()` Funktionen in premium.js
+  - Partner-Tier in allen Premium-Checks unterstützt
+  - `getPremiumInfo()` zeigt Partner-Details (partnerUserId, partnerLink)
+  - Partner-Badge in Ticket-Übersicht und Server-Listen
+
+#### 📚 **Help Command System**
+- **Multi-Language Support**: Vollständige Übersetzung in 9 Sprachen
+  - Deutsch, English, Turkish, Japanese, Russian, Portuguese, Spanish, Indonesian
+- **Slash Command**: `/help`
+  - Interactive Embed mit 5 Sections
+  - Quick Start Guide (5 Schritte zum Setup)
+  - Command Categories (8 Kategorien)
+  - Main Features (8 Hauptfunktionen)
+  - Premium Features (4 Tiers: Free, Basic, Pro, Partner)
+  - Helpful Tips (5 nützliche Tipps)
+- **Message Command**: `!help`
+  - Identische Funktionalität wie Slash Command
+  - Fake-Interaction-Pattern für Code-Wiederverwendung
+  - Funktioniert in allen Channels
+- **Dynamic Premium Badge**:
+  - Zeigt aktuellen Server-Premium-Status im Embed
+  - Färbung und Icon je nach Tier (Free/Basic/Pro/Partner)
+- **Link Buttons**:
+  - Dashboard, Premium, Support, Commands
+  - Öffnen in neuem Tab ohne Interaction-Handler
+
+#### 🔧 **Commands List Update**
+- **New Categories Added**:
+  - 📊 Analytics & Statistiken mit Web-Dashboard und Ticket-History
+  - 👑 Owner-Commands erweitert mit Partner-Befehlen
+  - ⭐ Founder-Commands mit Maintenance-Modus
+- **Premium Tier Descriptions Updated**:
+  - Free: Basis-Features, 5 Kategorien
+  - Basic: 7 Kategorien, File Upload, Custom Avatar
+  - Pro: Unbegrenzt, Analytics, SLA, Auto-Close
+  - Partner: Lifetime Pro-Features (NEU)
+- **New Commands Listed**:
+  - `/partner add/remove/list` - Partner-Verwaltung
+  - `/maintenance` - Wartungsmodus toggle
+  - `/availability` - Team-Verfügbarkeit setzen
+  - `/status` - Bot und Web-Panel Status
+- **Updated Commands**:
+  - `/commands` und `!commands` zeigen alle neuen Features
+  - Verbesserte Kategorisierung und Beschreibungen
+  - Premium-Badges für Basic+ und Pro Features
+
+### Changed
+
+- **Premium Tiers**: Von 4 auf 5 Tiers erweitert (none, basic, pro, beta, partner)
+- **Owner Dashboard**: Partner-Statistiken in premiumStats hinzugefügt
+- **Panel Alert Box**: Spezielle Partner-Anzeige mit grünem Gradient
+- **Commands List Embed**: Erweiterte Premium-Legende mit Partner-Tier
+- **Help System**: Professionelle Hilfe-Embeds für bessere User Experience
+
+### Technical
+
+**Neue Dateien**:
+- `commands/help.js` - Multi-language Help Command mit 9 Sprachen
+
+**Backend Änderungen**:
+- `premium.js`: Partner-Tier Recognition in allen Premium-Funktionen
+- `premium.js`: `activatePartner()` und `deactivatePartner()` Funktionen
+- `panel.js`: Partner-Statistiken in Owner Dashboard (line 4410)
+- `panel.js`: Partner-Aktivierung mit Rollenverwaltung (lines 4758-4784)
+- `panel.js`: Partner-Entfernung mit Rollenverwaltung (lines 4795-4811)
+- `commands/partner.js`: Rollenverwaltung bei add/remove (lines 190-267)
+- `commands/commands.js`: Partner-Commands und neue Kategorien
+- `index.js`: !help Message-Handler (lines 7153-7175)
+
+**Frontend Änderungen**:
+- `owner.ejs`: Partner-Card und Badge-Styling (lines 828-838, 334-338)
+- `owner.ejs`: Partner-Option im Premium-Modal (lines 1186-1203)
+- `panel.ejs`: Partner-Alert mit grünem Gradient (lines 5069-5099)
+- `panel.ejs`: Partner-Tier in Feature-Checks
+
+**CLAUDE.md Dokumentation**:
+- Partner-System vollständig dokumentiert
+- Premium-Tiers von 4 auf 5 aktualisiert
+- Partner-Funktionen zur Key Functions Liste hinzugefügt
+
+---
+
 ## [1.4.2] - 2025-10-26
 
 ### 🎤 Voice Support System
