@@ -39,3 +39,4 @@ install-premium.sh
 SYSTEMD-GUIDE.md
 package.json
 .claude/settings.local.json
+package-lock.json
