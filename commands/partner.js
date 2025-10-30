@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const premium = require('../premium');
-const { activatePartner, deactivatePartner, listPartnerServers } = premium;
+const { activatePartner, deactivatePartner, listPartnerServers, getPremiumInfo } = premium;
 
 const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
 const PARTNER_ROLE_ID = '1432763693535465554';
@@ -237,6 +237,9 @@ module.exports = {
           guildName = `Unknown (${guildId})`;
         }
 
+        // Get partner info before removing
+        const premiumInfo = getPremiumInfo(guildId);
+
         const result = deactivatePartner(guildId);
 
         if (!result.success) {
@@ -246,12 +249,29 @@ module.exports = {
           });
         }
 
+        // Remove Partner Role from user
+        let roleStatus = '';
+        if (premiumInfo.partnerUserId) {
+          try {
+            const partnerServerGuild = await interaction.client.guilds.fetch(PARTNER_SERVER_ID);
+            const member = await partnerServerGuild.members.fetch(premiumInfo.partnerUserId);
+
+            if (member.roles.cache.has(PARTNER_ROLE_ID)) {
+              await member.roles.remove(PARTNER_ROLE_ID);
+              roleStatus = '\n✅ Partner-Rolle wurde entfernt';
+            }
+          } catch (err) {
+            roleStatus = `\n⚠️ Rolle konnte nicht entfernt werden: ${err.message}`;
+          }
+        }
+
         const embed = new EmbedBuilder()
           .setTitle('🚫 Partner Entfernt')
           .setDescription(
             `**Server:** ${guildName}\n` +
             `**Guild ID:** \`${guildId}\`\n` +
-            `**Status:** Partner-Status wurde entfernt`
+            `**Status:** Partner-Status wurde entfernt` +
+            roleStatus
           )
           .setColor(0xff4444)
           .setTimestamp()

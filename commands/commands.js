@@ -186,6 +186,33 @@ function getCommandsList(userId, member, guildId) {
           permission: 'Administrator',
           canUse: isAdmin,
           premium: null
+        },
+        {
+          name: '/availability',
+          description: 'Team-Mitglied Verfügbarkeit setzen',
+          permission: 'Team',
+          canUse: isTeam,
+          premium: 'Pro'
+        }
+      ]
+    },
+    {
+      category: '📊 Analytics & Statistiken',
+      emoji: '📊',
+      items: [
+        {
+          name: 'Analytics Dashboard',
+          description: 'Web-basierte Analytics (Tickets, Ratings, Performance)',
+          permission: 'Team/Admin',
+          canUse: hasPro || isAdmin,
+          premium: 'Pro'
+        },
+        {
+          name: 'Ticket History',
+          description: 'Detaillierte Ticket-Historie im Web-Panel',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: null
         }
       ]
     },
@@ -210,6 +237,13 @@ function getCommandsList(userId, member, guildId) {
         {
           name: '/uptime',
           description: 'Bot-Uptime und Statistiken anzeigen',
+          permission: 'Alle',
+          canUse: true,
+          premium: null
+        },
+        {
+          name: '/status',
+          description: 'Bot und Web-Panel Status anzeigen',
           permission: 'Alle',
           canUse: true,
           premium: null
@@ -281,10 +315,31 @@ function getCommandsList(userId, member, guildId) {
           premium: null
         },
         {
-          name: '/partner',
-          description: 'Partner-Status verwalten (add/remove/list)',
+          name: '/partner add',
+          description: 'Partner-Status hinzufügen (Lifetime Pro)',
           permission: 'Founder',
           canUse: isFounder,
+          premium: null
+        },
+        {
+          name: '/partner remove',
+          description: 'Partner-Status entfernen',
+          permission: 'Founder',
+          canUse: isFounder,
+          premium: null
+        },
+        {
+          name: '/partner list',
+          description: 'Alle Partner-Server auflisten',
+          permission: 'Founder',
+          canUse: isFounder,
+          premium: null
+        },
+        {
+          name: '/ticket-open-as',
+          description: 'Ticket als anderer User öffnen (Testing)',
+          permission: 'Owner',
+          canUse: true,
           premium: null
         }
       ]
@@ -298,10 +353,24 @@ function getCommandsList(userId, member, guildId) {
       emoji: '⭐',
       items: [
         {
+          name: '/maintenance',
+          description: 'Wartungsmodus aktivieren/deaktivieren',
+          permission: 'Founder',
+          canUse: true,
+          premium: null
+        },
+        {
           name: 'Founder Panel',
           description: 'Zugriff auf /founder Web-Panel (Server verwalten)',
           permission: 'Founder',
           canUse: true,
+          premium: null
+        },
+        {
+          name: 'Owner Panel',
+          description: 'Zugriff auf /owner Web-Panel (Premium, Feedback)',
+          permission: 'Owner',
+          canUse: isOwner,
           premium: null
         }
       ]
@@ -323,8 +392,13 @@ function buildCommandEmbed(commands, username) {
       '**Legende:**\n' +
       '✅ = Du kannst diesen Command verwenden\n' +
       '❌ = Keine Berechtigung\n' +
-      '⭐ **Basic+** = Basic Premium erforderlich\n' +
-      '🌟 **Pro** = Pro Premium erforderlich\n\n' +
+      '⭐ **Basic+** = Basic Premium oder höher erforderlich\n' +
+      '🌟 **Pro** = Pro Premium, Partner oder Betatester erforderlich\n\n' +
+      '**Premium Tiers:**\n' +
+      '• 🆓 **Free**: Basis-Features, 5 Kategorien\n' +
+      '• 💎 **Basic**: 7 Kategorien, File Upload, Custom Avatar\n' +
+      '• 👑 **Pro**: Unbegrenzt, Analytics, SLA, Auto-Close\n' +
+      '• 🤝 **Partner**: Lifetime Pro-Features\n\n' +
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
     )
     .setFooter({ text: `Angefordert von ${username} • Quantix Tickets` })

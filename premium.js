@@ -331,9 +331,9 @@ function getPremiumInfo(guildId) {
   const isTrial = cfg.premium?.isTrial === true;
   const trialInfo = isTrial ? getTrialInfo(guildId) : null;
 
-  let tierName = tier === 'partner' ? 'Partner (Pro)' : PREMIUM_TIERS[tier]?.name || 'Free';
+  let tierName = tier === 'partner' ? 'Partner' : PREMIUM_TIERS[tier]?.name || 'Free';
   if (isPartner) {
-    tierName = 'Partner (Pro)';
+    tierName = 'Partner';
   } else if (isLifetime) {
     tierName = `${tierName} (Lifetime)`;
   } else if (isTrial && trialInfo) {

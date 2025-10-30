@@ -4761,6 +4761,24 @@ module.exports = (client)=>{
         result = activatePartner(serverId, guildOwner.id, null);
 
         if (result.success) {
+          // Assign Partner Role on Theredstonee Projects server
+          const PARTNER_SERVER_ID = '1403053662825222388';
+          const PARTNER_ROLE_ID = '1432763693535465554';
+
+          try {
+            const partnerServerGuild = await client.guilds.fetch(PARTNER_SERVER_ID);
+            const member = await partnerServerGuild.members.fetch(guildOwner.id);
+
+            if (!member.roles.cache.has(PARTNER_ROLE_ID)) {
+              await member.roles.add(PARTNER_ROLE_ID);
+              console.log(`✅ Partner-Rolle vergeben an ${guildOwner.user.tag} (${guildOwner.id})`);
+            } else {
+              console.log(`✅ User ${guildOwner.user.tag} hatte bereits die Partner-Rolle`);
+            }
+          } catch (err) {
+            console.error(`⚠️ Fehler beim Vergeben der Partner-Rolle: ${err.message}`);
+          }
+
           console.log(`🤝 Partner activated for ${sanitizeString(guild.name, 100)} (${serverId}) by ${sanitizeUsername(req.user.username || req.user.id)}`);
           return res.redirect('/owner?success=premium-activated');
         }
@@ -4772,6 +4790,24 @@ module.exports = (client)=>{
         // Check if server has any premium
         if (premiumInfo.tier === 'none') {
           return res.redirect('/owner?error=no-premium-to-remove');
+        }
+
+        // Remove Partner Role if removing Partner status
+        if (premiumInfo.tier === 'partner' && premiumInfo.partnerUserId) {
+          const PARTNER_SERVER_ID = '1403053662825222388';
+          const PARTNER_ROLE_ID = '1432763693535465554';
+
+          try {
+            const partnerServerGuild = await client.guilds.fetch(PARTNER_SERVER_ID);
+            const member = await partnerServerGuild.members.fetch(premiumInfo.partnerUserId);
+
+            if (member.roles.cache.has(PARTNER_ROLE_ID)) {
+              await member.roles.remove(PARTNER_ROLE_ID);
+              console.log(`✅ Partner-Rolle entfernt von User ${premiumInfo.partnerUserId}`);
+            }
+          } catch (err) {
+            console.error(`⚠️ Fehler beim Entfernen der Partner-Rolle: ${err.message}`);
+          }
         }
 
         // Deactivate premium - use specific function for Partner
