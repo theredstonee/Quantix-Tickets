@@ -4406,7 +4406,8 @@ module.exports = (client)=>{
         none: guildsData.filter(g => g.premium === 'none').length,
         basic: guildsData.filter(g => g.premium === 'basic').length,
         pro: guildsData.filter(g => g.premium === 'pro').length,
-        beta: guildsData.filter(g => g.premium === 'beta').length
+        beta: guildsData.filter(g => g.premium === 'beta').length,
+        partner: guildsData.filter(g => g.premium === 'partner').length
       };
 
       // Load feedbacks
@@ -4721,7 +4722,7 @@ module.exports = (client)=>{
   router.post('/owner/manage-premium', isOwner, async (req, res) => {
     try {
       const { serverId, action, tier, days } = req.body;
-      const { activateLifetimePremium, removeLifetimePremium, activateBetatester, deactivateBetatester } = require('./premium');
+      const { activateLifetimePremium, removeLifetimePremium, activateBetatester, deactivateBetatester, activatePartner, deactivatePartner } = require('./premium');
 
       if (!serverId || !action) {
         return res.redirect('/owner?error=missing-params');
@@ -4752,6 +4753,15 @@ module.exports = (client)=>{
 
         if (result.success) {
           console.log(`🧪 Betatester activated for ${sanitizeString(guild.name, 100)} (${serverId}) for ${duration} days by ${sanitizeUsername(req.user.username || req.user.id)}`);
+          return res.redirect('/owner?success=premium-activated');
+        }
+      } else if (action === 'partner') {
+        // Activate Partner
+        const guildOwner = await guild.fetchOwner();
+        result = activatePartner(serverId, guildOwner.id, null);
+
+        if (result.success) {
+          console.log(`🤝 Partner activated for ${sanitizeString(guild.name, 100)} (${serverId}) by ${sanitizeUsername(req.user.username || req.user.id)}`);
           return res.redirect('/owner?success=premium-activated');
         }
       } else if (action === 'remove') {

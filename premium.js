@@ -202,6 +202,11 @@ function isPremium(guildId, requiredTier = 'basic') {
     return true;
   }
 
+  // Partner haben Pro-Level Access (lifetime)
+  if (cfg.premium.tier === 'partner') {
+    return true;
+  }
+
   // Betatester haben Pro-Level Access
   if (cfg.premium.tier === 'beta') {
     // Prüfe ob abgelaufen
@@ -242,7 +247,12 @@ function hasFeature(guildId, feature) {
   }
 
   // Get current tier
-  const tier = cfg.premium.tier;
+  let tier = cfg.premium.tier;
+
+  // Partner haben alle Pro-Features
+  if (tier === 'partner') {
+    return PREMIUM_TIERS.pro.features[feature] || false;
+  }
 
   // Prüfe ob abgelaufen (nicht für Lifetime)
   if (!cfg.premium.lifetime && cfg.premium.expiresAt && new Date(cfg.premium.expiresAt) < new Date()) {
@@ -269,6 +279,11 @@ function getPremiumTier(guildId) {
 
   if (!cfg.premium || cfg.premium.tier === 'none') {
     return 'none';
+  }
+
+  // Partner haben Pro-Level (lifetime)
+  if (cfg.premium.tier === 'partner') {
+    return 'partner';
   }
 
   // Lifetime Premium läuft nie ab
@@ -306,6 +321,9 @@ function getPremiumInfo(guildId) {
   const tier = getPremiumTier(guildId);
   const cfg = readCfg(guildId);
 
+  // Check if Partner
+  const isPartner = cfg.premium?.partner === true || tier === 'partner';
+
   // Check if Lifetime Premium
   const isLifetime = cfg.premium?.lifetime === true;
 
@@ -313,8 +331,10 @@ function getPremiumInfo(guildId) {
   const isTrial = cfg.premium?.isTrial === true;
   const trialInfo = isTrial ? getTrialInfo(guildId) : null;
 
-  let tierName = PREMIUM_TIERS[tier].name;
-  if (isLifetime) {
+  let tierName = tier === 'partner' ? 'Partner (Pro)' : PREMIUM_TIERS[tier]?.name || 'Free';
+  if (isPartner) {
+    tierName = 'Partner (Pro)';
+  } else if (isLifetime) {
     tierName = `${tierName} (Lifetime)`;
   } else if (isTrial && trialInfo) {
     tierName = `${tierName} (Trial - ${trialInfo.daysRemaining} ${trialInfo.daysRemaining === 1 ? 'Tag' : 'Tage'})`;
@@ -323,16 +343,19 @@ function getPremiumInfo(guildId) {
   return {
     tier: tier,
     tierName: tierName,
-    price: PREMIUM_TIERS[tier].price,
-    features: PREMIUM_TIERS[tier].features, // Immer aktuelle Features aus PREMIUM_TIERS
+    price: tier === 'partner' ? 0 : (PREMIUM_TIERS[tier]?.price || 0),
+    features: tier === 'partner' ? PREMIUM_TIERS.pro.features : (PREMIUM_TIERS[tier]?.features || PREMIUM_TIERS.none.features),
     expiresAt: cfg.premium?.expiresAt || null,
     isActive: tier !== 'none',
-    isLifetime: isLifetime,
+    isLifetime: isLifetime || isPartner,
+    isPartner: isPartner,
     isTrial: isTrial,
     trialInfo: trialInfo,
     subscriptionId: cfg.premium?.subscriptionId || null,
     willCancel: cfg.premium?.willCancel || false,
-    cancelledAt: cfg.premium?.cancelledAt || null
+    cancelledAt: cfg.premium?.cancelledAt || null,
+    partnerUserId: cfg.premium?.partnerUserId || null,
+    partnerLink: cfg.premium?.partnerLink || null
   };
 }
 
