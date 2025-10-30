@@ -6,9 +6,9 @@ PartOf=quantix-tickets.target
 
 [Service]
 Type=simple
-User=trs-bot
-Group=trs-bot
-WorkingDirectory=/home/trs-bot/ticketbot
+User=root
+Group=root
+WorkingDirectory=/home/root/ticketbot
 ExecStart=/usr/bin/node web.js
 Restart=always
 RestartSec=1m
@@ -20,14 +20,14 @@ StartLimitIntervalSec=900
 # Environment
 Environment=NODE_ENV=production
 Environment=WEB_PORT=3000
-EnvironmentFile=/home/trs-bot/ticketbot/.env
+EnvironmentFile=/home/root/ticketbot/.env
 
 # Security
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/trs-bot/ticketbot
+ReadWritePaths=/home/root/ticketbot
 
 # Logging
 StandardOutput=journal
