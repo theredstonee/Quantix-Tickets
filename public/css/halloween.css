@@ -1,0 +1,582 @@
+/* ====================================
+   Halloween Special Edition CSS
+   🎃 Spooky Styles & Animations 👻
+   ==================================== */
+
+/* Halloween Theme Variables */
+:root[data-halloween="true"] {
+  --halloween-orange: #FF6B35;
+  --halloween-purple: #8B4789;
+  --halloween-dark: #1A1A1A;
+  --halloween-accent: #F7931E;
+  --halloween-light: #FFE5B4;
+  --halloween-green: #39FF14;
+  --halloween-blood: #8B0000;
+
+  /* Override default theme colors */
+  --accent-color: var(--halloween-orange);
+  --accent-hover: var(--halloween-purple);
+  --primary-color: var(--halloween-orange);
+}
+
+/* Halloween Dark Mode Override */
+[data-theme="dark"][data-halloween="true"] {
+  --bg-color: #0a0a0a;
+  --text-color: var(--halloween-light);
+  --card-bg: rgba(26, 26, 26, 0.9);
+  --glass-bg: rgba(26, 26, 26, 0.7);
+  --glass-border: rgba(255, 107, 53, 0.3);
+  --shadow-color: rgba(255, 107, 53, 0.2);
+}
+
+/* Halloween Light Mode Override */
+[data-theme="light"][data-halloween="true"] {
+  --bg-color: #2a1a0a;
+  --text-color: var(--halloween-light);
+  --card-bg: rgba(42, 26, 10, 0.9);
+  --glass-bg: rgba(42, 26, 10, 0.7);
+}
+
+/* ====================================
+   Halloween Background Effects
+   ==================================== */
+
+/* Animated Spooky Background */
+body[data-halloween="true"]::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(139, 71, 137, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(247, 147, 30, 0.05) 0%, transparent 70%);
+  animation: halloweenPulse 8s ease-in-out infinite;
+}
+
+/* Floating Particles */
+body[data-halloween="true"]::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, var(--halloween-orange), transparent),
+    radial-gradient(2px 2px at 60% 70%, var(--halloween-purple), transparent),
+    radial-gradient(1px 1px at 50% 50%, var(--halloween-accent), transparent),
+    radial-gradient(1px 1px at 80% 10%, var(--halloween-orange), transparent),
+    radial-gradient(2px 2px at 90% 60%, var(--halloween-purple), transparent);
+  background-size: 200px 200px, 300px 300px, 250px 250px, 180px 180px, 220px 220px;
+  background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 150px 50px;
+  animation: particleFloat 20s linear infinite;
+}
+
+/* ====================================
+   Spiderweb Decorations
+   ==================================== */
+
+.halloween-spiderweb {
+  position: fixed;
+  top: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.3;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+}
+
+.halloween-spiderweb.top-left {
+  left: 0;
+  width: 200px;
+  height: 200px;
+}
+
+.halloween-spiderweb.top-right {
+  right: 0;
+  width: 200px;
+  height: 200px;
+  transform: scaleX(-1);
+}
+
+/* ====================================
+   Floating Ghosts
+   ==================================== */
+
+.halloween-ghost {
+  position: fixed;
+  font-size: 3rem;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0;
+  animation: ghostFloat 15s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
+.halloween-ghost:nth-child(1) {
+  left: 10%;
+  top: 20%;
+  animation-delay: 0s;
+}
+
+.halloween-ghost:nth-child(2) {
+  left: 70%;
+  top: 40%;
+  animation-delay: 5s;
+}
+
+.halloween-ghost:nth-child(3) {
+  left: 30%;
+  top: 60%;
+  animation-delay: 10s;
+}
+
+/* ====================================
+   Flying Bats
+   ==================================== */
+
+.halloween-bat {
+  position: fixed;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0;
+  animation: batFly 12s linear infinite;
+}
+
+.halloween-bat:nth-child(1) {
+  top: 15%;
+  animation-delay: 0s;
+}
+
+.halloween-bat:nth-child(2) {
+  top: 45%;
+  animation-delay: 4s;
+}
+
+.halloween-bat:nth-child(3) {
+  top: 75%;
+  animation-delay: 8s;
+}
+
+/* ====================================
+   Pumpkin Decorations
+   ==================================== */
+
+.halloween-pumpkin {
+  display: inline-block;
+  font-size: 2.5rem;
+  animation: pumpkinGlow 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 15px var(--halloween-orange));
+}
+
+/* ====================================
+   Halloween Cards & Elements
+   ==================================== */
+
+[data-halloween="true"] .card,
+[data-halloween="true"] fieldset,
+[data-halloween="true"] .glass-box {
+  background: var(--glass-bg) !important;
+  border: 2px solid var(--halloween-orange) !important;
+  box-shadow:
+    0 0 20px rgba(255, 107, 53, 0.3),
+    inset 0 0 20px rgba(255, 107, 53, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s ease;
+}
+
+[data-halloween="true"] .card:hover,
+[data-halloween="true"] fieldset:hover {
+  transform: translateY(-5px);
+  border-color: var(--halloween-purple) !important;
+  box-shadow:
+    0 5px 30px rgba(139, 71, 137, 0.4),
+    inset 0 0 30px rgba(139, 71, 137, 0.2) !important;
+}
+
+/* Halloween Buttons */
+[data-halloween="true"] button,
+[data-halloween="true"] .btn,
+[data-halloween="true"] input[type="submit"] {
+  background: linear-gradient(135deg, var(--halloween-orange), var(--halloween-purple)) !important;
+  border: 2px solid var(--halloween-accent) !important;
+  color: var(--halloween-light) !important;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+  transition: all 0.3s ease;
+}
+
+[data-halloween="true"] button:hover,
+[data-halloween="true"] .btn:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 0 25px rgba(255, 107, 53, 0.8) !important;
+  filter: brightness(1.2);
+}
+
+/* Halloween Inputs */
+[data-halloween="true"] input,
+[data-halloween="true"] select,
+[data-halloween="true"] textarea {
+  background: rgba(26, 26, 26, 0.6) !important;
+  border: 2px solid var(--halloween-orange) !important;
+  color: var(--halloween-light) !important;
+  box-shadow: inset 0 0 10px rgba(255, 107, 53, 0.2);
+}
+
+[data-halloween="true"] input:focus,
+[data-halloween="true"] select:focus,
+[data-halloween="true"] textarea:focus {
+  border-color: var(--halloween-purple) !important;
+  box-shadow:
+    inset 0 0 10px rgba(139, 71, 137, 0.3),
+    0 0 20px rgba(139, 71, 137, 0.5) !important;
+}
+
+/* ====================================
+   Halloween Headers & Text
+   ==================================== */
+
+[data-halloween="true"] h1,
+[data-halloween="true"] h2,
+[data-halloween="true"] h3 {
+  color: var(--halloween-orange) !important;
+  text-shadow:
+    0 0 10px rgba(255, 107, 53, 0.5),
+    0 0 20px rgba(255, 107, 53, 0.3);
+  position: relative;
+}
+
+[data-halloween="true"] h1::before {
+  content: '🎃 ';
+  animation: pumpkinGlow 2s ease-in-out infinite;
+}
+
+[data-halloween="true"] h1::after {
+  content: ' 🎃';
+  animation: pumpkinGlow 2s ease-in-out infinite;
+}
+
+/* ====================================
+   Halloween Navigation
+   ==================================== */
+
+[data-halloween="true"] nav {
+  background: rgba(26, 26, 26, 0.95) !important;
+  border-bottom: 3px solid var(--halloween-orange) !important;
+  box-shadow: 0 5px 20px rgba(255, 107, 53, 0.3);
+}
+
+[data-halloween="true"] nav a {
+  color: var(--halloween-light) !important;
+  transition: all 0.3s ease;
+}
+
+[data-halloween="true"] nav a:hover {
+  color: var(--halloween-orange) !important;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.8);
+  transform: scale(1.1);
+}
+
+/* ====================================
+   Halloween Badges & Labels
+   ==================================== */
+
+[data-halloween="true"] .badge,
+[data-halloween="true"] .label {
+  background: linear-gradient(135deg, var(--halloween-orange), var(--halloween-purple)) !important;
+  border: 2px solid var(--halloween-accent);
+  box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* ====================================
+   Halloween Tables
+   ==================================== */
+
+[data-halloween="true"] table {
+  border: 2px solid var(--halloween-orange) !important;
+  background: rgba(26, 26, 26, 0.8) !important;
+}
+
+[data-halloween="true"] th {
+  background: linear-gradient(135deg, var(--halloween-orange), var(--halloween-purple)) !important;
+  color: var(--halloween-light) !important;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+[data-halloween="true"] tr:hover {
+  background: rgba(255, 107, 53, 0.2) !important;
+  box-shadow: inset 0 0 20px rgba(255, 107, 53, 0.3);
+}
+
+/* ====================================
+   Halloween Modal
+   ==================================== */
+
+[data-halloween="true"] .modal {
+  background: rgba(26, 26, 26, 0.95) !important;
+  border: 3px solid var(--halloween-orange) !important;
+  box-shadow: 0 0 50px rgba(255, 107, 53, 0.5);
+}
+
+/* ====================================
+   Halloween Scrollbar
+   ==================================== */
+
+[data-halloween="true"] ::-webkit-scrollbar {
+  width: 12px;
+  background: rgba(26, 26, 26, 0.8);
+}
+
+[data-halloween="true"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--halloween-orange), var(--halloween-purple));
+  border-radius: 6px;
+  border: 2px solid rgba(26, 26, 26, 0.8);
+}
+
+[data-halloween="true"] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--halloween-purple), var(--halloween-orange));
+  box-shadow: 0 0 10px rgba(255, 107, 53, 0.8);
+}
+
+/* ====================================
+   Halloween Animations
+   ==================================== */
+
+@keyframes halloweenPulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg);
+  }
+}
+
+@keyframes ghostFloat {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(0) translateX(0);
+  }
+  10% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(-30px) translateX(20px);
+  }
+  90% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes batFly {
+  0% {
+    left: -10%;
+    opacity: 0;
+    transform: translateY(0);
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: 110%;
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pumpkinGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px var(--halloween-orange));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px var(--halloween-orange)) brightness(1.2);
+  }
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(255, 107, 53, 0.8);
+  }
+}
+
+@keyframes spiderDrop {
+  0% {
+    top: -50px;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+/* ====================================
+   Halloween Loading Spinner
+   ==================================== */
+
+[data-halloween="true"] .spinner,
+[data-halloween="true"] .loader {
+  border-color: var(--halloween-orange) transparent var(--halloween-purple) transparent !important;
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+}
+
+/* ====================================
+   Halloween Toggle Switch
+   ==================================== */
+
+.halloween-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  background: rgba(26, 26, 26, 0.9);
+  padding: 10px 20px;
+  border-radius: 50px;
+  border: 2px solid var(--halloween-orange);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+}
+
+.halloween-toggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(255, 107, 53, 0.8);
+}
+
+.halloween-toggle-icon {
+  font-size: 1.5rem;
+  animation: pumpkinGlow 2s ease-in-out infinite;
+}
+
+.halloween-toggle-text {
+  color: var(--halloween-light);
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+/* ====================================
+   Halloween Notification Banner
+   ==================================== */
+
+.halloween-banner {
+  background: linear-gradient(135deg, var(--halloween-orange), var(--halloween-purple));
+  color: var(--halloween-light);
+  text-align: center;
+  padding: 15px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  box-shadow: 0 5px 20px rgba(255, 107, 53, 0.5);
+  animation: badgePulse 2s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.halloween-banner::before {
+  content: '🎃';
+  position: absolute;
+  left: 20px;
+  font-size: 2rem;
+  animation: pumpkinGlow 2s ease-in-out infinite;
+}
+
+.halloween-banner::after {
+  content: '👻';
+  position: absolute;
+  right: 20px;
+  font-size: 2rem;
+  animation: ghostFloat 3s ease-in-out infinite;
+}
+
+/* ====================================
+   Responsive Adjustments
+   ==================================== */
+
+@media (max-width: 768px) {
+  .halloween-ghost,
+  .halloween-bat {
+    font-size: 1.5rem;
+  }
+
+  .halloween-spiderweb {
+    width: 100px;
+    height: 100px;
+  }
+
+  .halloween-toggle {
+    top: 10px;
+    right: 10px;
+    padding: 8px 15px;
+  }
+
+  .halloween-banner::before,
+  .halloween-banner::after {
+    display: none;
+  }
+}
+
+/* ====================================
+   Print Styles (Disable Halloween)
+   ==================================== */
+
+@media print {
+  [data-halloween="true"] {
+    filter: none !important;
+  }
+
+  .halloween-ghost,
+  .halloween-bat,
+  .halloween-spiderweb,
+  .halloween-toggle,
+  .halloween-banner {
+    display: none !important;
+  }
+}
+
+/* ====================================
+   Accessibility
+   ==================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-halloween="true"] * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

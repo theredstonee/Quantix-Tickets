@@ -363,5 +363,86 @@
     "new_ticket_forwarded": "新しいチケットがあなたの部門に転送されました！",
     "no_team": "チームなし",
     "feature_locked": "マルチ部門サポートはプレミアムベーシック+でのみ利用可能です。"
+  },
+  "halloween": {
+    "theme_enabled": "🎃 ハロウィーンモードが有効になりました",
+    "theme_disabled": "ハロウィーンモードが無効になりました",
+    "title": "ハロウィーン特別版",
+    "subtitle": "ハロウィーンシーズンの不気味な機能",
+    "welcome": "ハロウィーン特別版へようこそ！🎃👻",
+    "description": "不気味なハロウィーンデザイン、アニメーション、エフェクトでチケットシステムを体験してください！",
+    "features": {
+      "title": "ハロウィーン機能",
+      "theme": "🎃 ハロウィーンダークテーマ",
+      "theme_desc": "オレンジと紫のアクセントが付いた美しく不気味なデザイン",
+      "animations": "👻 ゴーストアニメーション",
+      "animations_desc": "浮かぶゴーストと飛ぶコウモリ",
+      "sounds": "🔊 恐ろしい音",
+      "sounds_desc": "ハロウィーンの雰囲気のある音（オプション）",
+      "emojis": "🦇 ハロウィーン絵文字",
+      "emojis_desc": "すべてのメッセージにカボチャ、ゴースト、その他",
+      "special_effects": "🕸️ 特殊効果",
+      "special_effects_desc": "クモの巣と霧のエフェクト"
+    },
+    "settings": {
+      "title": "ハロウィーン設定",
+      "enable_theme": "ハロウィーンテーマを有効にする",
+      "enable_animations": "アニメーションを有効にする",
+      "enable_sounds": "音を有効にする",
+      "enable_emojis": "ハロウィーン絵文字を使用",
+      "enable_effects": "特殊効果を有効にする"
+    },
+    "messages": {
+      "ticket_created": "🎃 新しい不気味なチケットが作成されました！",
+      "ticket_closed": "👻 チケットがゴーストアーカイブに移動されました！",
+      "ticket_claimed": "🦇 {user}がチケットを引き継ぎました！",
+      "priority_changed": "🕷️ 優先度が{priority}に変更されました！",
+      "welcome_user": "恐ろしいサポートへようこそ、{user}！🎃",
+      "goodbye": "さようなら...もし戻る勇気があれば！👻"
+    },
+    "emojis": {
+      "pumpkin": "🎃",
+      "ghost": "👻",
+      "bat": "🦇",
+      "spider": "🕷️",
+      "spiderweb": "🕸️",
+      "skull": "💀",
+      "candy": "🍬",
+      "witch": "🧙",
+      "zombie": "🧟",
+      "vampire": "🧛",
+      "moon": "🌙",
+      "black_cat": "🐈‍⬛"
+    },
+    "countdown": {
+      "title": "ハロウィーンカウントダウン",
+      "days_until": "ハロウィーンまで{days}日！",
+      "today": "今日はハロウィーン！🎃",
+      "after": "ハロウィーンは終わりました...来年まで！👻"
+    },
+    "special": {
+      "trick_or_treat": "お菓子かいたずらか！🍬",
+      "spooky_season": "不気味なシーズンです！🎃",
+      "beware": "ゴーストに注意！👻",
+      "haunted": "このチャンネルはお化け屋敷です！🕸️"
+    },
+    "premium": {
+      "halloween_badge": "🎃 ハロウィーンプレミアム",
+      "exclusive_features": "ハロウィーン限定機能",
+      "limited_time": "⏰ 期間限定でのみ利用可能！"
+    },
+    "colors": {
+      "primary": "#FF6B35",
+      "secondary": "#8B4789",
+      "accent": "#F7931E",
+      "dark": "#1A1A1A",
+      "light": "#FFE5B4"
+    },
+    "admin": {
+      "toggle_title": "ハロウィーンモードを管理",
+      "toggle_description": "サーバーのハロウィーンテーマを有効または無効にします",
+      "save_success": "🎃 ハロウィーン設定が保存されました！",
+      "reset_success": "👻 ハロウィーン設定がリセットされました！"
+    }
   }
 }

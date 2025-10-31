@@ -29,6 +29,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/markdown.css">
 
+  <!-- Halloween Special Edition 🎃 -->
+  <link rel="stylesheet" href="/css/halloween.css">
+  <script src="/js/halloween.js" defer></script>
+
   <style>
     /* ============================================================
      * MODERN TAB-BASED PANEL DESIGN
@@ -2015,6 +2019,10 @@
             <button type="button" class="tab-btn" data-tab="premium">
               <i class="fas fa-crown"></i>
               <span>Premium</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="halloween">
+              <i class="fas fa-ghost"></i>
+              <span>🎃 Halloween</span>
             </button>
           </div>
 
@@ -5842,6 +5850,169 @@
             </div>
           </div>
 
+          <!-- Tab: Halloween 🎃 -->
+          <div class="tab-content" id="tab-halloween">
+            <!-- Halloween Banner -->
+            <div class="alert" style="background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(139, 71, 137, 0.2)); border-color: #FF6B35; margin-bottom: 2rem;">
+              <i class="fas fa-ghost"></i>
+              <div>
+                <strong style="font-size: 1.2rem; color: #FF6B35;">
+                  🎃 <%= lang === 'de' ? 'Halloween Special Edition' : 'Halloween Special Edition' %>
+                </strong><br>
+                <span style="opacity: 0.9;">
+                  <%= lang === 'de'
+                    ? 'Aktiviere gruselige Effekte und Animationen für die Halloween-Saison!'
+                    : 'Activate spooky effects and animations for the Halloween season!'
+                  %>
+                </span>
+              </div>
+            </div>
+
+            <!-- Halloween Features Overview -->
+            <div class="grid grid-2" style="margin-bottom: 2rem;">
+              <div class="stats-card" style="border-color: #FF6B35;">
+                <div class="stats-icon" style="background: linear-gradient(135deg, #FF6B35, #8B4789);">
+                  <i class="fas fa-pumpkin-carved"></i>
+                </div>
+                <div class="stats-content">
+                  <div class="stats-label">🎃 <%= lang === 'de' ? 'Theme' : 'Theme' %></div>
+                  <div class="stats-value"><%= lang === 'de' ? 'Dunkles Halloween' : 'Dark Halloween' %></div>
+                </div>
+              </div>
+
+              <div class="stats-card" style="border-color: #8B4789;">
+                <div class="stats-icon" style="background: linear-gradient(135deg, #8B4789, #FF6B35);">
+                  <i class="fas fa-ghost"></i>
+                </div>
+                <div class="stats-content">
+                  <div class="stats-label">👻 <%= lang === 'de' ? 'Animationen' : 'Animations' %></div>
+                  <div class="stats-value"><%= lang === 'de' ? 'Geister & Fledermäuse' : 'Ghosts & Bats' %></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Halloween Settings -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #FF6B35, #8B4789);">
+                      <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Halloween-Einstellungen' : 'Halloween Settings' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Passe das Halloween-Theme nach deinen Wünschen an'
+                      : 'Customize the Halloween theme to your liking'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <!-- Enable Halloween Theme -->
+                <div class="toggle-option-wrapper" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-option <%= (cfg.halloween && cfg.halloween.enabled) ? 'active' : '' %>" onclick="toggleHalloweenOption(this, 'halloweenEnabled')">
+                    <input type="checkbox" name="halloweenEnabled" <%= (cfg.halloween && cfg.halloween.enabled) ? 'checked' : '' %> style="display: none;">
+                    <div class="toggle-content" style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 2px solid transparent; transition: all 0.3s;">
+                      <div class="toggle-icon" style="width: 24px; height: 24px; border-radius: 50%; background: #ccc; display: inline-flex; align-items: center; justify-content: center; margin-right: 0.75rem; transition: all 0.3s;">
+                        <i class="fas fa-check" style="color: white; font-size: 0.75rem; opacity: 0;"></i>
+                      </div>
+                      <div style="display: inline-block; vertical-align: top;">
+                        <span style="font-weight: 600; font-size: 1.1rem; color: var(--text-color);">
+                          🎃 <%= lang === 'de' ? 'Halloween-Modus aktivieren' : 'Enable Halloween Mode' %>
+                        </span>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.7; font-size: 0.9rem;">
+                          <%= lang === 'de'
+                            ? 'Aktiviert das Halloween-Theme mit gruseligen Farben, Animationen und Effekten'
+                            : 'Activates the Halloween theme with spooky colors, animations and effects'
+                          %>
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <!-- Enable Animations -->
+                <div class="toggle-option-wrapper" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-option <%= (cfg.halloween && cfg.halloween.animations) ? 'active' : '' %>" onclick="toggleHalloweenOption(this, 'halloweenAnimations')">
+                    <input type="checkbox" name="halloweenAnimations" <%= (cfg.halloween && cfg.halloween.animations) ? 'checked' : '' %> style="display: none;">
+                    <div class="toggle-content" style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 2px solid transparent; transition: all 0.3s;">
+                      <div class="toggle-icon" style="width: 24px; height: 24px; border-radius: 50%; background: #ccc; display: inline-flex; align-items: center; justify-content: center; margin-right: 0.75rem; transition: all 0.3s;">
+                        <i class="fas fa-check" style="color: white; font-size: 0.75rem; opacity: 0;"></i>
+                      </div>
+                      <div style="display: inline-block; vertical-align: top;">
+                        <span style="font-weight: 600; font-size: 1.1rem; color: var(--text-color);">
+                          👻 <%= lang === 'de' ? 'Animationen aktivieren' : 'Enable Animations' %>
+                        </span>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.7; font-size: 0.9rem;">
+                          <%= lang === 'de'
+                            ? 'Zeigt schwebende Geister, fliegende Fledermäuse und andere Animationen'
+                            : 'Shows floating ghosts, flying bats and other animations'
+                          %>
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <!-- Enable Emojis -->
+                <div class="toggle-option-wrapper">
+                  <label class="toggle-option <%= (cfg.halloween && cfg.halloween.emojis) ? 'active' : '' %>" onclick="toggleHalloweenOption(this, 'halloweenEmojis')">
+                    <input type="checkbox" name="halloweenEmojis" <%= (cfg.halloween && cfg.halloween.emojis) ? 'checked' : '' %> style="display: none;">
+                    <div class="toggle-content" style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 2px solid transparent; transition: all 0.3s;">
+                      <div class="toggle-icon" style="width: 24px; height: 24px; border-radius: 50%; background: #ccc; display: inline-flex; align-items: center; justify-content: center; margin-right: 0.75rem; transition: all 0.3s;">
+                        <i class="fas fa-check" style="color: white; font-size: 0.75rem; opacity: 0;"></i>
+                      </div>
+                      <div style="display: inline-block; vertical-align: top;">
+                        <span style="font-weight: 600; font-size: 1.1rem; color: var(--text-color);">
+                          🦇 <%= lang === 'de' ? 'Halloween-Emojis verwenden' : 'Use Halloween Emojis' %>
+                        </span>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.7; font-size: 0.9rem;">
+                          <%= lang === 'de'
+                            ? 'Ersetzt Standard-Symbole durch Halloween-Emojis (Kürbisse, Geister, etc.)'
+                            : 'Replaces standard symbols with Halloween emojis (pumpkins, ghosts, etc.)'
+                          %>
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Halloween Countdown -->
+            <div class="card" style="margin-top: 2rem;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #F7931E, #FF6B35);">
+                      <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Halloween Countdown' : 'Halloween Countdown' %></span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎃</div>
+                <div id="halloween-countdown" style="font-size: 1.5rem; font-weight: bold; color: #FF6B35;">
+                  <%= lang === 'de' ? 'Berechne...' : 'Calculating...' %>
+                </div>
+                <p style="opacity: 0.7; margin-top: 1rem;">
+                  <%= lang === 'de' ? 'Bis Halloween 🦇' : 'Until Halloween 🦇' %>
+                </p>
+              </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="save-footer">
+              <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #FF6B35, #8B4789) !important;">
+                <i class="fas fa-save"></i>
+                <%= lang === 'de' ? 'Halloween-Einstellungen speichern' : 'Save Halloween Settings' %>
+              </button>
+            </div>
+          </div>
+
         </div>
       </form>
     </main>
@@ -6848,6 +7019,89 @@
       // Trigger on page load
       voiceSupportModeSelect.dispatchEvent(new Event('change'));
     }
+
+    // ====================================
+    // Halloween Functions 🎃
+    // ====================================
+
+    /**
+     * Toggle Halloween option active state
+     */
+    function toggleHalloweenOption(element, inputName) {
+      const checkbox = element.querySelector('input[type="checkbox"]');
+      const toggleIcon = element.querySelector('.toggle-icon');
+      const toggleContent = element.querySelector('.toggle-content');
+
+      // Toggle checkbox
+      checkbox.checked = !checkbox.checked;
+
+      // Toggle active class
+      if (checkbox.checked) {
+        element.classList.add('active');
+        toggleContent.style.borderColor = '#FF6B35';
+        toggleIcon.style.background = '#FF6B35';
+        toggleIcon.querySelector('i').style.opacity = '1';
+      } else {
+        element.classList.remove('active');
+        toggleContent.style.borderColor = 'transparent';
+        toggleIcon.style.background = '#ccc';
+        toggleIcon.querySelector('i').style.opacity = '0';
+      }
+    }
+
+    /**
+     * Calculate and display Halloween countdown
+     */
+    function updateHalloweenCountdown() {
+      const countdownEl = document.getElementById('halloween-countdown');
+      if (!countdownEl) return;
+
+      const now = new Date();
+      const year = now.getFullYear();
+      let halloween = new Date(year, 9, 31); // October 31
+
+      // If Halloween has passed this year, show next year's
+      if (now > halloween) {
+        halloween = new Date(year + 1, 9, 31);
+      }
+
+      const diff = halloween - now;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      const lang = '<%= lang || "de" %>';
+
+      if (days === 0 && hours === 0 && minutes === 0) {
+        countdownEl.textContent = lang === 'de' ? 'Heute ist Halloween! 🎃' : 'Today is Halloween! 🎃';
+        countdownEl.style.color = '#FF6B35';
+      } else if (days === 0) {
+        countdownEl.textContent = `${hours}h ${minutes}m`;
+      } else {
+        const text = lang === 'de' ? 'Noch' : '';
+        const dayText = lang === 'de' ? (days === 1 ? 'Tag' : 'Tage') : (days === 1 ? 'day' : 'days');
+        countdownEl.textContent = `${text} ${days} ${dayText}`.trim();
+      }
+    }
+
+    // Update countdown every minute
+    if (document.getElementById('halloween-countdown')) {
+      updateHalloweenCountdown();
+      setInterval(updateHalloweenCountdown, 60000);
+    }
+
+    // Initialize toggle styles for Halloween options
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.toggle-option.active').forEach(option => {
+        const toggleIcon = option.querySelector('.toggle-icon');
+        const toggleContent = option.querySelector('.toggle-content');
+        if (toggleIcon && toggleContent) {
+          toggleContent.style.borderColor = '#FF6B35';
+          toggleIcon.style.background = '#FF6B35';
+          toggleIcon.querySelector('i').style.opacity = '1';
+        }
+      });
+    });
   </script>
 </body>
 </html>
