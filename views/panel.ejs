@@ -2859,10 +2859,107 @@
           <div class="tab-content" id="tab-settings-advanced">
             <div class="alert alert-info" style="margin-bottom: 2rem;">
               <i class="fas fa-info-circle"></i>
-              <span><%= lang === 'de' ? 'Erweiterte Einstellungen für FAQ, Multi-Ticket-System, AntiSpam und Bewertungen.' : 'Advanced settings for FAQ, multi-ticket system, AntiSpam and ratings.' %></span>
+              <span><%= lang === 'de' ? 'Erweiterte Einstellungen für Multi-Ticket-Limits, AntiSpam-Schutz und Ticket-Bewertungen.' : 'Advanced settings for multi-ticket limits, AntiSpam protection and ticket ratings.' %></span>
             </div>
 
-            <!-- Content will be moved here from Dashboard -->
+            <!-- Multi-Ticket Settings -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+                      <i class="fas fa-layer-group"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Multi-Ticket Einstellungen' : 'Multi-Ticket Settings' %></span>
+                    <span class="priority-badge" style="background: #0ea5e9; color: white; border-color: #0ea5e9;">FREE</span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Konfiguriere, wie viele Tickets ein User gleichzeitig offen haben darf.'
+                      : 'Configure how many tickets a user can have open simultaneously.'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-ticket"></i>
+                    <span><%= lang === 'de' ? 'Maximale Tickets pro User' : 'Maximum Tickets per User' %></span>
+                  </div>
+                  <select name="maxTicketsPerUser">
+                    <%
+                    const currentMaxTickets = cfg.maxTicketsPerUser || 3;
+                    const ticketOptions = [
+                      { value: 0, label: lang === 'de' ? '♾️ Unbegrenzt' : '♾️ Unlimited' },
+                      { value: 1, label: '1 Ticket' },
+                      { value: 2, label: '2 Tickets' },
+                      { value: 3, label: '3 Tickets' },
+                      { value: 5, label: '5 Tickets' },
+                      { value: 10, label: '10 Tickets' },
+                      { value: 15, label: '15 Tickets' },
+                      { value: 20, label: '20 Tickets' }
+                    ];
+                    ticketOptions.forEach(opt => { %>
+                      <option value="<%= opt.value %>" <%= currentMaxTickets == opt.value ? 'selected' : '' %>>
+                        <%= opt.label %>
+                      </option>
+                    <% }); %>
+                  </select>
+                  <div class="help-text">
+                    <i class="fas fa-lightbulb"></i>
+                    <span><%= lang === 'de' ? 'Empfohlen: 3-5 Tickets für optimale Übersicht' : 'Recommended: 3-5 tickets for optimal overview' %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ticket-Bewertungssystem -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);">
+                      <i class="fas fa-star"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Ticket-Bewertungssystem' : 'Ticket Rating System' %></span>
+                    <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? '5-Sterne-Bewertungssystem für geschlossene Tickets mit optionalem Feedback-Text.'
+                      : '5-star rating system for closed tickets with optional feedback text.'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
+                  <input
+                    type="checkbox"
+                    name="ticketRatingEnabled"
+                    <%= (cfg.ticketRating && cfg.ticketRating.enabled !== false) ? 'checked' : '' %>
+                    style="width: auto; margin: 0;">
+                  <span style="font-weight: 500;"><%= lang === 'de' ? 'Bewertungssystem aktivieren' : 'Enable Rating System' %></span>
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
+                  <input
+                    type="checkbox"
+                    name="ticketRatingRequireFeedback"
+                    <%= (cfg.ticketRating && cfg.ticketRating.requireFeedback) ? 'checked' : '' %>
+                    style="width: auto; margin: 0;">
+                  <span style="font-weight: 500;"><%= lang === 'de' ? 'Feedback-Text erforderlich' : 'Require feedback text' %></span>
+                </label>
+
+                <div class="help-text">
+                  <i class="fas fa-info-circle"></i>
+                  <span><%= lang === 'de'
+                    ? 'User erhalten nach jedem geschlossenen Ticket automatisch eine DM mit Bewertungs-Buttons (1-5 Sterne)'
+                    : 'Users automatically receive a DM with rating buttons (1-5 stars) after every closed ticket' %></span>
+                </div>
+              </div>
+            </div>
 
           </div>
 
