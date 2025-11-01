@@ -29,6 +29,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/markdown.css">
 
+  <!-- Select2 for searchable dropdowns -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
   <style>
     /* ============================================================
      * MODERN TAB-BASED PANEL DESIGN
@@ -1740,6 +1745,65 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
     }
+
+    /* ============================================================
+     * SELECT2 DARK THEME CUSTOMIZATION
+     * ============================================================ */
+    .select2-container--default .select2-selection--single,
+    .select2-container--default .select2-selection--multiple {
+      background-color: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      min-height: 42px;
+      padding: 4px;
+      backdrop-filter: blur(10px);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      color: var(--text-color);
+      line-height: 34px;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+      color: white;
+      border-radius: 6px;
+      padding: 2px 8px;
+    }
+
+    .select2-dropdown {
+      background-color: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      backdrop-filter: blur(20px);
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: var(--accent-color);
+      color: white;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      color: var(--text-color);
+      padding: 8px;
+    }
+
+    .select2-container--default .select2-results__option {
+      color: var(--text-color);
+      padding: 8px 12px;
+    }
+
+    .select2-container--default .select2-results__option[aria-selected=true] {
+      background-color: rgba(var(--accent-rgb), 0.2);
+    }
+
+    .select2-container {
+      width: 100% !important;
+    }
   </style>
 </head>
 <body>
@@ -2442,9 +2506,13 @@
                     <select name="priorityRoles_0" multiple size="8">
                       <%
                       const green = (cfg.priorityRoles && cfg.priorityRoles['0']) || [];
-                      roles.forEach(role => { %>
-                        <option value="<%= role.id %>" <%= green.includes(role.id) ? 'selected' : '' %>>
-                          @ <%= role.name %>
+                      const orange = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
+                      const red = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
+                      roles.forEach(role => {
+                        const usedInOther = orange.includes(role.id) || red.includes(role.id);
+                      %>
+                        <option value="<%= role.id %>" <%= green.includes(role.id) ? 'selected' : '' %> <%= usedInOther ? 'disabled' : '' %>>
+                          @ <%= role.name %><%= usedInOther ? ' (bereits verwendet)' : '' %>
                         </option>
                       <% }) %>
                     </select>
@@ -2470,10 +2538,17 @@
                   <div class="form-group">
                     <select name="priorityRoles_1" multiple size="8">
                       <%
-                      const orange = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
-                      roles.forEach(role => { %>
-                        <option value="<%= role.id %>" <%= orange.includes(role.id) ? 'selected' : '' %>>
-                          @ <%= role.name %>
+                      const usedInOther1 = (role) => {
+                        const g = (cfg.priorityRoles && cfg.priorityRoles['0']) || [];
+                        const r = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
+                        return g.includes(role.id) || r.includes(role.id);
+                      };
+                      const orange1 = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
+                      roles.forEach(role => {
+                        const used = usedInOther1(role);
+                      %>
+                        <option value="<%= role.id %>" <%= orange1.includes(role.id) ? 'selected' : '' %> <%= used ? 'disabled' : '' %>>
+                          @ <%= role.name %><%= used ? ' (bereits verwendet)' : '' %>
                         </option>
                       <% }) %>
                     </select>
@@ -2499,10 +2574,17 @@
                   <div class="form-group">
                     <select name="priorityRoles_2" multiple size="8">
                       <%
-                      const red = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
-                      roles.forEach(role => { %>
-                        <option value="<%= role.id %>" <%= red.includes(role.id) ? 'selected' : '' %>>
-                          @ <%= role.name %>
+                      const usedInOther2 = (role) => {
+                        const g = (cfg.priorityRoles && cfg.priorityRoles['0']) || [];
+                        const o = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
+                        return g.includes(role.id) || o.includes(role.id);
+                      };
+                      const red2 = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
+                      roles.forEach(role => {
+                        const used = usedInOther2(role);
+                      %>
+                        <option value="<%= role.id %>" <%= red2.includes(role.id) ? 'selected' : '' %> <%= used ? 'disabled' : '' %>>
+                          @ <%= role.name %><%= used ? ' (bereits verwendet)' : '' %>
                         </option>
                       <% }) %>
                     </select>
@@ -5153,6 +5235,55 @@
       // Trigger on page load
       voiceSupportModeSelect.dispatchEvent(new Event('change'));
     }
+
+    // ============================================================
+    // SELECT2 INITIALIZATION FOR SEARCHABLE DROPDOWNS
+    // ============================================================
+    $(document).ready(function() {
+      // Initialize Select2 on all select elements (channels, roles, categories, etc.)
+      $('select[name*="Channel"]').select2({
+        placeholder: 'Channel auswählen...',
+        allowClear: true,
+        width: '100%',
+        theme: 'default'
+      });
+
+      $('select[name*="Role"]').select2({
+        placeholder: 'Rolle auswählen...',
+        allowClear: true,
+        width: '100%',
+        theme: 'default'
+      });
+
+      $('select[name*="Category"]').select2({
+        placeholder: 'Kategorie auswählen...',
+        allowClear: true,
+        width: '100%',
+        theme: 'default'
+      });
+
+      $('select[name*="priorityRoles"]').select2({
+        placeholder: 'Rollen auswählen...',
+        width: '100%',
+        theme: 'default'
+      });
+
+      $('select[name="teamRoleId"]').select2({
+        placeholder: 'Team-Rollen auswählen...',
+        width: '100%',
+        theme: 'default'
+      });
+
+      // Initialize Select2 on topic category selects
+      $('select[name*="topicCategory"]').select2({
+        placeholder: 'Kategorie auswählen...',
+        allowClear: true,
+        width: '100%',
+        theme: 'default'
+      });
+
+      console.log('✓ Select2 initialized for all dropdowns');
+    });
 
   </script>
 </body>
