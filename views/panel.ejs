@@ -568,12 +568,6 @@
       border-color: #ef4444;
     }
 
-    .tab-badge.warning-badge {
-      background: rgba(251, 191, 36, 0.2);
-      color: #fbbf24;
-      border-color: #fbbf24;
-    }
-
     .tab-badge.premium-badge {
       background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(219, 39, 119, 0.2));
       color: #a855f7;
@@ -596,12 +590,6 @@
       background: rgba(239, 68, 68, 0.3);
       color: #fecaca;
       border-color: #fca5a5;
-    }
-
-    .tab-btn.active .tab-badge.warning-badge {
-      background: rgba(251, 191, 36, 0.3);
-      color: #fef3c7;
-      border-color: #fde68a;
     }
 
     .tab-btn.active .tab-badge.premium-badge {
@@ -2026,30 +2014,8 @@
         <!-- Tabs Navigation -->
         <div class="tabs-container">
           <div class="tabs-nav">
-            <!-- Tab 1: Schnellstart - Für Anfänger -->
-            <button type="button" class="tab-btn active" data-tab="quickstart">
-              <i class="fas fa-rocket"></i>
-              <span><%= lang === 'de' ? 'Schnellstart' : 'Quickstart' %></span>
-              <%
-                const setupProgress = {
-                  step1: !!(cfg.ticketCategories && cfg.ticketCategories.length > 0),
-                  step2: !!(cfg.logChannels && cfg.logChannels.length > 0),
-                  step3: !!(cfg.priorityRoles && (cfg.priorityRoles['0'] || cfg.priorityRoles['1'] || cfg.priorityRoles['2'])),
-                  step4: !!(cfg.topics && cfg.topics.length > 0),
-                  step5: !!(cfg.panelMessageId)
-                };
-                const completedSteps = Object.values(setupProgress).filter(Boolean).length;
-                const totalSteps = 5;
-              %>
-              <% if (completedSteps < totalSteps) { %>
-                <span class="tab-badge warning-badge"><%= completedSteps %>/<%= totalSteps %></span>
-              <% } else { %>
-                <span class="tab-badge success-badge">✓</span>
-              <% } %>
-            </button>
-
-            <!-- Tab 2: Übersicht -->
-            <button type="button" class="tab-btn" data-tab="overview">
+            <!-- Tab 1: Übersicht -->
+            <button type="button" class="tab-btn active" data-tab="overview">
               <i class="fas fa-chart-line"></i>
               <span><%= lang === 'de' ? 'Übersicht' : 'Overview' %></span>
             </button>
@@ -2125,296 +2091,8 @@
             </button>
           </div>
 
-          <!-- Tab: Schnellstart / Quickstart -->
-          <div class="tab-content active" id="tab-quickstart">
-            <!-- Welcome Banner -->
-            <div class="alert" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(16, 185, 129, 0.15)); border-color: #3b82f6; margin-bottom: 2rem;">
-              <i class="fas fa-rocket" style="font-size: 2rem; color: #3b82f6;"></i>
-              <div>
-                <strong style="font-size: 1.3rem; color: #3b82f6;">
-                  <%= lang === 'de' ? '🚀 Willkommen beim Schnellstart!' : '🚀 Welcome to Quickstart!' %>
-                </strong><br>
-                <span style="opacity: 0.9; font-size: 1rem;">
-                  <%= lang === 'de'
-                    ? 'Folge diesen 5 einfachen Schritten, um dein Ticket-System einzurichten. Keine Sorge - wir führen dich durch alles!'
-                    : 'Follow these 5 simple steps to set up your ticket system. Don\'t worry - we\'ll guide you through everything!'
-                  %>
-                </span>
-              </div>
-            </div>
-
-            <!-- Progress Overview -->
-            <div class="card" style="margin-bottom: 2rem; border: 2px solid <%= completedSteps === totalSteps ? '#10b981' : '#3b82f6' %>;">
-              <div class="card-body">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                  <h3 style="margin: 0; font-size: 1.2rem;">
-                    <i class="fas fa-tasks" style="color: #3b82f6;"></i>
-                    <%= lang === 'de' ? 'Setup-Fortschritt' : 'Setup Progress' %>
-                  </h3>
-                  <div style="font-size: 1.5rem; font-weight: bold; color: <%= completedSteps === totalSteps ? '#10b981' : '#3b82f6' %>;">
-                    <%= completedSteps %>/<%= totalSteps %>
-                  </div>
-                </div>
-                <div style="width: 100%; background: rgba(59, 130, 246, 0.1); height: 12px; border-radius: 6px; overflow: hidden;">
-                  <div style="width: <%= (completedSteps / totalSteps * 100) %>%; background: linear-gradient(90deg, #3b82f6, #10b981); height: 100%; transition: width 0.3s ease;"></div>
-                </div>
-                <% if (completedSteps === totalSteps) { %>
-                  <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; border-radius: 4px;">
-                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                    <strong><%= lang === 'de' ? 'Perfekt! Setup abgeschlossen!' : 'Perfect! Setup completed!' %></strong>
-                    <%= lang === 'de' ? 'Dein Ticket-System ist einsatzbereit!' : 'Your ticket system is ready to go!' %>
-                  </div>
-                <% } %>
-              </div>
-            </div>
-
-            <!-- Step 1: Categories -->
-            <div class="setup-step-card <%= setupProgress.step1 ? 'completed' : '' %>">
-              <div class="step-number">1</div>
-              <div class="step-content">
-                <h3>
-                  <i class="fas fa-folder"></i>
-                  <%= lang === 'de' ? 'Ticket-Kategorie wählen' : 'Choose Ticket Category' %>
-                </h3>
-                <p>
-                  <%= lang === 'de'
-                    ? 'Wähle eine Discord-Kategorie aus, in der neue Ticket-Channels erstellt werden. Das ist wie ein Ordner für deine Tickets.'
-                    : 'Select a Discord category where new ticket channels will be created. This is like a folder for your tickets.'
-                  %>
-                </p>
-                <% if (setupProgress.step1) { %>
-                  <div class="step-status completed">
-                    <i class="fas fa-check-circle"></i>
-                    <%= lang === 'de' ? 'Erledigt!' : 'Completed!' %>
-                  </div>
-                <% } else { %>
-                  <button type="button" class="btn btn-primary" onclick="switchTab('settings')">
-                    <i class="fas fa-arrow-right"></i>
-                    <%= lang === 'de' ? 'Jetzt einrichten' : 'Set up now' %>
-                  </button>
-                <% } %>
-              </div>
-            </div>
-
-            <!-- Step 2: Log Channel -->
-            <div class="setup-step-card <%= setupProgress.step2 ? 'completed' : '' %>">
-              <div class="step-number">2</div>
-              <div class="step-content">
-                <h3>
-                  <i class="fas fa-file-alt"></i>
-                  <%= lang === 'de' ? 'Log-Channel festlegen' : 'Set Log Channel' %>
-                </h3>
-                <p>
-                  <%= lang === 'de'
-                    ? 'Wähle einen Channel, in dem alle Ticket-Aktionen protokolliert werden (z.B. wenn ein Ticket erstellt oder geschlossen wird).'
-                    : 'Choose a channel where all ticket actions will be logged (e.g., when a ticket is created or closed).'
-                  %>
-                </p>
-                <% if (setupProgress.step2) { %>
-                  <div class="step-status completed">
-                    <i class="fas fa-check-circle"></i>
-                    <%= lang === 'de' ? 'Erledigt!' : 'Completed!' %>
-                  </div>
-                <% } else { %>
-                  <button type="button" class="btn btn-primary" onclick="switchTab('settings')">
-                    <i class="fas fa-arrow-right"></i>
-                    <%= lang === 'de' ? 'Jetzt einrichten' : 'Set up now' %>
-                  </button>
-                <% } %>
-              </div>
-            </div>
-
-            <!-- Step 3: Team Roles -->
-            <div class="setup-step-card <%= setupProgress.step3 ? 'completed' : '' %>">
-              <div class="step-number">3</div>
-              <div class="step-content">
-                <h3>
-                  <i class="fas fa-users"></i>
-                  <%= lang === 'de' ? 'Team-Rollen definieren' : 'Define Team Roles' %>
-                </h3>
-                <p>
-                  <%= lang === 'de'
-                    ? 'Lege fest, welche Rollen Zugriff auf Tickets haben. Du kannst verschiedene Prioritäts-Level einrichten (z.B. Support, Moderator, Admin).'
-                    : 'Define which roles have access to tickets. You can set up different priority levels (e.g., Support, Moderator, Admin).'
-                  %>
-                </p>
-                <% if (setupProgress.step3) { %>
-                  <div class="step-status completed">
-                    <i class="fas fa-check-circle"></i>
-                    <%= lang === 'de' ? 'Erledigt!' : 'Completed!' %>
-                  </div>
-                <% } else { %>
-                  <button type="button" class="btn btn-primary" onclick="switchTab('settings')">
-                    <i class="fas fa-arrow-right"></i>
-                    <%= lang === 'de' ? 'Jetzt einrichten' : 'Set up now' %>
-                  </button>
-                <% } %>
-              </div>
-            </div>
-
-            <!-- Step 4: Topics -->
-            <div class="setup-step-card <%= setupProgress.step4 ? 'completed' : '' %>">
-              <div class="step-number">4</div>
-              <div class="step-content">
-                <h3>
-                  <i class="fas fa-th-list"></i>
-                  <%= lang === 'de' ? 'Ticket-Themen erstellen' : 'Create Ticket Topics' %>
-                </h3>
-                <p>
-                  <%= lang === 'de'
-                    ? 'Erstelle Themen, aus denen User beim Ticket-Erstellen wählen können (z.B. "Support", "Bug-Report", "Frage").'
-                    : 'Create topics that users can choose from when creating a ticket (e.g., "Support", "Bug Report", "Question").'
-                  %>
-                </p>
-                <% if (setupProgress.step4) { %>
-                  <div class="step-status completed">
-                    <i class="fas fa-check-circle"></i>
-                    <%= lang === 'de' ? 'Erledigt! ' + (cfg.topics || []).length + ' Themen' : 'Completed! ' + (cfg.topics || []).length + ' topics' %>
-                  </div>
-                <% } else { %>
-                  <button type="button" class="btn btn-primary" onclick="switchTab('topics')">
-                    <i class="fas fa-arrow-right"></i>
-                    <%= lang === 'de' ? 'Jetzt erstellen' : 'Create now' %>
-                  </button>
-                <% } %>
-              </div>
-            </div>
-
-            <!-- Step 5: Send Panel -->
-            <div class="setup-step-card <%= setupProgress.step5 ? 'completed' : '' %>">
-              <div class="step-number">5</div>
-              <div class="step-content">
-                <h3>
-                  <i class="fas fa-paper-plane"></i>
-                  <%= lang === 'de' ? 'Panel senden' : 'Send Panel' %>
-                </h3>
-                <p>
-                  <%= lang === 'de'
-                    ? 'Sende das Ticket-Panel in einen Discord-Channel. User können dann darauf klicken, um Tickets zu erstellen!'
-                    : 'Send the ticket panel to a Discord channel. Users can then click on it to create tickets!'
-                  %>
-                </p>
-                <% if (setupProgress.step5) { %>
-                  <div class="step-status completed">
-                    <i class="fas fa-check-circle"></i>
-                    <%= lang === 'de' ? 'Erledigt! Panel ist live!' : 'Completed! Panel is live!' %>
-                  </div>
-                <% } else { %>
-                  <button type="button" class="btn btn-primary" onclick="switchTab('panel')">
-                    <i class="fas fa-arrow-right"></i>
-                    <%= lang === 'de' ? 'Panel senden' : 'Send panel' %>
-                  </button>
-                <% } %>
-              </div>
-            </div>
-
-            <!-- Help Box -->
-            <div class="card" style="margin-top: 2rem; border: 2px solid #8b5cf6;">
-              <div class="card-body">
-                <h3 style="color: #8b5cf6; margin-bottom: 1rem;">
-                  <i class="fas fa-question-circle"></i>
-                  <%= lang === 'de' ? 'Brauchst du Hilfe?' : 'Need Help?' %>
-                </h3>
-                <p style="margin-bottom: 1rem;">
-                  <%= lang === 'de'
-                    ? 'Keine Sorge! Jeder Tab hat ausführliche Erklärungen. Klicke einfach auf einen Tab oben und folge den Anweisungen.'
-                    : 'Don\'t worry! Every tab has detailed explanations. Just click on a tab above and follow the instructions.'
-                  %>
-                </p>
-                <div class="grid grid-2" style="gap: 1rem;">
-                  <a href="https://docs.quantix-bot.de" target="_blank" class="btn btn-outline">
-                    <i class="fas fa-book"></i>
-                    <%= lang === 'de' ? 'Dokumentation' : 'Documentation' %>
-                  </a>
-                  <a href="https://discord.gg/theredstonee" target="_blank" class="btn btn-outline">
-                    <i class="fab fa-discord"></i>
-                    <%= lang === 'de' ? 'Support Discord' : 'Support Discord' %>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <style>
-              .setup-step-card {
-                display: flex;
-                gap: 1.5rem;
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-                background: var(--glass-bg);
-                border: 2px solid var(--glass-border);
-                border-radius: 12px;
-                transition: all 0.3s ease;
-              }
-
-              .setup-step-card:hover {
-                transform: translateX(5px);
-                box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
-              }
-
-              .setup-step-card.completed {
-                border-color: #10b981;
-                background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
-              }
-
-              .step-number {
-                flex-shrink: 0;
-                width: 50px;
-                height: 50px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.5rem;
-                font-weight: bold;
-                background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-                color: white;
-                border-radius: 50%;
-                box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-              }
-
-              .setup-step-card.completed .step-number {
-                background: linear-gradient(135deg, #10b981, #059669);
-              }
-
-              .step-content {
-                flex: 1;
-              }
-
-              .step-content h3 {
-                margin: 0 0 0.5rem 0;
-                font-size: 1.2rem;
-                color: var(--text-color);
-              }
-
-              .step-content h3 i {
-                margin-right: 0.5rem;
-                color: #3b82f6;
-              }
-
-              .step-content p {
-                margin: 0 0 1rem 0;
-                opacity: 0.8;
-                line-height: 1.6;
-              }
-
-              .step-status {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                padding: 0.5rem 1rem;
-                background: rgba(16, 185, 129, 0.1);
-                color: #10b981;
-                border-radius: 6px;
-                font-weight: 600;
-              }
-
-              .step-status.completed i {
-                font-size: 1.2rem;
-              }
-            </style>
-          </div>
-
           <!-- Tab: Overview -->
-          <div class="tab-content" id="tab-overview">
+          <div class="tab-content active" id="tab-overview">
             <div class="grid grid-2" style="margin-bottom: 2rem;">
               <div class="stats-card">
                 <div class="stats-icon">
@@ -7244,15 +6922,6 @@
       voiceSupportModeSelect.dispatchEvent(new Event('change'));
     }
 
-    // Switch to a specific tab (used in Quickstart)
-    function switchTab(tabId) {
-      const tabBtn = document.querySelector(`[data-tab="${tabId}"]`);
-      if (tabBtn) {
-        tabBtn.click();
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
   </script>
 </body>
 </html>
