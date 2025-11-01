@@ -29,10 +29,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/markdown.css">
 
-  <!-- Halloween Special Edition 🎃 -->
-  <link rel="stylesheet" href="/css/halloween.css">
-  <script src="/js/halloween.js" defer></script>
-
   <style>
     /* ============================================================
      * MODERN TAB-BASED PANEL DESIGN
@@ -554,12 +550,64 @@
       border-radius: 10px;
       font-size: 0.7rem;
       font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* Tab Badge Variants */
+    .tab-badge.success-badge {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      border-color: #10b981;
+    }
+
+    .tab-badge.error-badge {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border-color: #ef4444;
+    }
+
+    .tab-badge.warning-badge {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      border-color: #fbbf24;
+    }
+
+    .tab-badge.premium-badge {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(219, 39, 119, 0.2));
+      color: #a855f7;
+      border-color: #a855f7;
     }
 
     .tab-btn.active .tab-badge {
       background: rgba(255, 255, 255, 0.2);
       color: white;
       border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .tab-btn.active .tab-badge.success-badge {
+      background: rgba(16, 185, 129, 0.3);
+      color: #d1fae5;
+      border-color: #6ee7b7;
+    }
+
+    .tab-btn.active .tab-badge.error-badge {
+      background: rgba(239, 68, 68, 0.3);
+      color: #fecaca;
+      border-color: #fca5a5;
+    }
+
+    .tab-btn.active .tab-badge.warning-badge {
+      background: rgba(251, 191, 36, 0.3);
+      color: #fef3c7;
+      border-color: #fde68a;
+    }
+
+    .tab-btn.active .tab-badge.premium-badge {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(219, 39, 119, 0.4));
+      color: #e9d5ff;
+      border-color: #c4b5fd;
     }
 
     .tab-content {
@@ -1978,56 +2026,395 @@
         <!-- Tabs Navigation -->
         <div class="tabs-container">
           <div class="tabs-nav">
-            <button type="button" class="tab-btn active" data-tab="overview">
-              <i class="fas fa-home"></i>
+            <!-- Tab 1: Schnellstart - Für Anfänger -->
+            <button type="button" class="tab-btn active" data-tab="quickstart">
+              <i class="fas fa-rocket"></i>
+              <span><%= lang === 'de' ? 'Schnellstart' : 'Quickstart' %></span>
+              <%
+                const setupProgress = {
+                  step1: !!(cfg.ticketCategories && cfg.ticketCategories.length > 0),
+                  step2: !!(cfg.logChannels && cfg.logChannels.length > 0),
+                  step3: !!(cfg.priorityRoles && (cfg.priorityRoles['0'] || cfg.priorityRoles['1'] || cfg.priorityRoles['2'])),
+                  step4: !!(cfg.topics && cfg.topics.length > 0),
+                  step5: !!(cfg.panelMessageId)
+                };
+                const completedSteps = Object.values(setupProgress).filter(Boolean).length;
+                const totalSteps = 5;
+              %>
+              <% if (completedSteps < totalSteps) { %>
+                <span class="tab-badge warning-badge"><%= completedSteps %>/<%= totalSteps %></span>
+              <% } else { %>
+                <span class="tab-badge success-badge">✓</span>
+              <% } %>
+            </button>
+
+            <!-- Tab 2: Übersicht -->
+            <button type="button" class="tab-btn" data-tab="overview">
+              <i class="fas fa-chart-line"></i>
               <span><%= lang === 'de' ? 'Übersicht' : 'Overview' %></span>
             </button>
-            <button type="button" class="tab-btn" data-tab="channels">
-              <i class="fas fa-hashtag"></i>
-              <span><%= lang === 'de' ? 'Kanäle' : 'Channels' %></span>
+
+            <!-- Tab 3: Grundeinstellungen (Kanäle + Rollen kombiniert) -->
+            <button type="button" class="tab-btn" data-tab="settings">
+              <i class="fas fa-cog"></i>
+              <span><%= lang === 'de' ? 'Grundeinstellungen' : 'Basic Settings' %></span>
+              <%
+                const hasBasicSettings = !!(cfg.ticketCategories && cfg.ticketCategories.length > 0 &&
+                                            cfg.logChannels && cfg.logChannels.length > 0);
+              %>
+              <% if (hasBasicSettings) { %>
+                <span class="tab-badge success-badge"><i class="fas fa-check"></i></span>
+              <% } else { %>
+                <span class="tab-badge error-badge">!</span>
+              <% } %>
             </button>
-            <button type="button" class="tab-btn" data-tab="roles">
-              <i class="fas fa-users-cog"></i>
-              <span><%= lang === 'de' ? 'Rollen' : 'Roles' %></span>
-            </button>
+
+            <!-- Tab 4: Ticket-Themen -->
             <button type="button" class="tab-btn" data-tab="topics">
-              <i class="fas fa-tags"></i>
-              <span><%= lang === 'de' ? 'Themen' : 'Topics' %></span>
+              <i class="fas fa-th-list"></i>
+              <span><%= lang === 'de' ? 'Ticket-Themen' : 'Ticket Topics' %></span>
               <% if (cfg.topics && cfg.topics.length > 0) { %>
                 <span class="tab-badge"><%= cfg.topics.length %></span>
+              <% } else { %>
+                <span class="tab-badge error-badge">0</span>
               <% } %>
             </button>
+
+            <!-- Tab 5: Formulare -->
             <button type="button" class="tab-btn" data-tab="forms">
-              <i class="fas fa-clipboard-question"></i>
+              <i class="fas fa-list-check"></i>
               <span><%= lang === 'de' ? 'Formulare' : 'Forms' %></span>
-            </button>
-            <button type="button" class="tab-btn" data-tab="voice">
-              <i class="fas fa-microphone"></i>
-              <span>Voice</span>
-              <% if (cfg.voiceSupport && cfg.voiceSupport.enabled) { %>
-                <span class="tab-badge active-badge">✓</span>
+              <% if (cfg.formFields && cfg.formFields.length > 0) { %>
+                <span class="tab-badge"><%= cfg.formFields.length %></span>
               <% } %>
             </button>
+
+            <!-- Tab 6: Design -->
             <button type="button" class="tab-btn" data-tab="embeds">
-              <i class="fas fa-palette"></i>
+              <i class="fas fa-paint-brush"></i>
               <span><%= lang === 'de' ? 'Design' : 'Design' %></span>
             </button>
+
+            <!-- Tab 7: Voice Support -->
+            <button type="button" class="tab-btn" data-tab="voice">
+              <i class="fas fa-headset"></i>
+              <span><%= lang === 'de' ? 'Voice Support' : 'Voice Support' %></span>
+              <% if (cfg.voiceSupport && cfg.voiceSupport.enabled) { %>
+                <span class="tab-badge success-badge">ON</span>
+              <% } %>
+            </button>
+
+            <!-- Tab 8: Panel senden -->
             <button type="button" class="tab-btn" data-tab="panel">
               <i class="fas fa-paper-plane"></i>
-              <span>Panel</span>
+              <span><%= lang === 'de' ? 'Panel senden' : 'Send Panel' %></span>
+              <% if (cfg.panelMessageId) { %>
+                <span class="tab-badge success-badge">✓</span>
+              <% } else { %>
+                <span class="tab-badge error-badge">!</span>
+              <% } %>
             </button>
+
+            <!-- Tab 9: Premium -->
             <button type="button" class="tab-btn" data-tab="premium">
               <i class="fas fa-crown"></i>
               <span>Premium</span>
-            </button>
-            <button type="button" class="tab-btn" data-tab="halloween">
-              <i class="fas fa-ghost"></i>
-              <span>🎃 Halloween</span>
+              <% if (premiumTier && premiumTier !== 'none') { %>
+                <span class="tab-badge premium-badge"><%= premiumTierName %></span>
+              <% } %>
             </button>
           </div>
 
+          <!-- Tab: Schnellstart / Quickstart -->
+          <div class="tab-content active" id="tab-quickstart">
+            <!-- Welcome Banner -->
+            <div class="alert" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(16, 185, 129, 0.15)); border-color: #3b82f6; margin-bottom: 2rem;">
+              <i class="fas fa-rocket" style="font-size: 2rem; color: #3b82f6;"></i>
+              <div>
+                <strong style="font-size: 1.3rem; color: #3b82f6;">
+                  <%= lang === 'de' ? '🚀 Willkommen beim Schnellstart!' : '🚀 Welcome to Quickstart!' %>
+                </strong><br>
+                <span style="opacity: 0.9; font-size: 1rem;">
+                  <%= lang === 'de'
+                    ? 'Folge diesen 5 einfachen Schritten, um dein Ticket-System einzurichten. Keine Sorge - wir führen dich durch alles!'
+                    : 'Follow these 5 simple steps to set up your ticket system. Don\'t worry - we\'ll guide you through everything!'
+                  %>
+                </span>
+              </div>
+            </div>
+
+            <!-- Progress Overview -->
+            <div class="card" style="margin-bottom: 2rem; border: 2px solid <%= completedSteps === totalSteps ? '#10b981' : '#3b82f6' %>;">
+              <div class="card-body">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                  <h3 style="margin: 0; font-size: 1.2rem;">
+                    <i class="fas fa-tasks" style="color: #3b82f6;"></i>
+                    <%= lang === 'de' ? 'Setup-Fortschritt' : 'Setup Progress' %>
+                  </h3>
+                  <div style="font-size: 1.5rem; font-weight: bold; color: <%= completedSteps === totalSteps ? '#10b981' : '#3b82f6' %>;">
+                    <%= completedSteps %>/<%= totalSteps %>
+                  </div>
+                </div>
+                <div style="width: 100%; background: rgba(59, 130, 246, 0.1); height: 12px; border-radius: 6px; overflow: hidden;">
+                  <div style="width: <%= (completedSteps / totalSteps * 100) %>%; background: linear-gradient(90deg, #3b82f6, #10b981); height: 100%; transition: width 0.3s ease;"></div>
+                </div>
+                <% if (completedSteps === totalSteps) { %>
+                  <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; border-radius: 4px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                    <strong><%= lang === 'de' ? 'Perfekt! Setup abgeschlossen!' : 'Perfect! Setup completed!' %></strong>
+                    <%= lang === 'de' ? 'Dein Ticket-System ist einsatzbereit!' : 'Your ticket system is ready to go!' %>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Step 1: Categories -->
+            <div class="setup-step-card <%= setupProgress.step1 ? 'completed' : '' %>">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h3>
+                  <i class="fas fa-folder"></i>
+                  <%= lang === 'de' ? 'Ticket-Kategorie wählen' : 'Choose Ticket Category' %>
+                </h3>
+                <p>
+                  <%= lang === 'de'
+                    ? 'Wähle eine Discord-Kategorie aus, in der neue Ticket-Channels erstellt werden. Das ist wie ein Ordner für deine Tickets.'
+                    : 'Select a Discord category where new ticket channels will be created. This is like a folder for your tickets.'
+                  %>
+                </p>
+                <% if (setupProgress.step1) { %>
+                  <div class="step-status completed">
+                    <i class="fas fa-check-circle"></i>
+                    <%= lang === 'de' ? 'Erledigt!' : 'Completed!' %>
+                  </div>
+                <% } else { %>
+                  <button type="button" class="btn btn-primary" onclick="switchTab('settings')">
+                    <i class="fas fa-arrow-right"></i>
+                    <%= lang === 'de' ? 'Jetzt einrichten' : 'Set up now' %>
+                  </button>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Step 2: Log Channel -->
+            <div class="setup-step-card <%= setupProgress.step2 ? 'completed' : '' %>">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h3>
+                  <i class="fas fa-file-alt"></i>
+                  <%= lang === 'de' ? 'Log-Channel festlegen' : 'Set Log Channel' %>
+                </h3>
+                <p>
+                  <%= lang === 'de'
+                    ? 'Wähle einen Channel, in dem alle Ticket-Aktionen protokolliert werden (z.B. wenn ein Ticket erstellt oder geschlossen wird).'
+                    : 'Choose a channel where all ticket actions will be logged (e.g., when a ticket is created or closed).'
+                  %>
+                </p>
+                <% if (setupProgress.step2) { %>
+                  <div class="step-status completed">
+                    <i class="fas fa-check-circle"></i>
+                    <%= lang === 'de' ? 'Erledigt!' : 'Completed!' %>
+                  </div>
+                <% } else { %>
+                  <button type="button" class="btn btn-primary" onclick="switchTab('settings')">
+                    <i class="fas fa-arrow-right"></i>
+                    <%= lang === 'de' ? 'Jetzt einrichten' : 'Set up now' %>
+                  </button>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Step 3: Team Roles -->
+            <div class="setup-step-card <%= setupProgress.step3 ? 'completed' : '' %>">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h3>
+                  <i class="fas fa-users"></i>
+                  <%= lang === 'de' ? 'Team-Rollen definieren' : 'Define Team Roles' %>
+                </h3>
+                <p>
+                  <%= lang === 'de'
+                    ? 'Lege fest, welche Rollen Zugriff auf Tickets haben. Du kannst verschiedene Prioritäts-Level einrichten (z.B. Support, Moderator, Admin).'
+                    : 'Define which roles have access to tickets. You can set up different priority levels (e.g., Support, Moderator, Admin).'
+                  %>
+                </p>
+                <% if (setupProgress.step3) { %>
+                  <div class="step-status completed">
+                    <i class="fas fa-check-circle"></i>
+                    <%= lang === 'de' ? 'Erledigt!' : 'Completed!' %>
+                  </div>
+                <% } else { %>
+                  <button type="button" class="btn btn-primary" onclick="switchTab('settings')">
+                    <i class="fas fa-arrow-right"></i>
+                    <%= lang === 'de' ? 'Jetzt einrichten' : 'Set up now' %>
+                  </button>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Step 4: Topics -->
+            <div class="setup-step-card <%= setupProgress.step4 ? 'completed' : '' %>">
+              <div class="step-number">4</div>
+              <div class="step-content">
+                <h3>
+                  <i class="fas fa-th-list"></i>
+                  <%= lang === 'de' ? 'Ticket-Themen erstellen' : 'Create Ticket Topics' %>
+                </h3>
+                <p>
+                  <%= lang === 'de'
+                    ? 'Erstelle Themen, aus denen User beim Ticket-Erstellen wählen können (z.B. "Support", "Bug-Report", "Frage").'
+                    : 'Create topics that users can choose from when creating a ticket (e.g., "Support", "Bug Report", "Question").'
+                  %>
+                </p>
+                <% if (setupProgress.step4) { %>
+                  <div class="step-status completed">
+                    <i class="fas fa-check-circle"></i>
+                    <%= lang === 'de' ? 'Erledigt! ' + (cfg.topics || []).length + ' Themen' : 'Completed! ' + (cfg.topics || []).length + ' topics' %>
+                  </div>
+                <% } else { %>
+                  <button type="button" class="btn btn-primary" onclick="switchTab('topics')">
+                    <i class="fas fa-arrow-right"></i>
+                    <%= lang === 'de' ? 'Jetzt erstellen' : 'Create now' %>
+                  </button>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Step 5: Send Panel -->
+            <div class="setup-step-card <%= setupProgress.step5 ? 'completed' : '' %>">
+              <div class="step-number">5</div>
+              <div class="step-content">
+                <h3>
+                  <i class="fas fa-paper-plane"></i>
+                  <%= lang === 'de' ? 'Panel senden' : 'Send Panel' %>
+                </h3>
+                <p>
+                  <%= lang === 'de'
+                    ? 'Sende das Ticket-Panel in einen Discord-Channel. User können dann darauf klicken, um Tickets zu erstellen!'
+                    : 'Send the ticket panel to a Discord channel. Users can then click on it to create tickets!'
+                  %>
+                </p>
+                <% if (setupProgress.step5) { %>
+                  <div class="step-status completed">
+                    <i class="fas fa-check-circle"></i>
+                    <%= lang === 'de' ? 'Erledigt! Panel ist live!' : 'Completed! Panel is live!' %>
+                  </div>
+                <% } else { %>
+                  <button type="button" class="btn btn-primary" onclick="switchTab('panel')">
+                    <i class="fas fa-arrow-right"></i>
+                    <%= lang === 'de' ? 'Panel senden' : 'Send panel' %>
+                  </button>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Help Box -->
+            <div class="card" style="margin-top: 2rem; border: 2px solid #8b5cf6;">
+              <div class="card-body">
+                <h3 style="color: #8b5cf6; margin-bottom: 1rem;">
+                  <i class="fas fa-question-circle"></i>
+                  <%= lang === 'de' ? 'Brauchst du Hilfe?' : 'Need Help?' %>
+                </h3>
+                <p style="margin-bottom: 1rem;">
+                  <%= lang === 'de'
+                    ? 'Keine Sorge! Jeder Tab hat ausführliche Erklärungen. Klicke einfach auf einen Tab oben und folge den Anweisungen.'
+                    : 'Don\'t worry! Every tab has detailed explanations. Just click on a tab above and follow the instructions.'
+                  %>
+                </p>
+                <div class="grid grid-2" style="gap: 1rem;">
+                  <a href="https://docs.quantix-bot.de" target="_blank" class="btn btn-outline">
+                    <i class="fas fa-book"></i>
+                    <%= lang === 'de' ? 'Dokumentation' : 'Documentation' %>
+                  </a>
+                  <a href="https://discord.gg/theredstonee" target="_blank" class="btn btn-outline">
+                    <i class="fab fa-discord"></i>
+                    <%= lang === 'de' ? 'Support Discord' : 'Support Discord' %>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <style>
+              .setup-step-card {
+                display: flex;
+                gap: 1.5rem;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                background: var(--glass-bg);
+                border: 2px solid var(--glass-border);
+                border-radius: 12px;
+                transition: all 0.3s ease;
+              }
+
+              .setup-step-card:hover {
+                transform: translateX(5px);
+                box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+              }
+
+              .setup-step-card.completed {
+                border-color: #10b981;
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+              }
+
+              .step-number {
+                flex-shrink: 0;
+                width: 50px;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                font-weight: bold;
+                background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                color: white;
+                border-radius: 50%;
+                box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+              }
+
+              .setup-step-card.completed .step-number {
+                background: linear-gradient(135deg, #10b981, #059669);
+              }
+
+              .step-content {
+                flex: 1;
+              }
+
+              .step-content h3 {
+                margin: 0 0 0.5rem 0;
+                font-size: 1.2rem;
+                color: var(--text-color);
+              }
+
+              .step-content h3 i {
+                margin-right: 0.5rem;
+                color: #3b82f6;
+              }
+
+              .step-content p {
+                margin: 0 0 1rem 0;
+                opacity: 0.8;
+                line-height: 1.6;
+              }
+
+              .step-status {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                background: rgba(16, 185, 129, 0.1);
+                color: #10b981;
+                border-radius: 6px;
+                font-weight: 600;
+              }
+
+              .step-status.completed i {
+                font-size: 1.2rem;
+              }
+            </style>
+          </div>
+
           <!-- Tab: Overview -->
-          <div class="tab-content active" id="tab-overview">
+          <div class="tab-content" id="tab-overview">
             <div class="grid grid-2" style="margin-bottom: 2rem;">
               <div class="stats-card">
                 <div class="stats-icon">
@@ -5850,169 +6237,6 @@
             </div>
           </div>
 
-          <!-- Tab: Halloween 🎃 -->
-          <div class="tab-content" id="tab-halloween">
-            <!-- Halloween Banner -->
-            <div class="alert" style="background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(139, 71, 137, 0.2)); border-color: #FF6B35; margin-bottom: 2rem;">
-              <i class="fas fa-ghost"></i>
-              <div>
-                <strong style="font-size: 1.2rem; color: #FF6B35;">
-                  🎃 <%= lang === 'de' ? 'Halloween Special Edition' : 'Halloween Special Edition' %>
-                </strong><br>
-                <span style="opacity: 0.9;">
-                  <%= lang === 'de'
-                    ? 'Aktiviere gruselige Effekte und Animationen für die Halloween-Saison!'
-                    : 'Activate spooky effects and animations for the Halloween season!'
-                  %>
-                </span>
-              </div>
-            </div>
-
-            <!-- Halloween Features Overview -->
-            <div class="grid grid-2" style="margin-bottom: 2rem;">
-              <div class="stats-card" style="border-color: #FF6B35;">
-                <div class="stats-icon" style="background: linear-gradient(135deg, #FF6B35, #8B4789);">
-                  <i class="fas fa-pumpkin-carved"></i>
-                </div>
-                <div class="stats-content">
-                  <div class="stats-label">🎃 <%= lang === 'de' ? 'Theme' : 'Theme' %></div>
-                  <div class="stats-value"><%= lang === 'de' ? 'Dunkles Halloween' : 'Dark Halloween' %></div>
-                </div>
-              </div>
-
-              <div class="stats-card" style="border-color: #8B4789;">
-                <div class="stats-icon" style="background: linear-gradient(135deg, #8B4789, #FF6B35);">
-                  <i class="fas fa-ghost"></i>
-                </div>
-                <div class="stats-content">
-                  <div class="stats-label">👻 <%= lang === 'de' ? 'Animationen' : 'Animations' %></div>
-                  <div class="stats-value"><%= lang === 'de' ? 'Geister & Fledermäuse' : 'Ghosts & Bats' %></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Halloween Settings -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #FF6B35, #8B4789);">
-                      <i class="fas fa-sliders-h"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'Halloween-Einstellungen' : 'Halloween Settings' %></span>
-                  </div>
-                  <p class="card-description">
-                    <%= lang === 'de'
-                      ? 'Passe das Halloween-Theme nach deinen Wünschen an'
-                      : 'Customize the Halloween theme to your liking'
-                    %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <!-- Enable Halloween Theme -->
-                <div class="toggle-option-wrapper" style="margin-bottom: 1.5rem;">
-                  <label class="toggle-option <%= (cfg.halloween && cfg.halloween.enabled) ? 'active' : '' %>" onclick="toggleHalloweenOption(this, 'halloweenEnabled')">
-                    <input type="checkbox" name="halloweenEnabled" <%= (cfg.halloween && cfg.halloween.enabled) ? 'checked' : '' %> style="display: none;">
-                    <div class="toggle-content" style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 2px solid transparent; transition: all 0.3s;">
-                      <div class="toggle-icon" style="width: 24px; height: 24px; border-radius: 50%; background: #ccc; display: inline-flex; align-items: center; justify-content: center; margin-right: 0.75rem; transition: all 0.3s;">
-                        <i class="fas fa-check" style="color: white; font-size: 0.75rem; opacity: 0;"></i>
-                      </div>
-                      <div style="display: inline-block; vertical-align: top;">
-                        <span style="font-weight: 600; font-size: 1.1rem; color: var(--text-color);">
-                          🎃 <%= lang === 'de' ? 'Halloween-Modus aktivieren' : 'Enable Halloween Mode' %>
-                        </span>
-                        <p style="margin: 0.5rem 0 0 0; opacity: 0.7; font-size: 0.9rem;">
-                          <%= lang === 'de'
-                            ? 'Aktiviert das Halloween-Theme mit gruseligen Farben, Animationen und Effekten'
-                            : 'Activates the Halloween theme with spooky colors, animations and effects'
-                          %>
-                        </p>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                <!-- Enable Animations -->
-                <div class="toggle-option-wrapper" style="margin-bottom: 1.5rem;">
-                  <label class="toggle-option <%= (cfg.halloween && cfg.halloween.animations) ? 'active' : '' %>" onclick="toggleHalloweenOption(this, 'halloweenAnimations')">
-                    <input type="checkbox" name="halloweenAnimations" <%= (cfg.halloween && cfg.halloween.animations) ? 'checked' : '' %> style="display: none;">
-                    <div class="toggle-content" style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 2px solid transparent; transition: all 0.3s;">
-                      <div class="toggle-icon" style="width: 24px; height: 24px; border-radius: 50%; background: #ccc; display: inline-flex; align-items: center; justify-content: center; margin-right: 0.75rem; transition: all 0.3s;">
-                        <i class="fas fa-check" style="color: white; font-size: 0.75rem; opacity: 0;"></i>
-                      </div>
-                      <div style="display: inline-block; vertical-align: top;">
-                        <span style="font-weight: 600; font-size: 1.1rem; color: var(--text-color);">
-                          👻 <%= lang === 'de' ? 'Animationen aktivieren' : 'Enable Animations' %>
-                        </span>
-                        <p style="margin: 0.5rem 0 0 0; opacity: 0.7; font-size: 0.9rem;">
-                          <%= lang === 'de'
-                            ? 'Zeigt schwebende Geister, fliegende Fledermäuse und andere Animationen'
-                            : 'Shows floating ghosts, flying bats and other animations'
-                          %>
-                        </p>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                <!-- Enable Emojis -->
-                <div class="toggle-option-wrapper">
-                  <label class="toggle-option <%= (cfg.halloween && cfg.halloween.emojis) ? 'active' : '' %>" onclick="toggleHalloweenOption(this, 'halloweenEmojis')">
-                    <input type="checkbox" name="halloweenEmojis" <%= (cfg.halloween && cfg.halloween.emojis) ? 'checked' : '' %> style="display: none;">
-                    <div class="toggle-content" style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 2px solid transparent; transition: all 0.3s;">
-                      <div class="toggle-icon" style="width: 24px; height: 24px; border-radius: 50%; background: #ccc; display: inline-flex; align-items: center; justify-content: center; margin-right: 0.75rem; transition: all 0.3s;">
-                        <i class="fas fa-check" style="color: white; font-size: 0.75rem; opacity: 0;"></i>
-                      </div>
-                      <div style="display: inline-block; vertical-align: top;">
-                        <span style="font-weight: 600; font-size: 1.1rem; color: var(--text-color);">
-                          🦇 <%= lang === 'de' ? 'Halloween-Emojis verwenden' : 'Use Halloween Emojis' %>
-                        </span>
-                        <p style="margin: 0.5rem 0 0 0; opacity: 0.7; font-size: 0.9rem;">
-                          <%= lang === 'de'
-                            ? 'Ersetzt Standard-Symbole durch Halloween-Emojis (Kürbisse, Geister, etc.)'
-                            : 'Replaces standard symbols with Halloween emojis (pumpkins, ghosts, etc.)'
-                          %>
-                        </p>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Halloween Countdown -->
-            <div class="card" style="margin-top: 2rem;">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #F7931E, #FF6B35);">
-                      <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'Halloween Countdown' : 'Halloween Countdown' %></span>
-                  </div>
-                </div>
-              </div>
-              <div class="card-body" style="text-align: center; padding: 2rem;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🎃</div>
-                <div id="halloween-countdown" style="font-size: 1.5rem; font-weight: bold; color: #FF6B35;">
-                  <%= lang === 'de' ? 'Berechne...' : 'Calculating...' %>
-                </div>
-                <p style="opacity: 0.7; margin-top: 1rem;">
-                  <%= lang === 'de' ? 'Bis Halloween 🦇' : 'Until Halloween 🦇' %>
-                </p>
-              </div>
-            </div>
-
-            <!-- Save Button -->
-            <div class="save-footer">
-              <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #FF6B35, #8B4789) !important;">
-                <i class="fas fa-save"></i>
-                <%= lang === 'de' ? 'Halloween-Einstellungen speichern' : 'Save Halloween Settings' %>
-              </button>
-            </div>
-          </div>
-
         </div>
       </form>
     </main>
@@ -7020,88 +7244,15 @@
       voiceSupportModeSelect.dispatchEvent(new Event('change'));
     }
 
-    // ====================================
-    // Halloween Functions 🎃
-    // ====================================
-
-    /**
-     * Toggle Halloween option active state
-     */
-    function toggleHalloweenOption(element, inputName) {
-      const checkbox = element.querySelector('input[type="checkbox"]');
-      const toggleIcon = element.querySelector('.toggle-icon');
-      const toggleContent = element.querySelector('.toggle-content');
-
-      // Toggle checkbox
-      checkbox.checked = !checkbox.checked;
-
-      // Toggle active class
-      if (checkbox.checked) {
-        element.classList.add('active');
-        toggleContent.style.borderColor = '#FF6B35';
-        toggleIcon.style.background = '#FF6B35';
-        toggleIcon.querySelector('i').style.opacity = '1';
-      } else {
-        element.classList.remove('active');
-        toggleContent.style.borderColor = 'transparent';
-        toggleIcon.style.background = '#ccc';
-        toggleIcon.querySelector('i').style.opacity = '0';
+    // Switch to a specific tab (used in Quickstart)
+    function switchTab(tabId) {
+      const tabBtn = document.querySelector(`[data-tab="${tabId}"]`);
+      if (tabBtn) {
+        tabBtn.click();
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-
-    /**
-     * Calculate and display Halloween countdown
-     */
-    function updateHalloweenCountdown() {
-      const countdownEl = document.getElementById('halloween-countdown');
-      if (!countdownEl) return;
-
-      const now = new Date();
-      const year = now.getFullYear();
-      let halloween = new Date(year, 9, 31); // October 31
-
-      // If Halloween has passed this year, show next year's
-      if (now > halloween) {
-        halloween = new Date(year + 1, 9, 31);
-      }
-
-      const diff = halloween - now;
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-      const lang = '<%= lang || "de" %>';
-
-      if (days === 0 && hours === 0 && minutes === 0) {
-        countdownEl.textContent = lang === 'de' ? 'Heute ist Halloween! 🎃' : 'Today is Halloween! 🎃';
-        countdownEl.style.color = '#FF6B35';
-      } else if (days === 0) {
-        countdownEl.textContent = `${hours}h ${minutes}m`;
-      } else {
-        const text = lang === 'de' ? 'Noch' : '';
-        const dayText = lang === 'de' ? (days === 1 ? 'Tag' : 'Tage') : (days === 1 ? 'day' : 'days');
-        countdownEl.textContent = `${text} ${days} ${dayText}`.trim();
-      }
-    }
-
-    // Update countdown every minute
-    if (document.getElementById('halloween-countdown')) {
-      updateHalloweenCountdown();
-      setInterval(updateHalloweenCountdown, 60000);
-    }
-
-    // Initialize toggle styles for Halloween options
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('.toggle-option.active').forEach(option => {
-        const toggleIcon = option.querySelector('.toggle-icon');
-        const toggleContent = option.querySelector('.toggle-content');
-        if (toggleIcon && toggleContent) {
-          toggleContent.style.borderColor = '#FF6B35';
-          toggleIcon.style.background = '#FF6B35';
-          toggleIcon.querySelector('i').style.opacity = '1';
-        }
-      });
-    });
   </script>
 </body>
 </html>

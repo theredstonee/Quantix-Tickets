@@ -2158,6 +2158,17 @@ module.exports = (client)=>{
 
     const premiumInfo = getPremiumInfo(guildId);
 
+    // Calculate setup progress for Quickstart tab
+    const setupProgress = {
+      step1: !!(cfg.categoryId || (cfg.topics && cfg.topics.some(t => t.categoryId))),
+      step2: !!cfg.logChannelId,
+      step3: !!(cfg.teamRoleId || (cfg.priorityRoles && (cfg.priorityRoles['0']?.length || cfg.priorityRoles['1']?.length || cfg.priorityRoles['2']?.length))),
+      step4: !!(cfg.topics && cfg.topics.length > 0),
+      step5: !!cfg.panelMessageId
+    };
+    const completedSteps = Object.values(setupProgress).filter(Boolean).length;
+    const totalSteps = 5;
+
     res.render('panel', {
       cfg,
       system: selectedSystem, // Current ticket system
@@ -2182,7 +2193,10 @@ module.exports = (client)=>{
       user: req.user, // User object for display
       t: res.locals.t, // Translation object
       lang: res.locals.lang, // Language code
-      hasFeature: hasFeature // Add hasFeature function
+      hasFeature: hasFeature, // Add hasFeature function
+      setupProgress, // Setup progress for Quickstart tab
+      completedSteps,
+      totalSteps
     });
   });
 
