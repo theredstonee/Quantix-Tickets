@@ -197,7 +197,7 @@ module.exports = {
             roleStatus = '\n✅ User hatte bereits die Partner-Rolle';
           } else {
             await member.roles.add(PARTNER_ROLE_ID);
-            roleStatus = '\n✅ Partner-Rolle auf Theredstonee Projects vergeben';
+            roleStatus = '\n✅ Partner-Rolle auf Quantix Development vergeben';
           }
         } catch (err) {
           roleStatus = `\n⚠️ Rolle konnte nicht vergeben werden: ${err.message}`;
