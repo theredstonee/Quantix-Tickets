@@ -618,6 +618,52 @@
       }
     }
 
+    /* Subtabs Navigation */
+    .subtabs-nav {
+      display: none;
+      background: rgba(14, 165, 233, 0.05);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.5rem 2rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .subtabs-nav.active {
+      display: flex;
+    }
+
+    .subtab-btn {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-color);
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .subtab-btn:hover {
+      background: rgba(14, 165, 233, 0.1);
+    }
+
+    .subtab-btn.active {
+      background: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+    }
+
+    .subtab-btn i {
+      font-size: 0.85rem;
+    }
+
     /* Cards */
     .card {
       background: var(--glass-bg);
@@ -2013,17 +2059,18 @@
 
         <!-- Tabs Navigation -->
         <div class="tabs-container">
+          <!-- Main Tabs Navigation -->
           <div class="tabs-nav">
-            <!-- Tab 1: Übersicht -->
-            <button type="button" class="tab-btn active" data-tab="overview">
+            <!-- Main Tab 1: Dashboard -->
+            <button type="button" class="tab-btn active" data-tab="dashboard">
               <i class="fas fa-chart-line"></i>
-              <span><%= lang === 'de' ? 'Übersicht' : 'Overview' %></span>
+              <span><%= lang === 'de' ? 'Dashboard' : 'Dashboard' %></span>
             </button>
 
-            <!-- Tab 3: Grundeinstellungen (Kanäle + Rollen kombiniert) -->
-            <button type="button" class="tab-btn" data-tab="settings">
+            <!-- Main Tab 2: Einstellungen (with subtabs) -->
+            <button type="button" class="tab-btn" data-tab="settings-main">
               <i class="fas fa-cog"></i>
-              <span><%= lang === 'de' ? 'Grundeinstellungen' : 'Basic Settings' %></span>
+              <span><%= lang === 'de' ? 'Einstellungen' : 'Settings' %></span>
               <%
                 const hasBasicSettings = !!(cfg.ticketCategories && cfg.ticketCategories.length > 0 &&
                                             cfg.logChannels && cfg.logChannels.length > 0);
@@ -2035,53 +2082,16 @@
               <% } %>
             </button>
 
-            <!-- Tab 4: Ticket-Themen -->
-            <button type="button" class="tab-btn" data-tab="topics">
-              <i class="fas fa-th-list"></i>
-              <span><%= lang === 'de' ? 'Ticket-Themen' : 'Ticket Topics' %></span>
-              <% if (cfg.topics && cfg.topics.length > 0) { %>
-                <span class="tab-badge"><%= cfg.topics.length %></span>
-              <% } else { %>
-                <span class="tab-badge error-badge">0</span>
-              <% } %>
-            </button>
-
-            <!-- Tab 5: Formulare -->
-            <button type="button" class="tab-btn" data-tab="forms">
-              <i class="fas fa-list-check"></i>
-              <span><%= lang === 'de' ? 'Formulare' : 'Forms' %></span>
-              <% if (cfg.formFields && cfg.formFields.length > 0) { %>
-                <span class="tab-badge"><%= cfg.formFields.length %></span>
-              <% } %>
-            </button>
-
-            <!-- Tab 6: Design -->
-            <button type="button" class="tab-btn" data-tab="embeds">
+            <!-- Main Tab 3: Erscheinungsbild (with subtabs) -->
+            <button type="button" class="tab-btn" data-tab="appearance-main">
               <i class="fas fa-paint-brush"></i>
-              <span><%= lang === 'de' ? 'Design' : 'Design' %></span>
-            </button>
-
-            <!-- Tab 7: Voice Support -->
-            <button type="button" class="tab-btn" data-tab="voice">
-              <i class="fas fa-headset"></i>
-              <span><%= lang === 'de' ? 'Voice Support' : 'Voice Support' %></span>
-              <% if (cfg.voiceSupport && cfg.voiceSupport.enabled) { %>
-                <span class="tab-badge success-badge">ON</span>
-              <% } %>
-            </button>
-
-            <!-- Tab 8: Panel senden -->
-            <button type="button" class="tab-btn" data-tab="panel">
-              <i class="fas fa-paper-plane"></i>
-              <span><%= lang === 'de' ? 'Panel senden' : 'Send Panel' %></span>
+              <span><%= lang === 'de' ? 'Erscheinungsbild' : 'Appearance' %></span>
               <% if (cfg.panelMessageId) { %>
                 <span class="tab-badge success-badge">✓</span>
-              <% } else { %>
-                <span class="tab-badge error-badge">!</span>
               <% } %>
             </button>
 
-            <!-- Tab 9: Premium -->
+            <!-- Main Tab 4: Premium -->
             <button type="button" class="tab-btn" data-tab="premium">
               <i class="fas fa-crown"></i>
               <span>Premium</span>
@@ -2091,8 +2101,56 @@
             </button>
           </div>
 
-          <!-- Tab: Overview -->
-          <div class="tab-content active" id="tab-overview">
+          <!-- Subtabs for Einstellungen -->
+          <div class="subtabs-nav" data-parent="settings-main">
+            <button type="button" class="subtab-btn active" data-subtab="settings-basic">
+              <i class="fas fa-sliders-h"></i>
+              <span><%= lang === 'de' ? 'Grundeinstellungen' : 'Basic Settings' %></span>
+            </button>
+            <button type="button" class="subtab-btn" data-subtab="settings-topics">
+              <i class="fas fa-th-list"></i>
+              <span><%= lang === 'de' ? 'Ticket-Themen' : 'Ticket Topics' %></span>
+              <% if (cfg.topics && cfg.topics.length > 0) { %>
+                <span class="tab-badge"><%= cfg.topics.length %></span>
+              <% } else { %>
+                <span class="tab-badge error-badge">0</span>
+              <% } %>
+            </button>
+            <button type="button" class="subtab-btn" data-subtab="settings-forms">
+              <i class="fas fa-list-check"></i>
+              <span><%= lang === 'de' ? 'Formulare' : 'Forms' %></span>
+              <% if (cfg.formFields && cfg.formFields.length > 0) { %>
+                <span class="tab-badge"><%= cfg.formFields.length %></span>
+              <% } %>
+            </button>
+          </div>
+
+          <!-- Subtabs for Erscheinungsbild -->
+          <div class="subtabs-nav" data-parent="appearance-main">
+            <button type="button" class="subtab-btn active" data-subtab="appearance-design">
+              <i class="fas fa-palette"></i>
+              <span><%= lang === 'de' ? 'Design' : 'Design' %></span>
+            </button>
+            <button type="button" class="subtab-btn" data-subtab="appearance-voice">
+              <i class="fas fa-headset"></i>
+              <span><%= lang === 'de' ? 'Voice Support' : 'Voice Support' %></span>
+              <% if (cfg.voiceSupport && cfg.voiceSupport.enabled) { %>
+                <span class="tab-badge success-badge">ON</span>
+              <% } %>
+            </button>
+            <button type="button" class="subtab-btn" data-subtab="appearance-panel">
+              <i class="fas fa-paper-plane"></i>
+              <span><%= lang === 'de' ? 'Panel senden' : 'Send Panel' %></span>
+              <% if (cfg.panelMessageId) { %>
+                <span class="tab-badge success-badge">✓</span>
+              <% } else { %>
+                <span class="tab-badge error-badge">!</span>
+              <% } %>
+            </button>
+          </div>
+
+          <!-- Tab: Dashboard -->
+          <div class="tab-content active" id="tab-dashboard">
             <div class="grid grid-2" style="margin-bottom: 2rem;">
               <div class="stats-card">
                 <div class="stats-icon">
@@ -4035,8 +4093,8 @@
             </div>
           </div>
 
-          <!-- Tab: Channels -->
-          <div class="tab-content" id="tab-channels">
+          <!-- Tab: Settings Basic (Channels + Roles Combined) -->
+          <div class="tab-content" id="tab-settings-basic">
             <div class="card">
               <div class="card-header">
                 <div>
@@ -4236,8 +4294,7 @@
             </div>
           </div>
 
-          <!-- Tab: Roles -->
-          <div class="tab-content" id="tab-roles">
+          <!-- Roles Section (merged into Settings Basic) -->
             <div class="alert alert-info">
               <i class="fas fa-info-circle"></i>
               <div>
@@ -4377,8 +4434,8 @@
             </div>
           </div>
 
-          <!-- Tab: Topics -->
-          <div class="tab-content" id="tab-topics">
+          <!-- Tab: Settings Topics -->
+          <div class="tab-content" id="tab-settings-topics">
             <div class="card">
               <div class="card-header">
                 <div>
@@ -4468,8 +4525,8 @@
             </div>
           </div>
 
-          <!-- Tab: Forms -->
-          <div class="tab-content" id="tab-forms">
+          <!-- Tab: Settings Forms -->
+          <div class="tab-content" id="tab-settings-forms">
             <div class="card">
               <div class="card-header">
                 <div>
@@ -4597,8 +4654,8 @@
             </div>
           </div>
 
-          <!-- Tab: Voice -->
-          <div class="tab-content" id="tab-voice">
+          <!-- Tab: Appearance Voice -->
+          <div class="tab-content" id="tab-appearance-voice">
             <div class="feature-header">
               <div class="feature-title">
                 <i class="fas fa-microphone"></i>
@@ -4890,8 +4947,8 @@
             </div>
           </div>
 
-          <!-- Tab: Embeds -->
-          <div class="tab-content" id="tab-embeds">
+          <!-- Tab: Appearance Design -->
+          <div class="tab-content" id="tab-appearance-design">
             <div class="grid grid-2">
               <!-- Ticket Embed -->
               <div class="card">
@@ -4992,8 +5049,8 @@
             </div>
           </div>
 
-          <!-- Tab: Panel -->
-          <div class="tab-content" id="tab-panel">
+          <!-- Tab: Appearance Panel -->
+          <div class="tab-content" id="tab-appearance-panel">
             <div class="card">
               <div class="card-header">
                 <div>
@@ -5924,24 +5981,69 @@
   <script src="/js/ux-enhancements.js"></script>
   <script src="/js/auth-session.js"></script>
   <script>
-    // Tab Switching
+    // Tab Switching - Main tabs and subtabs
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
+    const subtabsNavs = document.querySelectorAll('.subtabs-nav');
+    const subtabBtns = document.querySelectorAll('.subtab-btn');
 
+    // Main tab switching
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const tabId = btn.getAttribute('data-tab');
 
-        // Remove active class from all
+        // Remove active from all main tabs
         tabBtns.forEach(b => b.classList.remove('active'));
         tabContents.forEach(c => c.classList.remove('active'));
+        subtabsNavs.forEach(s => s.classList.remove('active'));
 
-        // Add active class to clicked
+        // Activate clicked tab
         btn.classList.add('active');
-        document.getElementById(`tab-${tabId}`).classList.add('active');
+
+        // Check if tab has subtabs
+        const subtabsNav = document.querySelector(`.subtabs-nav[data-parent="${tabId}"]`);
+        if (subtabsNav) {
+          // Show subtabs navigation
+          subtabsNav.classList.add('active');
+          // Activate first subtab by default
+          const firstSubtab = subtabsNav.querySelector('.subtab-btn');
+          if (firstSubtab) {
+            firstSubtab.click();
+          }
+        } else {
+          // No subtabs, show main content directly
+          const content = document.getElementById(`tab-${tabId}`);
+          if (content) {
+            content.classList.add('active');
+          }
+        }
 
         // Save to localStorage
         localStorage.setItem('activeTab', tabId);
+      });
+    });
+
+    // Subtab switching
+    subtabBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent parent tab click
+        const subtabId = btn.getAttribute('data-subtab');
+        const parent = btn.closest('.subtabs-nav').getAttribute('data-parent');
+
+        // Remove active from all subtabs in this group
+        const parentNav = btn.closest('.subtabs-nav');
+        parentNav.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+
+        // Activate clicked subtab
+        btn.classList.add('active');
+        const content = document.getElementById(`tab-${subtabId}`);
+        if (content) {
+          content.classList.add('active');
+        }
+
+        // Save to localStorage
+        localStorage.setItem('activeSubtab', subtabId);
       });
     });
 
