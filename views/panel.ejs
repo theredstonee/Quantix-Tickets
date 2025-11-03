@@ -209,25 +209,24 @@
         linear-gradient(90deg, rgba(129, 140, 248, 0.03) 1px, transparent 1px);
     }
 
-    /* ===== MODERN LAYOUT SYSTEM ===== */
+    /* Layout */
     .app-container {
-      display: grid;
-      grid-template-columns: var(--sidebar-width) 1fr;
+      display: flex;
       min-height: 100vh;
       position: relative;
       z-index: 1;
-      gap: 0;
     }
 
-    /* ===== REDESIGNED SIDEBAR ===== */
+    /* Sidebar */
     .sidebar {
-      grid-column: 1;
+      width: var(--sidebar-width);
       background: var(--glass-bg-solid);
       backdrop-filter: blur(30px) saturate(180%);
       -webkit-backdrop-filter: blur(30px) saturate(180%);
       border-right: 1px solid var(--glass-border);
       padding: 0;
-      position: sticky;
+      position: fixed;
+      left: 0;
       top: 0;
       height: 100vh;
       overflow-y: auto;
@@ -235,6 +234,7 @@
       z-index: 1000;
       transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: var(--shadow-lg);
+      box-sizing: border-box;
     }
 
     /* Custom Scrollbar für Sidebar */
@@ -511,12 +511,13 @@
       color: var(--accent-color);
     }
 
-    /* ===== MAIN CONTENT AREA - Modernisiert ===== */
+    /* Main Content */
     .main-content {
-      grid-column: 2;
-      padding: 2.5rem 3rem;
-      min-height: 100vh;
-      background: transparent;
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 2rem;
+      max-width: calc(100% - var(--sidebar-width));
+      box-sizing: border-box;
     }
 
     .content-header {
