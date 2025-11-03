@@ -12,4 +12,10 @@
     <string name="no">Nein</string>
     <string name="ok">OK</string>
     <string name="error_loading">Fehler beim Laden</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_tickets">Tickets</string>
+    <string name="nav_my_tickets">Meine</string>
+    <string name="nav_premium">Premium</string>
 </resources>

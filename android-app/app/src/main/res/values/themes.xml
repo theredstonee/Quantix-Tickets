@@ -36,4 +36,12 @@
         <item name="windowSplashScreenAnimationDuration">1000</item>
         <item name="postSplashScreenTheme">@style/Theme.QuantixTickets</item>
     </style>
+
+    <!-- No Action Bar Theme (for BiometricAuth) -->
+    <style name="Theme.QuantixTickets.NoActionBar" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/md_theme_light_primary</item>
+        <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
+        <item name="android:statusBarColor">@color/md_theme_light_primary</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
 </resources>

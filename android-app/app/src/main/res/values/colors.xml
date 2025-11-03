@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Modern Gradient Colors matching Web Panel -->
-    <color name="accent_primary">#6366F1</color>
-    <color name="accent_secondary">#8B5CF6</color>
-    <color name="accent_tertiary">#D946EF</color>
+    <!-- Modern Gradient Colors matching Shield Logo -->
+    <color name="accent_primary">#00D9FF</color>
+    <color name="accent_secondary">#0099FF</color>
+    <color name="accent_tertiary">#0066FF</color>
 
     <!-- Status Colors -->
     <color name="success">#10B981</color>
@@ -14,6 +14,7 @@
     <!-- Background Colors -->
     <color name="background_light">#F0F9FF</color>
     <color name="background_dark">#0A0A0F</color>
+    <color name="background">#F0F9FF</color>
 
     <!-- Text Colors -->
     <color name="text_primary_light">#0F172A</color>
@@ -22,18 +23,18 @@
     <color name="text_secondary_dark">#94A3B8</color>
 
     <!-- Material Design 3 Colors -->
-    <color name="md_theme_light_primary">#6366F1</color>
+    <color name="md_theme_light_primary">#00D9FF</color>
     <color name="md_theme_light_onPrimary">#FFFFFF</color>
-    <color name="md_theme_light_secondary">#8B5CF6</color>
+    <color name="md_theme_light_secondary">#0099FF</color>
     <color name="md_theme_light_onSecondary">#FFFFFF</color>
     <color name="md_theme_light_background">#F0F9FF</color>
     <color name="md_theme_light_onBackground">#0F172A</color>
     <color name="md_theme_light_surface">#FFFFFF</color>
     <color name="md_theme_light_onSurface">#0F172A</color>
 
-    <color name="md_theme_dark_primary">#818CF8</color>
+    <color name="md_theme_dark_primary">#00D9FF</color>
     <color name="md_theme_dark_onPrimary">#000000</color>
-    <color name="md_theme_dark_secondary">#A78BFA</color>
+    <color name="md_theme_dark_secondary">#0099FF</color>
     <color name="md_theme_dark_onSecondary">#000000</color>
     <color name="md_theme_dark_background">#0A0A0F</color>
     <color name="md_theme_dark_onBackground">#E2E8F0</color>
@@ -41,5 +42,5 @@
     <color name="md_theme_dark_onSurface">#E2E8F0</color>
 
     <!-- Splash Screen -->
-    <color name="splash_background">#6366F1</color>
+    <color name="splash_background">#00D9FF</color>
 </resources>

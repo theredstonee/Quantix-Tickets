@@ -7,8 +7,14 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
+        android:name=".QuantixApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -20,6 +26,26 @@
         android:usesCleartextTraffic="false"
         tools:targetApi="31">
 
+        <!-- Biometric Auth Activity (Launcher) -->
+        <activity
+            android:name=".auth.BiometricAuthActivity"
+            android:exported="true"
+            android:theme="@style/Theme.QuantixTickets.NoActionBar"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Discord Login Activity -->
+        <activity
+            android:name=".auth.DiscordLoginActivity"
+            android:exported="false"
+            android:theme="@style/Theme.QuantixTickets"
+            android:configChanges="orientation|screenSize"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
@@ -28,10 +54,6 @@
             android:hardwareAccelerated="true"
             android:screenOrientation="unspecified"
             android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
 
             <!-- Deep Links -->
             <intent-filter android:autoVerify="true">
@@ -44,13 +66,24 @@
             </intent-filter>
         </activity>
 
-        <!-- Splash Screen -->
-        <activity
-            android:name=".SplashActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Splash"
-            android:noHistory="true">
-        </activity>
+        <!-- Firebase Cloud Messaging Service -->
+        <service
+            android:name=".fcm.QuantixFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Firebase Messaging Default Notification Icon -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+
+        <!-- Firebase Messaging Default Notification Color -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/accent_primary" />
 
     </application>
 

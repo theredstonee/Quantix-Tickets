@@ -5869,6 +5869,11 @@ module.exports = (client)=>{
   // Mount API routes
   router.use('/api', apiRoutes);
 
+  // Mount Mobile API routes
+  const mobileApi = require('./mobile-api');
+  mobileApi.app = { locals: { discordClient: client } };
+  router.use('/api/mobile', mobileApi);
+
   return router;
 };
 
