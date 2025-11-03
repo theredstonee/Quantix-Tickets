@@ -2151,7 +2151,7 @@ module.exports = (client)=>{
       roles = fetchedRoles
         .filter(r => r.id !== guild.id)
         .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
-        .sort((a,b) => a.name.localeCompare(b.name));
+        .sort((a,b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     } catch(err) {
       console.error('Fehler beim Laden der Channels/Rollen:', err);
     }

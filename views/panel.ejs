@@ -39,43 +39,94 @@
      * MODERN TAB-BASED PANEL DESIGN
      * ============================================================ */
 
-    /* CSS Variables */
+    /* CSS Variables - Modern & Creative Design */
     :root {
-      --bg-color: #f0f8ff;
-      --bg-secondary: #e5f3ff;
-      --text-color: #1a1a2e;
+      /* Backgrounds - Moderne Gradienten */
+      --bg-color: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      --bg-secondary: #f8fafc;
+      --bg-card: rgba(255, 255, 255, 0.85);
+
+      /* Text Colors */
+      --text-color: #0f172a;
       --text-secondary: #64748b;
-      --border-color: #bdd7ee;
-      --accent-color: #0ea5e9;
-      --accent-hover: #0284c7;
-      --glass-bg: rgba(255, 255, 255, 0.8);
-      --glass-bg-solid: rgba(255, 255, 255, 0.95);
-      --glass-border: rgba(14, 165, 233, 0.2);
-      --shadow-sm: 0 2px 8px rgba(14, 165, 233, 0.08);
-      --shadow-md: 0 4px 16px rgba(14, 165, 233, 0.12);
-      --shadow-lg: 0 8px 32px rgba(14, 165, 233, 0.16);
+      --text-muted: #94a3b8;
+
+      /* Accent Colors - Vibrant Gradients */
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+      --accent-color: #6366f1;
+      --accent-hover: #8b5cf6;
+      --accent-light: #eef2ff;
+
+      /* Status Colors */
       --success-color: #10b981;
+      --success-light: #d1fae5;
       --warning-color: #f59e0b;
+      --warning-light: #fef3c7;
       --error-color: #ef4444;
+      --error-light: #fee2e2;
+      --info-color: #3b82f6;
+      --info-light: #dbeafe;
+
+      /* Glassmorphism */
+      --glass-bg: rgba(255, 255, 255, 0.75);
+      --glass-bg-solid: rgba(255, 255, 255, 0.95);
+      --glass-border: rgba(203, 213, 225, 0.3);
+      --glass-shadow: 0 8px 32px 0 rgba(100, 116, 139, 0.1);
+
+      /* Shadows - Softer & More Depth */
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+
+      /* Layout */
       --sidebar-width: 280px;
       --header-height: 70px;
-      --tab-height: 60px;
+      --border-radius: 16px;
+      --border-radius-sm: 12px;
+      --transition-speed: 0.3s;
     }
 
     [data-theme="dark"] {
-      --bg-color: #000000;
-      --bg-secondary: #0a0a0f;
-      --text-color: #60a5fa;
-      --text-secondary: #93c5fd;
-      --border-color: #1e293b;
-      --accent-color: #3b82f6;
-      --accent-hover: #60a5fa;
-      --glass-bg: rgba(10, 10, 20, 0.8);
-      --glass-bg-solid: rgba(10, 10, 20, 0.95);
-      --glass-border: rgba(59, 130, 246, 0.3);
-      --shadow-sm: 0 2px 8px rgba(59, 130, 246, 0.15);
-      --shadow-md: 0 4px 16px rgba(59, 130, 246, 0.2);
-      --shadow-lg: 0 8px 32px rgba(59, 130, 246, 0.25);
+      /* Backgrounds - Dark Mode mit Tiefe */
+      --bg-color: linear-gradient(135deg, #0a0a0f 0%, #13131a 100%);
+      --bg-secondary: #1a1a24;
+      --bg-card: rgba(20, 20, 30, 0.85);
+
+      /* Text Colors */
+      --text-color: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      /* Accent Colors - Neon Glow */
+      --accent-gradient: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #e879f9 100%);
+      --accent-color: #818cf8;
+      --accent-hover: #a78bfa;
+      --accent-light: #312e81;
+
+      /* Status Colors - Dark Mode */
+      --success-color: #34d399;
+      --success-light: #064e3b;
+      --warning-color: #fbbf24;
+      --warning-light: #78350f;
+      --error-color: #f87171;
+      --error-light: #7f1d1d;
+      --info-color: #60a5fa;
+      --info-light: #1e3a8a;
+
+      /* Glassmorphism - Dark */
+      --glass-bg: rgba(20, 20, 30, 0.75);
+      --glass-bg-solid: rgba(20, 20, 30, 0.95);
+      --glass-border: rgba(148, 163, 184, 0.1);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+
+      /* Shadows - Dark Mode with Glow */
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+      --shadow-glow: 0 0 30px rgba(129, 140, 248, 0.4);
     }
 
     * {
@@ -85,15 +136,17 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, 'Helvetica Neue', Arial, sans-serif;
       background: var(--bg-color);
       color: var(--text-color);
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
+      font-size: 15px;
+      line-height: 1.6;
     }
 
-    /* Animated Background */
+    /* Animated Background - Mesh Gradient */
     body::before {
       content: '';
       position: fixed;
@@ -101,22 +154,59 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: radial-gradient(circle at 20% 50%, var(--accent-color) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 80%, var(--accent-color) 0%, transparent 50%);
-      opacity: 0.03;
-      animation: bgPulse 15s ease-in-out infinite;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(217, 70, 239, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 40%);
+      animation: meshMove 20s ease-in-out infinite alternate;
       pointer-events: none;
       z-index: 0;
     }
 
-    @keyframes bgPulse {
-      0%, 100% { opacity: 0.03; }
-      50% { opacity: 0.05; }
+    @keyframes meshMove {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translateY(-20px) scale(1.05);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
     }
 
-    /* Dark Mode: Blaues Hintergrundmuster */
+    /* Dark Mode: Animated Dots Pattern */
     [data-theme="dark"] body::before {
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 1px, transparent 1px);
+      background:
+        radial-gradient(circle at 10% 20%, rgba(129, 140, 248, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, rgba(167, 139, 250, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(232, 121, 249, 0.08) 0%, transparent 40%);
+    }
+
+    /* Subtle Grid Pattern */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(99, 102, 241, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    [data-theme="dark"] body::after {
+      background-image:
+        linear-gradient(rgba(129, 140, 248, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(129, 140, 248, 0.03) 1px, transparent 1px);
     }
 
     /* Layout */
@@ -2961,6 +3051,115 @@
               </div>
             </div>
 
+            <!-- SLA System -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                      <i class="fas fa-clock"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'SLA-System (Service Level Agreement)' : 'SLA System (Service Level Agreement)' %></span>
+                    <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Automatisches SLA-System mit Live-Countdown und Eskalation bei Überschreitung der Bearbeitungszeit.'
+                      : 'Automatic SLA system with live countdown and escalation when processing time is exceeded.'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
+                  <input
+                    type="checkbox"
+                    name="slaEnabled"
+                    <%= (cfg.sla && cfg.sla.enabled) ? 'checked' : '' %>
+                    style="width: auto; margin: 0;">
+                  <span style="font-weight: 500;"><%= lang === 'de' ? 'SLA-System aktivieren' : 'Enable SLA System' %></span>
+                </label>
+
+                <div class="grid grid-3" style="margin-bottom: 1rem;">
+                  <div class="form-group">
+                    <div class="form-label">
+                      <span>🟢 <%= lang === 'de' ? 'Niedrig (Stunden)' : 'Low (Hours)' %></span>
+                    </div>
+                    <input
+                      type="number"
+                      name="slaPriority0Hours"
+                      value="<%= (cfg.sla && cfg.sla.priority0Hours) || 24 %>"
+                      min="1"
+                      max="168"
+                      placeholder="24">
+                  </div>
+                  <div class="form-group">
+                    <div class="form-label">
+                      <span>🟠 <%= lang === 'de' ? 'Mittel (Stunden)' : 'Medium (Hours)' %></span>
+                    </div>
+                    <input
+                      type="number"
+                      name="slaPriority1Hours"
+                      value="<%= (cfg.sla && cfg.sla.priority1Hours) || 4 %>"
+                      min="1"
+                      max="72"
+                      placeholder="4">
+                  </div>
+                  <div class="form-group">
+                    <div class="form-label">
+                      <span>🔴 <%= lang === 'de' ? 'Hoch (Stunden)' : 'High (Hours)' %></span>
+                    </div>
+                    <input
+                      type="number"
+                      name="slaPriority2Hours"
+                      value="<%= (cfg.sla && cfg.sla.priority2Hours) || 1 %>"
+                      min="1"
+                      max="24"
+                      placeholder="1">
+                  </div>
+                </div>
+
+                <div class="grid grid-2">
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-percentage"></i>
+                      <span><%= lang === 'de' ? 'Warnung bei (%)' : 'Warning at (%)' %></span>
+                    </div>
+                    <input
+                      type="number"
+                      name="slaWarnAtPercent"
+                      value="<%= (cfg.sla && cfg.sla.warnAtPercent) || 80 %>"
+                      min="50"
+                      max="95"
+                      placeholder="80">
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span><%= lang === 'de' ? 'Warnung senden bei X% der SLA-Zeit' : 'Send warning at X% of SLA time' %></span>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-at"></i>
+                      <span><%= lang === 'de' ? 'Eskalation an Rolle' : 'Escalate to Role' %></span>
+                    </div>
+                    <select name="slaEscalateToRole">
+                      <option value=""><%= lang === 'de' ? 'Keine Eskalation' : 'No escalation' %></option>
+                      <% roles.forEach(role => { %>
+                        <option value="<%= role.id %>" <%= (cfg.sla && cfg.sla.escalateToRole === role.id) ? 'selected' : '' %>>
+                          @ <%= role.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span><%= lang === 'de' ? 'Rolle wird bei 100% SLA-Überschreitung gepingt' : 'Role will be pinged at 100% SLA breach' %></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <!-- Tab: Appearance Voice -->
@@ -4098,8 +4297,7 @@
 
             <% } %>
 
-            <!-- Pro Features -->
-            <% if (premiumTier === 'pro' || premiumTier === 'beta' || premiumTier === 'partner') { %>
+            <!-- FREE Features - Email & Auto-Close -->
             <div class="grid grid-2">
               <!-- Email Notifications -->
               <div class="card">
@@ -4110,6 +4308,7 @@
                         <i class="fas fa-envelope"></i>
                       </div>
                       <span><%= t.premium.email_notifications_label %></span>
+                      <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
                     </div>
                   </div>
                 </div>
@@ -4137,6 +4336,7 @@
                         <i class="fas fa-clock"></i>
                       </div>
                       <span><%= lang === 'de' ? 'Auto-Close System' : 'Auto-Close System' %></span>
+                      <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
                     </div>
                   </div>
                 </div>
@@ -4240,6 +4440,7 @@
                       <i class="fas fa-bell"></i>
                     </div>
                     <span><%= t.premium.dm_notifications_label %></span>
+                    <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
                   </div>
                   <p class="card-description">
                     <%= t.premium.dm_notifications_description %>
@@ -4260,7 +4461,6 @@
                 </div>
               </div>
             </div>
-            <% } %>
 
             <!-- Link to Premium Page -->
             <div class="btn-group">
