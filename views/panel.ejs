@@ -3537,8 +3537,7 @@
             </div>
             <% } %>
 
-            <!-- Custom Avatar -->
-            <% if (premiumTier === 'basic' || premiumTier === 'pro' || premiumTier === 'beta' || premiumTier === 'partner') { %>
+            <!-- Custom Avatar (FREE) -->
             <div class="card">
               <div class="card-header">
                 <div>
@@ -3547,7 +3546,6 @@
                       <i class="fas fa-image"></i>
                     </div>
                     <span><%= t.premium.custom_avatar_label %></span>
-                    <span class="priority-badge" style="background: #667eea; color: white; border-color: #667eea;">BASIC+</span>
                   </div>
                   <p class="card-description">
                     <%= t.premium.custom_avatar_description %>
@@ -3624,7 +3622,6 @@
                       <i class="fas fa-tags"></i>
                     </div>
                     <span><%= lang === 'de' ? 'Tag/Label System' : 'Tag/Label System' %></span>
-                    <span class="priority-badge" style="background: #667eea; color: white; border-color: #667eea;">BASIC+</span>
                   </div>
                   <p class="card-description">
                     <%= lang === 'de'
@@ -3717,7 +3714,6 @@
                       <i class="fas fa-file-alt"></i>
                     </div>
                     <span><%= lang === 'de' ? 'Ticket-Vorlagen System' : 'Ticket Templates System' %></span>
-                    <span class="priority-badge" style="background: #667eea; color: white; border-color: #667eea;">BASIC+</span>
                   </div>
                   <p class="card-description">
                     <%= lang === 'de'
@@ -3832,7 +3828,6 @@
                       <i class="fas fa-building"></i>
                     </div>
                     <span><%= lang === 'de' ? 'Abteilungs-System' : 'Department System' %></span>
-                    <span class="priority-badge" style="background: #667eea; color: white; border-color: #667eea;">BASIC+</span>
                   </div>
                   <p class="card-description">
                     <%= lang === 'de'
@@ -3940,8 +3935,6 @@
                 </div>
               </div>
             </div>
-
-            <% } %>
 
             <!-- Pro Features -->
             <% if (premiumTier === 'pro' || premiumTier === 'beta' || premiumTier === 'partner') { %>
