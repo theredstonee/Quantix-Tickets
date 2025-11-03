@@ -1735,8 +1735,21 @@
     %><%= pricingSubtitle[lang] || pricingSubtitle.de %></p>
 
     <div class="pricing-grid">
-      <!-- Free Tier -->
-      <div class="pricing-card">
+      <!-- Free Tier - NOW WITH ALL FEATURES -->
+      <div class="pricing-card featured">
+        <div class="pricing-badge"><%
+          const recommendedText = {
+            de: 'Empfohlen',
+            en: 'Recommended',
+            he: 'מומלץ',
+            ja: 'おすすめ',
+            ru: 'Рекомендуется',
+            pt: 'Recomendado',
+            es: 'Recomendado',
+            id: 'Direkomendasikan',
+            ar: 'موصى به'
+          };
+        %><%= recommendedText[lang] || recommendedText.de %></div>
         <h3><%
           const freeTitle = {
             de: 'Kostenlos',
@@ -1763,61 +1776,100 @@
             ar: 'شهر'
           };
         %><%= monthText[lang] || monthText.de %></span></div>
+        <p style="text-align: center; margin: 10px 0; color: #00ff88; font-weight: 600;"><%
+          const allFeaturesText = {
+            de: 'Alle Features inklusive!',
+            en: 'All features included!',
+            he: 'כל התכונות כלולות!',
+            ja: 'すべての機能が含まれています！',
+            ru: 'Все функции включены!',
+            pt: 'Todos os recursos incluídos!',
+            es: '¡Todas las funciones incluidas!',
+            id: 'Semua fitur termasuk!',
+            ar: 'جميع الميزات متضمنة!'
+          };
+        %><%= allFeaturesText[lang] || allFeaturesText.de %></p>
         <ul class="pricing-features">
-          <li><i class="fas fa-check"></i> <%
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
             const free1 = {
-              de: '5 Ticket-Kategorien',
-              en: '5 ticket categories',
-              he: '5 קטגוריות כרטיסים',
-              ja: '5つのチケットカテゴリ',
-              ru: '5 категории тикетов',
-              pt: '5 categorias de tickets',
-              es: '5 categorías de tickets',
-              id: '5 kategori tiket',
-              ar: '5 فئات تذاكر'
+              de: 'Unbegrenzte Ticket-Kategorien',
+              en: 'Unlimited ticket categories',
+              he: 'קטגוריות כרטיסים בלתי מוגבלות',
+              ja: '無制限のチケットカテゴリ',
+              ru: 'Неограниченные категории тикетов',
+              pt: 'Categorias de tickets ilimitadas',
+              es: 'Categorías de tickets ilimitadas',
+              id: 'Kategori tiket tak terbatas',
+              ar: 'فئات تذاكر غير محدودة'
             };
           %><%= free1[lang] || free1.de %></li>
-          <li><i class="fas fa-check"></i> <%
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
             const free2 = {
-              de: 'Web-Panel',
-              en: 'Web panel',
-              he: 'פאנל אינטרנט',
-              ja: 'Webパネル',
-              ru: 'Веб-панель',
-              pt: 'Painel web',
-              es: 'Panel web',
-              id: 'Panel web',
-              ar: 'لوحة ويب'
+              de: 'Web-Panel mit Analytics',
+              en: 'Web panel with analytics',
+              he: 'פאנל אינטרנט עם ניתוחים',
+              ja: '分析機能付きWebパネル',
+              ru: 'Веб-панель с аналитикой',
+              pt: 'Painel web com analytics',
+              es: 'Panel web con análisis',
+              id: 'Panel web dengan analitik',
+              ar: 'لوحة ويب مع التحليلات'
             };
           %><%= free2[lang] || free2.de %></li>
-          <li><i class="fas fa-check"></i> <%
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
             const free3 = {
-              de: 'Multi-Sprache',
-              en: 'Multi-language',
-              he: 'רב-לשוני',
-              ja: '多言語',
-              ru: 'Многоязычность',
-              pt: 'Multi-idioma',
-              es: 'Multi-idioma',
-              id: 'Multi-bahasa',
-              ar: 'متعدد اللغات'
+              de: 'SLA-System mit Countdown',
+              en: 'SLA system with countdown',
+              he: 'מערכת SLA עם ספירה לאחור',
+              ja: 'カウントダウン付きSLAシステム',
+              ru: 'SLA система с обратным отсчётом',
+              pt: 'Sistema SLA com contagem regressiva',
+              es: 'Sistema SLA con cuenta regresiva',
+              id: 'Sistem SLA dengan countdown',
+              ar: 'نظام SLA مع العد التنازلي'
             };
           %><%= free3[lang] || free3.de %></li>
-          <li><i class="fas fa-check"></i> <%
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
             const free4 = {
-              de: 'Basis-Support',
-              en: 'Basic support',
-              he: 'תמיכה בסיסית',
-              ja: '基本サポート',
-              ru: 'Базовая поддержка',
-              pt: 'Suporte básico',
-              es: 'Soporte básico',
-              id: 'Dukungan dasar',
-              ar: 'دعم أساسي'
+              de: 'DM & E-Mail-Benachrichtigungen',
+              en: 'DM & email notifications',
+              he: 'התראות DM ואימייל',
+              ja: 'DMとメール通知',
+              ru: 'Уведомления в ЛС и Email',
+              pt: 'Notificações DM e email',
+              es: 'Notificaciones DM y correo',
+              id: 'Notifikasi DM & email',
+              ar: 'إشعارات الرسائل المباشرة والبريد الإلكتروني'
             };
           %><%= free4[lang] || free4.de %></li>
-          <li><i class="fas fa-check"></i> <%
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
             const free5 = {
+              de: 'Auto-Close & Auto-Assignment',
+              en: 'Auto-close & auto-assignment',
+              he: 'סגירה אוטומטית והקצאה אוטומטית',
+              ja: '自動クローズと自動割り当て',
+              ru: 'Автозакрытие и автоназначение',
+              pt: 'Fechamento e atribuição automáticos',
+              es: 'Cierre y asignación automáticos',
+              id: 'Penutupan & penugasan otomatis',
+              ar: 'الإغلاق والتعيين التلقائي'
+            };
+          %><%= free5[lang] || free5.de %></li>
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
+            const free6 = {
+              de: 'Datei-Upload & Live-Transcripts',
+              en: 'File upload & live transcripts',
+              he: 'העלאת קבצים ותעתיקים חיים',
+              ja: 'ファイルアップロードとライブ記録',
+              ru: 'Загрузка файлов и транскрипты',
+              pt: 'Upload de arquivos e transcrições',
+              es: 'Carga de archivos y transcripciones',
+              id: 'Upload file & transkrip langsung',
+              ar: 'تحميل الملفات والنصوص الحية'
+            };
+          %><%= free6[lang] || free6.de %></li>
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
+            const free7 = {
               de: 'Ticket-Bewertungssystem',
               en: 'Ticket rating system',
               he: 'מערכת דירוג כרטיסים',
@@ -1828,7 +1880,46 @@
               id: 'Sistem rating tiket',
               ar: 'نظام تقييم التذاكر'
             };
-          %><%= free5[lang] || free5.de %></li>
+          %><%= free7[lang] || free7.de %></li>
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
+            const free8 = {
+              de: '9 Sprachen & Custom Avatar',
+              en: '9 languages & custom avatar',
+              he: '9 שפות ואווטר מותאם',
+              ja: '9言語とカスタムアバター',
+              ru: '9 языков и пользовательский аватар',
+              pt: '9 idiomas e avatar personalizado',
+              es: '9 idiomas y avatar personalizado',
+              id: '9 bahasa & avatar kustom',
+              ar: '9 لغات وصورة رمزية مخصصة'
+            };
+          %><%= free8[lang] || free8.de %></li>
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
+            const free9 = {
+              de: 'Multi-Ticket-Systeme',
+              en: 'Multi-ticket systems',
+              he: 'מערכות כרטיסים מרובות',
+              ja: 'マルチチケットシステム',
+              ru: 'Мультитикетные системы',
+              pt: 'Sistemas multi-ticket',
+              es: 'Sistemas multi-ticket',
+              id: 'Sistem multi-tiket',
+              ar: 'أنظمة تذاكر متعددة'
+            };
+          %><%= free9[lang] || free9.de %></li>
+          <li><i class="fas fa-check" style="color: #00ff88;"></i> <%
+            const free10 = {
+              de: 'Community Support',
+              en: 'Community support',
+              he: 'תמיכה קהילתית',
+              ja: 'コミュニティサポート',
+              ru: 'Поддержка сообщества',
+              pt: 'Suporte da comunidade',
+              es: 'Soporte de la comunidad',
+              id: 'Dukungan komunitas',
+              ar: 'دعم المجتمع'
+            };
+          %><%= free10[lang] || free10.de %></li>
         </ul>
         <a href="/login" class="btn-primary"><%
           const startText = {
@@ -1845,121 +1936,10 @@
         %><%= startText[lang] || startText.de %></a>
       </div>
 
-      <!-- Basic Tier -->
+      <!-- Pro Tier - ONLY CUSTOMIZATION -->
       <div class="pricing-card">
-        <h3>Basic</h3>
-        <div class="pricing-price">€2.99<span>/<%
-          const monthText2 = {
-            de: 'Monat',
-            en: 'month',
-            he: 'חודש',
-            ja: '月',
-            ru: 'мес',
-            pt: 'mês',
-            es: 'mes',
-            id: 'bulan',
-            ar: 'شهر'
-          };
-        %><%= monthText2[lang] || monthText2.de %></span></div>
-        <ul class="pricing-features">
-          <li><i class="fas fa-check"></i> <%
-            const basic1 = {
-              de: '7 Ticket-Kategorien',
-              en: '7 ticket categories',
-              he: '7 קטגוריות כרטיסים',
-              ja: '7つのチケットカテゴリ',
-              ru: '7 категорий тикетов',
-              pt: '7 categorias de tickets',
-              es: '7 categorías de tickets',
-              id: '7 kategori tiket',
-              ar: '7 فئات تذاكر'
-            };
-          %><%= basic1[lang] || basic1.de %></li>
-          <li><i class="fas fa-check"></i> <%
-            const basic2 = {
-              de: 'Custom Avatar',
-              en: 'Custom avatar',
-              he: 'אווטר מותאם אישית',
-              ja: 'カスタムアバター',
-              ru: 'Пользовательский аватар',
-              pt: 'Avatar personalizado',
-              es: 'Avatar personalizado',
-              id: 'Avatar kustom',
-              ar: 'صورة رمزية مخصصة'
-            };
-          %><%= basic2[lang] || basic2.de %></li>
-          <li><i class="fas fa-check"></i> <%
-            const basic3 = {
-              de: 'Statistiken',
-              en: 'Statistics',
-              he: 'סטטיסטיקות',
-              ja: '統計',
-              ru: 'Статистика',
-              pt: 'Estatísticas',
-              es: 'Estadísticas',
-              id: 'Statistik',
-              ar: 'إحصائيات'
-            };
-          %><%= basic3[lang] || basic3.de %></li>
-          <li><i class="fas fa-check"></i> <%
-            const basic4 = {
-              de: 'Prioritäts-Support',
-              en: 'Priority support',
-              he: 'תמיכה עדיפה',
-              ja: '優先サポート',
-              ru: 'Приоритетная поддержка',
-              pt: 'Suporte prioritário',
-              es: 'Soporte prioritario',
-              id: 'Dukungan prioritas',
-              ar: 'دعم ذو أولوية'
-            };
-          %><%= basic4[lang] || basic4.de %></li>
-          <li><i class="fas fa-check"></i> <%
-            const basic5 = {
-              de: 'Datei-Upload (bis 10MB)',
-              en: 'File upload (up to 10MB)',
-              he: 'העלאת קבצים (עד 10MB)',
-              ja: 'ファイルアップロード（最大10MB）',
-              ru: 'Загрузка файлов (до 10MB)',
-              pt: 'Upload de arquivos (até 10MB)',
-              es: 'Carga de archivos (hasta 10MB)',
-              id: 'Upload file (hingga 10MB)',
-              ar: 'تحميل الملفات (حتى 10 ميجابايت)'
-            };
-          %><%= basic5[lang] || basic5.de %></li>
-        </ul>
-        <a href="/premium" class="btn-primary"><%
-          const upgradeText = {
-            de: 'Jetzt upgraden',
-            en: 'Upgrade Now',
-            he: 'שדרג עכשיו',
-            ja: '今すぐアップグレード',
-            ru: 'Обновить',
-            pt: 'Atualizar',
-            es: 'Actualizar',
-            id: 'Tingkatkan',
-            ar: 'ترقية'
-          };
-        %><%= upgradeText[lang] || upgradeText.de %></a>
-      </div>
-
-      <!-- Pro Tier -->
-      <div class="pricing-card featured">
-        <div class="pricing-badge"><%
-          const popularText = {
-            de: 'Beliebt',
-            en: 'Popular',
-            he: 'פופולרי',
-            ja: '人気',
-            ru: 'Популярный',
-            pt: 'Popular',
-            es: 'Popular',
-            id: 'Populer',
-            ar: 'شائع'
-          };
-        %><%= popularText[lang] || popularText.de %></div>
         <h3>Pro</h3>
-        <div class="pricing-price">€4.99<span>/<%
+        <div class="pricing-price">€9.99<span>/<%
           const monthText3 = {
             de: 'Monat',
             en: 'month',
@@ -1972,98 +1952,111 @@
             ar: 'شهر'
           };
         %><%= monthText3[lang] || monthText3.de %></span></div>
+        <p style="text-align: center; margin: 10px 0; color: #3b82f6; font-weight: 600;"><%
+          const customizationText = {
+            de: 'Nur für Bot-Customization',
+            en: 'Bot customization only',
+            he: 'התאמה אישית של בוט בלבד',
+            ja: 'ボットカスタマイズのみ',
+            ru: 'Только кастомизация бота',
+            pt: 'Somente personalização do bot',
+            es: 'Solo personalización del bot',
+            id: 'Hanya kustomisasi bot',
+            ar: 'تخصيص البوت فقط'
+          };
+        %><%= customizationText[lang] || customizationText.de %></p>
         <ul class="pricing-features">
           <li><i class="fas fa-check"></i> <%
             const pro1 = {
-              de: 'Unbegrenzte Kategorien',
-              en: 'Unlimited categories',
-              he: 'קטגוריות בלתי מוגבלות',
-              ja: '無制限カテゴリ',
-              ru: 'Неограниченные категории',
-              pt: 'Categorias ilimitadas',
-              es: 'Categorías ilimitadas',
-              id: 'Kategori tak terbatas',
-              ar: 'فئات غير محدودة'
+              de: 'Eigener Bot-Token',
+              en: 'Custom bot token',
+              he: 'טוקן בוט מותאם אישית',
+              ja: 'カスタムボットトークン',
+              ru: 'Собственный токен бота',
+              pt: 'Token de bot personalizado',
+              es: 'Token de bot personalizado',
+              id: 'Token bot kustom',
+              ar: 'رمز بوت مخصص'
             };
           %><%= pro1[lang] || pro1.de %></li>
           <li><i class="fas fa-check"></i> <%
             const pro2 = {
-              de: 'DM-Benachrichtigungen',
-              en: 'DM notifications',
-              he: 'התראות DM',
-              ja: 'DM通知',
-              ru: 'Уведомления в ЛС',
-              pt: 'Notificações DM',
-              es: 'Notificaciones DM',
-              id: 'Notifikasi DM',
-              ar: 'إشعارات الرسائل المباشرة'
+              de: 'White-Label (ohne Branding)',
+              en: 'White-label (no branding)',
+              he: 'תווית לבנה (ללא מיתוג)',
+              ja: 'ホワイトラベル（ブランディングなし）',
+              ru: 'Белая метка (без брендинга)',
+              pt: 'Marca branca (sem branding)',
+              es: 'Marca blanca (sin branding)',
+              id: 'White-label (tanpa branding)',
+              ar: 'علامة بيضاء (بدون علامة تجارية)'
             };
           %><%= pro2[lang] || pro2.de %></li>
           <li><i class="fas fa-check"></i> <%
             const pro3 = {
-              de: 'Analytics Dashboard',
-              en: 'Analytics dashboard',
-              he: 'לוח מחוונים לניתוח',
-              ja: '分析ダッシュボード',
-              ru: 'Аналитическая панель',
-              pt: 'Painel de análise',
-              es: 'Panel de análisis',
-              id: 'Dashboard analitik',
-              ar: 'لوحة تحليلات'
+              de: 'Eigene Domain',
+              en: 'Custom domain',
+              he: 'דומיין מותאם אישית',
+              ja: 'カスタムドメイン',
+              ru: 'Собственный домен',
+              pt: 'Domínio personalizado',
+              es: 'Dominio personalizado',
+              id: 'Domain kustom',
+              ar: 'نطاق مخصص'
             };
           %><%= pro3[lang] || pro3.de %></li>
           <li><i class="fas fa-check"></i> <%
             const pro4 = {
-              de: 'E-Mail-Benachrichtigungen',
-              en: 'Email notifications',
-              he: 'התראות אימייל',
-              ja: 'メール通知',
-              ru: 'Email-уведомления',
-              pt: 'Notificações por email',
-              es: 'Notificaciones por correo',
-              id: 'Notifikasi email',
-              ar: 'إشعارات البريد الإلكتروني'
+              de: 'Custom Farben & Emojis',
+              en: 'Custom colors & emojis',
+              he: 'צבעים ואמוג\'יים מותאמים',
+              ja: 'カスタムカラーと絵文字',
+              ru: 'Пользовательские цвета и эмодзи',
+              pt: 'Cores e emojis personalizados',
+              es: 'Colores y emojis personalizados',
+              id: 'Warna & emoji kustom',
+              ar: 'ألوان ورموز تعبيرية مخصصة'
             };
           %><%= pro4[lang] || pro4.de %></li>
           <li><i class="fas fa-check"></i> <%
             const pro5 = {
-              de: 'Auto-Close System',
-              en: 'Auto-close system',
-              he: 'מערכת סגירה אוטומטית',
-              ja: '自動クローズシステム',
-              ru: 'Автозакрытие',
-              pt: 'Sistema de fechamento automático',
-              es: 'Sistema de cierre automático',
-              id: 'Sistem penutupan otomatis',
-              ar: 'نظام الإغلاق التلقائي'
+              de: 'Prioritäts-Support',
+              en: 'Priority support',
+              he: 'תמיכה עדיפה',
+              ja: '優先サポート',
+              ru: 'Приоритетная поддержка',
+              pt: 'Suporte prioritário',
+              es: 'Soporte prioritario',
+              id: 'Dukungan prioritas',
+              ar: 'دعم ذو أولوية'
             };
           %><%= pro5[lang] || pro5.de %></li>
           <li><i class="fas fa-check"></i> <%
             const pro6 = {
-              de: 'Premium Support',
-              en: 'Premium support',
-              he: 'תמיכה פרימיום',
-              ja: 'プレミアムサポート',
-              ru: 'Премиум-поддержка',
-              pt: 'Suporte premium',
-              es: 'Soporte premium',
-              id: 'Dukungan premium',
-              ar: 'دعم متميز'
+              de: 'Exklusive Beta-Features',
+              en: 'Exclusive beta features',
+              he: 'תכונות בטא בלעדיות',
+              ja: '限定ベータ機能',
+              ru: 'Эксклюзивные бета-функции',
+              pt: 'Recursos beta exclusivos',
+              es: 'Funciones beta exclusivas',
+              id: 'Fitur beta eksklusif',
+              ar: 'ميزات بيتا حصرية'
             };
           %><%= pro6[lang] || pro6.de %></li>
-          <li><i class="fas fa-check"></i> <%
-            const pro7 = {
-              de: 'SLA-System mit Countdown',
-              en: 'SLA system with countdown',
-              he: 'מערכת SLA עם ספירה לאחור',
-              ja: 'カウントダウン付きSLAシステム',
-              ru: 'SLA система с обратным отсчётом',
-              pt: 'Sistema SLA com contagem regressiva',
-              es: 'Sistema SLA con cuenta regresiva',
-              id: 'Sistem SLA dengan countdown',
-              ar: 'نظام SLA مع العد التنازلي'
+          <li style="color: #888;"><i class="fas fa-info-circle"></i> <%
+            const proNote = {
+              de: 'Alle kostenlosen Features inklusive',
+              en: 'All free features included',
+              he: 'כל התכונות החינמיות כלולות',
+              ja: 'すべての無料機能を含む',
+              ru: 'Все бесплатные функции включены',
+              pt: 'Todos os recursos gratuitos incluídos',
+              es: 'Todas las funciones gratuitas incluidas',
+              id: 'Semua fitur gratis termasuk',
+              ar: 'جميع الميزات المجانية متضمنة'
             };
-          %><%= pro7[lang] || pro7.de %></li>
+          %><%= proNote[lang] || proNote.de %></li>
         </ul>
         <a href="/premium" class="btn-primary"><%
           const upgradeText2 = {
@@ -2459,15 +2452,15 @@
         <div class="faq-answer">
           <p><%
             const faq1A = {
-              de: 'Ja! Die Basis-Version ist komplett kostenlos und bietet alle grundlegenden Funktionen für ein professionelles Ticket-System. Für erweiterte Features wie unbegrenzte Kategorien und Analytics gibt es Premium-Pläne ab €2.99/Monat.',
-              en: 'Yes! The basic version is completely free and offers all essential features for a professional ticket system. For advanced features like unlimited categories and analytics, there are premium plans starting at €2.99/month.',
-              he: 'כן! הגרסה הבסיסית חינמית לחלוטין ומציעה את כל התכונות החיוניות למערכת כרטיסים מקצועית. לתכונות מתקדמות כמו קטגוריות בלתי מוגבלות וניתוח, יש תוכניות פרימיום החל מ-€2.99 לחודש.',
-              ja: 'はい！ベーシック版は完全無料で、プロフェッショナルなチケットシステムに必要な機能をすべて提供しています。無制限のカテゴリや分析などの高度な機能には、月額€2.99からのプレミアムプランがあります。',
-              ru: 'Да! Базовая версия полностью бесплатна и предлагает все необходимые функции для профессиональной системы тикетов. Для расширенных функций, таких как неограниченные категории и аналитика, есть премиум-планы от €2.99/месяц.',
-              pt: 'Sim! A versão básica é completamente gratuita e oferece todos os recursos essenciais para um sistema de tickets profissional. Para recursos avançados como categorias ilimitadas e análises, existem planos premium a partir de €2,99/mês.',
-              es: '¡Sí! La versión básica es completamente gratuita y ofrece todas las funciones esenciales para un sistema de tickets profesional. Para funciones avanzadas como categorías ilimitadas y análisis, hay planes premium desde €2,99/mes.',
-              id: 'Ya! Versi dasar benar-benar gratis dan menawarkan semua fitur penting untuk sistem tiket profesional. Untuk fitur lanjutan seperti kategori tak terbatas dan analitik, ada paket premium mulai dari €2,99/bulan.',
-              ar: 'نعم! الإصدار الأساسي مجاني تمامًا ويقدم جميع الميزات الأساسية لنظام تذاكر احترافي. للميزات المتقدمة مثل الفئات غير المحدودة والتحليلات، هناك خطط مميزة تبدأ من €2.99 شهريًا.'
+              de: 'Ja! Die kostenlose Version bietet ALLE Features inklusive unbegrenzte Kategorien, Analytics, SLA-System, Auto-Assignment und mehr. Für Bot-Customization (eigener Token, White-Label, Custom Domain) gibt es den Pro-Plan für €9.99/Monat.',
+              en: 'Yes! The free version includes ALL features including unlimited categories, analytics, SLA system, auto-assignment and more. For bot customization (custom token, white-label, custom domain) there is the Pro plan for €9.99/month.',
+              he: 'כן! הגרסה החינמית כוללת את כל התכונות כולל קטגוריות בלתי מוגבלות, ניתוחים, מערכת SLA, הקצאה אוטומטית ועוד. להתאמה אישית של הבוט (טוקן מותאם, תווית לבנה, דומיין מותאם) קיימת תוכנית Pro ב-€9.99 לחודש.',
+              ja: 'はい！無料版には、無制限のカテゴリ、分析、SLAシステム、自動割り当てなど、すべての機能が含まれています。ボットのカスタマイズ（カスタムトークン、ホワイトラベル、カスタムドメイン）には、月額€9.99のProプランがあります。',
+              ru: 'Да! Бесплатная версия включает ВСЕ функции, включая неограниченные категории, аналитику, SLA-систему, автоназначение и многое другое. Для кастомизации бота (собственный токен, белая метка, собственный домен) есть Pro-план за €9.99/месяц.',
+              pt: 'Sim! A versão gratuita inclui TODOS os recursos, incluindo categorias ilimitadas, analytics, sistema SLA, atribuição automática e muito mais. Para personalização do bot (token personalizado, marca branca, domínio personalizado) há o plano Pro por €9,99/mês.',
+              es: '¡Sí! La versión gratuita incluye TODAS las funciones, incluidas categorías ilimitadas, análisis, sistema SLA, asignación automática y más. Para la personalización del bot (token personalizado, marca blanca, dominio personalizado) está el plan Pro por €9,99/mes.',
+              id: 'Ya! Versi gratis mencakup SEMUA fitur termasuk kategori tak terbatas, analitik, sistem SLA, penugasan otomatis dan banyak lagi. Untuk kustomisasi bot (token kustom, white-label, domain kustom) ada paket Pro seharga €9,99/bulan.',
+              ar: 'نعم! النسخة المجانية تتضمن جميع الميزات بما في ذلك الفئات غير المحدودة والتحليلات ونظام SLA والتعيين التلقائي والمزيد. لتخصيص البوت (رمز مخصص، علامة بيضاء، نطاق مخصص) هناك خطة Pro بسعر €9.99 شهريًا.'
             };
           %><%= faq1A[lang] || faq1A.de %></p>
         </div>
