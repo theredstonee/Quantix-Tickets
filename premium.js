@@ -31,119 +31,113 @@ function getDefaultConfig() {
       subscriptionId: null,
       customerId: null,
       features: {
-        noAds: false,
-        customAvatar: false,
-        statistics: false,
-        prioritySupport: false,
-        autoClose: false,
-        emailNotifications: false,
-        dmNotifications: false,
-        unlimitedCategories: false,
-        maxCategories: 5,
-        customTags: false,
-        templates: false,
-        slaSystem: false,
+        // Alle operativen Features sind jetzt kostenlos
         ratingSystem: true,
-        fileUpload: false,
-        autoAssignment: false,
-        voiceSupport: false,
+        statistics: true,
+        customAvatar: true,
+        fileUpload: true,
+        autoAssignment: true,
+        slaSystem: true,
+        emailNotifications: true,
+        dmNotifications: true,
+        autoClose: true,
+        customTags: true,
+        templates: true,
+        vipSystem: true,
+        voiceSupport: true,
+        multiDepartment: true,
+        applicationSystem: true,
+        multiTicketSystems: true,
         ticketBlacklist: true,
-        applicationSystem: false,
-        multiTicketSystems: false
+        unlimitedCategories: true,
+        maxCategories: 999,
+        // Pro-Features (nur Customization)
+        customBotToken: false,
+        whiteLabel: false,
+        customDomain: false,
+        removeBranding: false,
+        customColors: false,
+        customEmojis: false,
+        prioritySupport: false,
+        noAds: false
       }
     }
   };
 }
 
 // Premium Tiers Definition
+// NEUE STRUKTUR: Alle operativen Features sind FREE, Pro = Bot Customization
 const PREMIUM_TIERS = {
   none: {
     name: 'Free',
     price: 0,
     priceId: null,
     features: {
-      noAds: false,
-      customAvatar: false,
-      statistics: false,
-      prioritySupport: false,
-      autoClose: false,
-      emailNotifications: false,
-      dmNotifications: false,
-      unlimitedCategories: false,
-      maxCategories: 5,
-      customTags: false,
-      templates: false,
-      slaSystem: false,
+      // Alle operativen Features sind jetzt KOSTENLOS
       ratingSystem: true,
-      fileUpload: false,
-      autoAssignment: false,
-      customBranding: false,
-      vipSystem: false,
-      multiDepartment: false,
-      voiceSupport: false,
-      ticketBlacklist: true,
-      applicationSystem: false,
-      multiTicketSystems: false
-    }
-  },
-  basic: {
-    name: 'Premium Basic+',
-    price: 2.99,
-    priceId: 'price_basic_monthly', // Ersetze mit echter Stripe Price ID
-    features: {
-      noAds: true,
-      customAvatar: true,
       statistics: true,
-      prioritySupport: true,
-      autoClose: false,
-      emailNotifications: false,
-      dmNotifications: false,
-      unlimitedCategories: false,
-      maxCategories: 7,
-      customTags: true,
-      templates: true,
-      slaSystem: false,
-      ratingSystem: true,
+      customAvatar: true,
       fileUpload: true,
       autoAssignment: true,
-      customBranding: false,
+      slaSystem: true,
+      emailNotifications: true,
+      dmNotifications: true,
+      autoClose: true,
+      customTags: true,
+      templates: true,
       vipSystem: true,
-      multiDepartment: true,
       voiceSupport: true,
-      ticketBlacklist: true,
+      multiDepartment: true,
       applicationSystem: true,
-      multiTicketSystems: false
+      multiTicketSystems: true,
+      ticketBlacklist: true,
+      unlimitedCategories: true,
+      maxCategories: 999,
+      // Pro-Features (nur für Customization)
+      customBotToken: false,
+      whiteLabel: false,
+      customDomain: false,
+      removeBranding: false,
+      customColors: false,
+      customEmojis: false,
+      prioritySupport: false,
+      noAds: false
     }
   },
   pro: {
     name: 'Premium Pro',
-    price: 4.99,
+    price: 9.99,
     priceId: 'price_pro_monthly', // Ersetze mit echter Stripe Price ID
     features: {
-      // Alle Basic+ Features
-      noAds: true,
-      customAvatar: true,
+      // Alle Free Features
+      ratingSystem: true,
       statistics: true,
-      prioritySupport: true,
-      customTags: true,
-      templates: true,
+      customAvatar: true,
       fileUpload: true,
-      vipSystem: true,
-      multiDepartment: true,
-      // Pro-exklusive Features
+      autoAssignment: true,
       slaSystem: true,
-      autoClose: true,
       emailNotifications: true,
       dmNotifications: true,
+      autoClose: true,
+      customTags: true,
+      templates: true,
+      vipSystem: true,
+      voiceSupport: true,
+      multiDepartment: true,
+      applicationSystem: true,
+      multiTicketSystems: true,
+      ticketBlacklist: true,
       unlimitedCategories: true,
       maxCategories: 999,
-      ratingSystem: true,
-      autoAssignment: true,
-      customBranding: true,
-      voiceSupport: true,
-      ticketBlacklist: true,
-      applicationSystem: true,
-      multiTicketSystems: true
+      // Pro-exklusive Features (Bot Customization)
+      customBotToken: true,
+      whiteLabel: true,
+      customDomain: true,
+      removeBranding: true,
+      customColors: true,
+      customEmojis: true,
+      prioritySupport: true,
+      noAds: true
     }
   },
   beta: {
@@ -151,30 +145,35 @@ const PREMIUM_TIERS = {
     price: 0,
     priceId: null,
     features: {
-      // Alle Basic+ Features
-      noAds: true,
-      customAvatar: true,
+      // Alle Free Features
+      ratingSystem: true,
       statistics: true,
-      prioritySupport: true,
-      customTags: true,
-      templates: true,
+      customAvatar: true,
       fileUpload: true,
-      vipSystem: true,
-      multiDepartment: true,
-      // Pro-exklusive Features
+      autoAssignment: true,
       slaSystem: true,
-      autoClose: true,
       emailNotifications: true,
       dmNotifications: true,
+      autoClose: true,
+      customTags: true,
+      templates: true,
+      vipSystem: true,
+      voiceSupport: true,
+      multiDepartment: true,
+      applicationSystem: true,
+      multiTicketSystems: true,
+      ticketBlacklist: true,
       unlimitedCategories: true,
       maxCategories: 999,
-      ratingSystem: true,
-      autoAssignment: true,
-      customBranding: true,
-      voiceSupport: true,
-      ticketBlacklist: true,
-      applicationSystem: true,
-      multiTicketSystems: true
+      // Pro Features (Betatester bekommen volle Customization)
+      customBotToken: true,
+      whiteLabel: true,
+      customDomain: true,
+      removeBranding: true,
+      customColors: true,
+      customEmojis: true,
+      prioritySupport: true,
+      noAds: true
     }
   }
 };
@@ -182,10 +181,10 @@ const PREMIUM_TIERS = {
 /**
  * Prüft ob ein Server Premium hat
  * @param {string} guildId - Discord Guild ID
- * @param {string} requiredTier - Minimum benötigtes Tier ('basic' oder 'pro')
+ * @param {string} requiredTier - Minimum benötigtes Tier ('pro') - Default 'pro'
  * @returns {boolean}
  */
-function isPremium(guildId, requiredTier = 'basic') {
+function isPremium(guildId, requiredTier = 'pro') {
   // Special case: Developer/Owner Server hat immer Premium Pro
   if (guildId === '1291125037876904026') {
     return true;
@@ -221,7 +220,8 @@ function isPremium(guildId, requiredTier = 'basic') {
     return false;
   }
 
-  const tiers = ['none', 'basic', 'pro'];
+  // Nur noch 'none' und 'pro' - kein 'basic' mehr
+  const tiers = ['none', 'pro'];
   const requiredIndex = tiers.indexOf(requiredTier);
   const currentIndex = tiers.indexOf(cfg.premium.tier);
 
@@ -267,7 +267,7 @@ function hasFeature(guildId, feature) {
 /**
  * Gibt das Premium-Tier eines Servers zurück
  * @param {string} guildId - Discord Guild ID
- * @returns {string} 'none', 'basic', 'pro' oder 'beta'
+ * @returns {string} 'none', 'pro', 'beta' oder 'partner'
  */
 function getPremiumTier(guildId) {
   // Special case: Developer/Owner Server hat immer Pro
@@ -362,7 +362,7 @@ function getPremiumInfo(guildId) {
 /**
  * Aktiviert Premium für einen Server
  * @param {string} guildId - Discord Guild ID
- * @param {string} tier - 'basic' oder 'pro'
+ * @param {string} tier - 'pro' (nur Pro verfügbar, da Basic entfernt wurde)
  * @param {string} subscriptionId - Stripe Subscription ID
  * @param {string} customerId - Stripe Customer ID
  * @param {string} buyerId - Discord User ID des Käufers (optional)
@@ -463,7 +463,7 @@ function getMaxCategories(guildId) {
 }
 
 /**
- * Downgrade von Pro zu Basic
+ * Downgrade von Pro zu Free (None)
  * @param {string} guildId - Discord Guild ID
  * @returns {boolean}
  */
@@ -475,12 +475,15 @@ function downgradePremium(guildId) {
     return false;
   }
 
-  // Behalte Subscription ID und Customer ID für Billing
-  cfg.premium.tier = 'basic';
-  cfg.premium.features = { ...PREMIUM_TIERS.basic.features };
+  // Downgrade zu Free (none) - da Basic nicht mehr existiert
+  cfg.premium.tier = 'none';
+  cfg.premium.expiresAt = null;
+  cfg.premium.subscriptionId = null;
+  cfg.premium.customerId = null;
+  cfg.premium.features = { ...PREMIUM_TIERS.none.features };
 
   saveCfg(guildId, cfg);
-  console.log(`⬇️ Premium downgraded zu Basic für Guild ${guildId}`);
+  console.log(`⬇️ Premium downgraded zu Free für Guild ${guildId}`);
 
   return true;
 }
@@ -527,11 +530,11 @@ function cancelPremium(guildId) {
 /**
  * Aktiviert Lifetime Premium für einen Server (Owner-only)
  * @param {string} guildId - Discord Guild ID
- * @param {string} tier - 'basic' oder 'pro'
+ * @param {string} tier - 'pro' (nur Pro verfügbar, da Basic entfernt wurde)
  * @param {string} buyerId - Discord User ID des Käufers (optional)
  * @returns {object}
  */
-function activateLifetimePremium(guildId, tier, buyerId = null) {
+function activateLifetimePremium(guildId, tier = 'pro', buyerId = null) {
   const cfg = readCfg(guildId);
 
   cfg.premium = {

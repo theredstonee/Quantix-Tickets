@@ -30,7 +30,7 @@ module.exports = {
 
       // Build main embed
       const helpEmbed = new EmbedBuilder()
-        .setColor(premiumInfo.tier === 'partner' ? 0x00ff88 : premiumInfo.tier === 'pro' || premiumInfo.tier === 'beta' ? 0x9b59b6 : premiumInfo.tier === 'basic' ? 0x3498db : 0x00ff88)
+        .setColor(premiumInfo.tier === 'partner' ? 0x00ff88 : premiumInfo.tier === 'pro' || premiumInfo.tier === 'beta' ? 0x9b59b6 : 0x00ff88)
         .setAuthor({
           name: translations.title,
           iconURL: interaction.client.user.displayAvatarURL({ size: 256 })
@@ -73,8 +73,7 @@ module.exports = {
       if (premiumInfo.isActive) {
         const premiumBadge = premiumInfo.tier === 'partner' ? '🤝 Partner' :
                             premiumInfo.tier === 'pro' ? '👑 Premium Pro' :
-                            premiumInfo.tier === 'beta' ? '🧪 Betatester' :
-                            premiumInfo.tier === 'basic' ? '💎 Premium Basic' : '';
+                            premiumInfo.tier === 'beta' ? '🧪 Betatester' : '';
 
         if (premiumBadge) {
           helpEmbed.setThumbnail(interaction.guild.iconURL({ size: 256 }));

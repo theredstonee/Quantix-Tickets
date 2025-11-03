@@ -3537,7 +3537,7 @@
             </div>
             <% } %>
 
-            <!-- Custom Avatar (Basic+) -->
+            <!-- Custom Avatar -->
             <% if (premiumTier === 'basic' || premiumTier === 'pro' || premiumTier === 'beta' || premiumTier === 'partner') { %>
             <div class="card">
               <div class="card-header">
@@ -3615,7 +3615,7 @@
               </div>
             </div>
 
-            <!-- Tag System (Basic+) -->
+            <!-- Tag System -->
             <div class="card">
               <div class="card-header">
                 <div>
@@ -3708,7 +3708,7 @@
               </div>
             </div>
 
-            <!-- Template System (Basic+) -->
+            <!-- Template System -->
             <div class="card">
               <div class="card-header">
                 <div>
@@ -3823,7 +3823,7 @@
               </div>
             </div>
 
-            <!-- Multi-Department System (Basic+) -->
+            <!-- Multi-Department System -->
             <div class="card">
               <div class="card-header">
                 <div>
@@ -4117,7 +4117,6 @@
                         <i class="fas fa-envelope"></i>
                       </div>
                       <span><%= t.premium.email_notifications_label %></span>
-                      <span class="priority-badge" style="background: #764ba2; color: white; border-color: #764ba2;">PRO</span>
                     </div>
                   </div>
                 </div>
@@ -4145,7 +4144,6 @@
                         <i class="fas fa-clock"></i>
                       </div>
                       <span><%= lang === 'de' ? 'Auto-Close System' : 'Auto-Close System' %></span>
-                      <span class="priority-badge" style="background: #764ba2; color: white; border-color: #764ba2;">PRO</span>
                     </div>
                   </div>
                 </div>
@@ -4249,7 +4247,6 @@
                       <i class="fas fa-bell"></i>
                     </div>
                     <span><%= t.premium.dm_notifications_label %></span>
-                    <span class="priority-badge" style="background: #764ba2; color: white; border-color: #764ba2;">PRO</span>
                   </div>
                   <p class="card-description">
                     <%= t.premium.dm_notifications_description %>

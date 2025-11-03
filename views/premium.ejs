@@ -935,8 +935,8 @@
         <% if (!willCancel) { %>
           <% if (currentTier === 'pro') { %>
             <form action="/downgrade-premium" method="POST" style="margin: 0;">
-              <button type="submit" class="btn-action btn-downgrade" onclick="return confirm('Möchtest du wirklich von Pro zu Basic+ downgraden? Du verlierst Zugriff auf Pro-Features.');">
-                ⬇️ Zu Basic+ downgraden
+              <button type="submit" class="btn-action btn-downgrade" onclick="return confirm('Möchtest du wirklich von Pro zu Free downgraden? Du verlierst Zugriff auf Customization-Features.');">
+                ⬇️ Zu Free downgraden
               </button>
             </form>
           <% } %>
@@ -969,92 +969,72 @@
     </div>
 
     <!-- Pricing Cards -->
-    <div class="pricing-cards">
-      <!-- Basic Tier -->
-      <div class="pricing-card <%= currentTier === 'none' ? 'current' : '' %>">
-        <span class="tier-icon">🆓</span>
-        <div class="tier-name">Basic</div>
+    <div class="pricing-cards" style="grid-template-columns: repeat(2, 1fr); max-width: 900px; margin: 0 auto;">
+      <!-- Free Tier - ALLE Features kostenlos! -->
+      <div class="pricing-card <%= currentTier === 'none' ? 'current' : '' %>" style="border: 2px solid #00ff88;">
+        <span class="tier-icon">🎉</span>
+        <div class="tier-name">Free</div>
         <div class="tier-price">
           <span class="currency">€</span>0
-          <div class="price-period">/Monat</div>
+          <div class="price-period">/für immer</div>
         </div>
-        <div class="tier-description">Für kleine Server zum Testen</div>
+        <div class="tier-description">Alle Features kostenlos!</div>
 
         <ul class="features-list">
-          <li>Bis zu 5 Ticket-Kategorien</li>
-          <li>Vollständiges Ticket-System</li>
-          <li>Multi-Server Support</li>
-          <li>3-Stufen Priority-Rollen (Grün/Orange/Rot)</li>
-          <li>Dynamisches Formular-System</li>
-          <li>Web-Dashboard mit Discord Login</li>
-          <li>Transcript-System (TXT & HTML)</li>
-          <li>⭐ Ticket-Bewertungssystem (1-5 Sterne)</li>
+          <li><strong style="color: #00ff88;">✓ ALLE operativen Features inklusive:</strong></li>
+          <li>♾️ Unbegrenzte Ticket-Kategorien</li>
+          <li>📊 Erweiterte Ticket-Statistiken</li>
+          <li>🎨 Custom Bot-Avatar</li>
+          <li>📎 Datei-Upload in Tickets (bis 10MB)</li>
+          <li>🤖 Auto-Assignment (4 Strategien)</li>
+          <li>⏱️ SLA-System mit Live-Countdown</li>
+          <li>📧 Email-Benachrichtigungen</li>
+          <li>🔔 Discord DM-Benachrichtigungen</li>
+          <li>⏰ Auto-Close nach X Tagen</li>
+          <li>📈 Analytics Dashboard mit Ratings</li>
+          <li>🏷️ Custom Tags & Templates</li>
+          <li>🎭 VIP-System</li>
+          <li>🎤 Voice Support</li>
+          <li>📨 Multi-Department System</li>
+          <li>📋 Application System</li>
+          <li>🔄 Multi-Ticket Systems</li>
+          <li>⭐ Ticket-Bewertungssystem</li>
+          <li>🚫 Ticket-Blacklist</li>
+          <li>📝 Live Transcripts (TXT & HTML)</li>
+          <li>🌐 Web-Dashboard mit Discord OAuth</li>
         </ul>
 
         <% if (currentTier === 'none') { %>
           <div class="current-badge">✓ Aktueller Plan</div>
         <% } else { %>
-          <button class="btn-purchase" disabled>Aktueller Plan</button>
-        <% } %>
-      </div>
-
-      <!-- Basic+ Tier -->
-      <div class="pricing-card <%= currentTier === 'basic' ? 'current' : '' %>">
-        <span class="tier-icon">⭐</span>
-        <div class="tier-name">Premium Basic+</div>
-        <div class="tier-price">
-          <span class="currency">€</span><span class="price-monthly">2.99</span><span class="price-yearly" style="display: none;">29.99</span>
-          <div class="price-period">/Monat</div>
-        </div>
-        <div class="tier-description">Perfekt für aktive Server</div>
-
-        <ul class="features-list">
-          <li><strong>Alles von Basic +</strong></li>
-          <li>7 Ticket-Kategorien (statt 5)</li>
-          <li>🚫 Werbefrei im Dashboard</li>
-          <li>🎨 Custom Bot-Avatar</li>
-          <li>📊 Erweiterte Ticket-Statistiken</li>
-          <li>⚡ Priority Support (schnellere Antworten)</li>
-          <li>📎 Datei-Upload in Tickets (bis 10MB)</li>
-        </ul>
-
-        <% if (currentTier === 'basic') { %>
-          <div class="current-badge">✓ Aktueller Plan</div>
-        <% } else if (currentTier === 'pro') { %>
           <form action="/downgrade-premium" method="POST">
-            <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #f39c12, #e67e22);" onclick="return confirm('Möchtest du wirklich von Pro zu Basic+ downgraden?');">
-              ⬇️ Zu Basic+ downgraden
+            <button type="submit" class="btn-purchase" style="background: linear-gradient(135deg, #dc3545, #c82333);" onclick="return confirm('Möchtest du wirklich von Pro zu Free downgraden? Du verlierst Zugriff auf Customization-Features.');">
+              ⬇️ Zu Free downgraden
             </button>
           </form>
-        <% } else { %>
-          <form action="/purchase-premium" method="POST" class="premium-form">
-            <input type="hidden" name="tier" value="basic">
-            <input type="hidden" name="guildId" value="<%= guildId %>">
-            <input type="hidden" name="billingPeriod" value="monthly" class="billing-period-input">
-            <button type="submit" class="btn-purchase">🚀 Jetzt upgraden</button>
-          </form>
         <% } %>
       </div>
 
-      <!-- Pro Tier -->
+      <!-- Pro Tier - Nur für Bot Customization -->
       <div class="pricing-card popular <%= currentTier === 'pro' ? 'current' : '' %>">
-        <span class="tier-icon">🏆</span>
+        <span class="tier-icon">👑</span>
         <div class="tier-name">Premium Pro</div>
         <div class="tier-price">
-          <span class="currency">€</span><span class="price-monthly">4.99</span><span class="price-yearly" style="display: none;">49.99</span>
+          <span class="currency">€</span><span class="price-monthly">9.99</span><span class="price-yearly" style="display: none;">99.99</span>
           <div class="price-period">/Monat</div>
         </div>
-        <div class="tier-description">Für professionelle Teams</div>
+        <div class="tier-description">Volle Bot-Customization</div>
 
         <ul class="features-list">
-          <li><strong>Alles von Basic+ +</strong></li>
-          <li>♾️ Unbegrenzte Ticket-Kategorien</li>
-          <li>⏰ Auto-Close nach X Tagen</li>
-          <li>📧 Email-Benachrichtigungen</li>
-          <li>🔔 Discord DM-Benachrichtigungen</li>
-          <li>📈 Erweiterte Analytics Dashboard</li>
-          <li>📨 Ticket-Weiterleitung (/forward)</li>
-          <li>⏱️ SLA-System mit Live-Countdown & Eskalation</li>
+          <li><strong>Alle Free Features +</strong></li>
+          <li><strong style="color: #9b59b6;">🎨 Vollständige Bot-Customization:</strong></li>
+          <li>🔧 Custom Bot Token (eigenen Bot verwenden)</li>
+          <li>🏷️ White-Label (entferne Quantix Branding)</li>
+          <li>🌐 Custom Domain (eigene Domain für Panel)</li>
+          <li>🎨 Custom Colors (vollständige Farbpalette)</li>
+          <li>😀 Custom Emojis (eigene Emojis verwenden)</li>
+          <li>⚡ Priority Support (24/7)</li>
+          <li>🚫 Werbefrei (falls Ads eingeführt werden)</li>
         </ul>
 
         <% if (currentTier === 'pro') { %>
@@ -1064,7 +1044,7 @@
             <input type="hidden" name="tier" value="pro">
             <input type="hidden" name="guildId" value="<%= guildId %>">
             <input type="hidden" name="billingPeriod" value="monthly" class="billing-period-input">
-            <button type="submit" class="btn-purchase">🚀 Jetzt upgraden</button>
+            <button type="submit" class="btn-purchase">👑 Jetzt upgraden</button>
           </form>
         <% } %>
       </div>

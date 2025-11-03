@@ -4031,7 +4031,8 @@ module.exports = (client)=>{
     const tier = req.body.tier;
     const billingPeriod = req.body.billingPeriod || 'monthly';
 
-    if (!['basic', 'pro'].includes(tier)) {
+    // Nur Pro-Tier verfügbar (Basic wurde entfernt)
+    if (tier !== 'pro') {
       return res.status(400).send('Ungültiges Premium-Tier');
     }
 
@@ -4404,7 +4405,6 @@ module.exports = (client)=>{
 
       const premiumStats = {
         none: guildsData.filter(g => g.premium === 'none').length,
-        basic: guildsData.filter(g => g.premium === 'basic').length,
         pro: guildsData.filter(g => g.premium === 'pro').length,
         beta: guildsData.filter(g => g.premium === 'beta').length,
         partner: guildsData.filter(g => g.premium === 'partner').length

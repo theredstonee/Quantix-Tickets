@@ -67,8 +67,7 @@ module.exports = {
             })
             .setRequired(true)
             .addChoices(
-              { name: '💎 Basic', value: 'basic' },
-              { name: '👑 Pro', value: 'pro' }
+              { name: '👑 Pro (Full Customization)', value: 'pro' }
             )
         )
         .addUserOption(option =>
