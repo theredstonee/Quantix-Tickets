@@ -14,6 +14,30 @@ function requireAuth(req, res, next) {
   next();
 }
 
+// DEBUG: Session-Info Endpoint (zum Testen)
+router.get('/debug/session', (req, res) => {
+  console.log('[DEBUG] Session Info Request');
+  console.log('[DEBUG] Cookies:', req.headers.cookie);
+  console.log('[DEBUG] Session ID:', req.sessionID);
+  console.log('[DEBUG] Session exists:', !!req.session);
+  console.log('[DEBUG] Passport exists:', !!(req.session && req.session.passport));
+  console.log('[DEBUG] User exists:', !!(req.session && req.session.passport && req.session.passport.user));
+
+  res.json({
+    success: true,
+    debug: {
+      hasSession: !!req.session,
+      hasPassport: !!(req.session && req.session.passport),
+      hasUser: !!(req.session && req.session.passport && req.session.passport.user),
+      sessionID: req.sessionID,
+      cookies: req.headers.cookie ? req.headers.cookie.substring(0, 100) + '...' : 'none',
+      user: (req.session && req.session.passport && req.session.passport.user)
+        ? { id: req.session.passport.user.id, username: req.session.passport.user.username }
+        : null
+    }
+  });
+});
+
 // GET /api/user/me - Aktuelle User-Informationen
 router.get('/user/me', requireAuth, async (req, res) => {
   try {
