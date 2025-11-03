@@ -223,12 +223,12 @@ module.exports = {
           .setDescription(
             `**Server:** ${guildName}\n` +
             `**Guild ID:** \`${guildId}\`\n` +
-            `**Tier:** ${tier === 'pro' ? '👑 Pro' : '💎 Basic'}\n` +
+            `**Tier:** 👑 Pro\n` +
             `**Käufer:** ${buyer ? buyer.tag : guildOwner.user.tag}\n` +
             `**Status:** ♾️ Lifetime (läuft nie ab)` +
             roleStatus
           )
-          .setColor(tier === 'pro' ? 0x764ba2 : 0x667eea)
+          .setColor(0x764ba2)
           .setTimestamp()
           .setFooter({ text: 'Quantix Tickets Bot • Lifetime Premium' });
 
@@ -297,13 +297,13 @@ module.exports = {
             serverList.push(
               `**${guild.name}**\n` +
               `├ ID: \`${server.guildId}\`\n` +
-              `└ Tier: ${server.tier === 'pro' ? '👑 Pro' : '💎 Basic'}`
+              `└ Tier: 👑 Pro`
             );
           } catch (err) {
             serverList.push(
               `**Unknown Server**\n` +
               `├ ID: \`${server.guildId}\`\n` +
-              `└ Tier: ${server.tier === 'pro' ? '👑 Pro' : '💎 Basic'}`
+              `└ Tier: 👑 Pro`
             );
           }
         }
