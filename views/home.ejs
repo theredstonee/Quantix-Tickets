@@ -1278,7 +1278,7 @@
       %><%= heroTexts[lang] || heroTexts.de %></p>
 
       <div class="version-badge">
-        <i class="fas fa-star"></i> v{VERSION}
+        <i class="fas fa-star"></i> v1.4.5
       </div>
 
       <% if (isAuthenticated && user) { %>
@@ -2948,18 +2948,5 @@
       });
     }
   </script>
-  <script>
-  // Falls changelog im Browser vorhanden ist:
-  const VERSION = changelog.currentVersion;
-
-  // Ersetze {VERSION} in der Seite durch den echten Wert
-  document.addEventListener("DOMContentLoaded", () => {
-    const versionBadges = document.querySelectorAll(".version-badge");
-    versionBadges.forEach(el => {
-      el.innerHTML = el.innerHTML.replace("{VERSION}", VERSION || "1.0.0");
-    });
-  });
-</script>
-
 </body>
 </html>
