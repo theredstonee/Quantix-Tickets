@@ -3089,6 +3089,56 @@
               </div>
             </div>
 
+            <!-- Application/Bewerbungs-System -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                      <i class="fas fa-user-plus"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '📝 Bewerbungssystem' : '📝 Application System' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Konfiguriere das Bewerbungssystem für deinen Server'
+                      : 'Configure the application system for your server'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="toggle-container" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-label">
+                    <input type="checkbox" name="applicationsEnabled" value="true" <%= cfg.applications?.enabled ? 'checked' : '' %>>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">
+                      <strong><%= lang === 'de' ? 'Bewerbungen aktivieren' : 'Enable Applications' %></strong>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-hashtag"></i>
+                    <span><%= lang === 'de' ? 'Max. gleichzeitige Bewerbungen' : 'Max Concurrent Applications' %></span>
+                  </div>
+                  <input type="number" name="maxApplicationsPerUser"
+                    value="<%= cfg.maxApplicationsPerUser || 2 %>"
+                    min="1" max="5" placeholder="2" style="width: 100%;">
+                  <div class="help-text">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>
+                      <%= lang === 'de'
+                        ? 'Anzahl gleichzeitiger offener Bewerbungen pro Benutzer (Standard: 2)'
+                        : 'Number of concurrent open applications per user (Default: 2)'
+                      %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- File Upload Settings -->
             <div class="card">
               <div class="card-header">
@@ -3098,7 +3148,6 @@
                       <i class="fas fa-file-upload"></i>
                     </div>
                     <span><%= lang === 'de' ? '📎 Datei-Upload' : '📎 File Upload' %></span>
-                    <span class="priority-badge" style="background: #667eea; color: white; border-color: #667eea; font-size: 0.7rem;">BASIC+</span>
                   </div>
                   <p class="card-description">
                     <%= lang === 'de'
@@ -3190,8 +3239,7 @@
               </div>
             </div>
 
-            <!-- SLA System (Pro) -->
-            <% if (premiumTier === 'pro' || premiumTier === 'beta' || premiumTier === 'partner') { %>
+            <!-- SLA System -->
             <div class="card">
               <div class="card-header">
                 <div>
@@ -3200,7 +3248,6 @@
                       <i class="fas fa-stopwatch"></i>
                     </div>
                     <span><%= lang === 'de' ? '⏱️ SLA-System' : '⏱️ SLA System' %></span>
-                    <span class="priority-badge" style="background: #764ba2; color: white; border-color: #764ba2; font-size: 0.7rem;">PRO</span>
                   </div>
                   <p class="card-description">
                     <%= lang === 'de'
@@ -3268,7 +3315,6 @@
                 </div>
               </div>
             </div>
-            <% } %>
 
             <!-- Save Button -->
             <div class="save-footer">

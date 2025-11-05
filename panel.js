@@ -3044,6 +3044,44 @@ module.exports = (client)=>{
         };
       });
 
+      // Changelog Settings
+      cfg.changelogEnabled = req.body.changelogEnabled === 'true' || req.body.changelogEnabled === 'on';
+      cfg.changelogChannelId = sanitizeDiscordId(req.body.changelogChannelId) || null;
+
+      // AntiSpam Settings
+      if (!cfg.antiSpam) cfg.antiSpam = { enabled: false, maxTickets: 3, timeWindowMinutes: 30 };
+      cfg.antiSpam.enabled = req.body.antiSpamEnabled === 'true' || req.body.antiSpamEnabled === 'on';
+      cfg.antiSpam.maxTickets = sanitizeNumber(req.body.antiSpamMaxTickets, 1, 10) || 3;
+      cfg.antiSpam.timeWindowMinutes = sanitizeNumber(req.body.antiSpamTimeWindow, 5, 60) || 30;
+
+      // Application System Settings
+      if (!cfg.applications) cfg.applications = { enabled: false };
+      cfg.applications.enabled = req.body.applicationsEnabled === 'true' || req.body.applicationsEnabled === 'on';
+      cfg.maxApplicationsPerUser = sanitizeNumber(req.body.maxApplicationsPerUser, 1, 5) || 2;
+
+      // File Upload Settings
+      if (!cfg.fileUpload) cfg.fileUpload = { maxSizeMB: 10, allowedFormats: ['png', 'jpg', 'jpeg', 'pdf', 'txt', 'log'] };
+      cfg.fileUpload.maxSizeMB = sanitizeNumber(req.body.fileUploadMaxSizeMB, 1, 25) || 10;
+      if (req.body.fileUploadAllowedFormats) {
+        const formats = req.body.fileUploadAllowedFormats.split(',').map(f => f.trim().toLowerCase()).filter(f => f);
+        cfg.fileUpload.allowedFormats = formats.length > 0 ? formats : ['png', 'jpg', 'jpeg', 'pdf', 'txt', 'log'];
+      }
+
+      // Rating System Settings
+      if (!cfg.ratings) cfg.ratings = { enabled: false, sendDM: true, requireFeedback: false };
+      cfg.ratings.enabled = req.body.ratingsEnabled === 'true' || req.body.ratingsEnabled === 'on';
+      cfg.ratings.sendDM = req.body.ratingsSendDM === 'true' || req.body.ratingsSendDM === 'on';
+      cfg.ratings.requireFeedback = req.body.ratingsRequireFeedback === 'true' || req.body.ratingsRequireFeedback === 'on';
+
+      // SLA System Settings
+      if (!cfg.sla) cfg.sla = { enabled: false, warnPercent: 80, escalationRoleId: null };
+      cfg.sla.enabled = req.body.slaEnabled === 'true' || req.body.slaEnabled === 'on';
+      cfg.sla.warnPercent = sanitizeNumber(req.body.slaWarnPercent, 50, 95) || 80;
+      cfg.sla.escalationRoleId = sanitizeDiscordId(req.body.slaEscalationRoleId) || null;
+
+      // Voice Support Category (separate from ticket category)
+      cfg.voiceSupportCategoryId = sanitizeDiscordId(req.body.voiceSupportCategoryId) || null;
+
       writeCfg(guildId, cfg);
 
       await logEvent(guildId, t(guildId, 'logs.config_updated'), req.user);
