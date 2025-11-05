@@ -3930,6 +3930,94 @@
               </div>
             </div>
 
+              <!-- Application Embed -->
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">
+                      <div class="card-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-file-alt"></i>
+                      </div>
+                      <span><%= lang === 'de' ? 'Bewerbungs-Embed' : 'Application Embed' %></span>
+                    </div>
+                    <p class="card-description">
+                      <%= lang === 'de' ? 'Nachricht im Bewerbungs-Channel nach Erstellung' : 'Message in application channel after creation' %>
+                    </p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-heading"></i>
+                      <span><%= t.web.embed_title %></span>
+                    </div>
+                    <input
+                      type="text"
+                      name="applicationEmbedTitle"
+                      id="applicationEmbedTitle"
+                      value="<%= (cfg.applicationEmbed && cfg.applicationEmbed.title) || '' %>"
+                      placeholder="<%= lang === 'de' ? 'Bewerbung #{id}' : 'Application #{id}' %>"
+                      oninput="updateEmbedPreview('application')">
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-align-left"></i>
+                      <span><%= t.web.embed_description %></span>
+                    </div>
+                    <textarea
+                      name="applicationEmbedDescription"
+                      id="applicationEmbedDescription"
+                      rows="4"
+                      placeholder="<%= lang === 'de' ? 'Hallo {user}, vielen Dank für deine Bewerbung!' : 'Hello {user}, thank you for your application!' %>"
+                      oninput="updateEmbedPreview('application')"
+                    ><%= (cfg.applicationEmbed && cfg.applicationEmbed.description) || '' %></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-palette"></i>
+                      <span><%= t.web.embed_color %></span>
+                    </div>
+                    <input
+                      type="text"
+                      name="applicationEmbedColor"
+                      id="applicationEmbedColor"
+                      value="<%= (cfg.applicationEmbed && cfg.applicationEmbed.color) || '#10b981' %>"
+                      placeholder="#10b981"
+                      oninput="updateEmbedPreview('application')">
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-shoe-prints"></i>
+                      <span><%= t.web.embed_footer %></span>
+                    </div>
+                    <input
+                      type="text"
+                      name="applicationEmbedFooter"
+                      id="applicationEmbedFooter"
+                      value="<%= (cfg.applicationEmbed && cfg.applicationEmbed.footer) || '' %>"
+                      placeholder="<%= lang === 'de' ? 'Bewerbungs-System' : 'Application System' %>"
+                      oninput="updateEmbedPreview('application')">
+                  </div>
+
+                  <!-- Live Preview -->
+                  <div class="preview-card">
+                    <div class="preview-title">
+                      <i class="fas fa-eye"></i>
+                      <%= lang === 'de' ? 'Vorschau' : 'Preview' %>
+                    </div>
+                    <div class="embed-preview" id="applicationEmbedPreview" style="border-left-color: <%= (cfg.applicationEmbed && cfg.applicationEmbed.color) || '#10b981' %>">
+                      <div class="embed-preview-title"><%= (cfg.applicationEmbed && cfg.applicationEmbed.title) || (lang === 'de' ? 'Bewerbung #1234' : 'Application #1234') %></div>
+                      <div class="embed-preview-desc"><%= ((cfg.applicationEmbed && cfg.applicationEmbed.description) || '').replace('{user}', '@User').replace('{id}', '1234') %></div>
+                      <div class="embed-preview-footer"><%= (cfg.applicationEmbed && cfg.applicationEmbed.footer) || (lang === 'de' ? 'Bewerbungs-System' : 'Application System') %></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="alert alert-warning">
               <i class="fas fa-code"></i>
               <div>
@@ -5017,6 +5105,19 @@
         const footer = document.getElementById('panelFooter').value || '<%= lang === "de" ? "Klicke auf ein Thema, um ein Ticket zu öffnen" : "Click a topic to open a ticket" %>';
 
         const preview = document.getElementById('panelEmbedPreview');
+        if (preview) {
+          preview.style.borderLeftColor = color;
+          preview.querySelector('.embed-preview-title').textContent = title;
+          preview.querySelector('.embed-preview-desc').textContent = desc;
+          preview.querySelector('.embed-preview-footer').textContent = footer;
+        }
+      } else if (type === 'application') {
+        const title = document.getElementById('applicationEmbedTitle').value || '<%= lang === "de" ? "Bewerbung #1234" : "Application #1234" %>';
+        const desc = (document.getElementById('applicationEmbedDescription').value || '').replace('{user}', '@User').replace('{id}', '1234');
+        const color = document.getElementById('applicationEmbedColor').value || '#10b981';
+        const footer = document.getElementById('applicationEmbedFooter').value || '<%= lang === "de" ? "Bewerbungs-System" : "Application System" %>';
+
+        const preview = document.getElementById('applicationEmbedPreview');
         if (preview) {
           preview.style.borderLeftColor = color;
           preview.querySelector('.embed-preview-title').textContent = title;

@@ -2114,6 +2114,15 @@ module.exports = (client)=>{
       delete cfg.panelFooter;
       needsSave = true;
     }
+    if (!cfg.applicationEmbed) {
+      cfg.applicationEmbed = {
+        title: '',
+        description: '',
+        color: '#10b981',
+        footer: ''
+      };
+      needsSave = true;
+    }
     if (needsSave) {
       writeCfg(guildId, cfg);
     }
@@ -2754,6 +2763,14 @@ module.exports = (client)=>{
         description: sanitizeString(take('panelDescription', prevPE.description), 4096),
         color:       ensureHex(take('panelColor', prevPE.color), '#5865F2'),
         footer:      sanitizeString(take('panelFooter',      prevPE.footer), 2048)
+      };
+
+      const prevAE = cfg.applicationEmbed || {};
+      cfg.applicationEmbed = {
+        title:       sanitizeString(take('applicationEmbedTitle',       prevAE.title), 256),
+        description: sanitizeString(take('applicationEmbedDescription', prevAE.description), 4096),
+        color:       ensureHex(take('applicationEmbedColor', prevAE.color), '#10b981'),
+        footer:      sanitizeString(take('applicationEmbedFooter',      prevAE.footer), 2048)
       };
 
       // Auto-Close Configuration (Premium Pro)
