@@ -29,11 +29,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/markdown.css">
 
-  <!-- Select2 for searchable dropdowns -->
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
   <style>
     /* ============================================================
      * MODERN TAB-BASED PANEL DESIGN
@@ -784,52 +779,6 @@
         opacity: 1;
         transform: translateY(0);
       }
-    }
-
-    /* Subtabs Navigation */
-    .subtabs-nav {
-      display: none;
-      background: rgba(14, 165, 233, 0.05);
-      border-bottom: 1px solid var(--border-color);
-      padding: 0.5rem 2rem;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-top: -0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .subtabs-nav.active {
-      display: flex;
-    }
-
-    .subtab-btn {
-      padding: 0.5rem 1rem;
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 6px;
-      cursor: pointer;
-      color: var(--text-color);
-      font-size: 0.9rem;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      white-space: nowrap;
-    }
-
-    .subtab-btn:hover {
-      background: rgba(14, 165, 233, 0.1);
-    }
-
-    .subtab-btn.active {
-      background: var(--accent-color);
-      color: white;
-      border-color: var(--accent-color);
-      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
-    }
-
-    .subtab-btn i {
-      font-size: 0.85rem;
     }
 
     /* Cards */
@@ -1753,23 +1702,6 @@
         border-radius: var(--border-radius-sm);
       }
 
-      /* Subtabs auch scrollbar */
-      .subtabs-nav {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-
-      .subtabs-nav::-webkit-scrollbar {
-        display: none;
-      }
-
-      .subtab-btn {
-        padding: 0.875rem 1.25rem;
-        min-height: 48px;
-        white-space: nowrap;
-      }
-
       /* Title Sizes */
       .content-title {
         font-size: 1.75rem;
@@ -1866,11 +1798,6 @@
       /* Tab Buttons kleiner */
       .tab-btn {
         padding: 0.875rem 1.25rem;
-        font-size: 0.8125rem;
-      }
-
-      .subtab-btn {
-        padding: 0.75rem 1rem;
         font-size: 0.8125rem;
       }
 
@@ -2190,64 +2117,6 @@
       50% { opacity: 0.7; }
     }
 
-    /* ============================================================
-     * SELECT2 DARK THEME CUSTOMIZATION
-     * ============================================================ */
-    .select2-container--default .select2-selection--single,
-    .select2-container--default .select2-selection--multiple {
-      background-color: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      min-height: 42px;
-      padding: 4px;
-      backdrop-filter: blur(10px);
-    }
-
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-      color: var(--text-color);
-      line-height: 34px;
-    }
-
-    .select2-container--default .select2-selection--multiple .select2-selection__choice {
-      background-color: var(--accent-color);
-      border-color: var(--accent-color);
-      color: white;
-      border-radius: 6px;
-      padding: 2px 8px;
-    }
-
-    .select2-dropdown {
-      background-color: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      backdrop-filter: blur(20px);
-    }
-
-    .select2-container--default .select2-results__option--highlighted[aria-selected] {
-      background-color: var(--accent-color);
-      color: white;
-    }
-
-    .select2-container--default .select2-search--dropdown .select2-search__field {
-      background-color: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--glass-border);
-      border-radius: 6px;
-      color: var(--text-color);
-      padding: 8px;
-    }
-
-    .select2-container--default .select2-results__option {
-      color: var(--text-color);
-      padding: 8px 12px;
-    }
-
-    .select2-container--default .select2-results__option[aria-selected=true] {
-      background-color: rgba(var(--accent-rgb), 0.2);
-    }
-
-    .select2-container {
-      width: 100% !important;
-    }
   </style>
 </head>
 <body>
@@ -2934,13 +2803,9 @@
                     <select name="priorityRoles_0" multiple size="8">
                       <%
                       const green = (cfg.priorityRoles && cfg.priorityRoles['0']) || [];
-                      const orange = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
-                      const red = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
-                      roles.forEach(role => {
-                        const usedInOther = orange.includes(role.id) || red.includes(role.id);
-                      %>
-                        <option value="<%= role.id %>" <%= green.includes(role.id) ? 'selected' : '' %> <%= usedInOther ? 'disabled' : '' %>>
-                          @ <%= role.name %><%= usedInOther ? ' (bereits verwendet)' : '' %>
+                      roles.forEach(role => { %>
+                        <option value="<%= role.id %>" <%= green.includes(role.id) ? 'selected' : '' %>>
+                          @ <%= role.name %>
                         </option>
                       <% }) %>
                     </select>
@@ -2966,17 +2831,10 @@
                   <div class="form-group">
                     <select name="priorityRoles_1" multiple size="8">
                       <%
-                      const usedInOther1 = (role) => {
-                        const g = (cfg.priorityRoles && cfg.priorityRoles['0']) || [];
-                        const r = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
-                        return g.includes(role.id) || r.includes(role.id);
-                      };
-                      const orange1 = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
-                      roles.forEach(role => {
-                        const used = usedInOther1(role);
-                      %>
-                        <option value="<%= role.id %>" <%= orange1.includes(role.id) ? 'selected' : '' %> <%= used ? 'disabled' : '' %>>
-                          @ <%= role.name %><%= used ? ' (bereits verwendet)' : '' %>
+                      const orange = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
+                      roles.forEach(role => { %>
+                        <option value="<%= role.id %>" <%= orange.includes(role.id) ? 'selected' : '' %>>
+                          @ <%= role.name %>
                         </option>
                       <% }) %>
                     </select>
@@ -3002,17 +2860,10 @@
                   <div class="form-group">
                     <select name="priorityRoles_2" multiple size="8">
                       <%
-                      const usedInOther2 = (role) => {
-                        const g = (cfg.priorityRoles && cfg.priorityRoles['0']) || [];
-                        const o = (cfg.priorityRoles && cfg.priorityRoles['1']) || [];
-                        return g.includes(role.id) || o.includes(role.id);
-                      };
-                      const red2 = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
-                      roles.forEach(role => {
-                        const used = usedInOther2(role);
-                      %>
-                        <option value="<%= role.id %>" <%= red2.includes(role.id) ? 'selected' : '' %> <%= used ? 'disabled' : '' %>>
-                          @ <%= role.name %><%= used ? ' (bereits verwendet)' : '' %>
+                      const red = (cfg.priorityRoles && cfg.priorityRoles['2']) || [];
+                      roles.forEach(role => { %>
+                        <option value="<%= role.id %>" <%= red.includes(role.id) ? 'selected' : '' %>>
+                          @ <%= role.name %>
                         </option>
                       <% }) %>
                     </select>
@@ -4602,69 +4453,27 @@
   <script src="/js/ux-enhancements.js"></script>
   <script src="/js/auth-session.js"></script>
   <script>
-    // Tab Switching - Main tabs and subtabs
+    // Tab Switching
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
-    const subtabsNavs = document.querySelectorAll('.subtabs-nav');
-    const subtabBtns = document.querySelectorAll('.subtab-btn');
 
-    // Main tab switching
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const tabId = btn.getAttribute('data-tab');
 
-        // Remove active from all main tabs
+        // Remove active from all tabs
         tabBtns.forEach(b => b.classList.remove('active'));
         tabContents.forEach(c => c.classList.remove('active'));
-        subtabsNavs.forEach(s => s.classList.remove('active'));
 
         // Activate clicked tab
         btn.classList.add('active');
-
-        // Check if tab has subtabs
-        const subtabsNav = document.querySelector(`.subtabs-nav[data-parent="${tabId}"]`);
-        if (subtabsNav) {
-          // Show subtabs navigation
-          subtabsNav.classList.add('active');
-          // Activate first subtab by default
-          const firstSubtab = subtabsNav.querySelector('.subtab-btn');
-          if (firstSubtab) {
-            firstSubtab.click();
-          }
-        } else {
-          // No subtabs, show main content directly
-          const content = document.getElementById(`tab-${tabId}`);
-          if (content) {
-            content.classList.add('active');
-          }
-        }
-
-        // Save to localStorage
-        localStorage.setItem('activeTab', tabId);
-      });
-    });
-
-    // Subtab switching
-    subtabBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent parent tab click
-        const subtabId = btn.getAttribute('data-subtab');
-        const parent = btn.closest('.subtabs-nav').getAttribute('data-parent');
-
-        // Remove active from all subtabs in this group
-        const parentNav = btn.closest('.subtabs-nav');
-        parentNav.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
-
-        // Activate clicked subtab
-        btn.classList.add('active');
-        const content = document.getElementById(`tab-${subtabId}`);
+        const content = document.getElementById(`tab-${tabId}`);
         if (content) {
           content.classList.add('active');
         }
 
         // Save to localStorage
-        localStorage.setItem('activeSubtab', subtabId);
+        localStorage.setItem('activeTab', tabId);
       });
     });
 
@@ -5644,55 +5453,6 @@
       // Trigger on page load
       voiceSupportModeSelect.dispatchEvent(new Event('change'));
     }
-
-    // ============================================================
-    // SELECT2 INITIALIZATION FOR SEARCHABLE DROPDOWNS
-    // ============================================================
-    $(document).ready(function() {
-      // Initialize Select2 on all select elements (channels, roles, categories, etc.)
-      $('select[name*="Channel"]').select2({
-        placeholder: 'Channel auswählen...',
-        allowClear: true,
-        width: '100%',
-        theme: 'default'
-      });
-
-      $('select[name*="Role"]').select2({
-        placeholder: 'Rolle auswählen...',
-        allowClear: true,
-        width: '100%',
-        theme: 'default'
-      });
-
-      $('select[name*="Category"]').select2({
-        placeholder: 'Kategorie auswählen...',
-        allowClear: true,
-        width: '100%',
-        theme: 'default'
-      });
-
-      $('select[name*="priorityRoles"]').select2({
-        placeholder: 'Rollen auswählen...',
-        width: '100%',
-        theme: 'default'
-      });
-
-      $('select[name="teamRoleId"]').select2({
-        placeholder: 'Team-Rollen auswählen...',
-        width: '100%',
-        theme: 'default'
-      });
-
-      // Initialize Select2 on topic category selects
-      $('select[name*="topicCategory"]').select2({
-        placeholder: 'Kategorie auswählen...',
-        allowClear: true,
-        width: '100%',
-        theme: 'default'
-      });
-
-      console.log('✓ Select2 initialized for all dropdowns');
-    });
 
   </script>
 </body>
