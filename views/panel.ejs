@@ -2449,6 +2449,10 @@
               <i class="fas fa-users-cog"></i>
               <span>Roles</span>
             </button>
+            <button type="button" class="tab-btn" data-tab="settings">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </button>
             <button type="button" class="tab-btn" data-tab="topics">
               <i class="fas fa-tags"></i>
               <span>Topics</span>
@@ -2537,36 +2541,179 @@
 
           <!-- Tab: Channels -->
           <div class="tab-content" id="tab-channels">
+            <!-- Kategorie-Verwaltung -->
             <div class="card">
               <div class="card-header">
                 <div>
                   <div class="card-title">
-                    <div class="card-icon">
-                      <i class="fas fa-folder-open"></i>
+                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                      <i class="fas fa-layer-group"></i>
                     </div>
-                    <span><%= t.web.ticket_category %></span>
+                    <span><%= lang === 'de' ? '📂 Kategorie-Verwaltung' : '📂 Category Management' %></span>
                   </div>
                   <p class="card-description">
-                    <%= t.web?.panel_config?.ticket_category_help || 'Wähle eine oder mehrere Kategorien für dein Ticket-System aus' %>
+                    <%= lang === 'de'
+                      ? 'Verwalte alle Discord-Kategorien für dein Ticket-System an einem Ort'
+                      : 'Manage all Discord categories for your ticket system in one place'
+                    %>
                   </p>
                 </div>
               </div>
               <div class="card-body">
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-list"></i>
-                    <span><%= lang === 'de' ? 'Kategorien auswählen' : 'Select Categories' %></span>
-                    <span class="form-label-optional">(<%= lang === 'de' ? 'Mehrfachauswahl mit Strg/Cmd' : 'Multi-select with Ctrl/Cmd' %>)</span>
+                <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+                  <i class="fas fa-info-circle"></i>
+                  <div>
+                    <strong><%= lang === 'de' ? '💡 Hinweis:' : '💡 Note:' %></strong><br>
+                    <%= lang === 'de'
+                      ? 'Kategorien sind spezielle Container in Discord, die Channels organisieren. Hier kannst du festlegen, welche Kategorien für verschiedene Ticket-Systeme verwendet werden.'
+                      : 'Categories are special containers in Discord that organize channels. Here you can specify which categories are used for different ticket systems.'
+                    %>
                   </div>
-                  <select name="ticketCategoryId" multiple size="8">
-                    <%
-                    const selectedCategories = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
-                    channels.filter(ch => ch.type === 4).forEach(ch => { %>
-                      <option value="<%= ch.id %>" <%= selectedCategories.includes(ch.id) ? 'selected' : '' %>>
-                        🎫 <%= ch.name %>
-                      </option>
-                    <% }) %>
-                  </select>
+                </div>
+
+                <!-- Ticket-Kategorien -->
+                <div style="margin-bottom: 2rem;">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-ticket-alt"></i>
+                    <%= lang === 'de' ? '🎫 Ticket-Kategorien' : '🎫 Ticket Categories' %>
+                  </h3>
+                  <p style="margin-bottom: 1rem; opacity: 0.8;">
+                    <%= lang === 'de'
+                      ? 'In diesen Kategorien werden neue Ticket-Channels erstellt. Du kannst mehrere Kategorien auswählen - Tickets werden automatisch verteilt.'
+                      : 'New ticket channels will be created in these categories. You can select multiple categories - tickets will be distributed automatically.'
+                    %>
+                  </p>
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-list"></i>
+                      <span><%= lang === 'de' ? 'Kategorien auswählen' : 'Select Categories' %></span>
+                      <span class="form-label-optional">(<%= lang === 'de' ? 'Mehrfachauswahl mit Strg/Cmd' : 'Multi-select with Ctrl/Cmd' %>)</span>
+                    </div>
+                    <select name="ticketCategoryId" multiple size="8" style="width: 100%;">
+                      <%
+                      const selectedCategories = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
+                      channels.filter(ch => ch.type === 4).forEach(ch => { %>
+                        <option value="<%= ch.id %>" <%= selectedCategories.includes(ch.id) ? 'selected' : '' %>>
+                          🎫 <%= ch.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span>
+                        <%= lang === 'de'
+                          ? 'Ausgewählt: ' + (selectedCategories.length || 0) + ' Kategorie(n)'
+                          : 'Selected: ' + (selectedCategories.length || 0) + ' category(ies)'
+                        %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 2rem 0;">
+
+                <!-- Archiv-Kategorie -->
+                <div style="margin-bottom: 2rem;">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-archive"></i>
+                    <%= lang === 'de' ? '📦 Archiv-Kategorie' : '📦 Archive Category' %>
+                  </h3>
+                  <p style="margin-bottom: 1rem; opacity: 0.8;">
+                    <%= lang === 'de'
+                      ? 'Geschlossene Tickets werden in diese Kategorie verschoben statt gelöscht zu werden. Nützlich für Nachverfolgung und Statistiken.'
+                      : 'Closed tickets will be moved to this category instead of being deleted. Useful for tracking and statistics.'
+                    %>
+                  </p>
+
+                  <div class="toggle-container" style="margin-bottom: 1rem;">
+                    <label class="toggle-label">
+                      <input type="checkbox" name="archiveEnabled" value="true" <%= cfg.archiveEnabled ? 'checked' : '' %>>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-text">
+                        <strong><%= lang === 'de' ? 'Archiv aktivieren' : 'Enable Archive' %></strong>
+                      </span>
+                    </label>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-folder"></i>
+                      <span><%= lang === 'de' ? 'Archiv-Kategorie auswählen' : 'Select Archive Category' %></span>
+                    </div>
+                    <select name="archiveCategoryId" style="width: 100%;">
+                      <option value=""><%= lang === 'de' ? '-- Keine Kategorie --' : '-- No Category --' %></option>
+                      <%
+                      channels.filter(ch => ch.type === 4).forEach(ch => { %>
+                        <option value="<%= ch.id %>" <%= cfg.archiveCategoryId === ch.id ? 'selected' : '' %>>
+                          📁 <%= ch.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                    <div class="help-text">
+                      <i class="fas fa-info-circle"></i>
+                      <span>
+                        <%= lang === 'de'
+                          ? 'Geschlossene Tickets bleiben hier sichtbar, aber inaktiv'
+                          : 'Closed tickets remain visible here but inactive'
+                        %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin: 2rem 0;">
+
+                <!-- Voice Support Kategorie -->
+                <div style="margin-bottom: 1rem;">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-headset"></i>
+                    <%= lang === 'de' ? '🎤 Voice Support Kategorie' : '🎤 Voice Support Category' %>
+                    <span class="priority-badge" style="background: #667eea; color: white; border-color: #667eea; font-size: 0.7rem;">VOICE</span>
+                  </h3>
+                  <p style="margin-bottom: 1rem; opacity: 0.8;">
+                    <%= lang === 'de'
+                      ? 'Voice-Channels für Ticket-Support werden in dieser Kategorie erstellt (falls Voice Support aktiviert ist).'
+                      : 'Voice channels for ticket support will be created in this category (if Voice Support is enabled).'
+                    %>
+                  </p>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-microphone"></i>
+                      <span><%= lang === 'de' ? 'Voice-Kategorie auswählen' : 'Select Voice Category' %></span>
+                    </div>
+                    <select name="voiceSupportCategoryId" style="width: 100%;">
+                      <option value=""><%= lang === 'de' ? '-- Gleiche wie Ticket-Kategorie --' : '-- Same as Ticket Category --' %></option>
+                      <%
+                      channels.filter(ch => ch.type === 4).forEach(ch => { %>
+                        <option value="<%= ch.id %>" <%= cfg.voiceSupportCategoryId === ch.id ? 'selected' : '' %>>
+                          🎙️ <%= ch.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span>
+                        <%= lang === 'de'
+                          ? 'Optional: Separate Kategorie für Voice-Channels. Wenn leer, wird die Ticket-Kategorie verwendet.'
+                          : 'Optional: Separate category for voice channels. If empty, the ticket category will be used.'
+                        %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Zusammenfassung -->
+                <div class="alert alert-success" style="margin-top: 2rem;">
+                  <i class="fas fa-chart-pie"></i>
+                  <div>
+                    <strong><%= lang === 'de' ? '📊 Zusammenfassung:' : '📊 Summary:' %></strong><br>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; margin-top: 0.5rem; font-size: 0.9rem;">
+                      <div>🎫 <%= lang === 'de' ? 'Ticket' : 'Ticket' %>: <strong><%= selectedCategories.length %></strong></div>
+                      <div>📦 <%= lang === 'de' ? 'Archiv' : 'Archive' %>: <strong><%= cfg.archiveEnabled ? '✅' : '❌' %></strong></div>
+                      <div>🎤 <%= lang === 'de' ? 'Voice' : 'Voice' %>: <strong><%= cfg.voiceSupportCategoryId ? '✅' : '➖' %></strong></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2666,71 +2813,6 @@
                       </option>
                     <% }) %>
                   </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Ticket Archive Settings -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon">
-                      <i class="fas fa-archive"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'Ticket-Archiv' : 'Ticket Archive' %></span>
-                  </div>
-                  <p class="card-description">
-                    <%= lang === 'de'
-                      ? 'Geschlossene Tickets automatisch in eine Archiv-Kategorie verschieben statt löschen'
-                      : 'Automatically move closed tickets to an archive category instead of deleting them'
-                    %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="form-group">
-                  <div class="toggle-container">
-                    <label class="toggle-label">
-                      <input type="checkbox" name="archiveEnabled" value="true" <%= cfg.archiveEnabled ? 'checked' : '' %>>
-                      <span class="toggle-slider"></span>
-                      <span class="toggle-text"><%= lang === 'de' ? 'Archiv aktivieren' : 'Enable Archive' %></span>
-                    </label>
-                  </div>
-                  <div class="help-text">
-                    <i class="fas fa-lightbulb"></i>
-                    <span>
-                      <%= lang === 'de'
-                        ? 'Wenn aktiviert, werden geschlossene Tickets in die Archiv-Kategorie verschoben statt gelöscht'
-                        : 'When enabled, closed tickets will be moved to the archive category instead of being deleted'
-                      %>
-                    </span>
-                  </div>
-                </div>
-
-                <div class="form-group" style="margin-top: 1.5rem;">
-                  <div class="form-label">
-                    <i class="fas fa-folder"></i>
-                    <span><%= lang === 'de' ? 'Archiv-Kategorie' : 'Archive Category' %></span>
-                  </div>
-                  <select name="archiveCategoryId">
-                    <option value=""><%= lang === 'de' ? 'Kategorie auswählen' : 'Select Category' %></option>
-                    <%
-                    channels.filter(ch => ch.type === 4).forEach(ch => { %>
-                      <option value="<%= ch.id %>" <%= cfg.archiveCategoryId === ch.id ? 'selected' : '' %>>
-                        📁 <%= ch.name %>
-                      </option>
-                    <% }) %>
-                  </select>
-                  <div class="help-text">
-                    <i class="fas fa-info-circle"></i>
-                    <span>
-                      <%= lang === 'de'
-                        ? 'Wähle die Kategorie aus, in die geschlossene Tickets verschoben werden sollen'
-                        : 'Select the category where closed tickets should be moved to'
-                      %>
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -2874,6 +2956,326 @@
                   🔴 <%= lang === 'de' ? 'Rot' : 'Red' %>: <%= red.length %>
                 </span>
               </div>
+            </div>
+          </div>
+
+          <!-- Tab: Settings -->
+          <div class="tab-content" id="tab-settings">
+            <div class="alert alert-info" style="margin-bottom: 2rem;">
+              <i class="fas fa-info-circle"></i>
+              <div>
+                <strong><%= lang === 'de' ? '⚙️ Erweiterte Einstellungen' : '⚙️ Advanced Settings' %></strong><br>
+                <%= lang === 'de'
+                  ? 'Konfiguriere System-Features wie Changelog, Benachrichtigungen, AntiSpam, SLA und mehr an einem Ort.'
+                  : 'Configure system features like Changelog, Notifications, AntiSpam, SLA and more in one place.'
+                %>
+              </div>
+            </div>
+
+            <!-- Changelog & Updates -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                      <i class="fas fa-list-alt"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '📋 Changelog & Updates' : '📋 Changelog & Updates' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Erhalte automatisch Benachrichtigungen über neue Bot-Updates und Features'
+                      : 'Receive automatic notifications about new bot updates and features'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="toggle-container" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-label">
+                    <input type="checkbox" name="changelogEnabled" value="true" <%= cfg.changelogEnabled ? 'checked' : '' %>>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">
+                      <strong><%= lang === 'de' ? 'Changelog-Benachrichtigungen aktivieren' : 'Enable Changelog Notifications' %></strong>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-hashtag"></i>
+                    <span><%= lang === 'de' ? 'Changelog-Channel' : 'Changelog Channel' %></span>
+                  </div>
+                  <select name="changelogChannelId" style="width: 100%;">
+                    <option value=""><%= lang === 'de' ? '-- Log-Channel verwenden --' : '-- Use Log Channel --' %></option>
+                    <%
+                    channels.filter(ch => ch.type === 0).forEach(ch => { %>
+                      <option value="<%= ch.id %>" <%= cfg.changelogChannelId === ch.id ? 'selected' : '' %>>
+                        # <%= ch.name %>
+                      </option>
+                    <% }) %>
+                  </select>
+                  <div class="help-text">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>
+                      <%= lang === 'de'
+                        ? 'Channel für automatische Update-Benachrichtigungen. Wenn leer, wird der Log-Channel verwendet.'
+                        : 'Channel for automatic update notifications. If empty, the log channel will be used.'
+                      %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AntiSpam System -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                      <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '🛡️ AntiSpam-System' : '🛡️ AntiSpam System' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Schütze dein Ticket-System vor Spam und Missbrauch'
+                      : 'Protect your ticket system from spam and abuse'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="toggle-container" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-label">
+                    <input type="checkbox" name="antiSpamEnabled" value="true" <%= cfg.antiSpam?.enabled ? 'checked' : '' %>>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">
+                      <strong><%= lang === 'de' ? 'AntiSpam aktivieren' : 'Enable AntiSpam' %></strong>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="grid grid-2">
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-ticket-alt"></i>
+                      <span><%= lang === 'de' ? 'Max. Tickets' : 'Max Tickets' %></span>
+                    </div>
+                    <input type="number" name="antiSpamMaxTickets"
+                      value="<%= cfg.antiSpam?.maxTickets || 3 %>"
+                      min="1" max="10" placeholder="3" style="width: 100%;">
+                    <div class="help-text">
+                      <i class="fas fa-info-circle"></i>
+                      <span><%= lang === 'de' ? 'Maximale Anzahl Tickets pro Benutzer' : 'Maximum tickets per user' %></span>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-clock"></i>
+                      <span><%= lang === 'de' ? 'Zeitfenster (Minuten)' : 'Time Window (Minutes)' %></span>
+                    </div>
+                    <input type="number" name="antiSpamTimeWindow"
+                      value="<%= cfg.antiSpam?.timeWindowMinutes || 30 %>"
+                      min="5" max="60" placeholder="30" style="width: 100%;">
+                    <div class="help-text">
+                      <i class="fas fa-info-circle"></i>
+                      <span><%= lang === 'de' ? 'Zeitfenster für Rate-Limiting' : 'Time window for rate limiting' %></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- File Upload Settings -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                      <i class="fas fa-file-upload"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '📎 Datei-Upload' : '📎 File Upload' %></span>
+                    <span class="priority-badge" style="background: #667eea; color: white; border-color: #667eea; font-size: 0.7rem;">BASIC+</span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Konfiguriere Datei-Upload-Limits für Ticket-Channels'
+                      : 'Configure file upload limits for ticket channels'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="grid grid-2">
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-weight-hanging"></i>
+                      <span><%= lang === 'de' ? 'Max. Dateigröße (MB)' : 'Max File Size (MB)' %></span>
+                    </div>
+                    <input type="number" name="fileUploadMaxSizeMB"
+                      value="<%= cfg.fileUpload?.maxSizeMB || 10 %>"
+                      min="1" max="25" placeholder="10" style="width: 100%;">
+                    <div class="help-text">
+                      <i class="fas fa-info-circle"></i>
+                      <span><%= lang === 'de' ? 'Standard: 10 MB' : 'Default: 10 MB' %></span>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-file-alt"></i>
+                      <span><%= lang === 'de' ? 'Erlaubte Formate' : 'Allowed Formats' %></span>
+                    </div>
+                    <input type="text" name="fileUploadAllowedFormats"
+                      value="<%= (cfg.fileUpload?.allowedFormats || ['png', 'jpg', 'jpeg', 'pdf', 'txt', 'log']).join(', ') %>"
+                      placeholder="png, jpg, pdf, txt" style="width: 100%;">
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span><%= lang === 'de' ? 'Kommagetrennt: png, jpg, pdf' : 'Comma separated: png, jpg, pdf' %></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rating System -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                      <i class="fas fa-star"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '⭐ Bewertungssystem' : '⭐ Rating System' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Kunden können geschlossene Tickets bewerten (1-5 Sterne)'
+                      : 'Customers can rate closed tickets (1-5 stars)'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="toggle-container" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-label">
+                    <input type="checkbox" name="ratingsEnabled" value="true" <%= cfg.ratings?.enabled ? 'checked' : '' %>>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">
+                      <strong><%= lang === 'de' ? 'Bewertungen aktivieren' : 'Enable Ratings' %></strong>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="grid grid-2">
+                  <div class="toggle-container">
+                    <label class="toggle-label">
+                      <input type="checkbox" name="ratingsSendDM" value="true" <%= cfg.ratings?.sendDM ? 'checked' : '' %>>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-text"><%= lang === 'de' ? 'DM-Bewertungsanfrage' : 'DM Rating Request' %></span>
+                    </label>
+                  </div>
+
+                  <div class="toggle-container">
+                    <label class="toggle-label">
+                      <input type="checkbox" name="ratingsRequireFeedback" value="true" <%= cfg.ratings?.requireFeedback ? 'checked' : '' %>>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-text"><%= lang === 'de' ? 'Feedback-Pflicht' : 'Require Feedback' %></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SLA System (Pro) -->
+            <% if (premiumTier === 'pro' || premiumTier === 'beta' || premiumTier === 'partner') { %>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                      <i class="fas fa-stopwatch"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '⏱️ SLA-System' : '⏱️ SLA System' %></span>
+                    <span class="priority-badge" style="background: #764ba2; color: white; border-color: #764ba2; font-size: 0.7rem;">PRO</span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Service Level Agreement mit automatischer Eskalation bei Überschreitung'
+                      : 'Service Level Agreement with automatic escalation on breach'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="toggle-container" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-label">
+                    <input type="checkbox" name="slaEnabled" value="true" <%= cfg.sla?.enabled ? 'checked' : '' %>>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">
+                      <strong><%= lang === 'de' ? 'SLA aktivieren' : 'Enable SLA' %></strong>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="alert alert-info" style="margin-bottom: 1rem;">
+                  <i class="fas fa-info-circle"></i>
+                  <div style="font-size: 0.9rem;">
+                    <strong><%= lang === 'de' ? 'Standard-Reaktionszeiten:' : 'Default Response Times:' %></strong><br>
+                    🔴 <%= lang === 'de' ? 'Hoch (Rot)' : 'High (Red)' %>: 1 <%= lang === 'de' ? 'Stunde' : 'Hour' %><br>
+                    🟠 <%= lang === 'de' ? 'Mittel (Orange)' : 'Medium (Orange)' %>: 4 <%= lang === 'de' ? 'Stunden' : 'Hours' %><br>
+                    🟢 <%= lang === 'de' ? 'Niedrig (Grün)' : 'Low (Green)' %>: 24 <%= lang === 'de' ? 'Stunden' : 'Hours' %>
+                  </div>
+                </div>
+
+                <div class="grid grid-2">
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-percentage"></i>
+                      <span><%= lang === 'de' ? 'Warnung bei (%)' : 'Warn at (%)' %></span>
+                    </div>
+                    <input type="number" name="slaWarnPercent"
+                      value="<%= cfg.sla?.warnPercent || 80 %>"
+                      min="50" max="95" placeholder="80" style="width: 100%;">
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span><%= lang === 'de' ? 'Warnung bei 80% der SLA-Zeit' : 'Warn at 80% of SLA time' %></span>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-at"></i>
+                      <span><%= lang === 'de' ? 'Eskalations-Rolle' : 'Escalation Role' %></span>
+                    </div>
+                    <select name="slaEscalationRoleId" style="width: 100%;">
+                      <option value=""><%= lang === 'de' ? '-- Keine --' : '-- None --' %></option>
+                      <%
+                      roles.forEach(role => { %>
+                        <option value="<%= role.id %>" <%= cfg.sla?.escalationRoleId === role.id ? 'selected' : '' %>>
+                          @ <%= role.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                    <div class="help-text">
+                      <i class="fas fa-info-circle"></i>
+                      <span><%= lang === 'de' ? 'Rolle wird bei SLA-Überschreitung gepingt' : 'Role gets pinged on SLA breach' %></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Save Button -->
+            <div class="save-footer">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                <%= lang === 'de' ? 'Einstellungen speichern' : 'Save Settings' %>
+              </button>
             </div>
           </div>
 
