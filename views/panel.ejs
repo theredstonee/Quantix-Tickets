@@ -4416,32 +4416,33 @@
   <script src="/js/ux-enhancements.js"></script>
   <script src="/js/auth-session.js"></script>
   <script>
-    // Tab Switching
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
+    // Ensure all code runs after DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Tab Switching
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
 
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tabId = btn.getAttribute('data-tab');
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.getAttribute('data-tab');
 
-        // Remove active from all tabs
-        tabBtns.forEach(b => b.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
+          // Remove active from all tabs
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
 
-        // Activate clicked tab
-        btn.classList.add('active');
-        const content = document.getElementById(`tab-${tabId}`);
-        if (content) {
-          content.classList.add('active');
-        }
+          // Activate clicked tab
+          btn.classList.add('active');
+          const content = document.getElementById(`tab-${tabId}`);
+          if (content) {
+            content.classList.add('active');
+          }
 
-        // Save to localStorage
-        localStorage.setItem('activeTab', tabId);
+          // Save to localStorage
+          localStorage.setItem('activeTab', tabId);
+        });
       });
-    });
 
-    // Disable browser form draft/autosave feature
-    window.addEventListener('DOMContentLoaded', () => {
+      // Disable browser form draft/autosave feature
       // Prevent browser from showing "draft found" dialog
       const form = document.getElementById('panelForm');
       if (form) {
@@ -4487,7 +4488,7 @@
           sendPanelBtn.disabled = !this.value;
         });
       }
-    });
+    }); // End of DOMContentLoaded
 
     // Theme is managed by /js/theme-manager.js (Cookie-based)
 
