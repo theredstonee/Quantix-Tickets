@@ -2567,18 +2567,17 @@
 
         <!-- Tabs Navigation -->
         <div class="tabs-container">
-          <!-- Main Tabs Navigation -->
           <div class="tabs-nav">
-            <!-- Main Tab 1: Dashboard -->
-            <button type="button" class="tab-btn active" data-tab="dashboard">
+            <!-- Tab 1: Übersicht -->
+            <button type="button" class="tab-btn active" data-tab="overview">
               <i class="fas fa-chart-line"></i>
-              <span><%= lang === 'de' ? 'Dashboard' : 'Dashboard' %></span>
+              <span><%= lang === 'de' ? 'Übersicht' : 'Overview' %></span>
             </button>
 
-            <!-- Main Tab 2: Einstellungen (with subtabs) -->
-            <button type="button" class="tab-btn" data-tab="settings-main">
+            <!-- Tab 2: Grundeinstellungen -->
+            <button type="button" class="tab-btn" data-tab="settings">
               <i class="fas fa-cog"></i>
-              <span><%= lang === 'de' ? 'Einstellungen' : 'Settings' %></span>
+              <span><%= lang === 'de' ? 'Grundeinstellungen' : 'Basic Settings' %></span>
               <%
                 const hasBasicSettings = !!(cfg.ticketCategories && cfg.ticketCategories.length > 0 &&
                                             cfg.logChannels && cfg.logChannels.length > 0);
@@ -2590,16 +2589,53 @@
               <% } %>
             </button>
 
-            <!-- Main Tab 3: Erscheinungsbild (with subtabs) -->
-            <button type="button" class="tab-btn" data-tab="appearance-main">
-              <i class="fas fa-paint-brush"></i>
-              <span><%= lang === 'de' ? 'Erscheinungsbild' : 'Appearance' %></span>
-              <% if (cfg.panelMessageId) { %>
-                <span class="tab-badge success-badge">✓</span>
+            <!-- Tab 3: Ticket-Themen -->
+            <button type="button" class="tab-btn" data-tab="topics">
+              <i class="fas fa-th-list"></i>
+              <span><%= lang === 'de' ? 'Ticket-Themen' : 'Ticket Topics' %></span>
+              <% if (cfg.topics && cfg.topics.length > 0) { %>
+                <span class="tab-badge"><%= cfg.topics.length %></span>
+              <% } else { %>
+                <span class="tab-badge error-badge">0</span>
               <% } %>
             </button>
 
-            <!-- Main Tab 4: Premium -->
+            <!-- Tab 4: Formulare -->
+            <button type="button" class="tab-btn" data-tab="forms">
+              <i class="fas fa-list-check"></i>
+              <span><%= lang === 'de' ? 'Formulare' : 'Forms' %></span>
+              <% if (cfg.formFields && cfg.formFields.length > 0) { %>
+                <span class="tab-badge"><%= cfg.formFields.length %></span>
+              <% } %>
+            </button>
+
+            <!-- Tab 5: Design -->
+            <button type="button" class="tab-btn" data-tab="embeds">
+              <i class="fas fa-paint-brush"></i>
+              <span><%= lang === 'de' ? 'Design' : 'Design' %></span>
+            </button>
+
+            <!-- Tab 6: Voice Support -->
+            <button type="button" class="tab-btn" data-tab="voice">
+              <i class="fas fa-headset"></i>
+              <span><%= lang === 'de' ? 'Voice Support' : 'Voice Support' %></span>
+              <% if (cfg.voiceSupport && cfg.voiceSupport.enabled) { %>
+                <span class="tab-badge success-badge">ON</span>
+              <% } %>
+            </button>
+
+            <!-- Tab 7: Panel senden -->
+            <button type="button" class="tab-btn" data-tab="panel">
+              <i class="fas fa-paper-plane"></i>
+              <span><%= lang === 'de' ? 'Panel senden' : 'Send Panel' %></span>
+              <% if (cfg.panelMessageId) { %>
+                <span class="tab-badge success-badge">✓</span>
+              <% } else { %>
+                <span class="tab-badge error-badge">!</span>
+              <% } %>
+            </button>
+
+            <!-- Tab 8: Premium -->
             <button type="button" class="tab-btn" data-tab="premium">
               <i class="fas fa-crown"></i>
               <span>Premium</span>
@@ -2609,60 +2645,8 @@
             </button>
           </div>
 
-          <!-- Subtabs for Einstellungen -->
-          <div class="subtabs-nav" data-parent="settings-main">
-            <button type="button" class="subtab-btn active" data-subtab="settings-basic">
-              <i class="fas fa-sliders-h"></i>
-              <span><%= lang === 'de' ? 'Grundeinstellungen' : 'Basic Settings' %></span>
-            </button>
-            <button type="button" class="subtab-btn" data-subtab="settings-topics">
-              <i class="fas fa-th-list"></i>
-              <span><%= lang === 'de' ? 'Ticket-Themen' : 'Ticket Topics' %></span>
-              <% if (cfg.topics && cfg.topics.length > 0) { %>
-                <span class="tab-badge"><%= cfg.topics.length %></span>
-              <% } else { %>
-                <span class="tab-badge error-badge">0</span>
-              <% } %>
-            </button>
-            <button type="button" class="subtab-btn" data-subtab="settings-forms">
-              <i class="fas fa-list-check"></i>
-              <span><%= lang === 'de' ? 'Formulare' : 'Forms' %></span>
-              <% if (cfg.formFields && cfg.formFields.length > 0) { %>
-                <span class="tab-badge"><%= cfg.formFields.length %></span>
-              <% } %>
-            </button>
-            <button type="button" class="subtab-btn" data-subtab="settings-advanced">
-              <i class="fas fa-cog"></i>
-              <span><%= lang === 'de' ? 'Erweitert' : 'Advanced' %></span>
-            </button>
-          </div>
-
-          <!-- Subtabs for Erscheinungsbild -->
-          <div class="subtabs-nav" data-parent="appearance-main">
-            <button type="button" class="subtab-btn active" data-subtab="appearance-design">
-              <i class="fas fa-palette"></i>
-              <span><%= lang === 'de' ? 'Design' : 'Design' %></span>
-            </button>
-            <button type="button" class="subtab-btn" data-subtab="appearance-voice">
-              <i class="fas fa-headset"></i>
-              <span><%= lang === 'de' ? 'Voice Support' : 'Voice Support' %></span>
-              <% if (cfg.voiceSupport && cfg.voiceSupport.enabled) { %>
-                <span class="tab-badge success-badge">ON</span>
-              <% } %>
-            </button>
-            <button type="button" class="subtab-btn" data-subtab="appearance-panel">
-              <i class="fas fa-paper-plane"></i>
-              <span><%= lang === 'de' ? 'Panel senden' : 'Send Panel' %></span>
-              <% if (cfg.panelMessageId) { %>
-                <span class="tab-badge success-badge">✓</span>
-              <% } else { %>
-                <span class="tab-badge error-badge">!</span>
-              <% } %>
-            </button>
-          </div>
-
-          <!-- Tab: Dashboard -->
-          <div class="tab-content active" id="tab-dashboard">
+          <!-- Tab: Overview -->
+          <div class="tab-content active" id="tab-overview">
             <div class="grid grid-2" style="margin-bottom: 2rem;">
               <div class="stats-card">
                 <div class="stats-icon">
@@ -2720,8 +2704,8 @@
               </div>
             </div>
           </div>
-          <!-- Tab: Settings Basic (Channels + Roles Combined) -->
-          <div class="tab-content" id="tab-settings-basic">
+          <!-- Tab: Settings -->
+          <div class="tab-content" id="tab-settings">
             <div class="card">
               <div class="card-header">
                 <div>
@@ -3079,8 +3063,8 @@
             </div>
           </div>
 
-          <!-- Tab: Settings Topics -->
-          <div class="tab-content" id="tab-settings-topics">
+          <!-- Tab: Topics -->
+          <div class="tab-content" id="tab-topics">
             <div class="card">
               <div class="card-header">
                 <div>
@@ -3170,8 +3154,8 @@
             </div>
           </div>
 
-          <!-- Tab: Settings Forms -->
-          <div class="tab-content" id="tab-settings-forms">
+          <!-- Tab: Forms -->
+          <div class="tab-content" id="tab-forms">
             <div class="card">
               <div class="card-header">
                 <div>
@@ -3299,225 +3283,9 @@
             </div>
           </div>
 
-          <!-- Tab: Settings Advanced -->
-          <div class="tab-content" id="tab-settings-advanced">
-            <div class="alert alert-info" style="margin-bottom: 2rem;">
-              <i class="fas fa-info-circle"></i>
-              <span><%= lang === 'de' ? 'Erweiterte Einstellungen für Multi-Ticket-Limits, AntiSpam-Schutz und Ticket-Bewertungen.' : 'Advanced settings for multi-ticket limits, AntiSpam protection and ticket ratings.' %></span>
-            </div>
 
-            <!-- Multi-Ticket Settings -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
-                      <i class="fas fa-layer-group"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'Multi-Ticket Einstellungen' : 'Multi-Ticket Settings' %></span>
-                    <span class="priority-badge" style="background: #0ea5e9; color: white; border-color: #0ea5e9;">FREE</span>
-                  </div>
-                  <p class="card-description">
-                    <%= lang === 'de'
-                      ? 'Konfiguriere, wie viele Tickets ein User gleichzeitig offen haben darf.'
-                      : 'Configure how many tickets a user can have open simultaneously.'
-                    %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-ticket"></i>
-                    <span><%= lang === 'de' ? 'Maximale Tickets pro User' : 'Maximum Tickets per User' %></span>
-                  </div>
-                  <select name="maxTicketsPerUser">
-                    <%
-                    const currentMaxTickets = cfg.maxTicketsPerUser || 3;
-                    const ticketOptions = [
-                      { value: 0, label: lang === 'de' ? '♾️ Unbegrenzt' : '♾️ Unlimited' },
-                      { value: 1, label: '1 Ticket' },
-                      { value: 2, label: '2 Tickets' },
-                      { value: 3, label: '3 Tickets' },
-                      { value: 5, label: '5 Tickets' },
-                      { value: 10, label: '10 Tickets' },
-                      { value: 15, label: '15 Tickets' },
-                      { value: 20, label: '20 Tickets' }
-                    ];
-                    ticketOptions.forEach(opt => { %>
-                      <option value="<%= opt.value %>" <%= currentMaxTickets == opt.value ? 'selected' : '' %>>
-                        <%= opt.label %>
-                      </option>
-                    <% }); %>
-                  </select>
-                  <div class="help-text">
-                    <i class="fas fa-lightbulb"></i>
-                    <span><%= lang === 'de' ? 'Empfohlen: 3-5 Tickets für optimale Übersicht' : 'Recommended: 3-5 tickets for optimal overview' %></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Ticket-Bewertungssystem -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);">
-                      <i class="fas fa-star"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'Ticket-Bewertungssystem' : 'Ticket Rating System' %></span>
-                    <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
-                  </div>
-                  <p class="card-description">
-                    <%= lang === 'de'
-                      ? '5-Sterne-Bewertungssystem für geschlossene Tickets mit optionalem Feedback-Text.'
-                      : '5-star rating system for closed tickets with optional feedback text.'
-                    %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
-                  <input
-                    type="checkbox"
-                    name="ticketRatingEnabled"
-                    <%= (cfg.ticketRating && cfg.ticketRating.enabled !== false) ? 'checked' : '' %>
-                    style="width: auto; margin: 0;">
-                  <span style="font-weight: 500;"><%= lang === 'de' ? 'Bewertungssystem aktivieren' : 'Enable Rating System' %></span>
-                </label>
-
-                <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
-                  <input
-                    type="checkbox"
-                    name="ticketRatingRequireFeedback"
-                    <%= (cfg.ticketRating && cfg.ticketRating.requireFeedback) ? 'checked' : '' %>
-                    style="width: auto; margin: 0;">
-                  <span style="font-weight: 500;"><%= lang === 'de' ? 'Feedback-Text erforderlich' : 'Require feedback text' %></span>
-                </label>
-
-                <div class="help-text">
-                  <i class="fas fa-info-circle"></i>
-                  <span><%= lang === 'de'
-                    ? 'User erhalten nach jedem geschlossenen Ticket automatisch eine DM mit Bewertungs-Buttons (1-5 Sterne)'
-                    : 'Users automatically receive a DM with rating buttons (1-5 stars) after every closed ticket' %></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- SLA System -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                      <i class="fas fa-clock"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'SLA-System (Service Level Agreement)' : 'SLA System (Service Level Agreement)' %></span>
-                    <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
-                  </div>
-                  <p class="card-description">
-                    <%= lang === 'de'
-                      ? 'Automatisches SLA-System mit Live-Countdown und Eskalation bei Überschreitung der Bearbeitungszeit.'
-                      : 'Automatic SLA system with live countdown and escalation when processing time is exceeded.'
-                    %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
-                  <input
-                    type="checkbox"
-                    name="slaEnabled"
-                    <%= (cfg.sla && cfg.sla.enabled) ? 'checked' : '' %>
-                    style="width: auto; margin: 0;">
-                  <span style="font-weight: 500;"><%= lang === 'de' ? 'SLA-System aktivieren' : 'Enable SLA System' %></span>
-                </label>
-
-                <div class="grid grid-3" style="margin-bottom: 1rem;">
-                  <div class="form-group">
-                    <div class="form-label">
-                      <span>🟢 <%= lang === 'de' ? 'Niedrig (Stunden)' : 'Low (Hours)' %></span>
-                    </div>
-                    <input
-                      type="number"
-                      name="slaPriority0Hours"
-                      value="<%= (cfg.sla && cfg.sla.priority0Hours) || 24 %>"
-                      min="1"
-                      max="168"
-                      placeholder="24">
-                  </div>
-                  <div class="form-group">
-                    <div class="form-label">
-                      <span>🟠 <%= lang === 'de' ? 'Mittel (Stunden)' : 'Medium (Hours)' %></span>
-                    </div>
-                    <input
-                      type="number"
-                      name="slaPriority1Hours"
-                      value="<%= (cfg.sla && cfg.sla.priority1Hours) || 4 %>"
-                      min="1"
-                      max="72"
-                      placeholder="4">
-                  </div>
-                  <div class="form-group">
-                    <div class="form-label">
-                      <span>🔴 <%= lang === 'de' ? 'Hoch (Stunden)' : 'High (Hours)' %></span>
-                    </div>
-                    <input
-                      type="number"
-                      name="slaPriority2Hours"
-                      value="<%= (cfg.sla && cfg.sla.priority2Hours) || 1 %>"
-                      min="1"
-                      max="24"
-                      placeholder="1">
-                  </div>
-                </div>
-
-                <div class="grid grid-2">
-                  <div class="form-group">
-                    <div class="form-label">
-                      <i class="fas fa-percentage"></i>
-                      <span><%= lang === 'de' ? 'Warnung bei (%)' : 'Warning at (%)' %></span>
-                    </div>
-                    <input
-                      type="number"
-                      name="slaWarnAtPercent"
-                      value="<%= (cfg.sla && cfg.sla.warnAtPercent) || 80 %>"
-                      min="50"
-                      max="95"
-                      placeholder="80">
-                    <div class="help-text">
-                      <i class="fas fa-lightbulb"></i>
-                      <span><%= lang === 'de' ? 'Warnung senden bei X% der SLA-Zeit' : 'Send warning at X% of SLA time' %></span>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <div class="form-label">
-                      <i class="fas fa-at"></i>
-                      <span><%= lang === 'de' ? 'Eskalation an Rolle' : 'Escalate to Role' %></span>
-                    </div>
-                    <select name="slaEscalateToRole">
-                      <option value=""><%= lang === 'de' ? 'Keine Eskalation' : 'No escalation' %></option>
-                      <% roles.forEach(role => { %>
-                        <option value="<%= role.id %>" <%= (cfg.sla && cfg.sla.escalateToRole === role.id) ? 'selected' : '' %>>
-                          @ <%= role.name %>
-                        </option>
-                      <% }) %>
-                    </select>
-                    <div class="help-text">
-                      <i class="fas fa-lightbulb"></i>
-                      <span><%= lang === 'de' ? 'Rolle wird bei 100% SLA-Überschreitung gepingt' : 'Role will be pinged at 100% SLA breach' %></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Tab: Appearance Voice -->
-          <div class="tab-content" id="tab-appearance-voice">
+          <!-- Tab: Voice -->
+          <div class="tab-content" id="tab-voice">
             <div class="feature-header">
               <div class="feature-title">
                 <i class="fas fa-microphone"></i>
@@ -3809,8 +3577,8 @@
             </div>
           </div>
 
-          <!-- Tab: Appearance Design -->
-          <div class="tab-content" id="tab-appearance-design">
+          <!-- Tab: Design / Embeds -->
+          <div class="tab-content" id="tab-embeds">
             <div class="grid grid-2">
               <!-- Ticket Embed -->
               <div class="card">
@@ -3911,8 +3679,8 @@
             </div>
           </div>
 
-          <!-- Tab: Appearance Panel -->
-          <div class="tab-content" id="tab-appearance-panel">
+          <!-- Tab: Panel -->
+          <div class="tab-content" id="tab-panel">
             <div class="card">
               <div class="card-header">
                 <div>
