@@ -902,21 +902,34 @@ module.exports = (client)=>{
     // Prüfe ob User Team-Rolle hat
     try {
       const cfg = readCfg(guildId);
+
+      console.log('=== isAuthOrTeam Debug ===');
+      console.log('User ID:', req.user.id);
+      console.log('Guild ID:', guildId);
+      console.log('Team Role ID in Config:', cfg.teamRoleId);
+
       if(!cfg.teamRoleId) {
+        console.log('❌ Keine Team-Rolle konfiguriert!');
         return res.status(403).send('Keine Berechtigung. Du brauchst Administrator-Rechte oder die Team-Rolle.');
       }
 
       const guild = await client.guilds.fetch(guildId);
       const member = await guild.members.fetch(req.user.id);
 
+      const memberRoles = member.roles.cache.map(r => `${r.name} (${r.id})`);
+      console.log('Member Roles:', memberRoles);
+      console.log('Has Team Role:', member.roles.cache.has(cfg.teamRoleId));
+
       if(member.roles.cache.has(cfg.teamRoleId)) {
+        console.log('✅ Team-Mitglied hat Zugriff!');
         req.isAdmin = false; // Team-Mitglied, kein Admin
         return next();
       }
 
+      console.log('❌ Team-Mitglied hat NICHT die erforderliche Team-Rolle!');
       return res.status(403).send('Keine Berechtigung. Du brauchst Administrator-Rechte oder die Team-Rolle.');
     } catch(err) {
-      console.error('Team Role Check Error:', err);
+      console.error('❌ Team Role Check Error:', err);
       return res.status(403).send('Keine Berechtigung. Du brauchst Administrator-Rechte oder die Team-Rolle.');
     }
   }
@@ -2990,7 +3003,13 @@ module.exports = (client)=>{
         };
       }
 
-      if (hasFeature(guildId, 'applicationSystem')) {
+      const hasApplicationSystemFeature = hasFeature(guildId, 'applicationSystem');
+      console.log('=== Application System Debug ===');
+      console.log('Guild ID:', guildId);
+      console.log('Has applicationSystem Feature:', hasApplicationSystemFeature);
+      console.log('applicationSystemEnabled from form:', req.body.applicationSystemEnabled);
+
+      if (hasApplicationSystemFeature) {
         cfg.applicationSystem.enabled = req.body.applicationSystemEnabled === 'on';
         cfg.applicationSystem.panelChannelId = sanitizeDiscordId(req.body.applicationPanelChannelId) || null;
         cfg.applicationSystem.categoryId = sanitizeDiscordId(req.body.applicationCategoryId) || null;
@@ -3027,6 +3046,10 @@ module.exports = (client)=>{
         if (appFormFields.length > 0) {
           cfg.applicationSystem.formFields = appFormFields;
         }
+
+        console.log('✅ Application System Einstellungen gespeichert!');
+      } else {
+        console.log('❌ Application System Feature ist nicht verfügbar für diese Guild!');
       }
 
       // Voice Support Configuration
