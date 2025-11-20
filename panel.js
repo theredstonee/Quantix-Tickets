@@ -3022,30 +3022,26 @@ module.exports = (client)=>{
         cfg.applicationSystem.ticketDescription = sanitizeString(req.body.applicationTicketDescription, 2048) || cfg.applicationSystem.ticketDescription;
         cfg.applicationSystem.ticketColor = sanitizeString(req.body.applicationTicketColor, 7) || '#10b981';
 
-        // Process Application Form Fields
+        // Process Application Form Fields (New format: applicationField_label_0, applicationField_id_0, etc.)
         const appFormFields = [];
-        if (req.body.applicationFields) {
-          for (let i = 0; i < 20; i++) { // Max 20 fields
-            const label = req.body.applicationFields?.[i]?.label;
-            const id = req.body.applicationFields?.[i]?.id;
-            const style = req.body.applicationFields?.[i]?.style;
-            const required = req.body.applicationFields?.[i]?.required;
+        for (let i = 0; i < 5; i++) { // Max 5 fields (Discord Limit)
+          const label = req.body[`applicationField_label_${i}`];
+          const id = req.body[`applicationField_id_${i}`];
+          const style = req.body[`applicationField_style_${i}`];
+          const required = req.body[`applicationField_required_${i}`];
 
-            if (label && id) {
-              appFormFields.push({
-                label: sanitizeString(label, 256),
-                id: sanitizeString(id, 100).replace(/[^a-zA-Z0-9_]/g, ''),
-                style: ['short', 'paragraph', 'number'].includes(style) ? style : 'short',
-                required: required === 'on' || required === true
-              });
-            }
+          if (label && id) {
+            appFormFields.push({
+              label: sanitizeString(label, 45), // Discord Modal label limit
+              id: sanitizeString(id, 100).replace(/[^a-z0-9_]/g, ''), // Only lowercase, numbers, underscores
+              style: ['short', 'paragraph'].includes(style) ? style : 'short', // Only short or paragraph
+              required: required === 'on' || required === true
+            });
           }
         }
 
-        // If no fields were provided, keep the existing fields
-        if (appFormFields.length > 0) {
-          cfg.applicationSystem.formFields = appFormFields;
-        }
+        // Always update fields (empty array if no fields provided)
+        cfg.applicationSystem.formFields = appFormFields;
 
         console.log('✅ Application System Einstellungen gespeichert!');
       } else {

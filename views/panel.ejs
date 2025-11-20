@@ -3268,6 +3268,139 @@
                     </span>
                   </div>
                 </div>
+
+                <!-- Application Form Fields Editor -->
+                <div class="card-body" style="border-top: 2px solid var(--border-color);">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-clipboard-question"></i>
+                    <%= lang === 'de' ? '📋 Bewerbungs-Formularfelder' : '📋 Application Form Fields' %>
+                  </h3>
+                  <p style="margin-bottom: 1rem; opacity: 0.8; font-size: 0.9rem;">
+                    <%= lang === 'de'
+                      ? 'Erstelle benutzerdefinierte Fragen für Bewerbungen. Discord Limit: Max 5 Felder pro Modal, max 1024 Zeichen pro Paragraph-Feld.'
+                      : 'Create custom questions for applications. Discord Limit: Max 5 fields per modal, max 1024 characters per paragraph field.'
+                    %>
+                  </p>
+
+                  <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                      <strong><%= lang === 'de' ? '⚠️ Discord Limits:' : '⚠️ Discord Limits:' %></strong><br>
+                      <%= lang === 'de'
+                        ? '• Maximum 5 Felder pro Bewerbungsformular\n• Short-Felder: Max 256 Zeichen\n• Paragraph-Felder: Max 1024 Zeichen'
+                        : '• Maximum 5 fields per application form\n• Short fields: Max 256 characters\n• Paragraph fields: Max 1024 characters'
+                      %>
+                    </div>
+                  </div>
+
+                  <div id="applicationFieldsList">
+                    <% (cfg.applicationSystem?.formFields || []).forEach((field, index) => { %>
+                    <div class="form-field-item" data-index="<%= index %>" style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border-radius: 12px; border: 2px solid var(--border-color);">
+                      <div class="form-field-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <span class="form-field-number" style="background: var(--accent-color); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                          <%= index + 1 %>
+                        </span>
+                        <button type="button" class="btn-icon-danger" onclick="removeApplicationField(this)" style="background: #ff4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                          <i class="fas fa-trash"></i>
+                          <%= lang === 'de' ? 'Löschen' : 'Delete' %>
+                        </button>
+                      </div>
+
+                      <div class="form-group">
+                        <div class="form-label">
+                          <i class="fas fa-tag"></i>
+                          <span><%= lang === 'de' ? 'Frage / Label' : 'Question / Label' %></span>
+                          <span style="color: #ff4444;">*</span>
+                        </div>
+                        <input
+                          type="text"
+                          name="applicationField_label_<%= index %>"
+                          value="<%= field.label || '' %>"
+                          placeholder="<%= lang === 'de' ? 'z. B. Warum möchtest du dich bewerben?' : 'e.g. Why do you want to apply?' %>"
+                          maxlength="45"
+                          required
+                          style="width: 100%;">
+                        <div class="help-text">
+                          <i class="fas fa-info-circle"></i>
+                          <span><%= lang === 'de' ? 'Max 45 Zeichen (Discord Limit)' : 'Max 45 characters (Discord Limit)' %></span>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <div class="form-label">
+                          <i class="fas fa-keyboard"></i>
+                          <span>ID</span>
+                          <span style="color: #ff4444;">*</span>
+                        </div>
+                        <input
+                          type="text"
+                          name="applicationField_id_<%= index %>"
+                          value="<%= field.id || '' %>"
+                          placeholder="<%= lang === 'de' ? 'z. B. motivation, erfahrung' : 'e.g. motivation, experience' %>"
+                          pattern="[a-z0-9_]+"
+                          required
+                          style="width: 100%;">
+                        <div class="help-text">
+                          <i class="fas fa-lightbulb"></i>
+                          <span><%= lang === 'de' ? 'Nur Kleinbuchstaben, Zahlen und Unterstriche' : 'Only lowercase letters, numbers and underscores' %></span>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-2">
+                        <div class="form-group">
+                          <div class="form-label">
+                            <i class="fas fa-text-height"></i>
+                            <span><%= lang === 'de' ? 'Feld-Typ' : 'Field Type' %></span>
+                          </div>
+                          <select name="applicationField_style_<%= index %>" style="width: 100%;">
+                            <option value="short" <%= field.style === 'short' ? 'selected' : '' %>>
+                              <%= lang === 'de' ? '📝 Kurze Antwort (max 256 Zeichen)' : '📝 Short Answer (max 256 chars)' %>
+                            </option>
+                            <option value="paragraph" <%= field.style === 'paragraph' ? 'selected' : '' %>>
+                              <%= lang === 'de' ? '📄 Lange Antwort (max 1024 Zeichen)' : '📄 Long Answer (max 1024 chars)' %>
+                            </option>
+                          </select>
+                        </div>
+
+                        <div class="form-group">
+                          <label class="required-field-label" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer; border: 2px solid <%= field.required !== false ? 'var(--accent-color)' : 'transparent' %>; transition: all 0.2s;"
+                                 onchange="this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent';"
+                                 onclick="setTimeout(() => { this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent'; }, 10);">
+                            <input
+                              type="checkbox"
+                              name="applicationField_required_<%= index %>"
+                              <%= field.required !== false ? 'checked' : '' %>
+                              style="width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--accent-color);">
+                            <span style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                              <i class="fas fa-asterisk" style="font-size: 0.7rem; color: var(--accent-color);"></i>
+                              <%= lang === 'de' ? 'Pflichtfeld' : 'Required' %>
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <% }); %>
+                  </div>
+
+                  <% if ((cfg.applicationSystem?.formFields || []).length >= 5) { %>
+                  <div class="alert alert-warning" style="margin-top: 1rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                      <strong><%= lang === 'de' ? '⚠️ Maximum erreicht!' : '⚠️ Maximum reached!' %></strong><br>
+                      <%= lang === 'de'
+                        ? 'Du hast die maximale Anzahl von 5 Feldern erreicht (Discord Limit).'
+                        : 'You have reached the maximum of 5 fields (Discord Limit).'
+                      %>
+                    </div>
+                  </div>
+                  <% } else { %>
+                  <button type="button" class="btn btn-success" onclick="addApplicationField()" style="width: 100%; margin-top: 1rem;">
+                    <i class="fas fa-plus"></i>
+                    <%= lang === 'de' ? 'Neue Frage hinzufügen' : 'Add New Question' %>
+                    (<%= (cfg.applicationSystem?.formFields || []).length %>/5)
+                  </button>
+                  <% } %>
+                </div>
               </div>
             </div>
 
@@ -5488,6 +5621,173 @@
         field.querySelectorAll('input, select, textarea').forEach(input => {
           const name = input.getAttribute('name');
           if (name && name.startsWith('formField_')) {
+            const parts = name.split('_');
+            parts[parts.length - 1] = index;
+            input.setAttribute('name', parts.join('_'));
+          }
+        });
+      });
+    }
+
+    // Application Form Fields Management
+    function addApplicationField() {
+      const container = document.getElementById('applicationFieldsList');
+      const currentFields = container.querySelectorAll(':scope > .form-field-item');
+      const newIndex = currentFields.length;
+
+      // Check if maximum is reached (5 fields max)
+      if (newIndex >= 5) {
+        alert('<%= lang === 'de' ? 'Maximum von 5 Feldern erreicht (Discord Limit)!' : 'Maximum of 5 fields reached (Discord Limit)!' %>');
+        return;
+      }
+
+      const fieldHtml = `
+        <div class="form-field-item" data-index="${newIndex}" style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border-radius: 12px; border: 2px solid var(--border-color);">
+          <div class="form-field-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <span class="form-field-number" style="background: var(--accent-color); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+              ${newIndex + 1}
+            </span>
+            <button type="button" class="btn-icon-danger" onclick="removeApplicationField(this)" style="background: #ff4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-trash"></i>
+              <%= lang === 'de' ? 'Löschen' : 'Delete' %>
+            </button>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">
+              <i class="fas fa-tag"></i>
+              <span><%= lang === 'de' ? 'Frage / Label' : 'Question / Label' %></span>
+              <span style="color: #ff4444;">*</span>
+            </div>
+            <input
+              type="text"
+              name="applicationField_label_${newIndex}"
+              placeholder="<%= lang === 'de' ? 'z. B. Warum möchtest du dich bewerben?' : 'e.g. Why do you want to apply?' %>"
+              maxlength="45"
+              required
+              style="width: 100%;">
+            <div class="help-text">
+              <i class="fas fa-info-circle"></i>
+              <span><%= lang === 'de' ? 'Max 45 Zeichen (Discord Limit)' : 'Max 45 characters (Discord Limit)' %></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label">
+              <i class="fas fa-keyboard"></i>
+              <span>ID</span>
+              <span style="color: #ff4444;">*</span>
+            </div>
+            <input
+              type="text"
+              name="applicationField_id_${newIndex}"
+              placeholder="<%= lang === 'de' ? 'z. B. motivation, erfahrung' : 'e.g. motivation, experience' %>"
+              pattern="[a-z0-9_]+"
+              required
+              style="width: 100%;">
+            <div class="help-text">
+              <i class="fas fa-lightbulb"></i>
+              <span><%= lang === 'de' ? 'Nur Kleinbuchstaben, Zahlen und Unterstriche' : 'Only lowercase letters, numbers and underscores' %></span>
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <div class="form-label">
+                <i class="fas fa-text-height"></i>
+                <span><%= lang === 'de' ? 'Feld-Typ' : 'Field Type' %></span>
+              </div>
+              <select name="applicationField_style_${newIndex}" style="width: 100%;">
+                <option value="short">
+                  <%= lang === 'de' ? '📝 Kurze Antwort (max 256 Zeichen)' : '📝 Short Answer (max 256 chars)' %>
+                </option>
+                <option value="paragraph">
+                  <%= lang === 'de' ? '📄 Lange Antwort (max 1024 Zeichen)' : '📄 Long Answer (max 1024 chars)' %>
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="required-field-label" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer; border: 2px solid var(--accent-color); transition: all 0.2s;"
+                     onchange="this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent';"
+                     onclick="setTimeout(() => { this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent'; }, 10);">
+                <input
+                  type="checkbox"
+                  name="applicationField_required_${newIndex}"
+                  checked
+                  style="width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--accent-color);">
+                <span style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fas fa-asterisk" style="font-size: 0.7rem; color: var(--accent-color);"></i>
+                  <%= lang === 'de' ? 'Pflichtfeld' : 'Required' %>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.insertAdjacentHTML('beforeend', fieldHtml);
+      updateApplicationFieldNumbers();
+
+      // Update button text to show count
+      const addButton = document.querySelector('button[onclick="addApplicationField()"]');
+      if (addButton && newIndex + 1 < 5) {
+        addButton.innerHTML = '<i class="fas fa-plus"></i> <%= lang === 'de' ? 'Neue Frage hinzufügen' : 'Add New Question' %> (' + (newIndex + 1) + '/5)';
+      } else if (addButton) {
+        addButton.style.display = 'none';
+        // Show max warning
+        const warningHtml = `
+          <div class="alert alert-warning" style="margin-top: 1rem;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+              <strong><%= lang === 'de' ? '⚠️ Maximum erreicht!' : '⚠️ Maximum reached!' %></strong><br>
+              <%= lang === 'de'
+                ? 'Du hast die maximale Anzahl von 5 Feldern erreicht (Discord Limit).'
+                : 'You have reached the maximum of 5 fields (Discord Limit).'
+              %>
+            </div>
+          </div>
+        `;
+        addButton.insertAdjacentHTML('afterend', warningHtml);
+      }
+    }
+
+    function removeApplicationField(button) {
+      const fieldItem = button.closest('.form-field-item');
+      fieldItem.remove();
+      updateApplicationFieldNumbers();
+
+      // Update button visibility and text
+      const container = document.getElementById('applicationFieldsList');
+      const currentFields = container.querySelectorAll(':scope > .form-field-item');
+      const addButton = document.querySelector('button[onclick="addApplicationField()"]');
+
+      if (addButton) {
+        addButton.style.display = 'block';
+        addButton.innerHTML = '<i class="fas fa-plus"></i> <%= lang === 'de' ? 'Neue Frage hinzufügen' : 'Add New Question' %> (' + currentFields.length + '/5)';
+
+        // Remove max warning if exists
+        const warning = addButton.nextElementSibling;
+        if (warning && warning.classList.contains('alert-warning')) {
+          warning.remove();
+        }
+      }
+    }
+
+    function updateApplicationFieldNumbers() {
+      const container = document.getElementById('applicationFieldsList');
+      const fields = container.querySelectorAll(':scope > .form-field-item');
+      fields.forEach((field, index) => {
+        field.setAttribute('data-index', index);
+        const numberSpan = field.querySelector('.form-field-number');
+        if (numberSpan) {
+          numberSpan.textContent = index + 1;
+        }
+
+        // Update input names
+        field.querySelectorAll('input, select, textarea').forEach(input => {
+          const name = input.getAttribute('name');
+          if (name && name.startsWith('applicationField_')) {
             const parts = name.split('_');
             parts[parts.length - 1] = index;
             input.setAttribute('name', parts.join('_'));
