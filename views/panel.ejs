@@ -2972,6 +2972,58 @@
               </div>
             </div>
 
+            <!-- Ticket Behavior Settings -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                      <i class="fas fa-cog"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '⚙️ Ticket-Verhalten' : '⚙️ Ticket Behavior' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Konfiguriere wie Tickets sich verhalten, wenn sie geclaimed werden'
+                      : 'Configure how tickets behave when they are claimed'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="toggle-container" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-label">
+                    <input type="checkbox" name="forceClaimEnabled" <%= cfg.forceClaimEnabled !== false ? 'checked' : '' %>>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">
+                      <strong><%= lang === 'de' ? 'Force Claim aktivieren' : 'Enable Force Claim' %></strong>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i>
+                  <div>
+                    <strong><%= lang === 'de' ? 'Was ist Force Claim?' : 'What is Force Claim?' %></strong><br>
+                    <%= lang === 'de'
+                      ? 'Wenn aktiviert: Nach dem Claim werden automatisch alle Nachrichten von Nicht-Team-Mitgliedern gelöscht (außer Ersteller und hinzugefügte Nutzer). Dies sorgt für einen sauberen Channel.\n\nWenn deaktiviert: Es werden nur die Channel-Berechtigungen angepasst, Nachrichten bleiben erhalten.'
+                      : 'When enabled: After claiming, all messages from non-team members are automatically deleted (except creator and added users). This ensures a clean channel.\n\nWhen disabled: Only channel permissions are adjusted, messages remain.'
+                    %>
+                  </div>
+                </div>
+
+                <div class="help-text" style="margin-top: 1rem;">
+                  <i class="fas fa-lightbulb"></i>
+                  <span>
+                    <%= lang === 'de'
+                      ? '💡 Tipp: Force Claim ist besonders nützlich, wenn du möchtest, dass geclaimte Tickets nur relevante Informationen enthalten.'
+                      : '💡 Tip: Force Claim is especially useful when you want claimed tickets to only contain relevant information.'
+                    %>
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <!-- Changelog & Updates -->
             <div class="card">
               <div class="card-header">

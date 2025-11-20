@@ -3080,6 +3080,11 @@ module.exports = (client)=>{
         };
       });
 
+      // Ticket Behavior Settings
+      cfg.forceClaimEnabled = req.body.forceClaimEnabled === 'on' || req.body.forceClaimEnabled === 'true';
+      // Default to true if not set (for existing servers)
+      if (cfg.forceClaimEnabled === undefined) cfg.forceClaimEnabled = true;
+
       // Changelog Settings
       cfg.changelogEnabled = req.body.changelogEnabled === 'true' || req.body.changelogEnabled === 'on';
       cfg.changelogChannelId = sanitizeDiscordId(req.body.changelogChannelId) || null;

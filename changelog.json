@@ -1,6 +1,100 @@
 {
-  "currentVersion": "1.4.5",
+  "currentVersion": "1.5.0",
   "versions": [
+    {
+      "version": "1.5.0",
+      "date": "2025-01-20",
+      "changes": {
+        "de": [
+          "⚙️ Force Claim Toggle - Panel-Einstellung um Auto-Delete in geclaimten Tickets zu steuern",
+          "🗑️ Auto-Delete System - Nachrichten von Nicht-Team-Mitgliedern werden in geclaimten Tickets gelöscht (optional)",
+          "🔔 Close Request Pings - Automatische Benachrichtigungen bei Schließungsanfragen",
+          "👥 Smart Pinging - User/Team werden je nach Requester-Typ gezielt benachrichtigt",
+          "🎫 /ticket add - Neuer Command zum Hinzufügen von Usern zu Tickets",
+          "🔒 /ticket hide - Ticket für alle Team-Mitglieder verstecken (nur Claimer)",
+          "👁️ /ticket unhide - Verstecktes Ticket wieder sichtbar machen (nur Claimer)",
+          "📝 Application System - Number-Felder für Bewerbungsformulare hinzugefügt",
+          "🎨 Ticket-Verhalten - Neuer Einstellungs-Bereich im Panel für Ticket-Features"
+        ],
+        "en": [
+          "⚙️ Force Claim Toggle - Panel setting to control auto-delete in claimed tickets",
+          "🗑️ Auto-Delete System - Messages from non-team members are deleted in claimed tickets (optional)",
+          "🔔 Close Request Pings - Automatic notifications for close requests",
+          "👥 Smart Pinging - Users/Team are pinged based on requester type",
+          "🎫 /ticket add - New command to add users to tickets",
+          "🔒 /ticket hide - Hide ticket from all team members (claimer only)",
+          "👁️ /ticket unhide - Unhide hidden ticket (claimer only)",
+          "📝 Application System - Number fields added for application forms",
+          "🎨 Ticket Behavior - New settings section in panel for ticket features"
+        ],
+        "tr": [
+          "⚙️ Force Claim Değiştirici - Sahiplenilmiş ticketlarda otomatik silmeyi kontrol etmek için panel ayarı",
+          "🗑️ Otomatik Silme Sistemi - Sahiplenilmiş ticketlarda takım olmayan üyelerin mesajları silinir (opsiyonel)",
+          "🔔 Kapatma İsteği Pingler - Kapatma istekleri için otomatik bildirimler",
+          "👥 Akıllı Pingleme - İstek sahibi türüne göre kullanıcılar/takım pinglenir",
+          "🎫 /ticket add - Ticketlara kullanıcı eklemek için yeni komut",
+          "🔒 /ticket hide - Ticketi tüm takım üyelerinden gizle (sadece claimer)",
+          "👁️ /ticket unhide - Gizli ticketi tekrar görünür yap (sadece claimer)",
+          "📝 Başvuru Sistemi - Başvuru formları için sayı alanları eklendi",
+          "🎨 Ticket Davranışı - Ticket özellikleri için panelde yeni ayarlar bölümü"
+        ],
+        "ja": [
+          "⚙️ Force Claimトグル - クレーム済みチケットでの自動削除を制御するパネル設定",
+          "🗑️自動削除システム - クレーム済みチケットで非チームメンバーからのメッセージが削除される（オプション）",
+          "🔔クローズリクエストPing - クローズリクエストの自動通知",
+          "👥スマートPing - リクエスター種類に基づいてユーザー/チームがPingされる",
+          "🎫 /ticket add - チケットにユーザーを追加する新しいコマンド",
+          "🔒 /ticket hide - すべてのチームメンバーからチケットを非表示（クレーマーのみ）",
+          "👁️ /ticket unhide - 非表示チケットを再表示（クレーマーのみ）",
+          "📝申請システム - 申請フォームに番号フィールドを追加",
+          "🎨チケット動作 - チケット機能のパネルに新しい設定セクション"
+        ],
+        "ru": [
+          "⚙️ Переключатель Force Claim - Настройка панели для контроля автоудаления в заявленных тикетах",
+          "🗑️ Система автоудаления - Сообщения от не-членов команды удаляются в заявленных тикетах (опционально)",
+          "🔔 Пинги запросов на закрытие - Автоматические уведомления для запросов на закрытие",
+          "👥 Умные пинги - Пользователи/команда пингуются в зависимости от типа запрашивающего",
+          "🎫 /ticket add - Новая команда для добавления пользователей в тикеты",
+          "🔒 /ticket hide - Скрыть тикет от всех членов команды (только claimer)",
+          "👁️ /ticket unhide - Показать скрытый тикет (только claimer)",
+          "📝 Система заявок - Добавлены числовые поля для форм заявок",
+          "🎨 Поведение тикетов - Новый раздел настроек в панели для функций тикетов"
+        ],
+        "pt": [
+          "⚙️ Toggle Force Claim - Configuração do painel para controlar auto-delete em tickets reivindicados",
+          "🗑️ Sistema de Auto-Delete - Mensagens de não-membros da equipe são deletadas em tickets reivindicados (opcional)",
+          "🔔 Pings de Solicitação de Fechamento - Notificações automáticas para solicitações de fechamento",
+          "👥 Pinging Inteligente - Usuários/Equipe são pingados com base no tipo de solicitante",
+          "🎫 /ticket add - Novo comando para adicionar usuários aos tickets",
+          "🔒 /ticket hide - Ocultar ticket de todos os membros da equipe (apenas claimer)",
+          "👁️ /ticket unhide - Desocultar ticket oculto (apenas claimer)",
+          "📝 Sistema de Candidaturas - Campos numéricos adicionados para formulários de candidatura",
+          "🎨 Comportamento do Ticket - Nova seção de configurações no painel para recursos de tickets"
+        ],
+        "es": [
+          "⚙️ Toggle Force Claim - Configuración del panel para controlar auto-delete en tickets reclamados",
+          "🗑️ Sistema de Auto-Delete - Mensajes de no-miembros del equipo se eliminan en tickets reclamados (opcional)",
+          "🔔 Pings de Solicitud de Cierre - Notificaciones automáticas para solicitudes de cierre",
+          "👥 Pinging Inteligente - Usuarios/Equipo son pingeados según el tipo de solicitante",
+          "🎫 /ticket add - Nuevo comando para agregar usuarios a tickets",
+          "🔒 /ticket hide - Ocultar ticket de todos los miembros del equipo (solo claimer)",
+          "👁️ /ticket unhide - Desocultar ticket oculto (solo claimer)",
+          "📝 Sistema de Aplicaciones - Campos numéricos agregados para formularios de aplicación",
+          "🎨 Comportamiento del Ticket - Nueva sección de configuración en el panel para características de tickets"
+        ],
+        "id": [
+          "⚙️ Toggle Force Claim - Pengaturan panel untuk mengontrol auto-delete di ticket yang diklaim",
+          "🗑️ Sistem Auto-Delete - Pesan dari non-anggota tim dihapus di ticket yang diklaim (opsional)",
+          "🔔 Ping Permintaan Penutupan - Notifikasi otomatis untuk permintaan penutupan",
+          "👥 Pinging Cerdas - Pengguna/Tim di-ping berdasarkan jenis peminta",
+          "🎫 /ticket add - Perintah baru untuk menambahkan pengguna ke ticket",
+          "🔒 /ticket hide - Sembunyikan ticket dari semua anggota tim (hanya claimer)",
+          "👁️ /ticket unhide - Tampilkan ticket tersembunyi (hanya claimer)",
+          "📝 Sistem Aplikasi - Field nomor ditambahkan untuk formulir aplikasi",
+          "🎨 Perilaku Ticket - Bagian pengaturan baru di panel untuk fitur ticket"
+        ]
+      }
+    },
     {
       "version": "1.4.5",
       "date": "2025-10-30",

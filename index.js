@@ -4973,6 +4973,27 @@ client.on(Events.InteractionCreate, async i => {
         };
         saveTickets(guildId, log);
 
+        // Build ping mentions based on requester type
+        let pingMentions = '';
+        if (requesterType === 'user') {
+          // User requests close -> ping claimer (if claimed) or all team roles
+          if (ticket.claimer) {
+            pingMentions = `<@${ticket.claimer}>`;
+          } else {
+            const teamRoles = getAllTeamRoles(guildId);
+            if (teamRoles.length > 0) {
+              pingMentions = teamRoles.map(roleId => `<@&${roleId}>`).join(' ');
+            }
+          }
+        } else {
+          // Team requests close -> ping creator and all added users
+          const mentions = [`<@${ticket.userId}>`];
+          if (ticket.addedUsers && Array.isArray(ticket.addedUsers)) {
+            mentions.push(...ticket.addedUsers.map(uid => `<@${uid}>`));
+          }
+          pingMentions = mentions.join(' ');
+        }
+
         const requestEmbed = new EmbedBuilder()
           .setColor(0xffa500)
           .setTitle('📩 Schließungsanfrage')
@@ -5002,7 +5023,14 @@ client.on(Events.InteractionCreate, async i => {
             .setStyle(ButtonStyle.Danger)
         );
 
-        const requestMessage = await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] });
+        // Send ping mentions first (if any), then embed
+        let requestMessage;
+        if (pingMentions) {
+          await i.channel.send({ content: pingMentions });
+          requestMessage = await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] });
+        } else {
+          requestMessage = await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] });
+        }
         ticket.closeRequest.messageId = requestMessage.id; // Speichere Message-ID
         saveTickets(guildId, log);
         logEvent(i.guild, t(guildId, 'logs.close_requested', { id: ticket.id, user: `<@${i.user.id}>` }));
@@ -7298,6 +7326,56 @@ client.on(Events.MessageCreate, async (message) => {
 
   } catch(err) {
     console.error('Fehler beim Message-Delete-Check:', err);
+  }
+});
+
+// Force Claim: Auto-delete messages from non-team members in claimed tickets
+client.on(Events.MessageCreate, async (message) => {
+  // Ignore bot messages
+  if (message.author.bot) return;
+
+  // Only process messages in guilds
+  if (!message.guild) return;
+
+  try {
+    const guildId = message.guild.id;
+    const cfg = readCfg(guildId);
+
+    // Check if Force Claim is enabled (default: true)
+    if (cfg.forceClaimEnabled === false) return;
+
+    // Find ticket for this channel
+    const tickets = loadTickets(guildId);
+    const ticket = tickets.find(t => t.channelId === message.channel.id);
+
+    // Only process if this is a ticket channel and it's claimed
+    if (!ticket || !ticket.claimer) return;
+
+    // Allow messages from: creator, claimer, added users, and team members
+    const allowedUsers = [ticket.userId, ticket.claimer];
+    if (ticket.addedUsers && Array.isArray(ticket.addedUsers)) {
+      allowedUsers.push(...ticket.addedUsers);
+    }
+
+    // Check if user is in allowed list
+    if (allowedUsers.includes(message.author.id)) return;
+
+    // Check if user is team member
+    const member = message.member;
+    if (!member) return;
+
+    const isTeam = hasAnyTeamRole(member, guildId);
+    if (isTeam) return;
+
+    // User is not allowed -> delete message
+    await message.delete().catch(err => {
+      console.error(`Failed to delete message in ticket #${ticket.id}:`, err);
+    });
+
+    console.log(`🗑️ Auto-deleted message from ${message.author.tag} in claimed ticket #${ticket.id} (Force Claim enabled)`);
+
+  } catch(err) {
+    console.error('Fehler beim Force Claim Auto-Delete:', err);
   }
 });
 
