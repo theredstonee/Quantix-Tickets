@@ -3010,12 +3010,22 @@ client.on(Events.InteractionCreate, async i => {
 
       // Validate number fields
       for (const field of formFields) {
-        if (field.style === 'number' && answers[field.id]) {
-          const value = answers[field.id].trim();
-          if (value && !/^\d+([.,]\d+)?$/.test(value)) {
+        if (field.style === 'number') {
+          const value = answers[field.id] ? answers[field.id].trim() : '';
+
+          // Check if required and empty
+          if (field.required !== false && !value) {
             return i.reply({
               ephemeral: true,
-              content: `❌ **${field.label}** muss eine Zahl sein! (z.B. 123 oder 45.67)`
+              content: `❌ **${field.label}** ist ein Pflichtfeld und muss ausgefüllt werden!`
+            });
+          }
+
+          // Check if value is a valid number (allow integers and decimals)
+          if (value && !/^-?\d+([.,]\d+)?$/.test(value)) {
+            return i.reply({
+              ephemeral: true,
+              content: `❌ **${field.label}** darf nur Zahlen enthalten!\n\n✅ Erlaubt: 123, 45.67, 12,5, -10\n❌ Nicht erlaubt: abc, 12a, #123`
             });
           }
         }
@@ -4432,15 +4442,26 @@ client.on(Events.InteractionCreate, async i => {
         // Add fields (max 5 per modal)
         const fieldsToAdd = formFields.slice(0, 5);
         fieldsToAdd.forEach((field, idx) => {
-          const inputStyle = field.style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short;
-          const placeholder = field.style === 'number' ? '(Nur Zahlen)' : '';
+          let inputStyle = TextInputStyle.Short;
+          let placeholder = '';
+          let maxLength = 256;
+
+          if (field.style === 'paragraph') {
+            inputStyle = TextInputStyle.Paragraph;
+            maxLength = 1024;
+          } else if (field.style === 'number') {
+            inputStyle = TextInputStyle.Short;
+            placeholder = 'Nur Zahlen erlaubt (z.B. 123 oder 45.67)';
+            maxLength = 50; // Reasonable limit for numbers
+          }
 
           const input = new TextInputBuilder()
             .setCustomId(field.id)
             .setLabel(field.label.substring(0,45))
             .setStyle(inputStyle)
             .setRequired(field.required !== false)
-            .setMaxLength(field.style === 'paragraph' ? 1024 : 256);
+            .setMaxLength(maxLength)
+            .setMinLength(field.style === 'number' && field.required !== false ? 1 : 0);
 
           if(placeholder) input.setPlaceholder(placeholder);
 

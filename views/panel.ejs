@@ -3412,7 +3412,7 @@
                               <%= lang === 'de' ? '📄 Lange Antwort (max 1024 Zeichen)' : '📄 Long Answer (max 1024 chars)' %>
                             </option>
                             <option value="number" <%= field.style === 'number' ? 'selected' : '' %>>
-                              <%= lang === 'de' ? '🔢 Nur Zahlen' : '🔢 Number Only' %>
+                              <%= lang === 'de' ? '🔢 Nur Zahlen (validiert, max 50 Zeichen)' : '🔢 Number Only (validated, max 50 chars)' %>
                             </option>
                           </select>
                         </div>
@@ -3805,7 +3805,7 @@
                             <%= lang === 'de' ? 'Lange Antwort (Absatz)' : 'Long Answer (Paragraph)' %>
                           </option>
                           <option value="number" <%= field.style === 'number' ? 'selected' : '' %>>
-                            <%= lang === 'de' ? 'Nur Zahl' : 'Number Only' %>
+                            <%= lang === 'de' ? 'Nur Zahlen (validiert, max 50)' : 'Number Only (validated, max 50)' %>
                           </option>
                         </select>
                       </div>
@@ -5607,7 +5607,7 @@
               <select name="formField_style_${newIndex}">
                 <option value="short"><%= lang === 'de' ? 'Kurze Antwort (1 Zeile)' : 'Short Answer (1 line)' %></option>
                 <option value="paragraph"><%= lang === 'de' ? 'Lange Antwort (Absatz)' : 'Long Answer (Paragraph)' %></option>
-                <option value="number"><%= lang === 'de' ? 'Nur Zahl' : 'Number Only' %></option>
+                <option value="number"><%= lang === 'de' ? 'Nur Zahlen (validiert)' : 'Number Only (validated)' %></option>
               </select>
             </div>
 
@@ -5759,7 +5759,7 @@
                   <%= lang === 'de' ? '📄 Lange Antwort (max 1024 Zeichen)' : '📄 Long Answer (max 1024 chars)' %>
                 </option>
                 <option value="number">
-                  <%= lang === 'de' ? '🔢 Nur Zahlen' : '🔢 Number Only' %>
+                  <%= lang === 'de' ? '🔢 Nur Zahlen (validiert, max 50 Zeichen)' : '🔢 Number Only (validated, max 50 chars)' %>
                 </option>
               </select>
             </div>
