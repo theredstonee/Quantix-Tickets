@@ -141,6 +141,34 @@ module.exports = {
             versionLabel: '🆕 Versão',
             dateLabel: '📅 Data',
             changesLabel: '✨ Mudanças'
+          },
+          tr: {
+            title: '📢 Sürüm Güncellemesi',
+            description: `**Quantix Tickets Bot** sürüm **${VERSION}** olarak güncellendi`,
+            versionLabel: '🆕 Sürüm',
+            dateLabel: '📅 Tarih',
+            changesLabel: '✨ Değişiklikler'
+          },
+          es: {
+            title: '📢 Actualización de Versión',
+            description: `**Quantix Tickets Bot** ha sido actualizado a la versión **${VERSION}**`,
+            versionLabel: '🆕 Versión',
+            dateLabel: '📅 Fecha',
+            changesLabel: '✨ Cambios'
+          },
+          id: {
+            title: '📢 Pembaruan Versi',
+            description: `**Quantix Tickets Bot** telah diperbarui ke versi **${VERSION}**`,
+            versionLabel: '🆕 Versi',
+            dateLabel: '📅 Tanggal',
+            changesLabel: '✨ Perubahan'
+          },
+          ar: {
+            title: '📢 تحديث الإصدار',
+            description: `**Quantix Tickets Bot** تم تحديثه إلى الإصدار **${VERSION}**`,
+            versionLabel: '🆕 الإصدار',
+            dateLabel: '📅 التاريخ',
+            changesLabel: '✨ التغييرات'
           }
         };
 
