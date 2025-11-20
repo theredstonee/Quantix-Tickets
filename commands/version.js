@@ -26,12 +26,13 @@ module.exports = {
         { name: '📅 Release', value: `${RELEASE_DATE}`, inline: true },
         { name: '🌐 Sprachen', value: '9 verfügbar', inline: true },
         {
-          name: '✨ Neu in dieser Version',
+          name: '✨ Neu in Version 1.5.0',
           value:
-            '`•` **Verbesserte Sicherheit:** Team-Rolle aus Claim entfernt\n' +
-            '`•` **Privatsphäre:** Nur Creator, Claimer & Hinzugefügte\n' +
-            '`•` **Hierarchie:** Priority-Rollen bleiben aktiv\n' +
-            '`•` **Optimierung:** Bessere Performance & Stabilität',
+            '`•` **Force Claim Toggle:** Auto-Delete in geclaimten Tickets (optional)\n' +
+            '`•` **Smart Pings:** Close Requests pingen automatisch relevante User\n' +
+            '`•` **/ticket add:** User per Command zu Tickets hinzufügen\n' +
+            '`•` **/ticket hide/unhide:** Tickets für Team verstecken (Claimer-only)\n' +
+            '`•` **Number-Felder:** Zahlen-Eingaben in Bewerbungsformularen',
           inline: false
         },
         {
