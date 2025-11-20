@@ -3034,7 +3034,7 @@ module.exports = (client)=>{
             appFormFields.push({
               label: sanitizeString(label, 45), // Discord Modal label limit
               id: sanitizeString(id, 100).replace(/[^a-z0-9_]/g, ''), // Only lowercase, numbers, underscores
-              style: ['short', 'paragraph'].includes(style) ? style : 'short', // Only short or paragraph
+              style: ['short', 'paragraph', 'number'].includes(style) ? style : 'short', // short, paragraph or number
               required: required === 'on' || required === true
             });
           }

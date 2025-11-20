@@ -3359,6 +3359,9 @@
                             <option value="paragraph" <%= field.style === 'paragraph' ? 'selected' : '' %>>
                               <%= lang === 'de' ? '📄 Lange Antwort (max 1024 Zeichen)' : '📄 Long Answer (max 1024 chars)' %>
                             </option>
+                            <option value="number" <%= field.style === 'number' ? 'selected' : '' %>>
+                              <%= lang === 'de' ? '🔢 Nur Zahlen' : '🔢 Number Only' %>
+                            </option>
                           </select>
                         </div>
 
@@ -5215,7 +5218,6 @@
 
   <!-- JavaScript -->
   <script src="/js/ux-enhancements.js"></script>
-  <script src="/js/auth-session.js"></script>
   <script>
     // Ensure all code runs after DOM is fully loaded
     document.addEventListener('DOMContentLoaded', function() {
@@ -5703,6 +5705,9 @@
                 </option>
                 <option value="paragraph">
                   <%= lang === 'de' ? '📄 Lange Antwort (max 1024 Zeichen)' : '📄 Long Answer (max 1024 chars)' %>
+                </option>
+                <option value="number">
+                  <%= lang === 'de' ? '🔢 Nur Zahlen' : '🔢 Number Only' %>
                 </option>
               </select>
             </div>
