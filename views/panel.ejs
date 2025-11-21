@@ -3451,6 +3451,83 @@
                   </div>
                 </div>
 
+                <!-- Auto-Ablauf & Archiv -->
+                <div class="card-body" style="border-top: 2px solid var(--border-color);">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-clock"></i>
+                    <%= lang === 'de' ? '⏰ Auto-Ablauf & Archiv' : '⏰ Auto-Expire & Archive' %>
+                  </h3>
+
+                  <div class="grid grid-2">
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-hourglass-end"></i>
+                        <span><%= lang === 'de' ? 'Auto-Ablauf (Tage)' : 'Auto-Expire (Days)' %></span>
+                      </div>
+                      <input type="number" name="applicationAutoExpireDays"
+                        value="<%= cfg.applicationSystem?.autoExpireDays || 0 %>"
+                        min="0" max="365" placeholder="0" style="width: 100%;">
+                      <div class="help-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span><%= lang === 'de' ? '0 = deaktiviert. Bewerbungen ohne Antwort werden nach X Tagen geschlossen.' : '0 = disabled. Applications without response will be closed after X days.' %></span>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-archive"></i>
+                        <span><%= lang === 'de' ? 'Archiv-Channel' : 'Archive Channel' %></span>
+                      </div>
+                      <select name="applicationArchiveChannelId" style="width: 100%;">
+                        <option value=""><%= lang === 'de' ? '-- Kein Archiv --' : '-- No Archive --' %></option>
+                        <% channels.filter(c => c.type === 0).forEach(ch => { %>
+                          <option value="<%= ch.id %>" <%= cfg.applicationSystem?.archiveChannelId === ch.id ? 'selected' : '' %>>
+                            # <%= ch.name %>
+                          </option>
+                        <% }); %>
+                      </select>
+                      <div class="help-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span><%= lang === 'de' ? 'Abgeschlossene Bewerbungen werden hier archiviert' : 'Completed applications will be archived here' %></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Interview-System -->
+                <div class="card-body" style="border-top: 2px solid var(--border-color);">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-calendar-alt"></i>
+                    <%= lang === 'de' ? '📅 Interview-System' : '📅 Interview System' %>
+                  </h3>
+
+                  <div class="toggle-container" style="margin-bottom: 1rem;">
+                    <label class="toggle-label">
+                      <input type="checkbox" name="applicationInterviewEnabled" <%= cfg.applicationSystem?.interviewEnabled ? 'checked' : '' %>>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-text">
+                        <strong><%= lang === 'de' ? 'Interview-System aktivieren' : 'Enable Interview System' %></strong>
+                      </span>
+                    </label>
+                  </div>
+                  <p style="margin-bottom: 1rem; opacity: 0.8; font-size: 0.9rem;">
+                    <%= lang === 'de'
+                      ? 'Team kann Interviews planen. Bewerber und Team werden per DM erinnert.'
+                      : 'Team can schedule interviews. Applicants and team will be reminded via DM.'
+                    %>
+                  </p>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-bell"></i>
+                      <span><%= lang === 'de' ? 'Erinnerung vor Interview (Minuten)' : 'Reminder before Interview (Minutes)' %></span>
+                    </div>
+                    <input type="number" name="applicationInterviewReminderMinutes"
+                      value="<%= cfg.applicationSystem?.interviewReminderMinutes || 30 %>"
+                      min="5" max="1440" placeholder="30" style="width: 100%;">
+                  </div>
+                </div>
+
                 <!-- Stellen-Embed Settings -->
                 <div class="card-body" style="border-top: 2px solid var(--border-color);">
                   <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">

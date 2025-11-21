@@ -3031,6 +3031,14 @@ module.exports = (client)=>{
         cfg.applicationSystem.votingEnabled = req.body.applicationVotingEnabled === 'on';
         cfg.applicationSystem.votingChannelId = sanitizeDiscordId(req.body.applicationVotingChannelId) || null;
 
+        // Auto-Expire & Archive
+        cfg.applicationSystem.autoExpireDays = sanitizeNumber(req.body.applicationAutoExpireDays, 0, 365) || 0;
+        cfg.applicationSystem.archiveChannelId = sanitizeDiscordId(req.body.applicationArchiveChannelId) || null;
+
+        // Interview System
+        cfg.applicationSystem.interviewEnabled = req.body.applicationInterviewEnabled === 'on';
+        cfg.applicationSystem.interviewReminderMinutes = sanitizeNumber(req.body.applicationInterviewReminderMinutes, 5, 1440) || 30;
+
         // Blacklist
         const blacklistText = req.body.applicationBlacklist || '';
         cfg.applicationSystem.blacklist = blacklistText.split('\n')

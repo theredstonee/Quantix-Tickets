@@ -1297,9 +1297,103 @@ client.once('ready', async () => {
   // SLA Warning & Escalation Checker - läuft alle 10 Minuten
   startSLAChecker();
 
+  // Application Interview Reminders & Auto-Expire - läuft alle 5 Minuten
+  startApplicationServices();
+
   // Send startup notification to all guilds
   await sendStartupNotifications();
 });
+
+// Application Services (Interview Reminders & Auto-Expire)
+function startApplicationServices() {
+  setInterval(async () => {
+    try {
+      const configsDir = path.join(__dirname, 'configs');
+      if (!fs.existsSync(configsDir)) return;
+
+      const configFiles = fs.readdirSync(configsDir).filter(f => f.match(/^\d+\.json$/));
+
+      for (const file of configFiles) {
+        const guildId = file.replace('.json', '');
+        const cfg = readCfg(guildId);
+        if (!cfg?.applicationSystem?.enabled) continue;
+
+        const tickets = loadTickets(guildId);
+        let needsSave = false;
+
+        for (const ticket of tickets) {
+          if (!ticket.isApplication || ticket.status !== 'open') continue;
+
+          // Interview Reminder
+          if (ticket.interview && !ticket.interview.reminderSent) {
+            const interviewTime = new Date(ticket.interview.scheduledAt);
+            const reminderMinutes = cfg.applicationSystem.interviewReminderMinutes || 30;
+            const reminderTime = new Date(interviewTime.getTime() - reminderMinutes * 60 * 1000);
+
+            if (new Date() >= reminderTime && new Date() < interviewTime) {
+              // Send reminder
+              try {
+                const applicant = await client.users.fetch(ticket.userId).catch(() => null);
+                const scheduler = await client.users.fetch(ticket.interview.scheduledBy).catch(() => null);
+
+                const reminderEmbed = new EmbedBuilder()
+                  .setColor(0xfbbf24)
+                  .setTitle('⏰ Interview-Erinnerung!')
+                  .setDescription(
+                    `Dein Interview beginnt in **${reminderMinutes} Minuten**!\n\n` +
+                    `📅 **${interviewTime.toLocaleDateString('de-DE')}** um **${interviewTime.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr**` +
+                    (ticket.interview.note ? `\n\n📝 ${ticket.interview.note}` : '')
+                  )
+                  .setTimestamp();
+
+                if (applicant) await applicant.send({ embeds: [reminderEmbed] }).catch(() => {});
+                if (scheduler) await scheduler.send({ embeds: [reminderEmbed] }).catch(() => {});
+
+                ticket.interview.reminderSent = true;
+                needsSave = true;
+              } catch (e) { console.error('Interview reminder error:', e); }
+            }
+          }
+
+          // Auto-Expire
+          const autoExpireDays = cfg.applicationSystem.autoExpireDays || 0;
+          if (autoExpireDays > 0) {
+            const createdAt = new Date(ticket.createdAt);
+            const expireAt = new Date(createdAt.getTime() + autoExpireDays * 24 * 60 * 60 * 1000);
+
+            if (new Date() >= expireAt) {
+              ticket.status = 'expired';
+              ticket.expiredAt = new Date().toISOString();
+              needsSave = true;
+
+              // Close channel
+              try {
+                const guild = client.guilds.cache.get(guildId);
+                if (guild) {
+                  const channel = await guild.channels.fetch(ticket.channelId).catch(() => null);
+                  if (channel) {
+                    await channel.send({
+                      embeds: [new EmbedBuilder()
+                        .setColor(0x6b7280)
+                        .setTitle('⏰ Bewerbung abgelaufen')
+                        .setDescription(`Diese Bewerbung wurde automatisch geschlossen (${autoExpireDays} Tage ohne Antwort).`)
+                        .setTimestamp()
+                      ]
+                    });
+                    setTimeout(() => channel.delete('Auto-Expire').catch(() => {}), 10000);
+                  }
+                }
+              } catch (e) { console.error('Auto-expire error:', e); }
+            }
+          }
+        }
+
+        if (needsSave) saveTickets(guildId, tickets);
+      }
+    } catch (e) { console.error('Application services error:', e); }
+  }, 5 * 60 * 1000); // Every 5 minutes
+  console.log('📅 Application Services gestartet (Interview Reminders & Auto-Expire)');
+}
 
 /**
  * Send startup notification to all guilds
@@ -3456,7 +3550,15 @@ client.on(Events.InteractionCreate, async i => {
         const viewNotesButton = new ButtonBuilder().setCustomId(`app_notes_view_${guildId}:${counter}`).setLabel('Notizen').setStyle(ButtonStyle.Secondary).setEmoji('📋');
         const buttonRow = new ActionRowBuilder().addComponents(acceptButton, rejectButton, noteButton, viewNotesButton);
 
-        const ticketMessage = await channel.send({content: `<@${i.user.id}>`, embeds: [ticketEmbed], components: [buttonRow]});
+        // Second row with interview button (if enabled)
+        const components = [buttonRow];
+        if (cfg.applicationSystem.interviewEnabled) {
+          const interviewButton = new ButtonBuilder().setCustomId(`app_interview_${guildId}:${counter}`).setLabel('Interview planen').setStyle(ButtonStyle.Primary).setEmoji('📅');
+          const secondRow = new ActionRowBuilder().addComponents(interviewButton);
+          components.push(secondRow);
+        }
+
+        const ticketMessage = await channel.send({content: `<@${i.user.id}>`, embeds: [ticketEmbed], components});
 
         // Save ticket
         const newTicket = {
@@ -3648,6 +3750,42 @@ client.on(Events.InteractionCreate, async i => {
           content: `✅ Bewerbung angenommen! <@${ticket.userId}> hat die Rolle <@&${targetRole.id}> erhalten.`
         });
 
+        // Archive to channel (if configured)
+        if (cfg.applicationSystem?.archiveChannelId) {
+          try {
+            const archiveChannel = await i.guild.channels.fetch(cfg.applicationSystem.archiveChannelId);
+            if (archiveChannel) {
+              const archiveEmbed = new EmbedBuilder()
+                .setColor(0x22c55e)
+                .setTitle(`✅ Bewerbung #${ticket.id} - Angenommen`)
+                .setDescription(
+                  `**Bewerber:** <@${ticket.userId}> (${ticket.username})\n` +
+                  `**Kategorie:** ${ticket.applicationCategory || 'Unbekannt'}\n` +
+                  `**Rolle:** ${targetRole.name}\n` +
+                  `**Angenommen von:** <@${i.user.id}>\n` +
+                  `**Grund:** ${reason}\n\n` +
+                  `**Erstellt:** <t:${Math.floor(new Date(ticket.createdAt).getTime() / 1000)}:F>\n` +
+                  `**Abgeschlossen:** <t:${Math.floor(Date.now() / 1000)}:F>`
+                )
+                .setThumbnail(i.guild.iconURL({ size: 64 }))
+                .setFooter({ text: 'Bewerbungs-Archiv' })
+                .setTimestamp();
+
+              // Add votes if available
+              if (ticket.votes) {
+                archiveEmbed.addFields(
+                  { name: '👍 Dafür', value: `${ticket.votes.up?.length || 0}`, inline: true },
+                  { name: '👎 Dagegen', value: `${ticket.votes.down?.length || 0}`, inline: true }
+                );
+              }
+
+              await archiveChannel.send({ embeds: [archiveEmbed] });
+            }
+          } catch (archiveErr) {
+            console.error('Archive error:', archiveErr);
+          }
+        }
+
         // Delete ticket channel after 10 seconds
         setTimeout(async () => {
           try {
@@ -3752,6 +3890,41 @@ client.on(Events.InteractionCreate, async i => {
           content: `✅ Bewerbung abgelehnt. <@${ticket.userId}> wurde benachrichtigt.`
         });
 
+        // Archive to channel (if configured)
+        if (cfg.applicationSystem?.archiveChannelId) {
+          try {
+            const archiveChannel = await i.guild.channels.fetch(cfg.applicationSystem.archiveChannelId);
+            if (archiveChannel) {
+              const archiveEmbed = new EmbedBuilder()
+                .setColor(0xef4444)
+                .setTitle(`❌ Bewerbung #${ticket.id} - Abgelehnt`)
+                .setDescription(
+                  `**Bewerber:** <@${ticket.userId}> (${ticket.username})\n` +
+                  `**Kategorie:** ${ticket.applicationCategory || 'Unbekannt'}\n` +
+                  `**Abgelehnt von:** <@${i.user.id}>\n` +
+                  `**Grund:** ${reason}\n\n` +
+                  `**Erstellt:** <t:${Math.floor(new Date(ticket.createdAt).getTime() / 1000)}:F>\n` +
+                  `**Abgeschlossen:** <t:${Math.floor(Date.now() / 1000)}:F>`
+                )
+                .setThumbnail(i.guild.iconURL({ size: 64 }))
+                .setFooter({ text: 'Bewerbungs-Archiv' })
+                .setTimestamp();
+
+              // Add votes if available
+              if (ticket.votes) {
+                archiveEmbed.addFields(
+                  { name: '👍 Dafür', value: `${ticket.votes.up?.length || 0}`, inline: true },
+                  { name: '👎 Dagegen', value: `${ticket.votes.down?.length || 0}`, inline: true }
+                );
+              }
+
+              await archiveChannel.send({ embeds: [archiveEmbed] });
+            }
+          } catch (archiveErr) {
+            console.error('Archive error:', archiveErr);
+          }
+        }
+
         // Delete ticket channel after 10 seconds
         setTimeout(async () => {
           try {
@@ -3775,6 +3948,102 @@ client.on(Events.InteractionCreate, async i => {
           await i.editReply({
             content:'❌ Fehler beim Ablehnen der Bewerbung.'
           });
+        }
+      }
+      return;
+    }
+
+    // Interview Modal Submit Handler
+    if(i.isModalSubmit() && i.customId.startsWith('modal_app_interview:')){
+      try {
+        const parts = i.customId.split(':');
+        const guildId = parts[1];
+        const ticketId = parseInt(parts[2]);
+
+        if(guildId !== i.guild.id){
+          return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+        }
+
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.id === ticketId && t.isApplication === true);
+
+        if(!ticket){
+          return i.reply({ephemeral:true,content:'❌ Bewerbung nicht gefunden.'});
+        }
+
+        const dateStr = i.fields.getTextInputValue('interview_date');
+        const timeStr = i.fields.getTextInputValue('interview_time');
+        const note = i.fields.getTextInputValue('interview_note') || '';
+
+        // Parse date (DD.MM.YYYY)
+        const dateMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+        if (!dateMatch) {
+          return i.reply({ephemeral:true, content:'❌ Ungültiges Datum! Format: TT.MM.JJJJ'});
+        }
+
+        // Parse time (HH:MM)
+        const timeMatch = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+        if (!timeMatch) {
+          return i.reply({ephemeral:true, content:'❌ Ungültige Uhrzeit! Format: HH:MM'});
+        }
+
+        const [, day, month, year] = dateMatch;
+        const [, hours, minutes] = timeMatch;
+        const interviewDate = new Date(year, month - 1, day, hours, minutes);
+
+        if (interviewDate <= new Date()) {
+          return i.reply({ephemeral:true, content:'❌ Das Interview muss in der Zukunft liegen!'});
+        }
+
+        // Save interview
+        ticket.interview = {
+          scheduledAt: interviewDate.toISOString(),
+          scheduledBy: i.user.id,
+          note: note,
+          reminderSent: false
+        };
+        saveTickets(guildId, tickets);
+
+        // Notify applicant via DM
+        try {
+          const applicant = await client.users.fetch(ticket.userId);
+          const dmEmbed = new EmbedBuilder()
+            .setColor(0x3b82f6)
+            .setTitle('📅 Interview geplant!')
+            .setDescription(
+              `**Server:** ${i.guild.name}\n` +
+              `**Bewerbung:** #${ticket.id}\n\n` +
+              `Dein Interview wurde geplant für:\n` +
+              `📅 **${interviewDate.toLocaleDateString('de-DE')}** um **${interviewDate.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr**\n\n` +
+              (note ? `📝 **Hinweis:** ${note}` : '')
+            )
+            .setFooter({ text: 'Du wirst vor dem Termin erinnert!' })
+            .setTimestamp();
+
+          await applicant.send({ embeds: [dmEmbed] }).catch(() => {});
+        } catch(dmErr) {
+          console.error('Interview DM error:', dmErr);
+        }
+
+        // Send confirmation in channel
+        const confirmEmbed = new EmbedBuilder()
+          .setColor(0x3b82f6)
+          .setTitle('📅 Interview geplant')
+          .setDescription(
+            `**Bewerber:** <@${ticket.userId}>\n` +
+            `**Termin:** <t:${Math.floor(interviewDate.getTime() / 1000)}:F>\n` +
+            `**Geplant von:** <@${i.user.id}>\n` +
+            (note ? `**Hinweis:** ${note}` : '')
+          )
+          .setFooter({ text: 'Beide Parteien werden vor dem Termin erinnert' })
+          .setTimestamp();
+
+        await i.reply({ embeds: [confirmEmbed] });
+
+      } catch(error){
+        console.error('Interview schedule error:', error);
+        if(!i.replied){
+          await i.reply({ephemeral:true, content:'❌ Fehler beim Planen des Interviews.'});
         }
       }
       return;
@@ -5211,6 +5480,53 @@ client.on(Events.InteractionCreate, async i => {
           .setStyle(TextInputStyle.Paragraph);
 
         modal.addComponents(new ActionRowBuilder().addComponents(noteInput));
+        return i.showModal(modal);
+      }
+
+      // Interview Button
+      if(i.customId.startsWith('app_interview_')){
+        const parts = i.customId.replace('app_interview_', '').split(':');
+        const guildId = parts[0];
+        const ticketId = parseInt(parts[1]);
+
+        // Check team role
+        if (!hasAnyTeamRole(i.member, guildId)) {
+          return i.reply({ ephemeral: true, content: '❌ Nur Team-Mitglieder können Interviews planen.' });
+        }
+
+        const modal = new ModalBuilder()
+          .setCustomId(`modal_app_interview:${guildId}:${ticketId}`)
+          .setTitle('📅 Interview planen');
+
+        const dateInput = new TextInputBuilder()
+          .setCustomId('interview_date')
+          .setLabel('Datum (TT.MM.JJJJ)')
+          .setPlaceholder('z.B. 25.12.2025')
+          .setRequired(true)
+          .setStyle(TextInputStyle.Short)
+          .setMaxLength(10);
+
+        const timeInput = new TextInputBuilder()
+          .setCustomId('interview_time')
+          .setLabel('Uhrzeit (HH:MM)')
+          .setPlaceholder('z.B. 18:00')
+          .setRequired(true)
+          .setStyle(TextInputStyle.Short)
+          .setMaxLength(5);
+
+        const noteInput = new TextInputBuilder()
+          .setCustomId('interview_note')
+          .setLabel('Hinweise für den Bewerber (optional)')
+          .setPlaceholder('z.B. Bitte im Voice-Channel erscheinen')
+          .setRequired(false)
+          .setStyle(TextInputStyle.Paragraph);
+
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(dateInput),
+          new ActionRowBuilder().addComponents(timeInput),
+          new ActionRowBuilder().addComponents(noteInput)
+        );
+
         return i.showModal(modal);
       }
 
