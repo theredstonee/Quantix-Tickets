@@ -3813,20 +3813,10 @@ client.on(Events.InteractionCreate, async i => {
 
         saveTickets(guildId, tickets);
 
-        // Send note in channel (ephemeral would hide it from applicant)
-        const noteEmbed = new EmbedBuilder()
-          .setColor(0x6366f1)
-          .setTitle('📝 Team-Notiz hinzugefügt')
-          .setDescription(noteText)
-          .addFields(
-            { name: '👤 Von', value: `<@${i.user.id}>`, inline: true },
-            { name: '🕐 Zeit', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
-            { name: '📊 Notizen gesamt', value: `${ticket.notes.length}`, inline: true }
-          )
-          .setFooter({ text: 'Nur für Team sichtbar' })
-          .setTimestamp();
-
-        await i.reply({ embeds: [noteEmbed] });
+        await i.reply({
+          content: `✅ Notiz hinzugefügt! (${ticket.notes.length} Notizen gesamt)`,
+          ephemeral: true
+        });
 
       } catch(error){
         console.error('Application note error:', error);

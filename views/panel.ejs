@@ -3175,12 +3175,16 @@
                   <div class="form-group">
                     <div class="form-label">
                       <i class="fas fa-hashtag"></i>
-                      <span><%= lang === 'de' ? 'Panel Channel ID' : 'Panel Channel ID' %></span>
+                      <span><%= lang === 'de' ? 'Panel Channel' : 'Panel Channel' %></span>
                     </div>
-                    <input type="text" name="applicationPanelChannelId"
-                      value="<%= cfg.applicationSystem?.panelChannelId || '' %>"
-                      placeholder="<%= lang === 'de' ? 'Channel ID für das Bewerbungs-Panel' : 'Channel ID for application panel' %>"
-                      style="width: 100%;">
+                    <select name="applicationPanelChannelId" style="width: 100%;">
+                      <option value=""><%= lang === 'de' ? '-- Channel auswählen --' : '-- Select Channel --' %></option>
+                      <% channels.filter(c => c.type === 0).forEach(ch => { %>
+                        <option value="<%= ch.id %>" <%= cfg.applicationSystem?.panelChannelId === ch.id ? 'selected' : '' %>>
+                          # <%= ch.name %>
+                        </option>
+                      <% }); %>
+                    </select>
                     <div class="help-text">
                       <i class="fas fa-info-circle"></i>
                       <span><%= lang === 'de' ? 'Channel wo das Bewerbungs-Panel gesendet wird' : 'Channel where the application panel will be sent' %></span>
@@ -3190,12 +3194,16 @@
                   <div class="form-group">
                     <div class="form-label">
                       <i class="fas fa-folder"></i>
-                      <span><%= lang === 'de' ? 'Kategorie ID' : 'Category ID' %></span>
+                      <span><%= lang === 'de' ? 'Kategorie' : 'Category' %></span>
                     </div>
-                    <input type="text" name="applicationCategoryId"
-                      value="<%= cfg.applicationSystem?.categoryId || '' %>"
-                      placeholder="<%= lang === 'de' ? 'Kategorie für Bewerbungs-Tickets' : 'Category for application tickets' %>"
-                      style="width: 100%;">
+                    <select name="applicationCategoryId" style="width: 100%;">
+                      <option value=""><%= lang === 'de' ? '-- Kategorie auswählen --' : '-- Select Category --' %></option>
+                      <% categories.forEach(cat => { %>
+                        <option value="<%= cat.id %>" <%= cfg.applicationSystem?.categoryId === cat.id ? 'selected' : '' %>>
+                          📁 <%= cat.name %>
+                        </option>
+                      <% }); %>
+                    </select>
                     <div class="help-text">
                       <i class="fas fa-info-circle"></i>
                       <span><%= lang === 'de' ? 'Kategorie wo Bewerbungs-Tickets erstellt werden' : 'Category where application tickets will be created' %></span>
@@ -3207,12 +3215,16 @@
                 <div class="form-group">
                   <div class="form-label">
                     <i class="fas fa-user-shield"></i>
-                    <span><%= lang === 'de' ? 'Standard Team Rollen ID (Fallback)' : 'Default Team Role ID (Fallback)' %></span>
+                    <span><%= lang === 'de' ? 'Standard Team Rolle (Fallback)' : 'Default Team Role (Fallback)' %></span>
                   </div>
-                  <input type="text" name="applicationTeamRoleId"
-                    value="<%= cfg.applicationSystem?.teamRoleId || '' %>"
-                    placeholder="<%= lang === 'de' ? 'Wird verwendet wenn Kategorie keine Rolle hat' : 'Used when category has no role' %>"
-                    style="width: 100%;">
+                  <select name="applicationTeamRoleId" style="width: 100%;">
+                    <option value=""><%= lang === 'de' ? '-- Rolle auswählen --' : '-- Select Role --' %></option>
+                    <% roles.forEach(role => { %>
+                      <option value="<%= role.id %>" <%= cfg.applicationSystem?.teamRoleId === role.id ? 'selected' : '' %> style="color: <%= role.color %>">
+                        @<%= role.name %>
+                      </option>
+                    <% }); %>
+                  </select>
                   <div class="help-text">
                     <i class="fas fa-lightbulb"></i>
                     <span><%= lang === 'de' ? 'Fallback-Rolle wenn eine Kategorie keine eigene Team-Rolle hat' : 'Fallback role when a category has no team role' %></span>
@@ -3399,12 +3411,16 @@
                   <div class="form-group">
                     <div class="form-label">
                       <i class="fas fa-hashtag"></i>
-                      <span><%= lang === 'de' ? 'Abstimmungs-Channel ID' : 'Voting Channel ID' %></span>
+                      <span><%= lang === 'de' ? 'Abstimmungs-Channel' : 'Voting Channel' %></span>
                     </div>
-                    <input type="text" name="applicationVotingChannelId"
-                      value="<%= cfg.applicationSystem?.votingChannelId || '' %>"
-                      placeholder="<%= lang === 'de' ? 'Channel ID für Abstimmungen' : 'Channel ID for voting' %>"
-                      style="width: 100%;">
+                    <select name="applicationVotingChannelId" style="width: 100%;">
+                      <option value=""><%= lang === 'de' ? '-- Channel auswählen --' : '-- Select Channel --' %></option>
+                      <% channels.filter(c => c.type === 0).forEach(ch => { %>
+                        <option value="<%= ch.id %>" <%= cfg.applicationSystem?.votingChannelId === ch.id ? 'selected' : '' %>>
+                          # <%= ch.name %>
+                        </option>
+                      <% }); %>
+                    </select>
                     <div class="help-text">
                       <i class="fas fa-info-circle"></i>
                       <span><%= lang === 'de' ? 'Bewerbungen werden hier zur Team-Abstimmung gepostet' : 'Applications will be posted here for team voting' %></span>
@@ -3553,9 +3569,16 @@
                       <div class="form-group" style="margin-bottom: 1rem;">
                         <div class="form-label">
                           <i class="fas fa-user-shield"></i>
-                          <span><%= lang === 'de' ? 'Team Rollen ID (optional)' : 'Team Role ID (optional)' %></span>
+                          <span><%= lang === 'de' ? 'Team Rolle (optional)' : 'Team Role (optional)' %></span>
                         </div>
-                        <input type="text" name="appCat_teamRoleId_<%= catIndex %>" value="<%= category.teamRoleId || '' %>" placeholder="<%= lang === 'de' ? 'Leer lassen = Standard-Rolle verwenden' : 'Leave empty = use default role' %>" style="width: 100%;">
+                        <select name="appCat_teamRoleId_<%= catIndex %>" style="width: 100%;">
+                          <option value=""><%= lang === 'de' ? '-- Standard-Rolle verwenden --' : '-- Use default role --' %></option>
+                          <% roles.forEach(role => { %>
+                            <option value="<%= role.id %>" <%= category.teamRoleId === role.id ? 'selected' : '' %> style="color: <%= role.color %>">
+                              @<%= role.name %>
+                            </option>
+                          <% }); %>
+                        </select>
                       </div>
 
                       <!-- Status und Stellen-Beschreibung -->
@@ -6106,9 +6129,14 @@
           <div class="form-group" style="margin-bottom: 1rem;">
             <div class="form-label">
               <i class="fas fa-user-shield"></i>
-              <span><%= lang === 'de' ? 'Team Rollen ID (optional)' : 'Team Role ID (optional)' %></span>
+              <span><%= lang === 'de' ? 'Team Rolle (optional)' : 'Team Role (optional)' %></span>
             </div>
-            <input type="text" name="appCat_teamRoleId_${newIndex}" placeholder="<%= lang === 'de' ? 'Leer lassen = Standard-Rolle verwenden' : 'Leave empty = use default role' %>" style="width: 100%;">
+            <select name="appCat_teamRoleId_${newIndex}" style="width: 100%;">
+              <option value=""><%= lang === 'de' ? '-- Standard-Rolle verwenden --' : '-- Use default role --' %></option>
+              <% roles.forEach(role => { %>
+                <option value="<%= role.id %>" style="color: <%= role.color %>">@<%= role.name %></option>
+              <% }); %>
+            </select>
           </div>
 
           <div class="grid grid-2" style="margin-bottom: 1rem;">
