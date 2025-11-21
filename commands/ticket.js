@@ -771,23 +771,42 @@ module.exports = {
           permissionOverwrites: permOverwrites
         });
 
-        // Create ticket embed
+        // Create ticket embed (same format as normal tickets)
+        const ticketEmbedConfig = cfg.ticketEmbed || {};
+        const title = ticketEmbedConfig.title
+          ? ticketEmbedConfig.title.replace(/\{ticketNumber\}/g, ticketNumber)
+          : `🎫 Ticket #${ticketNumber}`;
+
+        const description = ticketEmbedConfig.description
+          ? ticketEmbedConfig.description
+              .replace(/\{ticketNumber\}/g, ticketNumber)
+              .replace(/\{userMention\}/g, `<@${targetUser.id}>`)
+              .replace(/\{userId\}/g, targetUser.id)
+              .replace(/\{topicLabel\}/g, topicString)
+              .replace(/\{topicValue\}/g, topicString)
+          : `<@${targetUser.id}>`;
+
         const ticketEmbed = new EmbedBuilder()
-          .setColor(0x5865f2)
-          .setTitle(`🎫 Ticket #${ticketNumber}`)
-          .setDescription(
-            `Hallo <@${targetUser.id}>!\n\n` +
-            `Dieses Ticket wurde für dich erstellt.\n\n` +
-            `**Thema:** ${topicString}\n` +
-            `**Erstellt von:** <@${interaction.user.id}>`
-          )
-          .addFields(
-            { name: '👤 Ersteller', value: `<@${targetUser.id}>`, inline: true },
-            { name: '📝 Status', value: '🟢 Offen', inline: true },
-            { name: '⏰ Erstellt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets • Ticket erstellt' })
-          .setTimestamp();
+          .setTitle(title)
+          .setDescription(description);
+
+        // Set color from config
+        if (ticketEmbedConfig.color && /^#?[0-9a-fA-F]{6}$/.test(ticketEmbedConfig.color)) {
+          ticketEmbed.setColor(parseInt(ticketEmbedConfig.color.replace('#', ''), 16));
+        }
+
+        // Set footer from config
+        if (ticketEmbedConfig.footer) {
+          ticketEmbed.setFooter({ text: ticketEmbedConfig.footer.replace(/\{ticketNumber\}/g, ticketNumber) });
+        }
+
+        // Add custom avatar if configured
+        if (cfg.customAvatarUrl) {
+          const avatarUrl = cfg.customAvatarUrl.startsWith('/')
+            ? `${process.env.BASE_URL || 'https://tickets.quantix-bot.de'}${cfg.customAvatarUrl}`
+            : cfg.customAvatarUrl;
+          ticketEmbed.setAuthor({ name: interaction.guild.name, iconURL: avatarUrl });
+        }
 
         // Create button rows (same as normal ticket)
         const row1 = new ActionRowBuilder().addComponents(
