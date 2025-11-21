@@ -2721,6 +2721,64 @@ client.on(Events.InteractionCreate, async i => {
       return await handleDepartmentForward(i);
     }
 
+    // Application Category Select Menu Handler
+    if(i.isStringSelectMenu() && i.customId.startsWith('application_category_select:')){
+      const guildId = i.customId.split(':')[1];
+      if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+
+      const cfg = readCfg(guildId);
+      const categories = cfg.applicationSystem?.categories || [];
+      const selectedIndex = parseInt(i.values[0]);
+      const selectedCategory = categories[selectedIndex];
+
+      if(!selectedCategory){
+        return i.reply({ephemeral:true, content:'❌ Ungültige Kategorie ausgewählt.'});
+      }
+
+      const formFields = selectedCategory.formFields || [];
+      if(formFields.length === 0){
+        return i.reply({
+          ephemeral:true,
+          content:`❌ Keine Fragen für die Kategorie "${selectedCategory.name}" konfiguriert.`
+        });
+      }
+
+      const modal = new ModalBuilder()
+        .setCustomId(`modal_application_cat:${guildId}:${selectedIndex}`)
+        .setTitle(`${selectedCategory.emoji || '📝'} ${selectedCategory.name}`.substring(0,45));
+
+      // Add fields (max 5 per modal)
+      formFields.slice(0, 5).forEach((field) => {
+        let inputStyle = TextInputStyle.Short;
+        let placeholder = '';
+        let maxLength = 256;
+
+        if (field.style === 'paragraph') {
+          inputStyle = TextInputStyle.Paragraph;
+          maxLength = 1024;
+        } else if (field.style === 'number') {
+          inputStyle = TextInputStyle.Short;
+          placeholder = 'Nur Zahlen erlaubt (z.B. 123 oder 45.67)';
+          maxLength = 50;
+        }
+
+        const input = new TextInputBuilder()
+          .setCustomId(field.id)
+          .setLabel(field.label.substring(0,45))
+          .setStyle(inputStyle)
+          .setRequired(field.required !== false)
+          .setMaxLength(maxLength)
+          .setMinLength(field.style === 'number' && field.required !== false ? 1 : 0);
+
+        if(placeholder) input.setPlaceholder(placeholder);
+
+        modal.addComponents(new ActionRowBuilder().addComponents(input));
+      });
+
+      await i.showModal(modal);
+      return;
+    }
+
     // Ticket Open-As Menu Handler
     if(i.isStringSelectMenu() && i.customId.startsWith('ticket_openas_')) {
       try {
@@ -4632,64 +4690,6 @@ client.on(Events.InteractionCreate, async i => {
         // Add fields (max 5 per modal)
         const fieldsToAdd = legacyFormFields.slice(0, 5);
         fieldsToAdd.forEach((field, idx) => {
-          let inputStyle = TextInputStyle.Short;
-          let placeholder = '';
-          let maxLength = 256;
-
-          if (field.style === 'paragraph') {
-            inputStyle = TextInputStyle.Paragraph;
-            maxLength = 1024;
-          } else if (field.style === 'number') {
-            inputStyle = TextInputStyle.Short;
-            placeholder = 'Nur Zahlen erlaubt (z.B. 123 oder 45.67)';
-            maxLength = 50;
-          }
-
-          const input = new TextInputBuilder()
-            .setCustomId(field.id)
-            .setLabel(field.label.substring(0,45))
-            .setStyle(inputStyle)
-            .setRequired(field.required !== false)
-            .setMaxLength(maxLength)
-            .setMinLength(field.style === 'number' && field.required !== false ? 1 : 0);
-
-          if(placeholder) input.setPlaceholder(placeholder);
-
-          modal.addComponents(new ActionRowBuilder().addComponents(input));
-        });
-
-        await i.showModal(modal);
-        return;
-      }
-
-      // Application Category Select Menu Handler
-      if(i.customId.startsWith('application_category_select:')){
-        const guildId = i.customId.split(':')[1];
-        if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
-
-        const cfg = readCfg(guildId);
-        const categories = cfg.applicationSystem?.categories || [];
-        const selectedIndex = parseInt(i.values[0]);
-        const selectedCategory = categories[selectedIndex];
-
-        if(!selectedCategory){
-          return i.reply({ephemeral:true, content:'❌ Ungültige Kategorie ausgewählt.'});
-        }
-
-        const formFields = selectedCategory.formFields || [];
-        if(formFields.length === 0){
-          return i.reply({
-            ephemeral:true,
-            content:`❌ Keine Fragen für die Kategorie "${selectedCategory.name}" konfiguriert.`
-          });
-        }
-
-        const modal = new ModalBuilder()
-          .setCustomId(`modal_application_cat:${guildId}:${selectedIndex}`)
-          .setTitle(`${selectedCategory.emoji || '📝'} ${selectedCategory.name}`.substring(0,45));
-
-        // Add fields (max 5 per modal)
-        formFields.slice(0, 5).forEach((field) => {
           let inputStyle = TextInputStyle.Short;
           let placeholder = '';
           let maxLength = 256;

@@ -3390,9 +3390,9 @@
                       <div class="form-group" style="margin-bottom: 1.5rem;">
                         <div class="form-label">
                           <i class="fas fa-user-shield"></i>
-                          <span><%= lang === 'de' ? 'Team Rollen ID (für diese Kategorie)' : 'Team Role ID (for this category)' %></span>
+                          <span><%= lang === 'de' ? 'Team Rollen ID (optional)' : 'Team Role ID (optional)' %></span>
                         </div>
-                        <input type="text" name="appCat_teamRoleId_<%= catIndex %>" value="<%= category.teamRoleId || '' %>" placeholder="<%= lang === 'de' ? 'Rolle die diese Bewerbungen sieht (leer = Standard-Rolle)' : 'Role that sees these applications (empty = default role)' %>" style="width: 100%;">
+                        <input type="text" name="appCat_teamRoleId_<%= catIndex %>" value="<%= category.teamRoleId || '' %>" placeholder="<%= lang === 'de' ? 'Leer lassen = Standard-Rolle verwenden' : 'Leave empty = use default role' %>" style="width: 100%;">
                       </div>
 
                       <!-- Category Form Fields -->
@@ -5914,9 +5914,9 @@
           <div class="form-group" style="margin-bottom: 1.5rem;">
             <div class="form-label">
               <i class="fas fa-user-shield"></i>
-              <span><%= lang === 'de' ? 'Team Rollen ID (für diese Kategorie)' : 'Team Role ID (for this category)' %></span>
+              <span><%= lang === 'de' ? 'Team Rollen ID (optional)' : 'Team Role ID (optional)' %></span>
             </div>
-            <input type="text" name="appCat_teamRoleId_${newIndex}" placeholder="<%= lang === 'de' ? 'Rolle die diese Bewerbungen sieht (leer = Standard-Rolle)' : 'Role that sees these applications (empty = default role)' %>" style="width: 100%;">
+            <input type="text" name="appCat_teamRoleId_${newIndex}" placeholder="<%= lang === 'de' ? 'Leer lassen = Standard-Rolle verwenden' : 'Leave empty = use default role' %>" style="width: 100%;">
           </div>
 
           <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
