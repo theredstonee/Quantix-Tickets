@@ -8174,6 +8174,10 @@ client.on(Events.MessageCreate, async (message) => {
 
     if(!ticket.claimer) return;
 
+    // Check if Force Claim is enabled
+    const cfg = readCfg(guildId);
+    if (cfg.forceClaimEnabled === false) return;
+
     const authorId = message.author.id;
     const isCreator = ticket.userId === authorId;
     const isClaimer = ticket.claimer === authorId;
