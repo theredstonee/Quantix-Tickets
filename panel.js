@@ -3080,7 +3080,7 @@ module.exports = (client)=>{
 
         cfg.applicationSystem.categories = appCategories;
 
-        console.log('✅ Application System Einstellungen gespeichert!');
+        console.log(`✅ Application System: ${appCategories.length} Kategorien gespeichert:`, appCategories.map(c => c.name));
       } else {
         console.log('❌ Application System Feature ist nicht verfügbar für diese Guild!');
       }

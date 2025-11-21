@@ -4586,6 +4586,8 @@ client.on(Events.InteractionCreate, async i => {
         const categories = cfg.applicationSystem.categories || [];
         const legacyFormFields = cfg.applicationSystem.formFields || [];
 
+        console.log(`📋 Application System: ${categories.length} Kategorien, ${legacyFormFields.length} Legacy-Felder`);
+
         // If categories exist, show Select Menu
         if (categories.length > 0) {
           const selectOptions = categories.map((cat, idx) => ({
@@ -4619,7 +4621,7 @@ client.on(Events.InteractionCreate, async i => {
         if(legacyFormFields.length === 0){
           return i.reply({
             ephemeral:true,
-            content:'❌ Keine Formularfelder oder Kategorien konfiguriert. Bitte kontaktiere einen Administrator.'
+            content:'❌ **Keine Bewerbungskategorien konfiguriert!**\n\nBitte erstelle im Panel unter "Bewerbungssystem" mindestens eine Kategorie mit Fragen.\n\n*Hinweis: Nach dem Speichern im Panel den Bot neu starten (`/restart`).*'
           });
         }
 
