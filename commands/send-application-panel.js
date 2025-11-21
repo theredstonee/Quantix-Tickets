@@ -83,6 +83,40 @@ module.exports = {
     try {
       await interaction.deferReply({ ephemeral: true });
 
+      // Send Positions Embed first (if enabled)
+      const positionsEmbed = cfg.applicationSystem.positionsEmbed;
+      const categories = cfg.applicationSystem.categories || [];
+
+      if (positionsEmbed?.enabled && categories.length > 0) {
+        const posColor = parseInt((positionsEmbed.color || '#3b82f6').replace('#', ''), 16);
+
+        // Build positions list
+        let positionsText = positionsEmbed.description || '';
+        if (positionsText) positionsText += '\n\n';
+
+        categories.forEach(cat => {
+          const statusIcon = cat.status === 'closed' ? '❌' : '✅';
+          const emoji = cat.emoji || '📋';
+          positionsText += `${statusIcon} **${emoji} ${cat.name}**`;
+          if (cat.positionInfo) positionsText += ` — ${cat.positionInfo}`;
+          positionsText += '\n';
+          if (cat.requirements) {
+            positionsText += `> ${cat.requirements.split('\n').join('\n> ')}\n`;
+          }
+          positionsText += '\n';
+        });
+
+        const posEmbed = new EmbedBuilder()
+          .setColor(posColor)
+          .setTitle(positionsEmbed.title || '📋 Offene Stellen')
+          .setDescription(positionsText.trim())
+          .setFooter({ text: '✅ = Offen • ❌ = Geschlossen' })
+          .setTimestamp();
+
+        const posMessage = await targetChannel.send({ embeds: [posEmbed] });
+        cfg.applicationSystem.positionsMessageId = posMessage.id;
+      }
+
       // Build embed
       const panelColor = cfg.applicationSystem.panelColor || '#3b82f6';
       const colorInt = parseInt(panelColor.replace('#', ''), 16);

@@ -3321,6 +3321,55 @@
                   </div>
                 </div>
 
+                <!-- Stellen-Embed Settings -->
+                <div class="card-body" style="border-top: 2px solid var(--border-color);">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-clipboard-list"></i>
+                    <%= lang === 'de' ? '📋 Stellen-Übersicht Embed (optional)' : '📋 Positions Overview Embed (optional)' %>
+                  </h3>
+                  <p style="margin-bottom: 1rem; opacity: 0.8; font-size: 0.9rem;">
+                    <%= lang === 'de'
+                      ? 'Zeigt eine Übersicht aller Stellen mit Status (offen/geschlossen) als separate Nachricht über dem Bewerben-Button.'
+                      : 'Shows an overview of all positions with status (open/closed) as a separate message above the apply button.'
+                    %>
+                  </p>
+
+                  <div class="toggle-container" style="margin-bottom: 1rem;">
+                    <label class="toggle-label">
+                      <input type="checkbox" name="positionsEmbedEnabled" <%= cfg.applicationSystem?.positionsEmbed?.enabled ? 'checked' : '' %>>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-text">
+                        <strong><%= lang === 'de' ? 'Stellen-Embed aktivieren' : 'Enable Positions Embed' %></strong>
+                      </span>
+                    </label>
+                  </div>
+
+                  <div class="grid grid-2" style="margin-bottom: 1rem;">
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-heading"></i>
+                        <span><%= lang === 'de' ? 'Embed Titel' : 'Embed Title' %></span>
+                      </div>
+                      <input type="text" name="positionsEmbedTitle" value="<%= cfg.applicationSystem?.positionsEmbed?.title || '' %>" placeholder="<%= lang === 'de' ? 'Unsere Stellen' : 'Our Positions' %>" maxlength="256" style="width: 100%;">
+                    </div>
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-palette"></i>
+                        <span><%= lang === 'de' ? 'Embed Farbe' : 'Embed Color' %></span>
+                      </div>
+                      <input type="color" name="positionsEmbedColor" value="<%= cfg.applicationSystem?.positionsEmbed?.color || '#3b82f6' %>" style="width: 100%;">
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 1rem;">
+                    <div class="form-label">
+                      <i class="fas fa-align-left"></i>
+                      <span><%= lang === 'de' ? 'Embed Beschreibung (oben)' : 'Embed Description (top)' %></span>
+                    </div>
+                    <textarea name="positionsEmbedDescription" rows="2" placeholder="<%= lang === 'de' ? 'Unsere Teamposten die wir zurzeit haben.\n✅ = offen | ❌ = geschlossen' : 'Our team positions.\n✅ = open | ❌ = closed' %>" style="width: 100%;"><%= cfg.applicationSystem?.positionsEmbed?.description || '' %></textarea>
+                  </div>
+                </div>
+
                 <!-- Application Categories Editor -->
                 <div class="card-body" style="border-top: 2px solid var(--border-color);">
                   <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
@@ -3387,12 +3436,41 @@
                         <input type="text" name="appCat_description_<%= catIndex %>" value="<%= category.description || '' %>" placeholder="<%= lang === 'de' ? 'Bewirb dich als Moderator' : 'Apply as Moderator' %>" maxlength="100" style="width: 100%;">
                       </div>
 
-                      <div class="form-group" style="margin-bottom: 1.5rem;">
+                      <div class="form-group" style="margin-bottom: 1rem;">
                         <div class="form-label">
                           <i class="fas fa-user-shield"></i>
                           <span><%= lang === 'de' ? 'Team Rollen ID (optional)' : 'Team Role ID (optional)' %></span>
                         </div>
                         <input type="text" name="appCat_teamRoleId_<%= catIndex %>" value="<%= category.teamRoleId || '' %>" placeholder="<%= lang === 'de' ? 'Leer lassen = Standard-Rolle verwenden' : 'Leave empty = use default role' %>" style="width: 100%;">
+                      </div>
+
+                      <!-- Status und Stellen-Beschreibung -->
+                      <div class="grid grid-2" style="margin-bottom: 1rem;">
+                        <div class="form-group">
+                          <div class="form-label">
+                            <i class="fas fa-door-open"></i>
+                            <span><%= lang === 'de' ? 'Status' : 'Status' %></span>
+                          </div>
+                          <select name="appCat_status_<%= catIndex %>" style="width: 100%;">
+                            <option value="open" <%= category.status !== 'closed' ? 'selected' : '' %>>✅ <%= lang === 'de' ? 'Offen (Bewerbungen möglich)' : 'Open (applications accepted)' %></option>
+                            <option value="closed" <%= category.status === 'closed' ? 'selected' : '' %>>❌ <%= lang === 'de' ? 'Geschlossen' : 'Closed' %></option>
+                          </select>
+                        </div>
+                        <div class="form-group">
+                          <div class="form-label">
+                            <i class="fas fa-file-alt"></i>
+                            <span><%= lang === 'de' ? 'Stellen-Info (für Embed)' : 'Position Info (for Embed)' %></span>
+                          </div>
+                          <input type="text" name="appCat_positionInfo_<%= catIndex %>" value="<%= category.positionInfo || '' %>" placeholder="<%= lang === 'de' ? 'z.B. Zurzeit gebraucht.' : 'e.g. Currently needed.' %>" maxlength="200" style="width: 100%;">
+                        </div>
+                      </div>
+
+                      <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <div class="form-label">
+                          <i class="fas fa-list"></i>
+                          <span><%= lang === 'de' ? 'Voraussetzungen (für Stellen-Embed, eine pro Zeile)' : 'Requirements (for positions embed, one per line)' %></span>
+                        </div>
+                        <textarea name="appCat_requirements_<%= catIndex %>" rows="4" placeholder="<%= lang === 'de' ? '• Mindestalter: 14 Jahre\n• Gute Kenntnisse in...\n• Erfahrung mit...' : '• Minimum age: 14\n• Good knowledge of...\n• Experience with...' %>" style="width: 100%;"><%= category.requirements || '' %></textarea>
                       </div>
 
                       <!-- Category Form Fields -->
@@ -5911,12 +5989,40 @@
             <input type="text" name="appCat_description_${newIndex}" placeholder="<%= lang === 'de' ? 'Bewirb dich als Moderator' : 'Apply as Moderator' %>" maxlength="100" style="width: 100%;">
           </div>
 
-          <div class="form-group" style="margin-bottom: 1.5rem;">
+          <div class="form-group" style="margin-bottom: 1rem;">
             <div class="form-label">
               <i class="fas fa-user-shield"></i>
               <span><%= lang === 'de' ? 'Team Rollen ID (optional)' : 'Team Role ID (optional)' %></span>
             </div>
             <input type="text" name="appCat_teamRoleId_${newIndex}" placeholder="<%= lang === 'de' ? 'Leer lassen = Standard-Rolle verwenden' : 'Leave empty = use default role' %>" style="width: 100%;">
+          </div>
+
+          <div class="grid grid-2" style="margin-bottom: 1rem;">
+            <div class="form-group">
+              <div class="form-label">
+                <i class="fas fa-door-open"></i>
+                <span><%= lang === 'de' ? 'Status' : 'Status' %></span>
+              </div>
+              <select name="appCat_status_${newIndex}" style="width: 100%;">
+                <option value="open" selected>✅ <%= lang === 'de' ? 'Offen (Bewerbungen möglich)' : 'Open (applications accepted)' %></option>
+                <option value="closed">❌ <%= lang === 'de' ? 'Geschlossen' : 'Closed' %></option>
+              </select>
+            </div>
+            <div class="form-group">
+              <div class="form-label">
+                <i class="fas fa-file-alt"></i>
+                <span><%= lang === 'de' ? 'Stellen-Info (für Embed)' : 'Position Info (for Embed)' %></span>
+              </div>
+              <input type="text" name="appCat_positionInfo_${newIndex}" placeholder="<%= lang === 'de' ? 'z.B. Zurzeit gebraucht.' : 'e.g. Currently needed.' %>" maxlength="200" style="width: 100%;">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <div class="form-label">
+              <i class="fas fa-list"></i>
+              <span><%= lang === 'de' ? 'Voraussetzungen (für Stellen-Embed)' : 'Requirements (for positions embed)' %></span>
+            </div>
+            <textarea name="appCat_requirements_${newIndex}" rows="4" placeholder="<%= lang === 'de' ? '• Mindestalter: 14 Jahre\n• Gute Kenntnisse in...' : '• Minimum age: 14\n• Good knowledge of...' %>" style="width: 100%;"></textarea>
           </div>
 
           <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">

@@ -3043,6 +3043,13 @@ module.exports = (client)=>{
         // Always update fields (empty array if no fields provided) - Legacy support
         cfg.applicationSystem.formFields = appFormFields;
 
+        // Process Positions Embed Settings
+        if (!cfg.applicationSystem.positionsEmbed) cfg.applicationSystem.positionsEmbed = {};
+        cfg.applicationSystem.positionsEmbed.enabled = req.body.positionsEmbedEnabled === 'on';
+        cfg.applicationSystem.positionsEmbed.title = sanitizeString(req.body.positionsEmbedTitle, 256) || '';
+        cfg.applicationSystem.positionsEmbed.description = sanitizeString(req.body.positionsEmbedDescription, 2048) || '';
+        cfg.applicationSystem.positionsEmbed.color = sanitizeString(req.body.positionsEmbedColor, 7) || '#3b82f6';
+
         // Process Application Categories (New system)
         const appCategories = [];
         for (let catIdx = 0; catIdx < 25; catIdx++) { // Max 25 categories (Discord Select Menu Limit)
@@ -3055,6 +3062,9 @@ module.exports = (client)=>{
             emoji: sanitizeString(req.body[`appCat_emoji_${catIdx}`], 10) || '',
             description: sanitizeString(req.body[`appCat_description_${catIdx}`], 100) || '',
             teamRoleId: sanitizeDiscordId(req.body[`appCat_teamRoleId_${catIdx}`]) || null,
+            status: req.body[`appCat_status_${catIdx}`] === 'closed' ? 'closed' : 'open',
+            positionInfo: sanitizeString(req.body[`appCat_positionInfo_${catIdx}`], 200) || '',
+            requirements: sanitizeString(req.body[`appCat_requirements_${catIdx}`], 2000) || '',
             formFields: []
           };
 
@@ -3161,6 +3171,63 @@ module.exports = (client)=>{
       cfg.voiceSupportCategoryId = sanitizeDiscordId(req.body.voiceSupportCategoryId) || null;
 
       writeCfg(guildId, cfg);
+
+      // Auto-update Positions Embed in Discord (if exists)
+      try {
+        const positionsEmbed = cfg.applicationSystem?.positionsEmbed;
+        const categories = cfg.applicationSystem?.categories || [];
+        const channelId = cfg.applicationSystem?.panelChannelId;
+        const messageId = cfg.applicationSystem?.positionsMessageId;
+
+        if (channelId && messageId && categories.length > 0) {
+          const guild = client.guilds.cache.get(guildId);
+          if (guild) {
+            const channel = await guild.channels.fetch(channelId).catch(() => null);
+            if (channel) {
+              const message = await channel.messages.fetch(messageId).catch(() => null);
+              if (message) {
+                if (positionsEmbed?.enabled) {
+                  // Update embed
+                  const posColor = parseInt((positionsEmbed.color || '#3b82f6').replace('#', ''), 16);
+                  let positionsText = positionsEmbed.description || '';
+                  if (positionsText) positionsText += '\n\n';
+
+                  categories.forEach(cat => {
+                    const statusIcon = cat.status === 'closed' ? '❌' : '✅';
+                    const emoji = cat.emoji || '📋';
+                    positionsText += `${statusIcon} **${emoji} ${cat.name}**`;
+                    if (cat.positionInfo) positionsText += ` — ${cat.positionInfo}`;
+                    positionsText += '\n';
+                    if (cat.requirements) {
+                      positionsText += `> ${cat.requirements.split('\n').join('\n> ')}\n`;
+                    }
+                    positionsText += '\n';
+                  });
+
+                  const { EmbedBuilder } = require('discord.js');
+                  const newEmbed = new EmbedBuilder()
+                    .setColor(posColor)
+                    .setTitle(positionsEmbed.title || '📋 Offene Stellen')
+                    .setDescription(positionsText.trim())
+                    .setFooter({ text: '✅ = Offen • ❌ = Geschlossen' })
+                    .setTimestamp();
+
+                  await message.edit({ embeds: [newEmbed] });
+                  console.log(`✅ Positions embed updated for guild ${guildId}`);
+                } else {
+                  // Disable: delete the message
+                  await message.delete().catch(() => {});
+                  cfg.applicationSystem.positionsMessageId = null;
+                  writeCfg(guildId, cfg);
+                  console.log(`🗑️ Positions embed deleted for guild ${guildId}`);
+                }
+              }
+            }
+          }
+        }
+      } catch (updateErr) {
+        console.error('Error updating positions embed:', updateErr);
+      }
 
       await logEvent(guildId, t(guildId, 'logs.config_updated'), req.user);
 

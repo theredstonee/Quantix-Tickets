@@ -2735,6 +2735,14 @@ client.on(Events.InteractionCreate, async i => {
         return i.reply({ephemeral:true, content:'❌ Ungültige Kategorie ausgewählt.'});
       }
 
+      // Check if category is closed
+      if(selectedCategory.status === 'closed'){
+        return i.reply({
+          ephemeral:true,
+          content:`❌ **${selectedCategory.emoji || '📋'} ${selectedCategory.name}** ist derzeit geschlossen und nimmt keine Bewerbungen an.`
+        });
+      }
+
       const formFields = selectedCategory.formFields || [];
       if(formFields.length === 0){
         return i.reply({
