@@ -203,6 +203,56 @@
     <% } %>
   </ul>
 
+  <% if (ticket.isApplication) { %>
+  <h2>📋 Bewerbungsdaten</h2>
+  <div style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 1rem;">
+    <p><strong>Kategorie:</strong> <%= ticket.applicationCategory || ticket.topic %></p>
+    <% if (ticket.applicationAnswers && Object.keys(ticket.applicationAnswers).length > 0) { %>
+      <h4>Antworten:</h4>
+      <ul style="list-style: none; padding-left: 0;">
+        <% Object.entries(ticket.applicationAnswers).forEach(([question, answer]) => { %>
+          <li style="margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(0,0,0,0.1); border-radius: 4px;">
+            <strong><%= question %></strong><br>
+            <span style="white-space: pre-wrap;"><%= answer || '-' %></span>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+    <% if (ticket.interview) { %>
+      <h4>🎤 Interview</h4>
+      <p><strong>Geplant:</strong> <%= new Date(ticket.interview.scheduledAt).toLocaleString('de-DE') %></p>
+      <% if (ticket.interview.note) { %><p><strong>Notiz:</strong> <%= ticket.interview.note %></p><% } %>
+    <% } %>
+    <% if (ticket.voting) { %>
+      <h4>🗳️ Abstimmung</h4>
+      <p>✅ Ja: <strong><%= ticket.voting.yes || 0 %></strong> | ❌ Nein: <strong><%= ticket.voting.no || 0 %></strong></p>
+    <% } %>
+    <% if (ticket.applicationNotes && ticket.applicationNotes.length > 0) { %>
+      <h4>📝 Notizen (<%= ticket.applicationNotes.length %>)</h4>
+      <ul style="list-style: none; padding-left: 0;">
+        <% ticket.applicationNotes.forEach(note => { %>
+          <li style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 0.9rem;">
+            <span style="opacity: 0.7;"><%= new Date(note.timestamp).toLocaleString('de-DE') %></span> -
+            <code><%= note.authorId %></code>: <%= note.content %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+  <% } %>
+
+  <% if (ticket.splitFrom || (ticket.splitTo && ticket.splitTo.length > 0)) { %>
+  <h2>🔀 Ticket-Verbindungen</h2>
+  <div style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 1rem;">
+    <% if (ticket.splitFrom) { %>
+      <p><strong>Abgespalten von:</strong> Ticket #<%= ticket.splitFrom %></p>
+    <% } %>
+    <% if (ticket.splitTo && ticket.splitTo.length > 0) { %>
+      <p><strong>Abgespalten in:</strong> <%= ticket.splitTo.map(id => 'Ticket #' + id).join(', ') %></p>
+    <% } %>
+  </div>
+  <% } %>
+
   <h2>Aktionen</h2>
   <a href="/tickets"><i class="fas fa-arrow-left"></i> Zur Übersicht</a>
   <!-- Platzhalter für spätere Export-Links -->

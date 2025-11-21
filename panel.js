@@ -2487,6 +2487,8 @@ module.exports = (client)=>{
         ? req.body.transcriptChannelId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
         : (req.body.transcriptChannelId ? [sanitizeDiscordId(req.body.transcriptChannelId) || req.body.transcriptChannelId.trim()] : []);
 
+      cfg.sendTranscriptToCreator = req.body.sendTranscriptToCreator === 'on' || req.body.sendTranscriptToCreator === true;
+
       cfg.teamRoleId = Array.isArray(req.body.teamRoleId)
         ? req.body.teamRoleId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
         : (req.body.teamRoleId ? [sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim()] : []);
@@ -6058,6 +6060,85 @@ module.exports = (client)=>{
     data.count++;
     saveGlobalClicks(data.count);
     res.json(data);
+  });
+
+  // ============================================================
+  // BACKUP SYSTEM - Download & Upload Config
+  // ============================================================
+
+  // Download Config Backup
+  router.get('/api/backup/download/:guildId', isAuthOrTeam, async (req, res) => {
+    try {
+      const { guildId } = req.params;
+
+      // Check if user has access to this guild
+      if (req.session.selectedGuild !== guildId) {
+        return res.status(403).json({ error: 'Kein Zugriff auf diesen Server' });
+      }
+
+      const cfg = readCfg(guildId);
+      if (!cfg) {
+        return res.status(404).json({ error: 'Konfiguration nicht gefunden' });
+      }
+
+      // Create backup object with metadata
+      const backup = {
+        _backup: {
+          version: '1.5.1',
+          createdAt: new Date().toISOString(),
+          guildId: guildId
+        },
+        config: cfg
+      };
+
+      // Send as downloadable JSON file
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="quantix-backup-${guildId}-${Date.now()}.json"`);
+      res.send(JSON.stringify(backup, null, 2));
+
+    } catch (err) {
+      console.error('Backup download error:', err);
+      res.status(500).json({ error: 'Backup konnte nicht erstellt werden' });
+    }
+  });
+
+  // Upload Config Backup
+  router.post('/api/backup/upload/:guildId', isAuthOrTeam, express.json({ limit: '5mb' }), async (req, res) => {
+    try {
+      const { guildId } = req.params;
+
+      // Check if user has access to this guild
+      if (req.session.selectedGuild !== guildId) {
+        return res.status(403).json({ error: 'Kein Zugriff auf diesen Server' });
+      }
+
+      const backup = req.body;
+
+      // Validate backup structure
+      if (!backup || !backup._backup || !backup.config) {
+        return res.status(400).json({ error: 'Ungültiges Backup-Format' });
+      }
+
+      // Sanitize and validate critical fields
+      const newConfig = backup.config;
+
+      // Preserve some fields from current config
+      const currentCfg = readCfg(guildId) || {};
+      newConfig.premium = currentCfg.premium; // Don't allow premium override
+
+      // Save the restored config
+      writeCfg(guildId, newConfig);
+
+      res.json({
+        success: true,
+        message: 'Backup erfolgreich wiederhergestellt',
+        backupDate: backup._backup.createdAt
+      });
+
+    } catch (err) {
+      console.error('Backup upload error:', err);
+      res.status(500).json({ error: 'Backup konnte nicht wiederhergestellt werden' });
+    }
   });
 
   // ============================================================

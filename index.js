@@ -1349,6 +1349,17 @@ function startApplicationServices() {
                 if (applicant) await applicant.send({ embeds: [reminderEmbed] }).catch(() => {});
                 if (scheduler) await scheduler.send({ embeds: [reminderEmbed] }).catch(() => {});
 
+                // Ping im Ticket-Channel
+                try {
+                  const ticketChannel = await client.channels.fetch(ticket.channelId).catch(() => null);
+                  if (ticketChannel) {
+                    await ticketChannel.send({
+                      content: `<@${ticket.userId}> ⏰ **Dein Interview beginnt in ${reminderMinutes} Minuten!**`,
+                      embeds: [reminderEmbed]
+                    });
+                  }
+                } catch (channelErr) { }
+
                 ticket.interview.reminderSent = true;
                 needsSave = true;
               } catch (e) { console.error('Interview reminder error:', e); }
@@ -6288,6 +6299,37 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         logEvent(i.guild, `🔐 Ticket **#${ticket.id}** geschlossen durch Zustimmung von ${closerTag}`);
+
+        // Send transcript to ticket creator via DM
+        if (cfg.sendTranscriptToCreator && files) {
+          try {
+            const creator = await client.users.fetch(ticket.userId).catch(() => null);
+            if (creator) {
+              const transcriptEmbed = new EmbedBuilder()
+                .setColor(0x3b82f6)
+                .setTitle('📄 Dein Ticket-Transcript')
+                .setDescription(
+                  `Dein Ticket **#${ticket.id}** wurde geschlossen.\n` +
+                  `Hier ist das Transcript für deine Unterlagen.`
+                )
+                .addFields(
+                  { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+                  { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true },
+                  { name: '📅 Geschlossen', value: `<t:${Math.floor(Date.now() / 1000)}:f>`, inline: true }
+                )
+                .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+                .setTimestamp();
+
+              await creator.send({
+                embeds: [transcriptEmbed],
+                files: [files.txt, files.html]
+              });
+              console.log(`✅ Transcript-DM gesendet an User ${creator.tag} für Ticket #${ticket.id}`);
+            }
+          } catch (dmErr) {
+            console.log('Konnte Transcript-DM nicht senden:', dmErr.message);
+          }
+        }
 
         // Send rating/survey request DM
         try {

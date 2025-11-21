@@ -105,6 +105,17 @@ module.exports = {
       subcommand
         .setName('unhide')
         .setDescription('Unhide the ticket and restore team access (claimer only)')
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('split')
+        .setDescription('Split ticket into a new ticket')
+        .addStringOption(option =>
+          option
+            .setName('reason')
+            .setDescription('Reason/topic for the new ticket')
+            .setRequired(true)
+        )
     ),
 
   async execute(interaction) {
@@ -469,6 +480,167 @@ module.exports = {
           .setTimestamp();
 
         return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+      }
+    }
+
+    // ===== SUBCOMMAND: SPLIT =====
+    if (subcommand === 'split') {
+      const reason = interaction.options.getString('reason');
+
+      // Check if user is team member
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+
+      if (!isTeam) {
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🚫 Zugriff verweigert')
+          .setDescription('**Nur Team-Mitglieder können Tickets splitten!**')
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+
+      // Load tickets and find current ticket
+      const log = loadTickets(guildId);
+      const ticket = log.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket) {
+        const noTicketEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Kein Ticket gefunden')
+          .setDescription('**Für diesen Channel wurde kein Ticket-Datensatz gefunden.**')
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
+      }
+
+      await interaction.deferReply();
+
+      try {
+        const cfg = readCfg(guildId);
+
+        // Load counter
+        const counterPath = path.join(CONFIG_DIR, `${guildId}_counter.json`);
+        let counter = { count: 0 };
+        if (fs.existsSync(counterPath)) {
+          counter = JSON.parse(fs.readFileSync(counterPath, 'utf8'));
+        }
+        counter.count++;
+        fs.writeFileSync(counterPath, JSON.stringify(counter, null, 2));
+
+        const newTicketNumber = counter.count;
+        const channelName = `ticket-${newTicketNumber}`;
+
+        // Create new channel
+        const newChannel = await interaction.guild.channels.create({
+          name: channelName,
+          type: 0, // Text channel
+          parent: interaction.channel.parentId,
+          permissionOverwrites: [
+            {
+              id: interaction.guild.id,
+              deny: ['ViewChannel']
+            },
+            {
+              id: ticket.userId,
+              allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+            },
+            {
+              id: interaction.user.id,
+              allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+            }
+          ]
+        });
+
+        // Add team roles permissions
+        const teamRoles = getAllTeamRoles(guildId);
+        for (const roleId of teamRoles) {
+          await newChannel.permissionOverwrites.edit(roleId, {
+            ViewChannel: true,
+            SendMessages: true,
+            ReadMessageHistory: true
+          }).catch(() => {});
+        }
+
+        // Create new ticket record
+        const newTicket = {
+          id: newTicketNumber,
+          channelId: newChannel.id,
+          userId: ticket.userId,
+          topic: reason,
+          status: 'open',
+          claimed: true,
+          claimer: interaction.user.id,
+          priority: ticket.priority || 0,
+          createdAt: new Date().toISOString(),
+          splitFrom: ticket.id,
+          addedUsers: ticket.addedUsers || []
+        };
+
+        // Link back in original ticket
+        if (!ticket.splitTo) ticket.splitTo = [];
+        ticket.splitTo.push(newTicketNumber);
+
+        log.push(newTicket);
+        saveTickets(guildId, log);
+
+        // Send embed in new channel
+        const newTicketEmbed = new EmbedBuilder()
+          .setColor(0x5865f2)
+          .setTitle(`🔀 Ticket #${newTicketNumber} (Split)`)
+          .setDescription(
+            `Dieses Ticket wurde aus **Ticket #${ticket.id}** abgespalten.\n\n` +
+            `**Grund:** ${reason}\n\n` +
+            `**Ursprüngliches Ticket:** <#${ticket.channelId}>\n` +
+            `**Ersteller:** <@${ticket.userId}>`
+          )
+          .addFields(
+            { name: '👤 Split von', value: `<@${interaction.user.id}>`, inline: true },
+            { name: '⏰ Erstellt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Ticket Split' })
+          .setTimestamp();
+
+        await newChannel.send({ content: `<@${ticket.userId}>`, embeds: [newTicketEmbed] });
+
+        // Notify in original ticket
+        const splitNotifyEmbed = new EmbedBuilder()
+          .setColor(0x5865f2)
+          .setTitle('🔀 Ticket wurde gesplittet')
+          .setDescription(
+            `Ein neues Ticket wurde aus diesem Ticket erstellt.\n\n` +
+            `**Neues Ticket:** <#${newChannel.id}> (#${newTicketNumber})\n` +
+            `**Grund:** ${reason}`
+          )
+          .addFields(
+            { name: '👤 Gesplittet von', value: `<@${interaction.user.id}>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Ticket Split' })
+          .setTimestamp();
+
+        await interaction.editReply({ embeds: [splitNotifyEmbed] });
+
+        // Log event
+        logEvent(interaction.guild, `🔀 **Ticket gesplittet:** <@${interaction.user.id}> hat Ticket #${ticket.id} in #${newTicketNumber} aufgeteilt (Grund: ${reason})`);
+
+      } catch (err) {
+        console.error('Fehler beim Splitten:', err);
+
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Fehler beim Splitten')
+          .setDescription('**Das Ticket konnte nicht gesplittet werden.**')
+          .addFields({
+            name: '❗ Fehlerdetails',
+            value: `\`\`\`${err.message}\`\`\``,
+            inline: false
+          })
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+
+        return interaction.editReply({ embeds: [errorEmbed] });
       }
     }
   },

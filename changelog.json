@@ -1,6 +1,40 @@
 {
-  "currentVersion": "1.5.0",
+  "currentVersion": "1.5.1",
   "versions": [
+    {
+      "version": "1.5.1",
+      "date": "2025-01-21",
+      "changes": {
+        "de": [
+          "📋 Bewerbungskategorien - Mehrere Kategorien mit eigenen Fragen und Team-Rollen",
+          "🗳️ Abstimmungssystem - Team kann per Button über Bewerbungen abstimmen (separater Channel)",
+          "📝 Notizen-System - Team-Notizen zu Bewerbungen hinzufügen und anzeigen",
+          "⏰ Cooldown-System - Bewerber müssen X Tage warten zwischen Bewerbungen",
+          "🛡️ Anforderungen - Mindest Account-Alter und Server-Beitritt prüfen",
+          "🚫 Bewerbungs-Blacklist - User von Bewerbungen ausschließen",
+          "📅 Interview-System - Interviews planen mit automatischen Erinnerungen per DM",
+          "⏳ Auto-Ablauf - Bewerbungen ohne Antwort automatisch schließen",
+          "📁 Bewerbungs-Archiv - Abgeschlossene Bewerbungen in Channel archivieren",
+          "📋 Stellen-Embed - Übersicht aller offenen/geschlossenen Stellen",
+          "📄 Multi-Modal - Mehr als 5 Fragen durch automatische Folge-Modals",
+          "🎯 Channel/Rollen-Dropdowns - Bessere Auswahl im Panel statt IDs"
+        ],
+        "en": [
+          "📋 Application Categories - Multiple categories with custom questions and team roles",
+          "🗳️ Voting System - Team can vote on applications via buttons (separate channel)",
+          "📝 Notes System - Add and view team notes on applications",
+          "⏰ Cooldown System - Applicants must wait X days between applications",
+          "🛡️ Requirements - Check minimum account age and server join date",
+          "🚫 Application Blacklist - Block users from applying",
+          "📅 Interview System - Schedule interviews with automatic DM reminders",
+          "⏳ Auto-Expire - Automatically close applications without response",
+          "📁 Application Archive - Archive completed applications to channel",
+          "📋 Positions Embed - Overview of all open/closed positions",
+          "📄 Multi-Modal - More than 5 questions through automatic follow-up modals",
+          "🎯 Channel/Role Dropdowns - Better selection in panel instead of IDs"
+        ]
+      }
+    },
     {
       "version": "1.5.0",
       "date": "2025-01-20",

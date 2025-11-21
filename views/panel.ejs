@@ -2776,6 +2776,17 @@
                       <span><%= t.web?.panel_config?.transcript_channel_help || 'Channel für Ticket-Transkripte' %></span>
                     </div>
                   </div>
+                  <div class="form-group" style="margin-top: 1rem;">
+                    <label class="toggle-option <%= cfg.sendTranscriptToCreator ? 'active' : '' %>">
+                      <input type="checkbox" name="sendTranscriptToCreator" <%= cfg.sendTranscriptToCreator ? 'checked' : '' %>>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-label">📬 <%= lang === 'de' ? 'Transcript per DM an Ersteller senden' : 'Send transcript via DM to creator' %></span>
+                    </label>
+                    <div class="help-text" style="margin-top: 0.5rem;">
+                      <i class="fas fa-info-circle"></i>
+                      <span><%= lang === 'de' ? 'Der Ticket-Ersteller erhält die Transcript-Dateien (HTML + TXT) per DM' : 'The ticket creator receives the transcript files (HTML + TXT) via DM' %></span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3935,12 +3946,23 @@
               </div>
             </div>
 
-            <!-- Save Button -->
-            <div class="save-footer">
+            <!-- Save Button & Backup -->
+            <div class="save-footer" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
               <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save"></i>
                 <%= lang === 'de' ? 'Einstellungen speichern' : 'Save Settings' %>
               </button>
+              <div style="display: flex; gap: 0.5rem; margin-left: auto;">
+                <button type="button" onclick="downloadBackup()" class="btn" style="background: #10b981; color: white;">
+                  <i class="fas fa-download"></i>
+                  <%= lang === 'de' ? 'Backup' : 'Backup' %>
+                </button>
+                <label class="btn" style="background: #f59e0b; color: white; cursor: pointer; margin: 0;">
+                  <i class="fas fa-upload"></i>
+                  <%= lang === 'de' ? 'Wiederherstellen' : 'Restore' %>
+                  <input type="file" accept=".json" onchange="uploadBackup(this)" style="display: none;">
+                </label>
+              </div>
             </div>
           </div>
 
@@ -6268,6 +6290,45 @@
       catItem.remove();
       updateCategoryIndices();
       updateCategoryButton();
+    }
+
+    // Backup System Functions
+    function downloadBackup() {
+      window.location.href = '/api/backup/download/<%= guildId %>';
+    }
+
+    function uploadBackup(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      if (!confirm('<%= lang === "de" ? "Möchtest du wirklich das Backup wiederherstellen? Die aktuelle Konfiguration wird überschrieben." : "Do you really want to restore the backup? The current configuration will be overwritten." %>')) {
+        input.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const backup = JSON.parse(e.target.result);
+          const response = await fetch('/api/backup/upload/<%= guildId %>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(backup)
+          });
+
+          if (response.ok) {
+            alert('<%= lang === "de" ? "Backup erfolgreich wiederhergestellt!" : "Backup successfully restored!" %>');
+            location.reload();
+          } else {
+            const error = await response.json();
+            alert('<%= lang === "de" ? "Fehler: " : "Error: " %>' + (error.error || '<%= lang === "de" ? "Unbekannter Fehler" : "Unknown error" %>'));
+          }
+        } catch (err) {
+          alert('<%= lang === "de" ? "Fehler beim Lesen der Backup-Datei: " : "Error reading backup file: " %>' + err.message);
+        }
+        input.value = '';
+      };
+      reader.readAsText(file);
     }
 
     function addCategoryField(button, catIndex) {
