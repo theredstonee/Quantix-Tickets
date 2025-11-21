@@ -337,6 +337,81 @@
       margin-bottom: 1rem;
     }
 
+    .ticket-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-transcript {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-transcript:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-transcript.disabled {
+      background: #374151;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .btn-transcript.disabled:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .rating-display {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: #fbbf24;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      background: var(--glass-bg);
+      border: 2px solid var(--glass-border);
+      color: var(--text-color);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .filter-btn.active {
+      background: var(--accent-color);
+      color: #000;
+      border-color: var(--accent-color);
+    }
+
+    .filter-btn:hover:not(.active) {
+      border-color: var(--accent-color);
+    }
+
     @media (max-width: 768px) {
       .ticket-header {
         flex-direction: column;
@@ -385,6 +460,12 @@
       </div>
     </div>
 
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">Alle</button>
+      <button class="filter-btn" data-filter="open">Offen</button>
+      <button class="filter-btn" data-filter="closed">Geschlossen</button>
+    </div>
+
     <div id="ticketsContainer"></div>
   </div>
 
@@ -392,47 +473,83 @@
     const tickets = JSON.parse('<%- tickets %>');
     const guildMap = JSON.parse('<%- guildMap %>');
 
-    // Calculate stats
-    const openTickets = tickets.filter(t => t.status === 'offen');
-    const closedTickets = tickets.filter(t => t.status === 'geschlossen');
+    // Calculate stats - handle both 'offen'/'open' and 'geschlossen'/'closed'
+    const openTickets = tickets.filter(t => t.status === 'offen' || t.status === 'open');
+    const closedTickets = tickets.filter(t => t.status === 'geschlossen' || t.status === 'closed' || !t.status);
 
     document.getElementById('totalCount').textContent = tickets.length;
     document.getElementById('openCount').textContent = openTickets.length;
     document.getElementById('closedCount').textContent = closedTickets.length;
 
-    // Render tickets
-    const container = document.getElementById('ticketsContainer');
+    let currentFilter = 'all';
 
-    if (tickets.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-inbox"></i>
-          <h2>Keine Tickets vorhanden</h2>
-          <p>Du hast noch keine Tickets erstellt.</p>
-        </div>
-      `;
-    } else {
-      tickets.forEach(ticket => {
+    function renderTickets(filter) {
+      const container = document.getElementById('ticketsContainer');
+      container.innerHTML = '';
+
+      let filteredTickets = tickets;
+      if (filter === 'open') {
+        filteredTickets = tickets.filter(t => t.status === 'offen' || t.status === 'open');
+      } else if (filter === 'closed') {
+        filteredTickets = tickets.filter(t => t.status === 'geschlossen' || t.status === 'closed' || !t.status);
+      }
+
+      if (filteredTickets.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h2>Keine Tickets vorhanden</h2>
+            <p>${filter === 'all' ? 'Du hast noch keine Tickets erstellt.' : 'Keine Tickets mit diesem Filter.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      filteredTickets.forEach(ticket => {
         const priorityLabels = ['Niedrig', 'Mittel', 'Hoch'];
         const priorityLabel = priorityLabels[ticket.priority || 0];
         const priorityClass = `priority-${ticket.priority || 0}`;
-        const statusClass = `status-${ticket.status || 'geschlossen'}`;
-        const statusLabel = ticket.status === 'offen' ? 'Offen' : 'Geschlossen';
 
-        const timestamp = new Date(ticket.timestamp).toLocaleString('de-DE');
+        const isOpen = ticket.status === 'offen' || ticket.status === 'open';
+        const statusClass = isOpen ? 'status-offen' : 'status-geschlossen';
+        const statusLabel = isOpen ? 'Offen' : 'Geschlossen';
+
+        const timestamp = new Date(ticket.timestamp || ticket.createdAt).toLocaleString('de-DE');
         const closedTime = ticket.closedAt ? new Date(ticket.closedAt).toLocaleString('de-DE') : '—';
 
         const ticketId = String(ticket.id).padStart(5, '0');
         const guildInfo = guildMap[ticket.guildId];
+
+        // Rating display
+        let ratingHtml = '';
+        if (ticket.rating) {
+          const stars = '⭐'.repeat(ticket.rating.stars);
+          ratingHtml = `
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-star"></i> Bewertung</div>
+              <div class="info-value rating-display">${stars} (${ticket.rating.stars}/5)</div>
+            </div>
+          `;
+        }
+
+        // Transcript button - only for closed tickets
+        const transcriptBtn = !isOpen
+          ? `<a href="/panel/transcripts/${ticket.guildId}/${ticket.id}" target="_blank" class="btn-transcript">
+              <i class="fas fa-file-alt"></i> Transcript ansehen
+            </a>`
+          : `<span class="btn-transcript disabled" title="Transcript verfügbar nach Schließung">
+              <i class="fas fa-file-alt"></i> Ticket noch offen
+            </span>`;
 
         const card = document.createElement('div');
         card.className = 'ticket-card';
         card.innerHTML = `
           <div class="ticket-header">
             <div class="ticket-id">#${ticketId}</div>
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
               <span class="priority-badge ${priorityClass}">${priorityLabel}</span>
               <span class="status-badge ${statusClass}">${statusLabel}</span>
+              ${ticket.isApplication ? '<span class="status-badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; border: 1px solid #8b5cf6;">Bewerbung</span>' : ''}
             </div>
           </div>
           <div class="ticket-info">
@@ -454,11 +571,28 @@
               <div class="info-value">${closedTime}</div>
             </div>
             ` : ''}
+            ${ratingHtml}
+          </div>
+          <div class="ticket-actions">
+            ${transcriptBtn}
           </div>
         `;
         container.appendChild(card);
       });
     }
+
+    // Initial render
+    renderTickets('all');
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderTickets(currentFilter);
+      });
+    });
 
     // Loading animation for Select Server button
     const selectServerBtn = document.getElementById('selectServerBtn');

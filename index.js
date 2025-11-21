@@ -5691,6 +5691,30 @@ client.on(Events.InteractionCreate, async i => {
 
             await i.update({ embeds: [thankYouEmbed], components: [] });
 
+            // Send transcript to user
+            try {
+              const transcriptDir = path.join(__dirname, 'transcripts', foundGuildId);
+              const htmlPath = path.join(transcriptDir, `transcript_${ticketId}.html`);
+              const txtPath = path.join(transcriptDir, `transcript_${ticketId}.txt`);
+
+              const files = [];
+              if (fs.existsSync(htmlPath)) files.push(htmlPath);
+              if (fs.existsSync(txtPath)) files.push(txtPath);
+
+              if (files.length > 0) {
+                const transcriptEmbed = new EmbedBuilder()
+                  .setColor(0x3b82f6)
+                  .setTitle('📄 Dein Ticket-Verlauf')
+                  .setDescription(`Hier ist der Verlauf von Ticket #${ticketId} für deine Unterlagen.`)
+                  .setFooter({ text: 'Quantix Tickets' })
+                  .setTimestamp();
+
+                await i.user.send({ embeds: [transcriptEmbed], files: files }).catch(() => {});
+              }
+            } catch (transcriptErr) {
+              console.log('Could not send transcript with rating:', transcriptErr.message);
+            }
+
             // Notify team in log channel
             try {
               const guild = client.guilds.cache.get(foundGuildId);
@@ -7145,6 +7169,30 @@ client.on(Events.InteractionCreate, async i => {
           .setTimestamp();
 
         await i.reply({ embeds: [thankYouEmbed], ephemeral: true });
+
+        // Send transcript to user
+        try {
+          const transcriptDir = path.join(__dirname, 'transcripts', foundGuildId);
+          const htmlPath = path.join(transcriptDir, `transcript_${ticketId}.html`);
+          const txtPath = path.join(transcriptDir, `transcript_${ticketId}.txt`);
+
+          const files = [];
+          if (fs.existsSync(htmlPath)) files.push(htmlPath);
+          if (fs.existsSync(txtPath)) files.push(txtPath);
+
+          if (files.length > 0) {
+            const transcriptEmbed = new EmbedBuilder()
+              .setColor(0x3b82f6)
+              .setTitle('📄 Dein Ticket-Verlauf')
+              .setDescription(`Hier ist der Verlauf von Ticket #${ticketId} für deine Unterlagen.`)
+              .setFooter({ text: 'Quantix Tickets' })
+              .setTimestamp();
+
+            await i.user.send({ embeds: [transcriptEmbed], files: files }).catch(() => {});
+          }
+        } catch (transcriptErr) {
+          console.log('Could not send transcript with rating:', transcriptErr.message);
+        }
 
         // Notify team in log channel
         try {

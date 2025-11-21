@@ -3568,6 +3568,63 @@ module.exports = (client)=>{
     }
   });
 
+  // User's own transcript (no admin required, just authenticated + owns ticket)
+  router.get('/panel/transcripts/:guildId/:ticketId', ensureAuthenticated, async (req, res) => {
+    try {
+      const { guildId, ticketId } = req.params;
+      const userId = req.user.id;
+
+      // Validate inputs
+      if (!guildId || !ticketId) {
+        return res.status(400).send('Guild ID oder Ticket ID fehlt');
+      }
+
+      const cleanGuildId = guildId.replace(/[^0-9]/g, '');
+      const cleanTicketId = ticketId.replace(/[^0-9]/g, '');
+
+      // Check if user owns this ticket
+      const tickets = loadTickets(cleanGuildId);
+      const ticket = tickets.find(t => t.id === parseInt(cleanTicketId));
+
+      if (!ticket) {
+        return res.status(404).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>📄 Ticket nicht gefunden</h2><p>Das Ticket existiert nicht.</p></div></body></html>');
+      }
+
+      // Check permission: user must be ticket creator OR team member
+      const isCreator = ticket.userId === userId;
+      let isTeam = false;
+
+      try {
+        const guild = await client.guilds.fetch(cleanGuildId).catch(() => null);
+        if (guild) {
+          const member = await guild.members.fetch(userId).catch(() => null);
+          if (member) {
+            isTeam = member.permissions.has('ManageMessages') || member.permissions.has('Administrator');
+          }
+        }
+      } catch (e) {}
+
+      if (!isCreator && !isTeam) {
+        return res.status(403).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>🚫 Zugriff verweigert</h2><p>Du hast keinen Zugriff auf dieses Transcript.</p></div></body></html>');
+      }
+
+      // Try to find transcript file
+      const transcriptsDir = path.join(__dirname, 'transcripts', cleanGuildId);
+      const htmlPath = path.join(transcriptsDir, `transcript_${cleanTicketId}.html`);
+
+      if (fs.existsSync(htmlPath)) {
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+        res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+        return res.sendFile(htmlPath);
+      }
+
+      return res.status(404).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>📄 Transcript nicht gefunden</h2><p>Das Transcript für Ticket #' + cleanTicketId + ' wurde noch nicht erstellt oder ist nicht mehr verfügbar.</p></div></body></html>');
+    } catch (err) {
+      console.error('Error in /panel/transcripts:', err);
+      return res.status(500).send('Fehler beim Laden des Transcripts');
+    }
+  });
+
   router.get('/transcript/:id', isAuthOrTeam, (req,res)=>{
     try {
       const id = req.params.id.replace(/[^0-9]/g,'');
