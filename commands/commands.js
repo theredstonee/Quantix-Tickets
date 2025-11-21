@@ -442,12 +442,12 @@ function buildCommandEmbed(commands, username) {
 function buildButtonRow() {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setURL('https://quantixtickets.theredstonee.de/panel')
+      .setURL('https://tickets.quantix-bot.de/panel')
       .setStyle(ButtonStyle.Link)
       .setLabel('Dashboard')
       .setEmoji('🎛️'),
     new ButtonBuilder()
-      .setURL('https://quantixtickets.theredstonee.de/premium')
+      .setURL('https://tickets.quantix-bot.de/premium')
       .setStyle(ButtonStyle.Link)
       .setLabel('Premium')
       .setEmoji('⭐'),
@@ -457,7 +457,7 @@ function buildButtonRow() {
       .setLabel('Support')
       .setEmoji('💬'),
     new ButtonBuilder()
-      .setURL('https://quantixtickets.theredstonee.de')
+      .setURL('https://tickets.quantix-bot.de')
       .setStyle(ButtonStyle.Link)
       .setLabel('Website')
       .setEmoji('🌐')

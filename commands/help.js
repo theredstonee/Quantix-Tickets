@@ -88,12 +88,12 @@ module.exports = {
       // Build button row
       const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setURL(process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de')
+          .setURL(process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de')
           .setStyle(ButtonStyle.Link)
           .setLabel(translations.buttons.dashboard)
           .setEmoji('🎛️'),
         new ButtonBuilder()
-          .setURL((process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de') + '/premium')
+          .setURL((process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de') + '/premium')
           .setStyle(ButtonStyle.Link)
           .setLabel(translations.buttons.premium)
           .setEmoji('⭐'),
@@ -103,7 +103,7 @@ module.exports = {
           .setLabel(translations.buttons.support)
           .setEmoji('💬'),
         new ButtonBuilder()
-          .setURL('https://quantixtickets.theredstonee.de')
+          .setURL('https://tickets.quantix-bot.de')
           .setStyle(ButtonStyle.Link)
           .setLabel(translations.buttons.commands)
           .setEmoji('📝')
@@ -139,7 +139,7 @@ function getHelpTranslations(lang) {
         emoji: '🚀',
         title: 'Schnellstart',
         steps:
-          '**1️⃣** Öffne das **[Dashboard](https://quantixtickets.theredstonee.de)** und logge dich mit Discord ein\n' +
+          '**1️⃣** Öffne das **[Dashboard](https://tickets.quantix-bot.de)** und logge dich mit Discord ein\n' +
           '**2️⃣** Wähle deinen Server aus\n' +
           '**3️⃣** Konfiguriere deine Ticket-Kategorien und Team-Rollen\n' +
           '**4️⃣** Sende das Ticket-Panel mit dem Button im Dashboard\n' +
@@ -178,7 +178,7 @@ function getHelpTranslations(lang) {
           '**💎 Basic** (€2.99): 7 Kategorien, File Upload, Custom Avatar\n' +
           '**👑 Pro** (€4.99): Unbegrenzt, Analytics, SLA, Auto-Close\n' +
           '**🤝 Partner**: Lifetime Pro-Features\n\n' +
-          '➡️ [Premium kaufen](https://quantixtickets.theredstonee.de/premium)'
+          '➡️ [Premium kaufen](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -206,7 +206,7 @@ function getHelpTranslations(lang) {
         emoji: '🚀',
         title: 'Quick Start',
         steps:
-          '**1️⃣** Open the **[Dashboard](https://quantixtickets.theredstonee.de)** and login with Discord\n' +
+          '**1️⃣** Open the **[Dashboard](https://tickets.quantix-bot.de)** and login with Discord\n' +
           '**2️⃣** Select your server\n' +
           '**3️⃣** Configure your ticket categories and team roles\n' +
           '**4️⃣** Send the ticket panel using the button in the dashboard\n' +
@@ -245,7 +245,7 @@ function getHelpTranslations(lang) {
           '**💎 Basic** (€2.99): 7 categories, file upload, custom avatar\n' +
           '**👑 Pro** (€4.99): Unlimited, analytics, SLA, auto-close\n' +
           '**🤝 Partner**: Lifetime Pro features\n\n' +
-          '➡️ [Get Premium](https://quantixtickets.theredstonee.de/premium)'
+          '➡️ [Get Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -273,7 +273,7 @@ function getHelpTranslations(lang) {
         emoji: '🚀',
         title: 'Hızlı Başlangıç',
         steps:
-          '**1️⃣** **[Panel](https://quantixtickets.theredstonee.de)**\'i açın ve Discord ile giriş yapın\n' +
+          '**1️⃣** **[Panel](https://tickets.quantix-bot.de)**\'i açın ve Discord ile giriş yapın\n' +
           '**2️⃣** Sunucunuzu seçin\n' +
           '**3️⃣** Destek kategorilerinizi ve takım rollerinizi yapılandırın\n' +
           '**4️⃣** Paneldeki butonu kullanarak destek panelini gönderin\n' +
@@ -312,7 +312,7 @@ function getHelpTranslations(lang) {
           '**💎 Basic** (€2.99): 7 kategori, dosya yükleme, özel avatar\n' +
           '**👑 Pro** (€4.99): Sınırsız, analitik, SLA, otomatik kapatma\n' +
           '**🤝 Partner**: Ömür boyu Pro özellikleri\n\n' +
-          '➡️ [Premium Al](https://quantixtickets.theredstonee.de/premium)'
+          '➡️ [Premium Al](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -340,7 +340,7 @@ function getHelpTranslations(lang) {
         emoji: '🚀',
         title: 'クイックスタート',
         steps:
-          '**1️⃣** **[ダッシュボード](https://quantixtickets.theredstonee.de)**を開き、Discordでログイン\n' +
+          '**1️⃣** **[ダッシュボード](https://tickets.quantix-bot.de)**を開き、Discordでログイン\n' +
           '**2️⃣** サーバーを選択\n' +
           '**3️⃣** チケットカテゴリとチームロールを設定\n' +
           '**4️⃣** ダッシュボードのボタンでチケットパネルを送信\n' +
@@ -379,7 +379,7 @@ function getHelpTranslations(lang) {
           '**💎 Basic** (€2.99): 7カテゴリ、ファイルアップロード、カスタムアバター\n' +
           '**👑 Pro** (€4.99): 無制限、分析、SLA、自動クローズ\n' +
           '**🤝 Partner**: 生涯Pro機能\n\n' +
-          '➡️ [プレミアムを取得](https://quantixtickets.theredstonee.de/premium)'
+          '➡️ [プレミアムを取得](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -407,7 +407,7 @@ function getHelpTranslations(lang) {
         emoji: '🚀',
         title: 'Быстрый Старт',
         steps:
-          '**1️⃣** Откройте **[Панель](https://quantixtickets.theredstonee.de)** и войдите через Discord\n' +
+          '**1️⃣** Откройте **[Панель](https://tickets.quantix-bot.de)** и войдите через Discord\n' +
           '**2️⃣** Выберите свой сервер\n' +
           '**3️⃣** Настройте категории тикетов и роли команды\n' +
           '**4️⃣** Отправьте панель тикетов с помощью кнопки в панели\n' +
@@ -446,7 +446,7 @@ function getHelpTranslations(lang) {
           '**💎 Basic** (€2.99): 7 категорий, загрузка файлов, пользовательский аватар\n' +
           '**👑 Pro** (€4.99): Неограниченно, аналитика, SLA, авто-закрытие\n' +
           '**🤝 Partner**: Пожизненные Pro функции\n\n' +
-          '➡️ [Получить Premium](https://quantixtickets.theredstonee.de/premium)'
+          '➡️ [Получить Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -474,7 +474,7 @@ function getHelpTranslations(lang) {
         emoji: '🚀',
         title: 'Início Rápido',
         steps:
-          '**1️⃣** Abra o **[Painel](https://quantixtickets.theredstonee.de)** e faça login com Discord\n' +
+          '**1️⃣** Abra o **[Painel](https://tickets.quantix-bot.de)** e faça login com Discord\n' +
           '**2️⃣** Selecione seu servidor\n' +
           '**3️⃣** Configure suas categorias de tickets e funções da equipe\n' +
           '**4️⃣** Envie o painel de tickets usando o botão no painel\n' +
@@ -513,7 +513,7 @@ function getHelpTranslations(lang) {
           '**💎 Basic** (€2.99): 7 categorias, upload de arquivos, avatar personalizado\n' +
           '**👑 Pro** (€4.99): Ilimitado, análises, SLA, fechamento automático\n' +
           '**🤝 Partner**: Recursos Pro vitalícios\n\n' +
-          '➡️ [Obter Premium](https://quantixtickets.theredstonee.de/premium)'
+          '➡️ [Obter Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -541,7 +541,7 @@ function getHelpTranslations(lang) {
         emoji: '🚀',
         title: 'Inicio Rápido',
         steps:
-          '**1️⃣** Abre el **[Panel](https://quantixtickets.theredstonee.de)** e inicia sesión con Discord\n' +
+          '**1️⃣** Abre el **[Panel](https://tickets.quantix-bot.de)** e inicia sesión con Discord\n' +
           '**2️⃣** Selecciona tu servidor\n' +
           '**3️⃣** Configura tus categorías de tickets y roles del equipo\n' +
           '**4️⃣** Envía el panel de tickets usando el botón en el panel\n' +
@@ -580,7 +580,7 @@ function getHelpTranslations(lang) {
           '**💎 Basic** (€2.99): 7 categorías, carga de archivos, avatar personalizado\n' +
           '**👑 Pro** (€4.99): Ilimitado, análisis, SLA, cierre automático\n' +
           '**🤝 Partner**: Características Pro de por vida\n\n' +
-          '➡️ [Obtener Premium](https://quantixtickets.theredstonee.de/premium)'
+          '➡️ [Obtener Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -608,7 +608,7 @@ function getHelpTranslations(lang) {
         emoji: '🚀',
         title: 'Mulai Cepat',
         steps:
-          '**1️⃣** Buka **[Panel](https://quantixtickets.theredstonee.de)** dan login dengan Discord\n' +
+          '**1️⃣** Buka **[Panel](https://tickets.quantix-bot.de)** dan login dengan Discord\n' +
           '**2️⃣** Pilih server Anda\n' +
           '**3️⃣** Konfigurasi kategori tiket dan peran tim Anda\n' +
           '**4️⃣** Kirim panel tiket menggunakan tombol di panel\n' +
@@ -647,7 +647,7 @@ function getHelpTranslations(lang) {
           '**💎 Basic** (€2.99): 7 kategori, unggah file, avatar kustom\n' +
           '**👑 Pro** (€4.99): Tidak terbatas, analitik, SLA, tutup otomatis\n' +
           '**🤝 Partner**: Fitur Pro seumur hidup\n\n' +
-          '➡️ [Dapatkan Premium](https://quantixtickets.theredstonee.de/premium)'
+          '➡️ [Dapatkan Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',

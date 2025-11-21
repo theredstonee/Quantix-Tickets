@@ -3604,14 +3604,14 @@
                   <div id="applicationCategoriesList">
                     <% (cfg.applicationSystem?.categories || []).forEach((category, catIndex) => { %>
                     <div class="application-category-item" data-cat-index="<%= catIndex %>" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--glass-bg); border-radius: 12px; border: 2px solid var(--accent-color);">
-                      <div class="category-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+                      <div class="category-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                           <span style="background: var(--accent-color); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;">
                             <%= catIndex + 1 %>
                           </span>
                           <span style="font-size: 1.2rem; font-weight: 600;"><%= category.name || 'Neue Kategorie' %></span>
                         </div>
-                        <button type="button" onclick="removeApplicationCategory(this)" style="background: #ff4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                        <button type="button" onclick="removeApplicationCategory(this)" style="background: #ef4444; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; margin-left: auto;">
                           <i class="fas fa-trash"></i>
                           <%= lang === 'de' ? 'Kategorie löschen' : 'Delete Category' %>
                         </button>
@@ -6165,14 +6165,14 @@
 
       const catHtml = `
         <div class="application-category-item" data-cat-index="${newIndex}" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--glass-bg); border-radius: 12px; border: 2px solid var(--accent-color);">
-          <div class="category-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+          <div class="category-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               <span style="background: var(--accent-color); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;">
                 ${newIndex + 1}
               </span>
               <span style="font-size: 1.2rem; font-weight: 600;"><%= lang === 'de' ? 'Neue Kategorie' : 'New Category' %></span>
             </div>
-            <button type="button" onclick="removeApplicationCategory(this)" style="background: #ff4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+            <button type="button" onclick="removeApplicationCategory(this)" style="background: #ef4444; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; margin-left: auto;">
               <i class="fas fa-trash"></i>
               <%= lang === 'de' ? 'Kategorie löschen' : 'Delete Category' %>
             </button>

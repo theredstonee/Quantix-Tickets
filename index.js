@@ -515,7 +515,7 @@ if (!process.env.BOT_ONLY && app) {
 }
 
 const TOKEN = process.env.DISCORD_TOKEN;
-const PANEL_FIXED_URL = 'https://quantixtickets.theredstonee.de/panel';
+const PANEL_FIXED_URL = 'https://tickets.quantix-bot.de/panel';
 
 function nextTicket(guildId){
   const counterPath = getCounterPath(guildId);
@@ -823,7 +823,7 @@ function startTrialExpiryWarningChecker() {
           const cfg = readCfg(trial.guildId);
           const guildLanguage = getGuildLanguage(trial.guildId);
           const isGerman = guildLanguage === 'de';
-          const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de').replace(/\/+$/, '');
+          const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de').replace(/\/+$/, '');
 
           // Find target channel (log channel or general channel)
           let targetChannel = null;
@@ -1518,7 +1518,7 @@ async function sendWelcomeMessage(guild) {
     const guildLanguage = getGuildLanguage(guild.id);
     const isGerman = guildLanguage === 'de' || guild.preferredLocale?.startsWith('de');
 
-    const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de').replace(/\/+$/, '');
+    const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de').replace(/\/+$/, '');
 
     // Check if trial is active
     const trialActive = isTrialActive(guild.id);
@@ -1684,7 +1684,7 @@ function buildTicketEmbed(cfg, i, topic, nr){
   // Add custom avatar if configured
   if(cfg.customAvatarUrl) {
     const avatarUrl = cfg.customAvatarUrl.startsWith('/')
-      ? `${process.env.BASE_URL || 'https://quantixtickets.theredstonee.de'}${cfg.customAvatarUrl}`
+      ? `${process.env.BASE_URL || 'https://tickets.quantix-bot.de'}${cfg.customAvatarUrl}`
       : cfg.customAvatarUrl;
     e.setAuthor({ name: i.guild.name, iconURL: avatarUrl });
   }

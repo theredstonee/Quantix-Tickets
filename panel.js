@@ -5195,7 +5195,7 @@ module.exports = (client)=>{
               // Dashboard & Support Buttons
               const buttonRow = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
-                  .setURL(process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de')
+                  .setURL(process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de')
                   .setStyle(ButtonStyle.Link)
                   .setLabel('Zum Dashboard')
                   .setEmoji('🎫'),
@@ -5802,7 +5802,7 @@ module.exports = (client)=>{
             // Dashboard & Support Buttons
             const buttonRow = new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setURL(process.env.PUBLIC_BASE_URL || 'https://quantixtickets.theredstonee.de')
+                .setURL(process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de')
                 .setStyle(ButtonStyle.Link)
                 .setLabel('Zum Dashboard')
                 .setEmoji('🎫'),
