@@ -3022,6 +3022,20 @@ module.exports = (client)=>{
         cfg.applicationSystem.ticketDescription = sanitizeString(req.body.applicationTicketDescription, 2048) || cfg.applicationSystem.ticketDescription;
         cfg.applicationSystem.ticketColor = sanitizeString(req.body.applicationTicketColor, 7) || '#10b981';
 
+        // Cooldown & Requirements
+        cfg.applicationSystem.cooldownDays = sanitizeNumber(req.body.applicationCooldownDays, 0, 365) || 0;
+        cfg.applicationSystem.minAccountAgeDays = sanitizeNumber(req.body.applicationMinAccountAge, 0, 365) || 0;
+        cfg.applicationSystem.minServerJoinDays = sanitizeNumber(req.body.applicationMinServerJoin, 0, 365) || 0;
+
+        // Voting System
+        cfg.applicationSystem.votingEnabled = req.body.applicationVotingEnabled === 'on';
+
+        // Blacklist
+        const blacklistText = req.body.applicationBlacklist || '';
+        cfg.applicationSystem.blacklist = blacklistText.split('\n')
+          .map(id => id.trim())
+          .filter(id => /^\d{17,20}$/.test(id));
+
         // Process Application Form Fields (New format: applicationField_label_0, applicationField_id_0, etc.)
         const appFormFields = [];
         for (let i = 0; i < 5; i++) { // Max 5 fields (Discord Limit)

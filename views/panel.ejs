@@ -3321,6 +3321,105 @@
                   </div>
                 </div>
 
+                <!-- Cooldown & Anforderungen -->
+                <div class="card-body" style="border-top: 2px solid var(--border-color);">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-shield-alt"></i>
+                    <%= lang === 'de' ? '🛡️ Anforderungen & Cooldown' : '🛡️ Requirements & Cooldown' %>
+                  </h3>
+
+                  <div class="grid grid-3">
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-clock"></i>
+                        <span><%= lang === 'de' ? 'Cooldown (Tage)' : 'Cooldown (Days)' %></span>
+                      </div>
+                      <input type="number" name="applicationCooldownDays"
+                        value="<%= cfg.applicationSystem?.cooldownDays || 0 %>"
+                        min="0" max="365" placeholder="0" style="width: 100%;">
+                      <div class="help-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span><%= lang === 'de' ? '0 = kein Cooldown' : '0 = no cooldown' %></span>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-user-clock"></i>
+                        <span><%= lang === 'de' ? 'Min. Account-Alter (Tage)' : 'Min. Account Age (Days)' %></span>
+                      </div>
+                      <input type="number" name="applicationMinAccountAge"
+                        value="<%= cfg.applicationSystem?.minAccountAgeDays || 0 %>"
+                        min="0" max="365" placeholder="0" style="width: 100%;">
+                      <div class="help-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span><%= lang === 'de' ? '0 = keine Prüfung' : '0 = no check' %></span>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-calendar-check"></i>
+                        <span><%= lang === 'de' ? 'Min. Server-Beitritt (Tage)' : 'Min. Server Join (Days)' %></span>
+                      </div>
+                      <input type="number" name="applicationMinServerJoin"
+                        value="<%= cfg.applicationSystem?.minServerJoinDays || 0 %>"
+                        min="0" max="365" placeholder="0" style="width: 100%;">
+                      <div class="help-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span><%= lang === 'de' ? '0 = keine Prüfung' : '0 = no check' %></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Abstimmungssystem -->
+                <div class="card-body" style="border-top: 2px solid var(--border-color);">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-vote-yea"></i>
+                    <%= lang === 'de' ? '🗳️ Abstimmungssystem' : '🗳️ Voting System' %>
+                  </h3>
+
+                  <div class="toggle-container" style="margin-bottom: 1rem;">
+                    <label class="toggle-label">
+                      <input type="checkbox" name="applicationVotingEnabled" <%= cfg.applicationSystem?.votingEnabled ? 'checked' : '' %>>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-text">
+                        <strong><%= lang === 'de' ? 'Abstimmung aktivieren' : 'Enable Voting' %></strong>
+                      </span>
+                    </label>
+                  </div>
+                  <p style="margin-bottom: 1rem; opacity: 0.8; font-size: 0.9rem;">
+                    <%= lang === 'de'
+                      ? 'Team-Mitglieder können per Button (👍/👎) über Bewerbungen abstimmen. Stimmen werden im Embed angezeigt.'
+                      : 'Team members can vote (👍/👎) on applications via buttons. Votes are shown in the embed.'
+                    %>
+                  </p>
+                </div>
+
+                <!-- Blacklist -->
+                <div class="card-body" style="border-top: 2px solid var(--border-color);">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-ban"></i>
+                    <%= lang === 'de' ? '🚫 Bewerbungs-Blacklist' : '🚫 Application Blacklist' %>
+                  </h3>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-user-slash"></i>
+                      <span><%= lang === 'de' ? 'Gesperrte User IDs' : 'Blocked User IDs' %></span>
+                    </div>
+                    <textarea name="applicationBlacklist"
+                      rows="3"
+                      placeholder="<%= lang === 'de' ? 'Eine User ID pro Zeile' : 'One User ID per line' %>"
+                      style="width: 100%;"><%= (cfg.applicationSystem?.blacklist || []).join('\n') %></textarea>
+                    <div class="help-text">
+                      <i class="fas fa-info-circle"></i>
+                      <span><%= lang === 'de' ? 'Diese User können sich nicht bewerben' : 'These users cannot apply' %></span>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Stellen-Embed Settings -->
                 <div class="card-body" style="border-top: 2px solid var(--border-color);">
                   <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">

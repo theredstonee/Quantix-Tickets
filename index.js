@@ -2751,12 +2751,16 @@ client.on(Events.InteractionCreate, async i => {
         });
       }
 
-      const modal = new ModalBuilder()
-        .setCustomId(`modal_application_cat:${guildId}:${selectedIndex}`)
-        .setTitle(`${selectedCategory.emoji || '📝'} ${selectedCategory.name}`.substring(0,45));
+      // Multi-modal support: page 0 = first 5 questions
+      const totalPages = Math.ceil(formFields.length / 5);
+      const currentPage = 0;
+      const pageFields = formFields.slice(currentPage * 5, (currentPage + 1) * 5);
 
-      // Add fields (max 5 per modal)
-      formFields.slice(0, 5).forEach((field) => {
+      const modal = new ModalBuilder()
+        .setCustomId(`modal_application_cat:${guildId}:${selectedIndex}:${currentPage}:${totalPages}`)
+        .setTitle(`${selectedCategory.emoji || '📝'} ${selectedCategory.name}${totalPages > 1 ? ` (${currentPage + 1}/${totalPages})` : ''}`.substring(0,45));
+
+      pageFields.forEach((field) => {
         let inputStyle = TextInputStyle.Short;
         let placeholder = '';
         let maxLength = 256;
@@ -3272,11 +3276,13 @@ client.on(Events.InteractionCreate, async i => {
       return;
     }
 
-    // Application Modal Submit Handler (Category-based)
+    // Application Modal Submit Handler (Category-based with multi-page support)
     if(i.isModalSubmit() && i.customId.startsWith('modal_application_cat:')){
       const parts = i.customId.split(':');
       const guildId = parts[1];
       const categoryIndex = parseInt(parts[2]);
+      const currentPage = parseInt(parts[3]) || 0;
+      const totalPages = parseInt(parts[4]) || 1;
 
       if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
 
@@ -3293,19 +3299,22 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       const formFields = selectedCategory.formFields || [];
-      const answers = {};
-      formFields.forEach(f => {
+
+      // Get answers from current page fields only
+      const pageFields = formFields.slice(currentPage * 5, (currentPage + 1) * 5);
+      const pageAnswers = {};
+      pageFields.forEach(f => {
         try {
-          answers[f.id] = i.fields.getTextInputValue(f.id);
+          pageAnswers[f.id] = i.fields.getTextInputValue(f.id);
         } catch(e) {
-          answers[f.id] = '';
+          pageAnswers[f.id] = '';
         }
       });
 
-      // Validate number fields
-      for (const field of formFields) {
+      // Validate number fields for current page
+      for (const field of pageFields) {
         if (field.style === 'number') {
-          const value = answers[field.id] ? answers[field.id].trim() : '';
+          const value = pageAnswers[field.id] ? pageAnswers[field.id].trim() : '';
           if (field.required !== false && !value) {
             return i.reply({ephemeral: true, content: `❌ **${field.label}** ist ein Pflichtfeld!`});
           }
@@ -3314,6 +3323,68 @@ client.on(Events.InteractionCreate, async i => {
           }
         }
       }
+
+      // Get previous answers from temp storage (if multi-page)
+      const tempKey = `app_answers_${i.user.id}_${guildId}_${categoryIndex}`;
+      let allAnswers = {};
+      if (global.tempAppAnswers && global.tempAppAnswers[tempKey]) {
+        allAnswers = { ...global.tempAppAnswers[tempKey] };
+      }
+
+      // Merge current page answers
+      Object.assign(allAnswers, pageAnswers);
+
+      // Check if more pages remaining
+      if (currentPage + 1 < totalPages) {
+        // Store answers temporarily
+        if (!global.tempAppAnswers) global.tempAppAnswers = {};
+        global.tempAppAnswers[tempKey] = allAnswers;
+
+        // Show next modal
+        const nextPage = currentPage + 1;
+        const nextPageFields = formFields.slice(nextPage * 5, (nextPage + 1) * 5);
+
+        const modal = new ModalBuilder()
+          .setCustomId(`modal_application_cat:${guildId}:${categoryIndex}:${nextPage}:${totalPages}`)
+          .setTitle(`${selectedCategory.emoji || '📝'} ${selectedCategory.name} (${nextPage + 1}/${totalPages})`.substring(0,45));
+
+        nextPageFields.forEach((field) => {
+          let inputStyle = TextInputStyle.Short;
+          let placeholder = '';
+          let maxLength = 256;
+
+          if (field.style === 'paragraph') {
+            inputStyle = TextInputStyle.Paragraph;
+            maxLength = 1024;
+          } else if (field.style === 'number') {
+            inputStyle = TextInputStyle.Short;
+            placeholder = 'Nur Zahlen erlaubt (z.B. 123 oder 45.67)';
+            maxLength = 50;
+          }
+
+          const input = new TextInputBuilder()
+            .setCustomId(field.id)
+            .setLabel(field.label.substring(0,45))
+            .setStyle(inputStyle)
+            .setRequired(field.required !== false)
+            .setMaxLength(maxLength)
+            .setMinLength(field.style === 'number' && field.required !== false ? 1 : 0);
+
+          if(placeholder) input.setPlaceholder(placeholder);
+          modal.addComponents(new ActionRowBuilder().addComponents(input));
+        });
+
+        await i.showModal(modal);
+        return;
+      }
+
+      // Final page - clean up temp storage
+      if (global.tempAppAnswers && global.tempAppAnswers[tempKey]) {
+        delete global.tempAppAnswers[tempKey];
+      }
+
+      // Use allAnswers for ticket creation
+      const answers = allAnswers;
 
       try {
         await i.deferReply({ ephemeral: true });
@@ -3381,9 +3452,19 @@ client.on(Events.InteractionCreate, async i => {
 
         const acceptButton = new ButtonBuilder().setCustomId(`accept_application_${guildId}`).setLabel('Annehmen').setStyle(ButtonStyle.Success).setEmoji('✅');
         const rejectButton = new ButtonBuilder().setCustomId(`reject_application_${guildId}`).setLabel('Ablehnen').setStyle(ButtonStyle.Danger).setEmoji('❌');
-        const buttonRow = new ActionRowBuilder().addComponents(acceptButton, rejectButton);
+        const noteButton = new ButtonBuilder().setCustomId(`app_note_${guildId}:${counter}`).setLabel('Notiz').setStyle(ButtonStyle.Secondary).setEmoji('📝');
+        const buttonRow = new ActionRowBuilder().addComponents(acceptButton, rejectButton, noteButton);
 
-        const ticketMessage = await channel.send({content: `<@${i.user.id}>`, embeds: [ticketEmbed], components: [buttonRow]});
+        // Voting buttons (if enabled)
+        const components = [buttonRow];
+        if (cfg.applicationSystem.votingEnabled) {
+          const voteUpButton = new ButtonBuilder().setCustomId(`app_vote_up_${guildId}:${counter}`).setLabel('0').setStyle(ButtonStyle.Success).setEmoji('👍');
+          const voteDownButton = new ButtonBuilder().setCustomId(`app_vote_down_${guildId}:${counter}`).setLabel('0').setStyle(ButtonStyle.Danger).setEmoji('👎');
+          const voteRow = new ActionRowBuilder().addComponents(voteUpButton, voteDownButton);
+          components.push(voteRow);
+        }
+
+        const ticketMessage = await channel.send({content: `<@${i.user.id}>`, embeds: [ticketEmbed], components});
 
         // Save ticket
         const newTicket = {
@@ -3400,7 +3481,9 @@ client.on(Events.InteractionCreate, async i => {
           isApplication: true,
           applicationCategory: selectedCategory.name,
           applicationCategoryIndex: categoryIndex,
-          applicationAnswers: answers
+          applicationAnswers: answers,
+          votes: { up: [], down: [] },
+          notes: []
         };
 
         tickets.push(newTicket);
@@ -3662,6 +3745,63 @@ client.on(Events.InteractionCreate, async i => {
           await i.editReply({
             content:'❌ Fehler beim Ablehnen der Bewerbung.'
           });
+        }
+      }
+      return;
+    }
+
+    // Application Note Modal Submit Handler
+    if(i.isModalSubmit() && i.customId.startsWith('modal_app_note:')){
+      try {
+        const parts = i.customId.split(':');
+        const guildId = parts[1];
+        const ticketId = parseInt(parts[2]);
+
+        if(guildId !== i.guild.id){
+          return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+        }
+
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.id === ticketId && t.isApplication === true);
+
+        if(!ticket){
+          return i.reply({ephemeral:true,content:'❌ Bewerbung nicht gefunden.'});
+        }
+
+        const noteText = i.fields.getTextInputValue('note_text');
+
+        // Initialize notes array if not exists
+        if (!ticket.notes) ticket.notes = [];
+
+        // Add note
+        ticket.notes.push({
+          text: noteText,
+          userId: i.user.id,
+          username: i.user.username,
+          createdAt: new Date().toISOString()
+        });
+
+        saveTickets(guildId, tickets);
+
+        // Send note in channel (ephemeral would hide it from applicant)
+        const noteEmbed = new EmbedBuilder()
+          .setColor(0x6366f1)
+          .setTitle('📝 Team-Notiz hinzugefügt')
+          .setDescription(noteText)
+          .addFields(
+            { name: '👤 Von', value: `<@${i.user.id}>`, inline: true },
+            { name: '🕐 Zeit', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
+            { name: '📊 Notizen gesamt', value: `${ticket.notes.length}`, inline: true }
+          )
+          .setFooter({ text: 'Nur für Team sichtbar' })
+          .setTimestamp();
+
+        await i.reply({ embeds: [noteEmbed] });
+
+      } catch(error){
+        console.error('Application note error:', error);
+        if(!i.replied){
+          await i.reply({ephemeral:true, content:'❌ Fehler beim Hinzufügen der Notiz.'});
         }
       }
       return;
@@ -4632,6 +4772,63 @@ client.on(Events.InteractionCreate, async i => {
           }
         }
 
+        // Application-specific Blacklist
+        const appBlacklist = cfg.applicationSystem.blacklist || [];
+        if (appBlacklist.includes(i.user.id)) {
+          return i.reply({
+            ephemeral: true,
+            content: '❌ Du bist vom Bewerbungssystem ausgeschlossen.'
+          });
+        }
+
+        // Check Account Age
+        const minAccountAgeDays = cfg.applicationSystem.minAccountAgeDays || 0;
+        if (minAccountAgeDays > 0) {
+          const accountAge = (Date.now() - i.user.createdTimestamp) / (1000 * 60 * 60 * 24);
+          if (accountAge < minAccountAgeDays) {
+            return i.reply({
+              ephemeral: true,
+              content: `❌ Dein Account muss mindestens **${minAccountAgeDays} Tage** alt sein.\n` +
+                `📅 Dein Account ist ${Math.floor(accountAge)} Tage alt.`
+            });
+          }
+        }
+
+        // Check Server Join Date
+        const minServerJoinDays = cfg.applicationSystem.minServerJoinDays || 0;
+        if (minServerJoinDays > 0) {
+          const member = i.member;
+          const joinedDays = (Date.now() - member.joinedTimestamp) / (1000 * 60 * 60 * 24);
+          if (joinedDays < minServerJoinDays) {
+            return i.reply({
+              ephemeral: true,
+              content: `❌ Du musst mindestens **${minServerJoinDays} Tage** auf dem Server sein.\n` +
+                `📅 Du bist seit ${Math.floor(joinedDays)} Tagen hier.`
+            });
+          }
+        }
+
+        // Check Cooldown
+        const cooldownDays = cfg.applicationSystem.cooldownDays || 0;
+        if (cooldownDays > 0) {
+          const tickets = loadTickets(guildId);
+          const lastApplication = tickets
+            .filter(t => t.userId === i.user.id && t.isApplication === true)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+
+          if (lastApplication) {
+            const daysSinceLastApp = (Date.now() - new Date(lastApplication.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+            if (daysSinceLastApp < cooldownDays) {
+              const remainingDays = Math.ceil(cooldownDays - daysSinceLastApp);
+              return i.reply({
+                ephemeral: true,
+                content: `❌ Du kannst dich erst in **${remainingDays} Tagen** wieder bewerben.\n` +
+                  `⏰ Cooldown: ${cooldownDays} Tage zwischen Bewerbungen.`
+              });
+            }
+          }
+        }
+
         // Check if user already has 2 or more open application tickets
         const tickets = loadTickets(guildId);
         const openApplications = tickets.filter(t =>
@@ -4919,6 +5116,81 @@ client.on(Events.InteractionCreate, async i => {
           new ActionRowBuilder().addComponents(reasonInput)
         );
 
+        return i.showModal(modal);
+      }
+
+      // Application Voting: Up/Down buttons
+      if(i.customId.startsWith('app_vote_up_') || i.customId.startsWith('app_vote_down_')){
+        const isUp = i.customId.startsWith('app_vote_up_');
+        const parts = i.customId.replace('app_vote_up_', '').replace('app_vote_down_', '').split(':');
+        const guildId = parts[0];
+        const ticketId = parseInt(parts[1]);
+
+        // Check team role
+        if (!hasAnyTeamRole(i.member, guildId)) {
+          return i.reply({ ephemeral: true, content: '❌ Nur Team-Mitglieder können abstimmen.' });
+        }
+
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.id === ticketId && t.isApplication === true);
+        if (!ticket) return i.reply({ ephemeral: true, content: '❌ Bewerbung nicht gefunden.' });
+
+        // Initialize votes if not exists
+        if (!ticket.votes) ticket.votes = { up: [], down: [] };
+
+        // Remove existing vote
+        ticket.votes.up = ticket.votes.up.filter(v => v !== i.user.id);
+        ticket.votes.down = ticket.votes.down.filter(v => v !== i.user.id);
+
+        // Add new vote
+        if (isUp) ticket.votes.up.push(i.user.id);
+        else ticket.votes.down.push(i.user.id);
+
+        saveTickets(guildId, tickets);
+
+        // Update button labels
+        const message = await i.message.fetch();
+        const newComponents = message.components.map(row => {
+          const newRow = new ActionRowBuilder();
+          row.components.forEach(comp => {
+            if (comp.customId?.startsWith('app_vote_up_')) {
+              newRow.addComponents(ButtonBuilder.from(comp).setLabel(`${ticket.votes.up.length}`));
+            } else if (comp.customId?.startsWith('app_vote_down_')) {
+              newRow.addComponents(ButtonBuilder.from(comp).setLabel(`${ticket.votes.down.length}`));
+            } else {
+              newRow.addComponents(ButtonBuilder.from(comp));
+            }
+          });
+          return newRow;
+        });
+
+        await i.update({ components: newComponents });
+        return;
+      }
+
+      // Application Note Button
+      if(i.customId.startsWith('app_note_')){
+        const parts = i.customId.replace('app_note_', '').split(':');
+        const guildId = parts[0];
+        const ticketId = parseInt(parts[1]);
+
+        // Check team role
+        if (!hasAnyTeamRole(i.member, guildId)) {
+          return i.reply({ ephemeral: true, content: '❌ Nur Team-Mitglieder können Notizen hinzufügen.' });
+        }
+
+        const modal = new ModalBuilder()
+          .setCustomId(`modal_app_note:${guildId}:${ticketId}`)
+          .setTitle('📝 Notiz hinzufügen');
+
+        const noteInput = new TextInputBuilder()
+          .setCustomId('note_text')
+          .setLabel('Notiz (nur für Team sichtbar)')
+          .setPlaceholder('z.B. Hat gute Erfahrung, Interview vereinbaren...')
+          .setRequired(true)
+          .setStyle(TextInputStyle.Paragraph);
+
+        modal.addComponents(new ActionRowBuilder().addComponents(noteInput));
         return i.showModal(modal);
       }
 
