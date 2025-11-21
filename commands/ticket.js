@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { t } = require('../translations');
@@ -789,7 +789,51 @@ module.exports = {
           .setFooter({ text: 'Quantix Tickets • Ticket erstellt' })
           .setTimestamp();
 
-        await newChannel.send({ content: `<@${targetUser.id}>`, embeds: [ticketEmbed] });
+        // Create button rows (same as normal ticket)
+        const row1 = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('request_close')
+            .setEmoji('📩')
+            .setLabel('Schließen anfordern')
+            .setStyle(ButtonStyle.Secondary)
+        );
+
+        const row2 = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('close')
+            .setEmoji('🔐')
+            .setLabel('Schließen')
+            .setStyle(ButtonStyle.Danger),
+          new ButtonBuilder()
+            .setCustomId('priority_down')
+            .setEmoji('⬇️')
+            .setLabel('Priorität ↓')
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId('priority_up')
+            .setEmoji('⬆️')
+            .setLabel('Priorität ↑')
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId('claim')
+            .setEmoji('✨')
+            .setLabel('Übernehmen')
+            .setStyle(ButtonStyle.Success)
+        );
+
+        const row3 = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('add_user')
+            .setEmoji('👥')
+            .setLabel('Benutzer hinzufügen')
+            .setStyle(ButtonStyle.Secondary)
+        );
+
+        await newChannel.send({
+          content: `<@${targetUser.id}>`,
+          embeds: [ticketEmbed],
+          components: [row1, row2, row3]
+        });
 
         // Save ticket data
         const tickets = loadTickets(guildId);
