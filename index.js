@@ -3453,18 +3453,10 @@ client.on(Events.InteractionCreate, async i => {
         const acceptButton = new ButtonBuilder().setCustomId(`accept_application_${guildId}`).setLabel('Annehmen').setStyle(ButtonStyle.Success).setEmoji('✅');
         const rejectButton = new ButtonBuilder().setCustomId(`reject_application_${guildId}`).setLabel('Ablehnen').setStyle(ButtonStyle.Danger).setEmoji('❌');
         const noteButton = new ButtonBuilder().setCustomId(`app_note_${guildId}:${counter}`).setLabel('Notiz').setStyle(ButtonStyle.Secondary).setEmoji('📝');
-        const buttonRow = new ActionRowBuilder().addComponents(acceptButton, rejectButton, noteButton);
+        const viewNotesButton = new ButtonBuilder().setCustomId(`app_notes_view_${guildId}:${counter}`).setLabel('Notizen').setStyle(ButtonStyle.Secondary).setEmoji('📋');
+        const buttonRow = new ActionRowBuilder().addComponents(acceptButton, rejectButton, noteButton, viewNotesButton);
 
-        // Voting buttons (if enabled)
-        const components = [buttonRow];
-        if (cfg.applicationSystem.votingEnabled) {
-          const voteUpButton = new ButtonBuilder().setCustomId(`app_vote_up_${guildId}:${counter}`).setLabel('0').setStyle(ButtonStyle.Success).setEmoji('👍');
-          const voteDownButton = new ButtonBuilder().setCustomId(`app_vote_down_${guildId}:${counter}`).setLabel('0').setStyle(ButtonStyle.Danger).setEmoji('👎');
-          const voteRow = new ActionRowBuilder().addComponents(voteUpButton, voteDownButton);
-          components.push(voteRow);
-        }
-
-        const ticketMessage = await channel.send({content: `<@${i.user.id}>`, embeds: [ticketEmbed], components});
+        const ticketMessage = await channel.send({content: `<@${i.user.id}>`, embeds: [ticketEmbed], components: [buttonRow]});
 
         // Save ticket
         const newTicket = {
@@ -3488,6 +3480,44 @@ client.on(Events.InteractionCreate, async i => {
 
         tickets.push(newTicket);
         saveTickets(guildId, tickets);
+
+        // Post to voting channel (if enabled)
+        if (cfg.applicationSystem.votingEnabled && cfg.applicationSystem.votingChannelId) {
+          try {
+            const votingChannel = await i.guild.channels.fetch(cfg.applicationSystem.votingChannelId);
+            if (votingChannel) {
+              const voteEmbed = new EmbedBuilder()
+                .setColor(0x6366f1)
+                .setTitle(`🗳️ Abstimmung: ${selectedCategory.emoji || '📝'} ${selectedCategory.name}`)
+                .setDescription(
+                  `**Bewerber:** <@${i.user.id}> (${i.user.tag})\n` +
+                  `**Ticket:** <#${channel.id}>\n` +
+                  `**Bewerbung:** #${counter}\n\n` +
+                  `Bitte stimmt über diese Bewerbung ab!`
+                )
+                .setThumbnail(i.user.displayAvatarURL({ size: 128 }))
+                .addFields(
+                  { name: '👍 Dafür', value: '0', inline: true },
+                  { name: '👎 Dagegen', value: '0', inline: true }
+                )
+                .setFooter({ text: `Bewerbung #${counter} • Abstimmung` })
+                .setTimestamp();
+
+              const voteUpButton = new ButtonBuilder().setCustomId(`app_vote_up_${guildId}:${counter}`).setLabel('Dafür').setStyle(ButtonStyle.Success).setEmoji('👍');
+              const voteDownButton = new ButtonBuilder().setCustomId(`app_vote_down_${guildId}:${counter}`).setLabel('Dagegen').setStyle(ButtonStyle.Danger).setEmoji('👎');
+              const voteRow = new ActionRowBuilder().addComponents(voteUpButton, voteDownButton);
+
+              const voteMessage = await votingChannel.send({ embeds: [voteEmbed], components: [voteRow] });
+
+              // Save voting message ID
+              newTicket.votingMessageId = voteMessage.id;
+              newTicket.votingChannelId = votingChannel.id;
+              saveTickets(guildId, tickets);
+            }
+          } catch (voteErr) {
+            console.error('Error posting to voting channel:', voteErr);
+          }
+        }
 
         // Initialize transcript
         const transcriptDir = path.join(__dirname, 'transcripts', guildId);
@@ -5138,38 +5168,38 @@ client.on(Events.InteractionCreate, async i => {
         // Initialize votes if not exists
         if (!ticket.votes) ticket.votes = { up: [], down: [] };
 
+        // Check if user already voted same way
+        const alreadyVotedUp = ticket.votes.up.includes(i.user.id);
+        const alreadyVotedDown = ticket.votes.down.includes(i.user.id);
+
         // Remove existing vote
         ticket.votes.up = ticket.votes.up.filter(v => v !== i.user.id);
         ticket.votes.down = ticket.votes.down.filter(v => v !== i.user.id);
 
-        // Add new vote
-        if (isUp) ticket.votes.up.push(i.user.id);
-        else ticket.votes.down.push(i.user.id);
+        // Toggle vote (if same button clicked again, just remove vote)
+        if ((isUp && !alreadyVotedUp) || (!isUp && !alreadyVotedDown)) {
+          if (isUp) ticket.votes.up.push(i.user.id);
+          else ticket.votes.down.push(i.user.id);
+        }
 
         saveTickets(guildId, tickets);
 
-        // Update button labels
+        // Update embed with vote counts
         const message = await i.message.fetch();
-        const newComponents = message.components.map(row => {
-          const newRow = new ActionRowBuilder();
-          row.components.forEach(comp => {
-            if (comp.customId?.startsWith('app_vote_up_')) {
-              newRow.addComponents(ButtonBuilder.from(comp).setLabel(`${ticket.votes.up.length}`));
-            } else if (comp.customId?.startsWith('app_vote_down_')) {
-              newRow.addComponents(ButtonBuilder.from(comp).setLabel(`${ticket.votes.down.length}`));
-            } else {
-              newRow.addComponents(ButtonBuilder.from(comp));
-            }
-          });
-          return newRow;
-        });
+        const embed = EmbedBuilder.from(message.embeds[0]);
 
-        await i.update({ components: newComponents });
+        // Update vote fields
+        embed.spliceFields(0, 2,
+          { name: '👍 Dafür', value: `${ticket.votes.up.length}`, inline: true },
+          { name: '👎 Dagegen', value: `${ticket.votes.down.length}`, inline: true }
+        );
+
+        await i.update({ embeds: [embed] });
         return;
       }
 
       // Application Note Button
-      if(i.customId.startsWith('app_note_')){
+      if(i.customId.startsWith('app_note_') && !i.customId.startsWith('app_notes_view_')){
         const parts = i.customId.replace('app_note_', '').split(':');
         const guildId = parts[0];
         const ticketId = parseInt(parts[1]);
@@ -5192,6 +5222,40 @@ client.on(Events.InteractionCreate, async i => {
 
         modal.addComponents(new ActionRowBuilder().addComponents(noteInput));
         return i.showModal(modal);
+      }
+
+      // View Notes Button
+      if(i.customId.startsWith('app_notes_view_')){
+        const parts = i.customId.replace('app_notes_view_', '').split(':');
+        const guildId = parts[0];
+        const ticketId = parseInt(parts[1]);
+
+        // Check team role
+        if (!hasAnyTeamRole(i.member, guildId)) {
+          return i.reply({ ephemeral: true, content: '❌ Nur Team-Mitglieder können Notizen sehen.' });
+        }
+
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.id === ticketId && t.isApplication === true);
+        if (!ticket) return i.reply({ ephemeral: true, content: '❌ Bewerbung nicht gefunden.' });
+
+        const notes = ticket.notes || [];
+
+        if (notes.length === 0) {
+          return i.reply({ ephemeral: true, content: '📋 Noch keine Notizen vorhanden.' });
+        }
+
+        const notesEmbed = new EmbedBuilder()
+          .setColor(0x6366f1)
+          .setTitle(`📋 Notizen für Bewerbung #${ticketId}`)
+          .setDescription(notes.map((n, idx) =>
+            `**${idx + 1}.** ${n.text}\n` +
+            `└ *<@${n.userId}> • <t:${Math.floor(new Date(n.createdAt).getTime() / 1000)}:R>*`
+          ).join('\n\n'))
+          .setFooter({ text: `${notes.length} Notiz${notes.length !== 1 ? 'en' : ''} • Nur für Team sichtbar` })
+          .setTimestamp();
+
+        return i.reply({ embeds: [notesEmbed], ephemeral: true });
       }
 
       // Rating System: Handle star ratings

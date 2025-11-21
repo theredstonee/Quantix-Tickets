@@ -3391,10 +3391,25 @@
                   </div>
                   <p style="margin-bottom: 1rem; opacity: 0.8; font-size: 0.9rem;">
                     <%= lang === 'de'
-                      ? 'Team-Mitglieder können per Button (👍/👎) über Bewerbungen abstimmen. Stimmen werden im Embed angezeigt.'
-                      : 'Team members can vote (👍/👎) on applications via buttons. Votes are shown in the embed.'
+                      ? 'Bewerbungen werden in einem separaten Channel zur Abstimmung gepostet. Team-Mitglieder können dort per Button (👍/👎) abstimmen.'
+                      : 'Applications are posted to a separate channel for voting. Team members can vote (👍/👎) via buttons there.'
                     %>
                   </p>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-hashtag"></i>
+                      <span><%= lang === 'de' ? 'Abstimmungs-Channel ID' : 'Voting Channel ID' %></span>
+                    </div>
+                    <input type="text" name="applicationVotingChannelId"
+                      value="<%= cfg.applicationSystem?.votingChannelId || '' %>"
+                      placeholder="<%= lang === 'de' ? 'Channel ID für Abstimmungen' : 'Channel ID for voting' %>"
+                      style="width: 100%;">
+                    <div class="help-text">
+                      <i class="fas fa-info-circle"></i>
+                      <span><%= lang === 'de' ? 'Bewerbungen werden hier zur Team-Abstimmung gepostet' : 'Applications will be posted here for team voting' %></span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Blacklist -->

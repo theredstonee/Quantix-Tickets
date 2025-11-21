@@ -3029,6 +3029,7 @@ module.exports = (client)=>{
 
         // Voting System
         cfg.applicationSystem.votingEnabled = req.body.applicationVotingEnabled === 'on';
+        cfg.applicationSystem.votingChannelId = sanitizeDiscordId(req.body.applicationVotingChannelId) || null;
 
         // Blacklist
         const blacklistText = req.body.applicationBlacklist || '';
