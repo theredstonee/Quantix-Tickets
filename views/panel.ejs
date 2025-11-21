@@ -3203,19 +3203,19 @@
                   </div>
                 </div>
 
-                <!-- Team Role -->
+                <!-- Fallback Team Role (wenn keine Kategorie gewählt) -->
                 <div class="form-group">
                   <div class="form-label">
                     <i class="fas fa-user-shield"></i>
-                    <span><%= lang === 'de' ? 'Team Rollen ID' : 'Team Role ID' %></span>
+                    <span><%= lang === 'de' ? 'Standard Team Rollen ID (Fallback)' : 'Default Team Role ID (Fallback)' %></span>
                   </div>
                   <input type="text" name="applicationTeamRoleId"
                     value="<%= cfg.applicationSystem?.teamRoleId || '' %>"
-                    placeholder="<%= lang === 'de' ? 'Rolle die Bewerbungen sehen kann' : 'Role that can view applications' %>"
+                    placeholder="<%= lang === 'de' ? 'Wird verwendet wenn Kategorie keine Rolle hat' : 'Used when category has no role' %>"
                     style="width: 100%;">
                   <div class="help-text">
                     <i class="fas fa-lightbulb"></i>
-                    <span><%= lang === 'de' ? 'Diese Rolle kann Bewerbungs-Tickets sehen' : 'This role can view application tickets' %></span>
+                    <span><%= lang === 'de' ? 'Fallback-Rolle wenn eine Kategorie keine eigene Team-Rolle hat' : 'Fallback role when a category has no team role' %></span>
                   </div>
                 </div>
 
@@ -3321,138 +3321,145 @@
                   </div>
                 </div>
 
-                <!-- Application Form Fields Editor -->
+                <!-- Application Categories Editor -->
                 <div class="card-body" style="border-top: 2px solid var(--border-color);">
                   <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-clipboard-question"></i>
-                    <%= lang === 'de' ? '📋 Bewerbungs-Formularfelder' : '📋 Application Form Fields' %>
+                    <i class="fas fa-folder-tree"></i>
+                    <%= lang === 'de' ? '📂 Bewerbungskategorien' : '📂 Application Categories' %>
                   </h3>
                   <p style="margin-bottom: 1rem; opacity: 0.8; font-size: 0.9rem;">
                     <%= lang === 'de'
-                      ? 'Erstelle benutzerdefinierte Fragen für Bewerbungen. Discord Limit: Max 5 Felder pro Modal, max 1024 Zeichen pro Paragraph-Feld.'
-                      : 'Create custom questions for applications. Discord Limit: Max 5 fields per modal, max 1024 characters per paragraph field.'
+                      ? 'Erstelle verschiedene Bewerbungskategorien (z.B. Moderator, Developer, Builder). Jede Kategorie kann eigene Fragen und eine eigene Team-Rolle haben.'
+                      : 'Create different application categories (e.g. Moderator, Developer, Builder). Each category can have its own questions and team role.'
                     %>
                   </p>
 
-                  <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
-                    <i class="fas fa-exclamation-triangle"></i>
+                  <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+                    <i class="fas fa-info-circle"></i>
                     <div>
-                      <strong><%= lang === 'de' ? '⚠️ Discord Limits:' : '⚠️ Discord Limits:' %></strong><br>
+                      <strong><%= lang === 'de' ? 'ℹ️ So funktioniert es:' : 'ℹ️ How it works:' %></strong><br>
                       <%= lang === 'de'
-                        ? '• Maximum 5 Felder pro Bewerbungsformular\n• Short-Felder: Max 256 Zeichen\n• Paragraph-Felder: Max 1024 Zeichen'
-                        : '• Maximum 5 fields per application form\n• Short fields: Max 256 characters\n• Paragraph fields: Max 1024 characters'
+                        ? '1. User klickt auf "Bewerben"\n2. Select Menu zeigt alle Kategorien\n3. Nach Auswahl öffnet sich das Modal mit den kategorie-spezifischen Fragen'
+                        : '1. User clicks "Apply"\n2. Select menu shows all categories\n3. After selection, modal opens with category-specific questions'
                       %>
                     </div>
                   </div>
 
-                  <div id="applicationFieldsList">
-                    <% (cfg.applicationSystem?.formFields || []).forEach((field, index) => { %>
-                    <div class="form-field-item" data-index="<%= index %>" style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border-radius: 12px; border: 2px solid var(--border-color);">
-                      <div class="form-field-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <span class="form-field-number" style="background: var(--accent-color); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                          <%= index + 1 %>
-                        </span>
-                        <button type="button" class="btn-icon-danger" onclick="removeApplicationField(this)" style="background: #ff4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                  <div id="applicationCategoriesList">
+                    <% (cfg.applicationSystem?.categories || []).forEach((category, catIndex) => { %>
+                    <div class="application-category-item" data-cat-index="<%= catIndex %>" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--glass-bg); border-radius: 12px; border: 2px solid var(--accent-color);">
+                      <div class="category-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                          <span style="background: var(--accent-color); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;">
+                            <%= catIndex + 1 %>
+                          </span>
+                          <span style="font-size: 1.2rem; font-weight: 600;"><%= category.name || 'Neue Kategorie' %></span>
+                        </div>
+                        <button type="button" onclick="removeApplicationCategory(this)" style="background: #ff4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
                           <i class="fas fa-trash"></i>
-                          <%= lang === 'de' ? 'Löschen' : 'Delete' %>
+                          <%= lang === 'de' ? 'Kategorie löschen' : 'Delete Category' %>
                         </button>
                       </div>
 
-                      <div class="form-group">
-                        <div class="form-label">
-                          <i class="fas fa-tag"></i>
-                          <span><%= lang === 'de' ? 'Frage / Label' : 'Question / Label' %></span>
-                          <span style="color: #ff4444;">*</span>
-                        </div>
-                        <input
-                          type="text"
-                          name="applicationField_label_<%= index %>"
-                          value="<%= field.label || '' %>"
-                          placeholder="<%= lang === 'de' ? 'z. B. Warum möchtest du dich bewerben?' : 'e.g. Why do you want to apply?' %>"
-                          maxlength="45"
-                          required
-                          style="width: 100%;">
-                        <div class="help-text">
-                          <i class="fas fa-info-circle"></i>
-                          <span><%= lang === 'de' ? 'Max 45 Zeichen (Discord Limit)' : 'Max 45 characters (Discord Limit)' %></span>
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <div class="form-label">
-                          <i class="fas fa-keyboard"></i>
-                          <span>ID</span>
-                          <span style="color: #ff4444;">*</span>
-                        </div>
-                        <input
-                          type="text"
-                          name="applicationField_id_<%= index %>"
-                          value="<%= field.id || '' %>"
-                          placeholder="<%= lang === 'de' ? 'z. B. motivation, erfahrung' : 'e.g. motivation, experience' %>"
-                          pattern="[a-z0-9_]+"
-                          required
-                          style="width: 100%;">
-                        <div class="help-text">
-                          <i class="fas fa-lightbulb"></i>
-                          <span><%= lang === 'de' ? 'Nur Kleinbuchstaben, Zahlen und Unterstriche' : 'Only lowercase letters, numbers and underscores' %></span>
-                        </div>
-                      </div>
-
-                      <div class="grid grid-2">
+                      <!-- Category Basic Info -->
+                      <div class="grid grid-2" style="margin-bottom: 1rem;">
                         <div class="form-group">
                           <div class="form-label">
-                            <i class="fas fa-text-height"></i>
-                            <span><%= lang === 'de' ? 'Feld-Typ' : 'Field Type' %></span>
+                            <i class="fas fa-tag"></i>
+                            <span><%= lang === 'de' ? 'Kategorie Name' : 'Category Name' %> *</span>
                           </div>
-                          <select name="applicationField_style_<%= index %>" style="width: 100%;">
-                            <option value="short" <%= field.style === 'short' ? 'selected' : '' %>>
-                              <%= lang === 'de' ? '📝 Kurze Antwort (max 256 Zeichen)' : '📝 Short Answer (max 256 chars)' %>
-                            </option>
-                            <option value="paragraph" <%= field.style === 'paragraph' ? 'selected' : '' %>>
-                              <%= lang === 'de' ? '📄 Lange Antwort (max 1024 Zeichen)' : '📄 Long Answer (max 1024 chars)' %>
-                            </option>
-                            <option value="number" <%= field.style === 'number' ? 'selected' : '' %>>
-                              <%= lang === 'de' ? '🔢 Nur Zahlen (validiert, max 50 Zeichen)' : '🔢 Number Only (validated, max 50 chars)' %>
-                            </option>
-                          </select>
+                          <input type="text" name="appCat_name_<%= catIndex %>" value="<%= category.name || '' %>" placeholder="<%= lang === 'de' ? 'z.B. Moderator' : 'e.g. Moderator' %>" maxlength="100" required style="width: 100%;">
+                        </div>
+                        <div class="form-group">
+                          <div class="form-label">
+                            <i class="fas fa-smile"></i>
+                            <span><%= lang === 'de' ? 'Emoji (optional)' : 'Emoji (optional)' %></span>
+                          </div>
+                          <input type="text" name="appCat_emoji_<%= catIndex %>" value="<%= category.emoji || '' %>" placeholder="🛡️" maxlength="10" style="width: 100%;">
+                        </div>
+                      </div>
+
+                      <div class="form-group" style="margin-bottom: 1rem;">
+                        <div class="form-label">
+                          <i class="fas fa-align-left"></i>
+                          <span><%= lang === 'de' ? 'Beschreibung (für Select Menu)' : 'Description (for Select Menu)' %></span>
+                        </div>
+                        <input type="text" name="appCat_description_<%= catIndex %>" value="<%= category.description || '' %>" placeholder="<%= lang === 'de' ? 'Bewirb dich als Moderator' : 'Apply as Moderator' %>" maxlength="100" style="width: 100%;">
+                      </div>
+
+                      <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <div class="form-label">
+                          <i class="fas fa-user-shield"></i>
+                          <span><%= lang === 'de' ? 'Team Rollen ID (für diese Kategorie)' : 'Team Role ID (for this category)' %></span>
+                        </div>
+                        <input type="text" name="appCat_teamRoleId_<%= catIndex %>" value="<%= category.teamRoleId || '' %>" placeholder="<%= lang === 'de' ? 'Rolle die diese Bewerbungen sieht (leer = Standard-Rolle)' : 'Role that sees these applications (empty = default role)' %>" style="width: 100%;">
+                      </div>
+
+                      <!-- Category Form Fields -->
+                      <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                          <i class="fas fa-clipboard-question"></i>
+                          <%= lang === 'de' ? 'Fragen für diese Kategorie' : 'Questions for this category' %>
+                          <span style="font-size: 0.8rem; opacity: 0.7;">(Max 5)</span>
+                        </h4>
+
+                        <div class="category-fields-list" data-cat-index="<%= catIndex %>">
+                          <% (category.formFields || []).forEach((field, fieldIndex) => { %>
+                          <div class="category-field-item" data-field-index="<%= fieldIndex %>" style="margin-bottom: 1rem; padding: 1rem; background: var(--glass-bg); border-radius: 8px; border: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                              <span style="font-weight: 500;"><%= lang === 'de' ? 'Frage' : 'Question' %> <%= fieldIndex + 1 %></span>
+                              <button type="button" onclick="removeCategoryField(this, <%= catIndex %>)" style="background: #ff4444; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                                <i class="fas fa-times"></i>
+                              </button>
+                            </div>
+                            <div class="grid grid-2" style="gap: 0.5rem;">
+                              <input type="text" name="appCat_<%= catIndex %>_field_label_<%= fieldIndex %>" value="<%= field.label || '' %>" placeholder="<%= lang === 'de' ? 'Frage/Label (max 45)' : 'Question/Label (max 45)' %>" maxlength="45" required style="width: 100%;">
+                              <input type="text" name="appCat_<%= catIndex %>_field_id_<%= fieldIndex %>" value="<%= field.id || '' %>" placeholder="ID (z.B. motivation)" pattern="[a-z0-9_]+" required style="width: 100%;">
+                            </div>
+                            <div class="grid grid-2" style="gap: 0.5rem; margin-top: 0.5rem;">
+                              <select name="appCat_<%= catIndex %>_field_style_<%= fieldIndex %>" style="width: 100%;">
+                                <option value="short" <%= field.style === 'short' ? 'selected' : '' %>><%= lang === 'de' ? 'Kurz (256)' : 'Short (256)' %></option>
+                                <option value="paragraph" <%= field.style === 'paragraph' ? 'selected' : '' %>><%= lang === 'de' ? 'Lang (1024)' : 'Long (1024)' %></option>
+                                <option value="number" <%= field.style === 'number' ? 'selected' : '' %>><%= lang === 'de' ? 'Zahl' : 'Number' %></option>
+                              </select>
+                              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" name="appCat_<%= catIndex %>_field_required_<%= fieldIndex %>" <%= field.required !== false ? 'checked' : '' %>>
+                                <span><%= lang === 'de' ? 'Pflicht' : 'Required' %></span>
+                              </label>
+                            </div>
+                          </div>
+                          <% }); %>
                         </div>
 
-                        <div class="form-group">
-                          <label class="required-field-label" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer; border: 2px solid <%= field.required !== false ? 'var(--accent-color)' : 'transparent' %>; transition: all 0.2s;"
-                                 onchange="this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent';"
-                                 onclick="setTimeout(() => { this.style.borderColor = this.querySelector('input').checked ? 'var(--accent-color)' : 'transparent'; }, 10);">
-                            <input
-                              type="checkbox"
-                              name="applicationField_required_<%= index %>"
-                              <%= field.required !== false ? 'checked' : '' %>
-                              style="width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--accent-color);">
-                            <span style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
-                              <i class="fas fa-asterisk" style="font-size: 0.7rem; color: var(--accent-color);"></i>
-                              <%= lang === 'de' ? 'Pflichtfeld' : 'Required' %>
-                            </span>
-                          </label>
+                        <% if ((category.formFields || []).length < 5) { %>
+                        <button type="button" onclick="addCategoryField(this, <%= catIndex %>)" style="width: 100%; padding: 0.5rem; background: var(--accent-color); color: white; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                          <i class="fas fa-plus"></i>
+                          <%= lang === 'de' ? 'Frage hinzufügen' : 'Add Question' %>
+                          (<%= (category.formFields || []).length %>/5)
+                        </button>
+                        <% } else { %>
+                        <div style="text-align: center; padding: 0.5rem; opacity: 0.7; font-size: 0.9rem;">
+                          <i class="fas fa-check-circle"></i> <%= lang === 'de' ? 'Maximum 5 Fragen erreicht' : 'Maximum 5 questions reached' %>
                         </div>
+                        <% } %>
                       </div>
                     </div>
                     <% }); %>
                   </div>
 
-                  <% if ((cfg.applicationSystem?.formFields || []).length >= 5) { %>
+                  <% if ((cfg.applicationSystem?.categories || []).length >= 25) { %>
                   <div class="alert alert-warning" style="margin-top: 1rem;">
                     <i class="fas fa-exclamation-triangle"></i>
                     <div>
                       <strong><%= lang === 'de' ? '⚠️ Maximum erreicht!' : '⚠️ Maximum reached!' %></strong><br>
-                      <%= lang === 'de'
-                        ? 'Du hast die maximale Anzahl von 5 Feldern erreicht (Discord Limit).'
-                        : 'You have reached the maximum of 5 fields (Discord Limit).'
-                      %>
+                      <%= lang === 'de' ? 'Du hast die maximale Anzahl von 25 Kategorien erreicht (Discord Select Menu Limit).' : 'You have reached the maximum of 25 categories (Discord Select Menu Limit).' %>
                     </div>
                   </div>
                   <% } else { %>
-                  <button type="button" class="btn btn-success" onclick="addApplicationField()" style="width: 100%; margin-top: 1rem;">
+                  <button type="button" class="btn btn-success" onclick="addApplicationCategory()" style="width: 100%; margin-top: 1rem;">
                     <i class="fas fa-plus"></i>
-                    <%= lang === 'de' ? 'Neue Frage hinzufügen' : 'Add New Question' %>
-                    (<%= (cfg.applicationSystem?.formFields || []).length %>/5)
+                    <%= lang === 'de' ? 'Neue Kategorie hinzufügen' : 'Add New Category' %>
+                    (<%= (cfg.applicationSystem?.categories || []).length %>/25)
                   </button>
                   <% } %>
                 </div>
@@ -5851,6 +5858,223 @@
           }
         });
       });
+    }
+
+    // Application Categories Management
+    function addApplicationCategory() {
+      const container = document.getElementById('applicationCategoriesList');
+      const currentCats = container.querySelectorAll(':scope > .application-category-item');
+      const newIndex = currentCats.length;
+
+      if (newIndex >= 25) {
+        alert('<%= lang === 'de' ? 'Maximum von 25 Kategorien erreicht (Discord Limit)!' : 'Maximum of 25 categories reached (Discord Limit)!' %>');
+        return;
+      }
+
+      const catHtml = `
+        <div class="application-category-item" data-cat-index="${newIndex}" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--glass-bg); border-radius: 12px; border: 2px solid var(--accent-color);">
+          <div class="category-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="background: var(--accent-color); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;">
+                ${newIndex + 1}
+              </span>
+              <span style="font-size: 1.2rem; font-weight: 600;"><%= lang === 'de' ? 'Neue Kategorie' : 'New Category' %></span>
+            </div>
+            <button type="button" onclick="removeApplicationCategory(this)" style="background: #ff4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-trash"></i>
+              <%= lang === 'de' ? 'Kategorie löschen' : 'Delete Category' %>
+            </button>
+          </div>
+
+          <div class="grid grid-2" style="margin-bottom: 1rem;">
+            <div class="form-group">
+              <div class="form-label">
+                <i class="fas fa-tag"></i>
+                <span><%= lang === 'de' ? 'Kategorie Name' : 'Category Name' %> *</span>
+              </div>
+              <input type="text" name="appCat_name_${newIndex}" placeholder="<%= lang === 'de' ? 'z.B. Moderator' : 'e.g. Moderator' %>" maxlength="100" required style="width: 100%;">
+            </div>
+            <div class="form-group">
+              <div class="form-label">
+                <i class="fas fa-smile"></i>
+                <span><%= lang === 'de' ? 'Emoji (optional)' : 'Emoji (optional)' %></span>
+              </div>
+              <input type="text" name="appCat_emoji_${newIndex}" placeholder="🛡️" maxlength="10" style="width: 100%;">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <div class="form-label">
+              <i class="fas fa-align-left"></i>
+              <span><%= lang === 'de' ? 'Beschreibung (für Select Menu)' : 'Description (for Select Menu)' %></span>
+            </div>
+            <input type="text" name="appCat_description_${newIndex}" placeholder="<%= lang === 'de' ? 'Bewirb dich als Moderator' : 'Apply as Moderator' %>" maxlength="100" style="width: 100%;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <div class="form-label">
+              <i class="fas fa-user-shield"></i>
+              <span><%= lang === 'de' ? 'Team Rollen ID (für diese Kategorie)' : 'Team Role ID (for this category)' %></span>
+            </div>
+            <input type="text" name="appCat_teamRoleId_${newIndex}" placeholder="<%= lang === 'de' ? 'Rolle die diese Bewerbungen sieht (leer = Standard-Rolle)' : 'Role that sees these applications (empty = default role)' %>" style="width: 100%;">
+          </div>
+
+          <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+            <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-clipboard-question"></i>
+              <%= lang === 'de' ? 'Fragen für diese Kategorie' : 'Questions for this category' %>
+              <span style="font-size: 0.8rem; opacity: 0.7;">(Max 5)</span>
+            </h4>
+            <div class="category-fields-list" data-cat-index="${newIndex}"></div>
+            <button type="button" onclick="addCategoryField(this, ${newIndex})" style="width: 100%; padding: 0.5rem; background: var(--accent-color); color: white; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+              <i class="fas fa-plus"></i>
+              <%= lang === 'de' ? 'Frage hinzufügen' : 'Add Question' %> (0/5)
+            </button>
+          </div>
+        </div>
+      `;
+
+      container.insertAdjacentHTML('beforeend', catHtml);
+      updateCategoryButton();
+    }
+
+    function removeApplicationCategory(button) {
+      const catItem = button.closest('.application-category-item');
+      catItem.remove();
+      updateCategoryIndices();
+      updateCategoryButton();
+    }
+
+    function addCategoryField(button, catIndex) {
+      const catItem = button.closest('.application-category-item');
+      const fieldsList = catItem.querySelector('.category-fields-list');
+      const currentFields = fieldsList.querySelectorAll(':scope > .category-field-item');
+      const newFieldIndex = currentFields.length;
+
+      if (newFieldIndex >= 5) {
+        alert('<%= lang === 'de' ? 'Maximum von 5 Fragen pro Kategorie erreicht!' : 'Maximum of 5 questions per category reached!' %>');
+        return;
+      }
+
+      const fieldHtml = `
+        <div class="category-field-item" data-field-index="${newFieldIndex}" style="margin-bottom: 1rem; padding: 1rem; background: var(--glass-bg); border-radius: 8px; border: 1px solid var(--border-color);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-weight: 500;"><%= lang === 'de' ? 'Frage' : 'Question' %> ${newFieldIndex + 1}</span>
+            <button type="button" onclick="removeCategoryField(this, ${catIndex})" style="background: #ff4444; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="grid grid-2" style="gap: 0.5rem;">
+            <input type="text" name="appCat_${catIndex}_field_label_${newFieldIndex}" placeholder="<%= lang === 'de' ? 'Frage/Label (max 45)' : 'Question/Label (max 45)' %>" maxlength="45" required style="width: 100%;">
+            <input type="text" name="appCat_${catIndex}_field_id_${newFieldIndex}" placeholder="ID (z.B. motivation)" pattern="[a-z0-9_]+" required style="width: 100%;">
+          </div>
+          <div class="grid grid-2" style="gap: 0.5rem; margin-top: 0.5rem;">
+            <select name="appCat_${catIndex}_field_style_${newFieldIndex}" style="width: 100%;">
+              <option value="short"><%= lang === 'de' ? 'Kurz (256)' : 'Short (256)' %></option>
+              <option value="paragraph"><%= lang === 'de' ? 'Lang (1024)' : 'Long (1024)' %></option>
+              <option value="number"><%= lang === 'de' ? 'Zahl' : 'Number' %></option>
+            </select>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="appCat_${catIndex}_field_required_${newFieldIndex}" checked>
+              <span><%= lang === 'de' ? 'Pflicht' : 'Required' %></span>
+            </label>
+          </div>
+        </div>
+      `;
+
+      fieldsList.insertAdjacentHTML('beforeend', fieldHtml);
+      updateCategoryFieldButton(button, newFieldIndex + 1);
+    }
+
+    function removeCategoryField(button, catIndex) {
+      const fieldItem = button.closest('.category-field-item');
+      const catItem = fieldItem.closest('.application-category-item');
+      fieldItem.remove();
+
+      // Update field indices for this category
+      const fieldsList = catItem.querySelector('.category-fields-list');
+      const fields = fieldsList.querySelectorAll(':scope > .category-field-item');
+      fields.forEach((field, idx) => {
+        field.setAttribute('data-field-index', idx);
+        field.querySelector('span[style*="font-weight"]').textContent = '<%= lang === 'de' ? 'Frage' : 'Question' %> ' + (idx + 1);
+
+        field.querySelectorAll('input, select').forEach(input => {
+          const name = input.getAttribute('name');
+          if (name && name.includes('_field_')) {
+            const parts = name.split('_field_');
+            const fieldPart = parts[1].split('_');
+            fieldPart[0] = idx;
+            input.setAttribute('name', parts[0] + '_field_' + fieldPart.join('_'));
+          }
+        });
+      });
+
+      // Update add button
+      const addBtn = catItem.querySelector('button[onclick*="addCategoryField"]');
+      if (addBtn) {
+        updateCategoryFieldButton(addBtn, fields.length);
+      }
+    }
+
+    function updateCategoryFieldButton(button, count) {
+      if (count >= 5) {
+        button.style.display = 'none';
+        button.insertAdjacentHTML('afterend', '<div style="text-align: center; padding: 0.5rem; opacity: 0.7; font-size: 0.9rem;"><i class="fas fa-check-circle"></i> <%= lang === 'de' ? 'Maximum 5 Fragen erreicht' : 'Maximum 5 questions reached' %></div>');
+      } else {
+        button.style.display = 'flex';
+        button.innerHTML = '<i class="fas fa-plus"></i> <%= lang === 'de' ? 'Frage hinzufügen' : 'Add Question' %> (' + count + '/5)';
+        const maxMsg = button.nextElementSibling;
+        if (maxMsg && maxMsg.textContent.includes('Maximum')) maxMsg.remove();
+      }
+    }
+
+    function updateCategoryIndices() {
+      const container = document.getElementById('applicationCategoriesList');
+      const cats = container.querySelectorAll(':scope > .application-category-item');
+      cats.forEach((cat, idx) => {
+        cat.setAttribute('data-cat-index', idx);
+        const numSpan = cat.querySelector('.category-header span[style*="border-radius: 50%"]');
+        if (numSpan) numSpan.textContent = idx + 1;
+
+        // Update all input names with new category index
+        cat.querySelectorAll('input, select').forEach(input => {
+          const name = input.getAttribute('name');
+          if (name && name.startsWith('appCat_')) {
+            const parts = name.split('_');
+            if (parts[1].match(/^\d+$/)) {
+              parts[1] = idx;
+              input.setAttribute('name', parts.join('_'));
+            }
+          }
+        });
+
+        // Update onclick handlers for field buttons
+        const addFieldBtn = cat.querySelector('button[onclick*="addCategoryField"]');
+        if (addFieldBtn) {
+          addFieldBtn.setAttribute('onclick', `addCategoryField(this, ${idx})`);
+        }
+        cat.querySelectorAll('button[onclick*="removeCategoryField"]').forEach(btn => {
+          btn.setAttribute('onclick', `removeCategoryField(this, ${idx})`);
+        });
+
+        // Update fields list data attribute
+        const fieldsList = cat.querySelector('.category-fields-list');
+        if (fieldsList) fieldsList.setAttribute('data-cat-index', idx);
+      });
+    }
+
+    function updateCategoryButton() {
+      const container = document.getElementById('applicationCategoriesList');
+      const count = container.querySelectorAll(':scope > .application-category-item').length;
+      const addBtn = document.querySelector('button[onclick="addApplicationCategory()"]');
+      if (addBtn) {
+        if (count >= 25) {
+          addBtn.style.display = 'none';
+        } else {
+          addBtn.style.display = 'block';
+          addBtn.innerHTML = '<i class="fas fa-plus"></i> <%= lang === 'de' ? 'Neue Kategorie hinzufügen' : 'Add New Category' %> (' + count + '/25)';
+        }
+      }
     }
 
     // Topics Management

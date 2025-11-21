@@ -3206,6 +3206,162 @@ client.on(Events.InteractionCreate, async i => {
       return;
     }
 
+    // Application Modal Submit Handler (Category-based)
+    if(i.isModalSubmit() && i.customId.startsWith('modal_application_cat:')){
+      const parts = i.customId.split(':');
+      const guildId = parts[1];
+      const categoryIndex = parseInt(parts[2]);
+
+      if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+
+      const cfg = readCfg(guildId);
+      if(!cfg || !cfg.applicationSystem || !cfg.applicationSystem.enabled){
+        return i.reply({ephemeral:true, content:'❌ Das Bewerbungssystem ist nicht aktiviert.'});
+      }
+
+      const categories = cfg.applicationSystem.categories || [];
+      const selectedCategory = categories[categoryIndex];
+
+      if(!selectedCategory){
+        return i.reply({ephemeral:true, content:'❌ Ungültige Bewerbungskategorie.'});
+      }
+
+      const formFields = selectedCategory.formFields || [];
+      const answers = {};
+      formFields.forEach(f => {
+        try {
+          answers[f.id] = i.fields.getTextInputValue(f.id);
+        } catch(e) {
+          answers[f.id] = '';
+        }
+      });
+
+      // Validate number fields
+      for (const field of formFields) {
+        if (field.style === 'number') {
+          const value = answers[field.id] ? answers[field.id].trim() : '';
+          if (field.required !== false && !value) {
+            return i.reply({ephemeral: true, content: `❌ **${field.label}** ist ein Pflichtfeld!`});
+          }
+          if (value && !/^-?\d+([.,]\d+)?$/.test(value)) {
+            return i.reply({ephemeral: true, content: `❌ **${field.label}** darf nur Zahlen enthalten!`});
+          }
+        }
+      }
+
+      try {
+        await i.deferReply({ ephemeral: true });
+
+        const tickets = loadTickets(guildId);
+        const counter = nextTicket(guildId);
+
+        const categoryId = cfg.applicationSystem.categoryId;
+        if(!categoryId){
+          return i.editReply({content: '❌ Keine Bewerbungs-Kategorie konfiguriert.'});
+        }
+
+        // Channel name with category
+        const sanitizedUsername = i.user.username.replace(/[^a-zA-Z0-9]/g, '').substring(0,12).toLowerCase() || 'user';
+        const sanitizedCatName = selectedCategory.name.replace(/[^a-zA-Z0-9]/g, '').substring(0,8).toLowerCase() || 'app';
+        const channelName = `${PREFIX}${sanitizedCatName}-${counter}-${sanitizedUsername}`;
+
+        const channel = await i.guild.channels.create({
+          name: channelName,
+          type: ChannelType.GuildText,
+          parent: categoryId,
+          topic: `${selectedCategory.emoji || '📝'} ${selectedCategory.name} Bewerbung #${counter} von ${i.user.tag}`,
+          permissionOverwrites: [
+            {id: i.guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel]},
+            {id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.AttachFiles]},
+            {id: i.client.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageChannels, PermissionsBitField.Flags.ReadMessageHistory]}
+          ]
+        });
+
+        // Add team role permissions (category-specific or fallback)
+        const teamRoleId = selectedCategory.teamRoleId || cfg.applicationSystem.teamRoleId;
+        if(teamRoleId){
+          await channel.permissionOverwrites.create(teamRoleId, {
+            ViewChannel: true,
+            SendMessages: true,
+            ReadMessageHistory: true,
+            AttachFiles: true,
+            ManageMessages: true
+          });
+        }
+
+        // Build ticket embed
+        const ticketColor = cfg.applicationSystem.ticketColor || '#10b981';
+        const ticketColorInt = parseInt(ticketColor.replace('#', ''), 16);
+
+        let ticketTitle = cfg.applicationSystem.ticketTitle || '📝 Bewerbung von {username}';
+        let ticketDescription = cfg.applicationSystem.ticketDescription || 'Willkommen {username}! Vielen Dank für deine Bewerbung.';
+
+        ticketTitle = ticketTitle.replace(/\{username\}/g, i.user.username).replace(/\{userId\}/g, i.user.id).replace(/\{userTag\}/g, i.user.tag);
+        ticketDescription = ticketDescription.replace(/\{username\}/g, i.user.username).replace(/\{userId\}/g, i.user.id).replace(/\{userTag\}/g, i.user.tag);
+
+        const ticketEmbed = new EmbedBuilder()
+          .setColor(ticketColorInt)
+          .setTitle(`${selectedCategory.emoji || '📝'} ${ticketTitle}`)
+          .setDescription(`**Kategorie:** ${selectedCategory.name}\n\n${ticketDescription}`)
+          .setThumbnail(i.user.displayAvatarURL({ size: 128 }))
+          .setFooter({text: `${selectedCategory.name} Bewerbung #${counter} • ${i.guild.name}`, iconURL: i.guild.iconURL({ size: 64 })})
+          .setTimestamp();
+
+        // Add form field answers
+        formFields.forEach(field => {
+          const answer = answers[field.id] || 'Nicht beantwortet';
+          ticketEmbed.addFields({name: field.label, value: answer.substring(0, 1024), inline: false});
+        });
+
+        const acceptButton = new ButtonBuilder().setCustomId(`accept_application_${guildId}`).setLabel('Annehmen').setStyle(ButtonStyle.Success).setEmoji('✅');
+        const rejectButton = new ButtonBuilder().setCustomId(`reject_application_${guildId}`).setLabel('Ablehnen').setStyle(ButtonStyle.Danger).setEmoji('❌');
+        const buttonRow = new ActionRowBuilder().addComponents(acceptButton, rejectButton);
+
+        const ticketMessage = await channel.send({content: `<@${i.user.id}>`, embeds: [ticketEmbed], components: [buttonRow]});
+
+        // Save ticket
+        const newTicket = {
+          id: counter,
+          userId: i.user.id,
+          username: i.user.username,
+          channelId: channel.id,
+          messageId: ticketMessage.id,
+          status: 'open',
+          createdAt: new Date().toISOString(),
+          closedAt: null,
+          claimer: null,
+          addedUsers: [],
+          isApplication: true,
+          applicationCategory: selectedCategory.name,
+          applicationCategoryIndex: categoryIndex,
+          applicationAnswers: answers
+        };
+
+        tickets.push(newTicket);
+        saveTickets(guildId, tickets);
+
+        // Initialize transcript
+        const transcriptDir = path.join(__dirname, 'transcripts', guildId);
+        if (!fs.existsSync(transcriptDir)) fs.mkdirSync(transcriptDir, { recursive: true });
+        const txtPath = path.join(transcriptDir, `transcript_${counter}.txt`);
+        const htmlPath = path.join(transcriptDir, `transcript_${counter}.html`);
+        fs.writeFileSync(txtPath, `${selectedCategory.name} Bewerbung #${counter} - ${i.user.tag}\nErstellt am: ${new Date().toLocaleString('de-DE')}\n\n`, 'utf8');
+        fs.writeFileSync(htmlPath, `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${selectedCategory.name} Bewerbung #${counter}</title><style>body{background:#1e1e1e;color:#fff;font-family:Arial,sans-serif;padding:20px;}.msg{margin:10px 0;padding:10px;background:#2e2e2e;border-radius:8px;}</style></head><body><h1>${selectedCategory.name} Bewerbung #${counter}</h1><p>Erstellt von: ${i.user.tag}</p><p>Datum: ${new Date().toLocaleString('de-DE')}</p><hr>`, 'utf8');
+
+        await i.editReply({content: `✅ Deine **${selectedCategory.name}** Bewerbung wurde eingereicht!\n🎫 Ticket: <#${channel.id}>`});
+        await logEvent(i.guild, `📝 ${selectedCategory.name} Bewerbung #${counter} von <@${i.user.id}> eingereicht.`, i.user);
+
+      } catch(error) {
+        console.error('Category application ticket error:', error);
+        if (!i.replied && !i.deferred) {
+          await i.reply({content: '❌ Fehler beim Erstellen der Bewerbung.', ephemeral: true});
+        } else {
+          await i.editReply({content: '❌ Fehler beim Erstellen der Bewerbung.'});
+        }
+      }
+      return;
+    }
+
     // Application Accept Modal Submit Handler
     if(i.isModalSubmit() && i.customId.startsWith('modal_accept_application:')){
       try {
@@ -4426,12 +4582,44 @@ client.on(Events.InteractionCreate, async i => {
           });
         }
 
-        // Build modal with configured fields
-        const formFields = cfg.applicationSystem.formFields || [];
-        if(formFields.length === 0){
+        // Check if categories are configured (new system)
+        const categories = cfg.applicationSystem.categories || [];
+        const legacyFormFields = cfg.applicationSystem.formFields || [];
+
+        // If categories exist, show Select Menu
+        if (categories.length > 0) {
+          const selectOptions = categories.map((cat, idx) => ({
+            label: cat.name.substring(0, 100),
+            value: `${idx}`,
+            description: (cat.description || '').substring(0, 100) || undefined,
+            emoji: cat.emoji || undefined
+          }));
+
+          const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`application_category_select:${guildId}`)
+            .setPlaceholder('📂 Wähle eine Bewerbungskategorie...')
+            .addOptions(selectOptions.slice(0, 25)); // Discord limit
+
+          const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+
+          const selectEmbed = new EmbedBuilder()
+            .setColor(parseInt((cfg.applicationSystem.panelColor || '#3b82f6').replace('#', ''), 16))
+            .setTitle('📂 Bewerbungskategorie wählen')
+            .setDescription('Bitte wähle die Kategorie, für die du dich bewerben möchtest.')
+            .setFooter({ text: 'Quantix Tickets • Bewerbungssystem' });
+
+          return i.reply({
+            embeds: [selectEmbed],
+            components: [selectRow],
+            ephemeral: true
+          });
+        }
+
+        // Fallback: Legacy system without categories
+        if(legacyFormFields.length === 0){
           return i.reply({
             ephemeral:true,
-            content:'❌ Keine Formularfelder konfiguriert. Bitte kontaktiere einen Administrator.'
+            content:'❌ Keine Formularfelder oder Kategorien konfiguriert. Bitte kontaktiere einen Administrator.'
           });
         }
 
@@ -4440,7 +4628,7 @@ client.on(Events.InteractionCreate, async i => {
           .setTitle('Bewerbung'.substring(0,45));
 
         // Add fields (max 5 per modal)
-        const fieldsToAdd = formFields.slice(0, 5);
+        const fieldsToAdd = legacyFormFields.slice(0, 5);
         fieldsToAdd.forEach((field, idx) => {
           let inputStyle = TextInputStyle.Short;
           let placeholder = '';
@@ -4452,7 +4640,65 @@ client.on(Events.InteractionCreate, async i => {
           } else if (field.style === 'number') {
             inputStyle = TextInputStyle.Short;
             placeholder = 'Nur Zahlen erlaubt (z.B. 123 oder 45.67)';
-            maxLength = 50; // Reasonable limit for numbers
+            maxLength = 50;
+          }
+
+          const input = new TextInputBuilder()
+            .setCustomId(field.id)
+            .setLabel(field.label.substring(0,45))
+            .setStyle(inputStyle)
+            .setRequired(field.required !== false)
+            .setMaxLength(maxLength)
+            .setMinLength(field.style === 'number' && field.required !== false ? 1 : 0);
+
+          if(placeholder) input.setPlaceholder(placeholder);
+
+          modal.addComponents(new ActionRowBuilder().addComponents(input));
+        });
+
+        await i.showModal(modal);
+        return;
+      }
+
+      // Application Category Select Menu Handler
+      if(i.customId.startsWith('application_category_select:')){
+        const guildId = i.customId.split(':')[1];
+        if(guildId !== i.guild.id) return i.reply({ephemeral:true,content:'❌ Ungültige Guild ID'});
+
+        const cfg = readCfg(guildId);
+        const categories = cfg.applicationSystem?.categories || [];
+        const selectedIndex = parseInt(i.values[0]);
+        const selectedCategory = categories[selectedIndex];
+
+        if(!selectedCategory){
+          return i.reply({ephemeral:true, content:'❌ Ungültige Kategorie ausgewählt.'});
+        }
+
+        const formFields = selectedCategory.formFields || [];
+        if(formFields.length === 0){
+          return i.reply({
+            ephemeral:true,
+            content:`❌ Keine Fragen für die Kategorie "${selectedCategory.name}" konfiguriert.`
+          });
+        }
+
+        const modal = new ModalBuilder()
+          .setCustomId(`modal_application_cat:${guildId}:${selectedIndex}`)
+          .setTitle(`${selectedCategory.emoji || '📝'} ${selectedCategory.name}`.substring(0,45));
+
+        // Add fields (max 5 per modal)
+        formFields.slice(0, 5).forEach((field) => {
+          let inputStyle = TextInputStyle.Short;
+          let placeholder = '';
+          let maxLength = 256;
+
+          if (field.style === 'paragraph') {
+            inputStyle = TextInputStyle.Paragraph;
+            maxLength = 1024;
+          } else if (field.style === 'number') {
+            inputStyle = TextInputStyle.Short;
+            placeholder = 'Nur Zahlen erlaubt (z.B. 123 oder 45.67)';
+            maxLength = 50;
           }
 
           const input = new TextInputBuilder()

@@ -3040,8 +3040,45 @@ module.exports = (client)=>{
           }
         }
 
-        // Always update fields (empty array if no fields provided)
+        // Always update fields (empty array if no fields provided) - Legacy support
         cfg.applicationSystem.formFields = appFormFields;
+
+        // Process Application Categories (New system)
+        const appCategories = [];
+        for (let catIdx = 0; catIdx < 25; catIdx++) { // Max 25 categories (Discord Select Menu Limit)
+          const catName = req.body[`appCat_name_${catIdx}`];
+          if (!catName) continue; // Skip if no name
+
+          const category = {
+            id: `cat_${catIdx}_${Date.now()}`,
+            name: sanitizeString(catName, 100),
+            emoji: sanitizeString(req.body[`appCat_emoji_${catIdx}`], 10) || '',
+            description: sanitizeString(req.body[`appCat_description_${catIdx}`], 100) || '',
+            teamRoleId: sanitizeDiscordId(req.body[`appCat_teamRoleId_${catIdx}`]) || null,
+            formFields: []
+          };
+
+          // Process fields for this category
+          for (let fieldIdx = 0; fieldIdx < 5; fieldIdx++) { // Max 5 fields per category
+            const fieldLabel = req.body[`appCat_${catIdx}_field_label_${fieldIdx}`];
+            const fieldId = req.body[`appCat_${catIdx}_field_id_${fieldIdx}`];
+            const fieldStyle = req.body[`appCat_${catIdx}_field_style_${fieldIdx}`];
+            const fieldRequired = req.body[`appCat_${catIdx}_field_required_${fieldIdx}`];
+
+            if (fieldLabel && fieldId) {
+              category.formFields.push({
+                label: sanitizeString(fieldLabel, 45),
+                id: sanitizeString(fieldId, 100).replace(/[^a-z0-9_]/g, ''),
+                style: ['short', 'paragraph', 'number'].includes(fieldStyle) ? fieldStyle : 'short',
+                required: fieldRequired === 'on' || fieldRequired === true
+              });
+            }
+          }
+
+          appCategories.push(category);
+        }
+
+        cfg.applicationSystem.categories = appCategories;
 
         console.log('✅ Application System Einstellungen gespeichert!');
       } else {
