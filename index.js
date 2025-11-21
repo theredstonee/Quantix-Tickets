@@ -1327,10 +1327,15 @@ function startApplicationServices() {
           // Interview Reminder
           if (ticket.interview && !ticket.interview.reminderSent) {
             const interviewTime = new Date(ticket.interview.scheduledAt);
-            const reminderMinutes = cfg.applicationSystem.interviewReminderMinutes || 30;
+            const reminderMinutes = cfg.applicationSystem?.interviewReminderMinutes || 30;
             const reminderTime = new Date(interviewTime.getTime() - reminderMinutes * 60 * 1000);
+            const now = new Date();
 
-            if (new Date() >= reminderTime && new Date() < interviewTime) {
+            // Debug log
+            console.log(`📅 Interview Check - Ticket #${ticket.id}: Interview at ${interviewTime.toISOString()}, Reminder at ${reminderTime.toISOString()}, Now: ${now.toISOString()}`);
+
+            if (now >= reminderTime && now < interviewTime) {
+              console.log(`⏰ Sending interview reminder for Ticket #${ticket.id}`);
               // Send reminder
               try {
                 const applicant = await client.users.fetch(ticket.userId).catch(() => null);
@@ -1346,22 +1351,31 @@ function startApplicationServices() {
                   )
                   .setTimestamp();
 
-                if (applicant) await applicant.send({ embeds: [reminderEmbed] }).catch(() => {});
-                if (scheduler) await scheduler.send({ embeds: [reminderEmbed] }).catch(() => {});
+                // DM an Bewerber
+                if (applicant) {
+                  await applicant.send({ embeds: [reminderEmbed] }).catch(e => console.log('DM to applicant failed:', e.message));
+                  console.log(`✅ DM sent to applicant ${applicant.tag}`);
+                }
+
+                // DM an Scheduler
+                if (scheduler) {
+                  await scheduler.send({ embeds: [reminderEmbed] }).catch(e => console.log('DM to scheduler failed:', e.message));
+                  console.log(`✅ DM sent to scheduler ${scheduler.tag}`);
+                }
 
                 // Ping im Ticket-Channel
-                try {
-                  const ticketChannel = await client.channels.fetch(ticket.channelId).catch(() => null);
-                  if (ticketChannel) {
-                    await ticketChannel.send({
-                      content: `<@${ticket.userId}> ⏰ **Dein Interview beginnt in ${reminderMinutes} Minuten!**`,
-                      embeds: [reminderEmbed]
-                    });
-                  }
-                } catch (channelErr) { }
+                const ticketChannel = await client.channels.fetch(ticket.channelId).catch(() => null);
+                if (ticketChannel) {
+                  await ticketChannel.send({
+                    content: `<@${ticket.userId}> ⏰ **Dein Interview beginnt in ${reminderMinutes} Minuten!**`,
+                    embeds: [reminderEmbed]
+                  });
+                  console.log(`✅ Channel ping sent to #${ticketChannel.name}`);
+                }
 
                 ticket.interview.reminderSent = true;
                 needsSave = true;
+                console.log(`✅ Interview reminder completed for Ticket #${ticket.id}`);
               } catch (e) { console.error('Interview reminder error:', e); }
             }
           }
@@ -4035,6 +4049,24 @@ client.on(Events.InteractionCreate, async i => {
         } catch(dmErr) {
           console.error('Interview DM error:', dmErr);
         }
+
+        // Ping applicant in ticket channel
+        const interviewPingEmbed = new EmbedBuilder()
+          .setColor(0x3b82f6)
+          .setTitle('📅 Interview geplant!')
+          .setDescription(
+            `<@${ticket.userId}>, dein Interview wurde geplant!\n\n` +
+            `📅 **Datum:** ${interviewDate.toLocaleDateString('de-DE')}\n` +
+            `⏰ **Uhrzeit:** ${interviewDate.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr\n` +
+            (note ? `📝 **Hinweis:** ${note}` : '')
+          )
+          .setFooter({ text: 'Du wirst vor dem Termin erinnert!' })
+          .setTimestamp();
+
+        await i.channel.send({
+          content: `<@${ticket.userId}>`,
+          embeds: [interviewPingEmbed]
+        }).catch(() => {});
 
         // Send confirmation in channel
         const confirmEmbed = new EmbedBuilder()
