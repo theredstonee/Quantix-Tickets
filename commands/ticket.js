@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { t } = require('../translations');
@@ -81,6 +81,28 @@ function logEvent(guild, message) {
   }
 }
 
+function getCounterPath(guildId) {
+  return path.join(CONFIG_DIR, `${guildId}_counter.json`);
+}
+
+function nextTicket(guildId) {
+  const counterPath = getCounterPath(guildId);
+  if (!fs.existsSync(counterPath)) {
+    fs.writeFileSync(counterPath, JSON.stringify({ last: 0 }, null, 2), 'utf8');
+  }
+  const counter = JSON.parse(fs.readFileSync(counterPath, 'utf8'));
+  counter.last++;
+  fs.writeFileSync(counterPath, JSON.stringify(counter, null, 2), 'utf8');
+  return counter.last;
+}
+
+function getPriorityRoles(guildId, priority) {
+  const cfg = readCfg(guildId);
+  if (!cfg.priorityRoles) return [];
+  const roles = cfg.priorityRoles[priority.toString()];
+  return Array.isArray(roles) ? roles : [];
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('ticket')
@@ -114,6 +136,23 @@ module.exports = {
           option
             .setName('reason')
             .setDescription('Reason/topic for the new ticket')
+            .setRequired(true)
+        )
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('open-as')
+        .setDescription('Open a ticket on behalf of another user (Team only)')
+        .addUserOption(option =>
+          option
+            .setName('user')
+            .setDescription('The user who will be the ticket creator')
+            .setRequired(true)
+        )
+        .addStringOption(option =>
+          option
+            .setName('topic')
+            .setDescription('Ticket topic/reason')
             .setRequired(true)
         )
     ),
@@ -632,6 +671,170 @@ module.exports = {
           .setColor(0xff4444)
           .setTitle('❌ Fehler beim Splitten')
           .setDescription('**Das Ticket konnte nicht gesplittet werden.**')
+          .addFields({
+            name: '❗ Fehlerdetails',
+            value: `\`\`\`${err.message}\`\`\``,
+            inline: false
+          })
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+
+        return interaction.editReply({ embeds: [errorEmbed] });
+      }
+    }
+
+    // ===== SUBCOMMAND: OPEN-AS =====
+    if (subcommand === 'open-as') {
+      // Check if user is team member
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+
+      if (!isTeam) {
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🚫 Zugriff verweigert')
+          .setDescription('**Nur Team-Mitglieder können Tickets für andere Nutzer erstellen!**')
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+
+      const targetUser = interaction.options.getUser('user');
+      const topicString = interaction.options.getString('topic');
+      const cfg = readCfg(guildId);
+
+      await interaction.deferReply({ ephemeral: true });
+
+      try {
+        // Generate ticket number
+        const ticketNumber = nextTicket(guildId);
+
+        // Determine category
+        let parentId = null;
+        const categoryIds = Array.isArray(cfg.ticketCategoryId)
+          ? cfg.ticketCategoryId
+          : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
+
+        if (categoryIds.length > 0 && categoryIds[0]) {
+          try {
+            const category = await interaction.guild.channels.fetch(categoryIds[0].trim());
+            if (category && category.type === ChannelType.GuildCategory) {
+              parentId = category.id;
+            }
+          } catch {
+            console.error('Kategorie nicht gefunden:', categoryIds[0]);
+          }
+        }
+
+        // Set up permissions
+        const permOverwrites = [
+          { id: interaction.guild.id, deny: PermissionsBitField.Flags.ViewChannel },
+          { id: targetUser.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+        ];
+
+        // Add team roles
+        const TEAM_ROLE = getTeamRole(guildId);
+        if (TEAM_ROLE && TEAM_ROLE.trim()) {
+          try {
+            await interaction.guild.roles.fetch(TEAM_ROLE);
+            permOverwrites.push({
+              id: TEAM_ROLE,
+              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages]
+            });
+          } catch {
+            console.error('Team-Rolle nicht gefunden:', TEAM_ROLE);
+          }
+        }
+
+        // Add priority 0 roles
+        const priorityRoles = getPriorityRoles(guildId, 0);
+        for (const roleId of priorityRoles) {
+          if (roleId && roleId.trim() && roleId !== TEAM_ROLE) {
+            try {
+              await interaction.guild.roles.fetch(roleId);
+              permOverwrites.push({
+                id: roleId,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages]
+              });
+            } catch {
+              console.error('Priority-Rolle nicht gefunden:', roleId);
+            }
+          }
+        }
+
+        // Create channel
+        const channelName = `ticket-${ticketNumber}`;
+        const newChannel = await interaction.guild.channels.create({
+          name: channelName,
+          type: ChannelType.GuildText,
+          parent: parentId,
+          permissionOverwrites: permOverwrites
+        });
+
+        // Create ticket embed
+        const ticketEmbed = new EmbedBuilder()
+          .setColor(0x5865f2)
+          .setTitle(`🎫 Ticket #${ticketNumber}`)
+          .setDescription(
+            `Hallo <@${targetUser.id}>!\n\n` +
+            `Dieses Ticket wurde für dich erstellt.\n\n` +
+            `**Thema:** ${topicString}\n` +
+            `**Erstellt von:** <@${interaction.user.id}>`
+          )
+          .addFields(
+            { name: '👤 Ersteller', value: `<@${targetUser.id}>`, inline: true },
+            { name: '📝 Status', value: '🟢 Offen', inline: true },
+            { name: '⏰ Erstellt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Ticket erstellt' })
+          .setTimestamp();
+
+        await newChannel.send({ content: `<@${targetUser.id}>`, embeds: [ticketEmbed] });
+
+        // Save ticket data
+        const tickets = loadTickets(guildId);
+        tickets.push({
+          id: ticketNumber,
+          channelId: newChannel.id,
+          userId: targetUser.id,
+          topic: topicString,
+          status: 'offen',
+          priority: 0,
+          timestamp: Date.now(),
+          formData: {},
+          addedUsers: [interaction.user.id], // Add command executor as added user
+          notes: [],
+          openedBy: interaction.user.id // Track who opened it on behalf
+        });
+        saveTickets(guildId, tickets);
+
+        // Reply to command executor
+        const successEmbed = new EmbedBuilder()
+          .setColor(0x10b981)
+          .setTitle('✅ Ticket erstellt')
+          .setDescription(
+            `**Ticket #${ticketNumber}** wurde erfolgreich für <@${targetUser.id}> erstellt.\n\n` +
+            `**Channel:** ${newChannel}\n` +
+            `**Thema:** ${topicString}`
+          )
+          .setFooter({ text: 'Quantix Tickets • Erfolgreich erstellt' })
+          .setTimestamp();
+
+        await interaction.editReply({ embeds: [successEmbed] });
+
+        // Log event
+        logEvent(
+          interaction.guild,
+          `🎫 **Ticket für Nutzer erstellt:** <@${interaction.user.id}> hat Ticket #${ticketNumber} für <@${targetUser.id}> erstellt (Thema: ${topicString})`
+        );
+
+      } catch (err) {
+        console.error('Fehler beim Erstellen des Tickets:', err);
+
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Fehler beim Erstellen')
+          .setDescription('**Das Ticket konnte nicht erstellt werden.**')
           .addFields({
             name: '❗ Fehlerdetails',
             value: `\`\`\`${err.message}\`\`\``,

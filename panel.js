@@ -6273,7 +6273,6 @@ module.exports = (client)=>{
       saveTickets(guildId, tickets);
 
       // Send message in new channel
-      const { EmbedBuilder } = require('discord.js');
       const reopenEmbed = new EmbedBuilder()
         .setColor(0x10b981)
         .setTitle('🔄 Ticket wiedereröffnet')
