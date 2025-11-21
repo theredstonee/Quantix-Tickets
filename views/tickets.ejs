@@ -489,6 +489,9 @@
     .nowrap{white-space:nowrap}
     .trans-link{text-decoration:none}
     .details-btn{cursor:pointer;text-decoration:none}
+    .btn-reopen{background:#10b981;color:#fff;border:none;padding:0.3rem 0.6rem;border-radius:4px;cursor:pointer;font-size:0.75rem;font-weight:600;transition:all 0.2s}
+    .btn-reopen:hover{background:#059669;transform:scale(1.05)}
+    .btn-reopen:disabled{background:#6b7280;cursor:not-allowed;transform:none}
     .form-data{font-size:.7rem;padding:.3rem;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;margin-top:.3rem;display:none}
     .form-data.show{display:block}
     .form-data dt{font-weight:bold;margin-top:.3rem}
@@ -949,6 +952,7 @@
         <th>Details</th>
         <th data-sort="channelId">Kanal</th>
         <th>Transcript</th>
+        <th>Aktion</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -1085,6 +1089,7 @@
         <td>${hasFormData? `<span class="details-btn" onclick="toggleFormData(${t.id})">📋</span>${formDataHtml}`:''}</td>
         <td><a href="https://discord.com/channels/${GUILD_ID}/${t.channelId}" target="_blank" title="Channel öffnen">🔗</a></td>
         <td><a class="trans-link" href="javascript:void(0)" onclick="openTranscriptModal(${t.id})" title="Transcript Live anzeigen">📄</a></td>
+        <td>${t.status === 'geschlossen' || t.status === 'closed' ? `<button class="btn-reopen" onclick="event.stopPropagation(); reopenTicket(${t.id})" title="Ticket wiedereröffnen">🔄 Öffnen</button>` : ''}</td>
       </tr>`;
     }).join('');
 
@@ -1109,6 +1114,11 @@
             ${t.claimer ? `<div><strong>Claimer:</strong> ${claimerName}</div>` : ''}
             <div><strong>Erstellt:</strong> ${fmt(t.timestamp)}</div>
           </div>
+          ${(t.status === 'geschlossen' || t.status === 'closed') ? `
+            <div style="margin-top: 12px; display: flex; gap: 8px;">
+              <button class="btn-reopen" onclick="event.stopPropagation(); reopenTicket(${t.id})" title="Ticket wiedereröffnen">🔄 Wiedereröffnen</button>
+            </div>
+          ` : ''}
         </div>
       `;
     }).join('');
@@ -1160,6 +1170,32 @@
 
   async function reloadData(){
     try { const r = await fetch('/tickets/data?_=' + Date.now()); if(!r.ok) return; tickets = await r.json(); setTimes(); apply(); } catch{}
+  }
+
+  async function reopenTicket(ticketId) {
+    if (!confirm('Möchtest du Ticket #' + ticketId + ' wirklich wiedereröffnen?\n\nEin neuer Channel wird erstellt.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/ticket/reopen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId: ticketId })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert('✅ Ticket #' + ticketId + ' wurde erfolgreich wiedereröffnet!\n\nNeuer Channel: ' + (data.channelName || 'ticket-' + ticketId));
+        reloadData();
+      } else {
+        alert('❌ Fehler: ' + (data.error || 'Unbekannter Fehler'));
+      }
+    } catch (err) {
+      console.error('Reopen error:', err);
+      alert('❌ Fehler beim Wiedereröffnen des Tickets');
+    }
   }
 
   // Populate tag filter dropdown

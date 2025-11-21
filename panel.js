@@ -6198,6 +6198,111 @@ module.exports = (client)=>{
     }
   });
 
+  // Reopen closed ticket
+  router.post('/api/ticket/reopen', isAuthOrTeam, express.json(), async (req, res) => {
+    try {
+      const guildId = req.session.selectedGuild;
+      const { ticketId } = req.body;
+
+      if (!guildId || !ticketId) {
+        return res.status(400).json({ error: 'Guild ID oder Ticket ID fehlt' });
+      }
+
+      const tickets = loadTickets(guildId);
+      const ticketIndex = tickets.findIndex(t => t.id === parseInt(ticketId));
+
+      if (ticketIndex === -1) {
+        return res.status(404).json({ error: 'Ticket nicht gefunden' });
+      }
+
+      const ticket = tickets[ticketIndex];
+
+      if (ticket.status === 'offen' || ticket.status === 'open') {
+        return res.status(400).json({ error: 'Ticket ist bereits offen' });
+      }
+
+      const guild = await client.guilds.fetch(guildId).catch(() => null);
+      if (!guild) {
+        return res.status(404).json({ error: 'Server nicht gefunden' });
+      }
+
+      const cfg = readCfg(guildId);
+      const categoryId = cfg.categoryId;
+
+      // Create new channel
+      const channelName = `ticket-${ticket.id}`;
+      const permissionOverwrites = [
+        {
+          id: guild.id,
+          deny: ['ViewChannel']
+        },
+        {
+          id: ticket.userId,
+          allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+        }
+      ];
+
+      // Add team roles
+      if (cfg.teamRoleId) {
+        const teamRoles = Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : [cfg.teamRoleId];
+        teamRoles.forEach(roleId => {
+          if (roleId) {
+            permissionOverwrites.push({
+              id: roleId,
+              allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+            });
+          }
+        });
+      }
+
+      const newChannel = await guild.channels.create({
+        name: channelName,
+        type: 0,
+        parent: categoryId || null,
+        permissionOverwrites
+      });
+
+      // Update ticket
+      ticket.status = 'offen';
+      ticket.channelId = newChannel.id;
+      ticket.reopenedAt = new Date().toISOString();
+      ticket.reopenedBy = req.user.id;
+      delete ticket.closedAt;
+      delete ticket.closedBy;
+
+      saveTickets(guildId, tickets);
+
+      // Send message in new channel
+      const { EmbedBuilder } = require('discord.js');
+      const reopenEmbed = new EmbedBuilder()
+        .setColor(0x10b981)
+        .setTitle('🔄 Ticket wiedereröffnet')
+        .setDescription(
+          `Dieses Ticket wurde vom Web-Panel aus wiedereröffnet.\n\n` +
+          `**Ticket:** #${ticket.id}\n` +
+          `**Thema:** ${ticket.topic || 'Kein Thema'}\n` +
+          `**Ersteller:** <@${ticket.userId}>`
+        )
+        .setFooter({ text: 'Quantix Tickets • Ticket wiedereröffnet' })
+        .setTimestamp();
+
+      await newChannel.send({
+        content: `<@${ticket.userId}>`,
+        embeds: [reopenEmbed]
+      });
+
+      res.json({
+        success: true,
+        channelId: newChannel.id,
+        channelName: newChannel.name
+      });
+
+    } catch (err) {
+      console.error('Ticket reopen error:', err);
+      res.status(500).json({ error: 'Ticket konnte nicht wiedereröffnet werden: ' + err.message });
+    }
+  });
+
   // ============================================================
   // REST API ROUTES (Frontend/Backend Separation)
   // ============================================================
