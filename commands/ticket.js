@@ -155,7 +155,55 @@ module.exports = {
             .setDescription('Ticket topic/reason')
             .setRequired(true)
         )
-    ),
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('blacklist-add')
+        .setDescription('Add a user to the ticket blacklist')
+        .addUserOption(option =>
+          option
+            .setName('user')
+            .setDescription('User to blacklist')
+            .setRequired(true))
+        .addStringOption(option =>
+          option
+            .setName('reason')
+            .setDescription('Reason for blacklisting')
+            .setRequired(true))
+        .addBooleanOption(option =>
+          option
+            .setName('permanent')
+            .setDescription('Permanent blacklist (default: true)')
+            .setRequired(false))
+        .addIntegerOption(option =>
+          option
+            .setName('days')
+            .setDescription('Days to blacklist (if not permanent)')
+            .setRequired(false)
+            .setMinValue(1)
+            .setMaxValue(365)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('blacklist-remove')
+        .setDescription('Remove a user from the ticket blacklist')
+        .addUserOption(option =>
+          option
+            .setName('user')
+            .setDescription('User to unblacklist')
+            .setRequired(true)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('blacklist-list')
+        .setDescription('List all blacklisted users'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('blacklist-check')
+        .setDescription('Check if a user is blacklisted')
+        .addUserOption(option =>
+          option
+            .setName('user')
+            .setDescription('User to check')
+            .setRequired(true))),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -908,6 +956,233 @@ module.exports = {
 
         return interaction.editReply({ embeds: [errorEmbed] });
       }
+    }
+
+    // ===== SUBCOMMAND: BLACKLIST-ADD =====
+    if (subcommand === 'blacklist-add') {
+      const user = interaction.options.getUser('user');
+      const reason = interaction.options.getString('reason');
+      const isPermanent = interaction.options.getBoolean('permanent') !== false;
+      const days = interaction.options.getInteger('days') || null;
+
+      const cfg = readCfg(guildId);
+      if (!cfg.ticketBlacklist) {
+        cfg.ticketBlacklist = [];
+      }
+
+      if (cfg.ticketBlacklist.find(b => b.userId === user.id)) {
+        return interaction.reply({
+          content: `❌ ${user.tag} ist bereits auf der Blacklist.`,
+          ephemeral: true
+        });
+      }
+
+      const blacklistEntry = {
+        userId: user.id,
+        username: user.tag,
+        reason: reason,
+        isPermanent: isPermanent,
+        blacklistedAt: new Date().toISOString(),
+        blacklistedBy: interaction.user.id,
+        expiresAt: isPermanent ? null : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      cfg.ticketBlacklist.push(blacklistEntry);
+
+      // Save config
+      const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
+      fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
+
+      const embed = new EmbedBuilder()
+        .setColor(0xff4444)
+        .setTitle('🚫 User zur Blacklist hinzugefügt')
+        .setDescription(`${user} wurde zur Ticket-Blacklist hinzugefügt.`)
+        .addFields(
+          { name: '👤 User', value: `${user} (${user.id})`, inline: true },
+          { name: '📝 Grund', value: reason, inline: true },
+          {
+            name: '⏰ Dauer',
+            value: isPermanent ? '♾️ Permanent' : `${days} Tage`,
+            inline: true
+          },
+          { name: '👮 Von', value: `<@${interaction.user.id}>`, inline: true }
+        )
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed] });
+
+      // Try to send DM
+      try {
+        const dmEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🚫 Ticket-Blacklist')
+          .setDescription(`Du wurdest auf **${interaction.guild.name}** zur Ticket-Blacklist hinzugefügt.`)
+          .addFields(
+            { name: '📝 Grund', value: reason, inline: false },
+            {
+              name: '⏰ Dauer',
+              value: isPermanent ? '♾️ Permanent' : `${days} Tage`,
+              inline: false
+            }
+          )
+          .setTimestamp();
+
+        await user.send({ embeds: [dmEmbed] }).catch(() => {});
+      } catch (err) {}
+    }
+
+    // ===== SUBCOMMAND: BLACKLIST-REMOVE =====
+    if (subcommand === 'blacklist-remove') {
+      const user = interaction.options.getUser('user');
+
+      const cfg = readCfg(guildId);
+      if (!cfg.ticketBlacklist) {
+        cfg.ticketBlacklist = [];
+      }
+
+      const index = cfg.ticketBlacklist.findIndex(b => b.userId === user.id);
+      if (index === -1) {
+        return interaction.reply({
+          content: `❌ ${user.tag} ist nicht auf der Blacklist.`,
+          ephemeral: true
+        });
+      }
+
+      cfg.ticketBlacklist.splice(index, 1);
+
+      // Save config
+      const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
+      fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
+
+      const embed = new EmbedBuilder()
+        .setColor(0x00ff88)
+        .setTitle('✅ User von Blacklist entfernt')
+        .setDescription(`${user} wurde von der Ticket-Blacklist entfernt.`)
+        .addFields(
+          { name: '👤 User', value: `${user} (${user.id})`, inline: true },
+          { name: '👮 Von', value: `<@${interaction.user.id}>`, inline: true }
+        )
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed] });
+
+      // Try to send DM
+      try {
+        const dmEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('✅ Blacklist aufgehoben')
+          .setDescription(`Du wurdest auf **${interaction.guild.name}** von der Ticket-Blacklist entfernt.`)
+          .setTimestamp();
+
+        await user.send({ embeds: [dmEmbed] }).catch(() => {});
+      } catch (err) {}
+    }
+
+    // ===== SUBCOMMAND: BLACKLIST-LIST =====
+    if (subcommand === 'blacklist-list') {
+      const cfg = readCfg(guildId);
+      if (!cfg.ticketBlacklist) {
+        cfg.ticketBlacklist = [];
+      }
+
+      if (cfg.ticketBlacklist.length === 0) {
+        return interaction.reply({
+          content: '✅ Die Ticket-Blacklist ist leer.',
+          ephemeral: true
+        });
+      }
+
+      const now = new Date();
+      const activeBlacklists = cfg.ticketBlacklist.filter(b => {
+        if (b.isPermanent) return true;
+        return new Date(b.expiresAt) > now;
+      });
+
+      if (activeBlacklists.length === 0) {
+        return interaction.reply({
+          content: '✅ Die Ticket-Blacklist ist leer (abgelaufene Einträge wurden bereinigt).',
+          ephemeral: true
+        });
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(0xff4444)
+        .setTitle('🚫 Ticket-Blacklist')
+        .setDescription(`**${activeBlacklists.length}** User auf der Blacklist:`)
+        .setTimestamp();
+
+      const fields = activeBlacklists.slice(0, 25).map((bl, index) => {
+        const expiryText = bl.isPermanent
+          ? '♾️ Permanent'
+          : `<t:${Math.floor(new Date(bl.expiresAt).getTime() / 1000)}:R>`;
+
+        return {
+          name: `${index + 1}. ${bl.username}`,
+          value: `**ID:** ${bl.userId}\n**Grund:** ${bl.reason}\n**Läuft ab:** ${expiryText}`,
+          inline: false
+        };
+      });
+
+      embed.addFields(fields);
+
+      if (activeBlacklists.length > 25) {
+        embed.setFooter({ text: `Zeige erste 25 von ${activeBlacklists.length} Einträgen` });
+      }
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    // ===== SUBCOMMAND: BLACKLIST-CHECK =====
+    if (subcommand === 'blacklist-check') {
+      const user = interaction.options.getUser('user');
+
+      const cfg = readCfg(guildId);
+      if (!cfg.ticketBlacklist) {
+        cfg.ticketBlacklist = [];
+      }
+
+      const blacklist = cfg.ticketBlacklist.find(b => b.userId === user.id);
+
+      if (!blacklist) {
+        return interaction.reply({
+          content: `✅ ${user.tag} ist nicht auf der Blacklist.`,
+          ephemeral: true
+        });
+      }
+
+      if (!blacklist.isPermanent && new Date(blacklist.expiresAt) <= new Date()) {
+        cfg.ticketBlacklist = cfg.ticketBlacklist.filter(b => b.userId !== user.id);
+
+        // Save config
+        const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
+        fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
+
+        return interaction.reply({
+          content: `✅ ${user.tag} war auf der Blacklist, aber der Eintrag ist abgelaufen und wurde entfernt.`,
+          ephemeral: true
+        });
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(0xff4444)
+        .setTitle('🚫 User ist auf der Blacklist')
+        .setDescription(`${user} ist auf der Ticket-Blacklist.`)
+        .addFields(
+          { name: '👤 User', value: `${user} (${user.id})`, inline: true },
+          { name: '📝 Grund', value: blacklist.reason, inline: true },
+          {
+            name: '⏰ Dauer',
+            value: blacklist.isPermanent
+              ? '♾️ Permanent'
+              : `<t:${Math.floor(new Date(blacklist.expiresAt).getTime() / 1000)}:R>`,
+            inline: true
+          },
+          { name: '👮 Hinzugefügt von', value: `<@${blacklist.blacklistedBy}>`, inline: true },
+          { name: '📅 Hinzugefügt am', value: `<t:${Math.floor(new Date(blacklist.blacklistedAt).getTime() / 1000)}:F>`, inline: true }
+        )
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 };

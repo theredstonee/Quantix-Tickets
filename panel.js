@@ -1252,7 +1252,13 @@ module.exports = (client)=>{
           const guild = await client.guilds.fetch(guildId);
           const member = await guild.members.fetch(req.user.id).catch(() => null);
 
-          if (member && member.roles.cache.has(cfg.teamRoleId)) {
+          if (!member) continue;
+
+          // Support both string and array for teamRoleId
+          const teamRoleIds = Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : [cfg.teamRoleId];
+          const hasTeamRole = teamRoleIds.some(roleId => member.roles.cache.has(roleId));
+
+          if (hasTeamRole) {
             teamServers.push({
               id: guildId,
               name: guild.name,
@@ -1326,9 +1332,15 @@ module.exports = (client)=>{
       const guild = await client.guilds.fetch(guildId);
       const member = await guild.members.fetch(req.user.id).catch(() => null);
 
-      if(member && member.roles.cache.has(cfg.teamRoleId)) {
-        req.session.selectedGuild = guildId;
-        return res.redirect('/panel');
+      if(member) {
+        // Support both string and array for teamRoleId
+        const teamRoleIds = Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : [cfg.teamRoleId];
+        const hasTeamRole = teamRoleIds.some(roleId => member.roles.cache.has(roleId));
+
+        if(hasTeamRole) {
+          req.session.selectedGuild = guildId;
+          return res.redirect('/panel');
+        }
       }
 
       return res.status(403).send('Keine Administrator-Rechte oder Team-Rolle auf diesem Server.');
