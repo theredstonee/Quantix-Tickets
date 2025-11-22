@@ -1639,120 +1639,58 @@
             </div>
           </div>
 
-          <!-- Section 7: Premium Features -->
+          <!-- Section 7: Premium - Whitelabel (Custom Bot) -->
           <% if (isPremium) { %>
           <div class="accordion-item" style="border-color: rgba(102, 126, 234, 0.5);">
             <div class="accordion-header" onclick="toggleAccordion(this)">
               <div class="accordion-title">
                 <div class="accordion-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                  <i class="fas fa-gem"></i>
+                  <i class="fas fa-paint-brush"></i>
                 </div>
                 <div class="accordion-text">
                   <h3>
-                    <%= t.web.panel_config.section_premium %>
+                    Whitelabel (Eigener Bot)
                     <span class="priority-badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-left: 0.5rem;">
-                      <%= premiumTierName %>
+                      PREMIUM
                     </span>
                   </h3>
-                  <p><%= t.web.panel_config.section_premium_desc %></p>
+                  <p>Nutze deinen eigenen Discord Bot mit Custom Name, Avatar, Banner und Token</p>
                 </div>
               </div>
               <i class="fas fa-chevron-down accordion-toggle"></i>
             </div>
             <div class="accordion-content">
               <div class="accordion-body">
-                <!-- Custom Avatar (Basic+) -->
-                <% if (premiumTier === 'basic' || premiumTier === 'pro' || premiumTier === 'beta') { %>
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-image"></i>
-                    <span><%= t.premium.custom_avatar_label %></span>
-                    <span class="priority-badge" style="background: #667eea; color: white; font-size: 0.7rem;">BASIC+</span>
-                  </div>
-                  <input
-                    type="url"
-                    name="customAvatarUrl"
-                    value="<%= cfg.customAvatarUrl || '' %>"
-                    placeholder="<%= t.premium.custom_avatar_placeholder %>">
-                  <div class="help-text">
-                    <i class="fas fa-lightbulb"></i>
-                    <span><%= t.premium.custom_avatar_description %></span>
-                  </div>
-                </div>
-                <% } %>
-
-                <!-- Email Notifications (Pro) -->
-                <% if (premiumTier === 'pro' || premiumTier === 'beta') { %>
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-envelope"></i>
-                    <span><%= t.premium.email_notifications_label %></span>
-                    <span class="priority-badge" style="background: #764ba2; color: white; font-size: 0.7rem;">PRO</span>
-                  </div>
-                  <input
-                    type="email"
-                    name="notificationEmail"
-                    value="<%= cfg.notificationEmail || '' %>"
-                    placeholder="<%= t.premium.email_notifications_placeholder %>">
-                  <div class="help-text">
-                    <i class="fas fa-lightbulb"></i>
-                    <span><%= t.premium.email_notifications_description %></span>
+                <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+                  <i class="fas fa-info-circle"></i>
+                  <div>
+                    <strong>Hinweis:</strong> Mit Whitelabel kannst du deinen eigenen Discord Bot verwenden.
+                    Alle Einstellungen werden nur für deinen Server angewendet.
                   </div>
                 </div>
 
-                <!-- Auto-Close System (Pro) -->
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-clock"></i>
-                    <span><%= t.premium.auto_close_label %></span>
-                    <span class="priority-badge" style="background: #764ba2; color: white; font-size: 0.7rem;">PRO</span>
-                  </div>
-                  <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                    <input
-                      type="checkbox"
-                      name="autoCloseEnabled"
-                      <%= cfg.autoCloseEnabled ? 'checked' : '' %>
-                      style="width: auto;">
-                    <span><%= t.premium.auto_close_enable %></span>
-                  </label>
-                  <input
-                    type="number"
-                    name="autoCloseDays"
-                    value="<%= cfg.autoCloseDays || 7 %>"
-                    min="1"
-                    max="365"
-                    placeholder="7">
-                  <div class="help-text">
-                    <i class="fas fa-lightbulb"></i>
-                    <span><%= t.premium.auto_close_description %></span>
-                  </div>
-                </div>
-
-                <!-- DM Notifications (Pro) -->
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-bell"></i>
-                    <span><%= t.premium.dm_notifications_label %></span>
-                    <span class="priority-badge" style="background: #764ba2; color: white; font-size: 0.7rem;">PRO</span>
-                  </div>
-                  <textarea
-                    name="dmNotificationUsers"
-                    rows="4"
-                    placeholder="<%= t.premium.dm_notifications_placeholder %>"
-                  ><%= (cfg.dmNotificationUsers || []).join('\n') %></textarea>
-                  <div class="help-text">
-                    <i class="fas fa-lightbulb"></i>
-                    <span><%= t.premium.dm_notifications_description %></span>
-                  </div>
-                </div>
-                <% } %>
-
-                <!-- Link to Premium Page -->
-                <div class="btn-group" style="margin-top: 1.5rem;">
+                <!-- Link to Whitelabel Page -->
+                <div class="btn-group">
+                  <a href="/whitelabel" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <i class="fas fa-paint-brush"></i>
+                    Whitelabel konfigurieren
+                  </a>
                   <a href="/premium" class="btn btn-outline">
                     <i class="fas fa-gem"></i>
-                    <%= t.premium.manage_subscription %>
+                    Premium verwalten
                   </a>
+                </div>
+
+                <!-- Premium Features Info -->
+                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(102, 126, 234, 0.1); border-radius: 8px; border-left: 3px solid #667eea;">
+                  <div style="font-size: 0.9rem; opacity: 0.9;">
+                    <strong>✨ Premium-Vorteile:</strong><br>
+                    ✅ Eigener Bot-Name<br>
+                    ✅ Custom Bot-Avatar & Banner<br>
+                    ✅ Custom Bot-Status<br>
+                    ✅ Eigener Bot-Token<br>
+                    ✅ Fußzeilen-Bild
+                  </div>
                 </div>
               </div>
             </div>
@@ -1766,8 +1704,8 @@
                   <i class="fas fa-gem"></i>
                 </div>
                 <div class="accordion-text">
-                  <h3><%= t.premium.upgrade_cta_title %></h3>
-                  <p><%= t.premium.upgrade_cta_description %></p>
+                  <h3>Premium Upgrade</h3>
+                  <p>Nutze deinen eigenen Bot mit Whitelabel</p>
                 </div>
               </div>
               <i class="fas fa-chevron-down accordion-toggle"></i>
@@ -1777,19 +1715,19 @@
                 <div class="alert alert-warning">
                   <i class="fas fa-star"></i>
                   <div>
-                    <strong><%= lang === 'de' ? '🌟 Premium Features:' : '🌟 Premium Features:' %></strong><br>
-                    ✅ <%= t.premium.feature_custom_avatar %> (Basic)<br>
-                    ✅ <%= t.premium.feature_statistics %> (Basic)<br>
-                    ✅ <%= t.premium.feature_email_notifications %> (Pro)<br>
-                    ✅ <%= t.premium.feature_auto_close %> (Pro)<br>
-                    ✅ <%= t.premium.feature_dm_notifications %> (Pro)
+                    <strong>🌟 Premium Whitelabel-Features:</strong><br>
+                    ✅ Eigener Bot-Name, Avatar & Banner<br>
+                    ✅ Custom Bot-Status & Token<br>
+                    ✅ Vollständige Bot-Kontrolle<br>
+                    <br>
+                    <small style="opacity: 0.8;">Hinweis: Alle anderen Features sind FREE für alle!</small>
                   </div>
                 </div>
 
                 <div class="btn-group">
                   <a href="/premium" class="btn btn-primary">
                     <i class="fas fa-gem"></i>
-                    <%= t.premium.upgrade_cta_button %>
+                    Jetzt upgraden
                   </a>
                 </div>
               </div>
