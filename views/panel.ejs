@@ -5097,6 +5097,20 @@
   <script>
     // Ensure all code runs after DOM is fully loaded
     document.addEventListener('DOMContentLoaded', function() {
+      // Read-Only Mode für Team-Mitglieder (ohne Admin-Rechte)
+      <% if (typeof isAdmin !== 'undefined' && !isAdmin) { %>
+      const formElements = document.querySelectorAll('#panelForm input, #panelForm select, #panelForm textarea, #panelForm button[type="submit"], #panelForm button[type="button"]:not(.tab-btn)');
+      formElements.forEach(element => {
+        element.disabled = true;
+        element.style.opacity = '0.6';
+        element.style.cursor = 'not-allowed';
+        // Add title to explain why disabled
+        if (!element.title) {
+          element.title = '<%= lang === "de" ? "Nur Administratoren können Einstellungen ändern" : "Only administrators can change settings" %>';
+        }
+      });
+      <% } %>
+
       // Tab Switching
       const tabBtns = document.querySelectorAll('.tab-btn');
       const tabContents = document.querySelectorAll('.tab-content');

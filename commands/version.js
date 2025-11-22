@@ -26,13 +26,13 @@ module.exports = {
         { name: '📅 Release', value: `${RELEASE_DATE}`, inline: true },
         { name: '🌐 Sprachen', value: '9 verfügbar', inline: true },
         {
-          name: '✨ Neu in Version 1.5.0',
+          name: '✨ Neu in Version 1.5.1',
           value:
-            '`•` **Force Claim Toggle:** Auto-Delete in geclaimten Tickets (optional)\n' +
-            '`•` **Smart Pings:** Close Requests pingen automatisch relevante User\n' +
-            '`•` **/ticket add:** User per Command zu Tickets hinzufügen\n' +
-            '`•` **/ticket hide/unhide:** Tickets für Team verstecken (Claimer-only)\n' +
-            '`•` **Number-Felder:** Zahlen-Eingaben in Bewerbungsformularen',
+            '`•` **Ticket Split:** Tickets in verbundene Sub-Tickets aufteilen\n' +
+            '`•` **Ticket Open-As:** Tickets für andere User erstellen (Team-only)\n' +
+            '`•` **Panel Wiedereröffnen:** Geschlossene Tickets aus Panel erneut öffnen\n' +
+            '`•` **Transcript DMs:** Automatischer Transcript-Versand an Ticket-Ersteller\n' +
+            '`•` **Config Backup:** Backup/Restore System im Web Panel',
           inline: false
         },
         {

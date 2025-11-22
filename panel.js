@@ -4127,7 +4127,8 @@ module.exports = (client)=>{
         canExportCSV: canExportCSV,
         timeRange: timeRange,
         guildId: guildId,
-        hasFeature: hasFeature
+        hasFeature: hasFeature,
+        isAdmin: req.isAdmin // Flag ob User Admin ist oder nur Team-Mitglied
       });
     } catch(e) {
       console.error('Analytics Error:', e);
