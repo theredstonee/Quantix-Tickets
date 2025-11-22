@@ -4817,22 +4817,7 @@
 
           <!-- Tab: Premium -->
           <div class="tab-content" id="tab-premium">
-            <% if (premiumTier === 'partner') { %>
-            <div class="alert alert-success" style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 200, 100, 0.2)); border-color: #00ff88;">
-              <i class="fas fa-handshake"></i>
-              <div>
-                <strong style="font-size: 1.1rem;">
-                  <%= lang === 'de' ? '🤝 Premium Aktiv' : '🤝 Premium Active' %>: <%= premiumTierName %>
-                </strong><br>
-                <span style="opacity: 0.9;">
-                  <%= lang === 'de'
-                    ? 'Du hast Zugriff auf exklusive Premium-Features!'
-                    : 'You have access to exclusive premium features!'
-                  %>
-                </span>
-              </div>
-            </div>
-            <% } else { %>
+            <% if (premiumTier === 'pro' || premiumTier === 'beta' || premiumTier === 'lifetime') { %>
             <div class="alert alert-success" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-color: #667eea;">
               <i class="fas fa-gem"></i>
               <div>
@@ -4841,747 +4826,164 @@
                 </strong><br>
                 <span style="opacity: 0.9;">
                   <%= lang === 'de'
-                    ? 'Du hast Zugriff auf exklusive Premium-Features!'
-                    : 'You have access to exclusive premium features!'
+                    ? 'Du hast Zugriff auf Whitelabel - nutze deinen eigenen Discord Bot!'
+                    : 'You have access to Whitelabel - use your own Discord bot!'
                   %>
                 </span>
               </div>
             </div>
-            <% } %>
 
-            <!-- Custom Avatar (FREE) -->
+            <!-- Whitelabel Section (PREMIUM ONLY) -->
             <div class="card">
               <div class="card-header">
                 <div>
                   <div class="card-title">
                     <div class="card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                      <i class="fas fa-image"></i>
-                    </div>
-                    <span><%= t.premium.custom_avatar_label %></span>
-                  </div>
-                  <p class="card-description">
-                    <%= t.premium.custom_avatar_description %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <!-- Avatar Preview -->
-                <% if (cfg.customAvatarUrl) { %>
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                  <div class="form-label">
-                    <i class="fas fa-eye"></i>
-                    <span><%= lang === 'de' ? 'Aktueller Avatar' : 'Current Avatar' %></span>
-                  </div>
-                  <div style="display: flex; align-items: center; gap: 1rem;">
-                    <img src="<%= cfg.customAvatarUrl %>" alt="Avatar" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--glass-border);">
-                    <button type="button" onclick="deleteAvatar()" class="btn" style="background: #ef4444; color: white;">
-                      <i class="fas fa-trash"></i>
-                      <%= lang === 'de' ? 'Löschen' : 'Delete' %>
-                    </button>
-                  </div>
-                </div>
-                <% } %>
-
-                <!-- File Upload -->
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                  <div class="form-label">
-                    <i class="fas fa-upload"></i>
-                    <span><%= lang === 'de' ? 'Avatar hochladen' : 'Upload Avatar' %></span>
-                  </div>
-                  <div style="display: flex; align-items: center; gap: 1rem;">
-                    <input type="file" id="avatarFile" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="display: none;">
-                    <button type="button" onclick="document.getElementById('avatarFile').click()" class="btn btn-primary">
-                      <i class="fas fa-folder-open"></i>
-                      <%= lang === 'de' ? 'Datei wählen' : 'Choose File' %>
-                    </button>
-                    <span id="avatarFileName" style="color: var(--text-color); opacity: 0.7;"><%= lang === 'de' ? 'Keine Datei gewählt' : 'No file chosen' %></span>
-                    <button type="button" id="uploadAvatarBtn" onclick="uploadAvatar()" class="btn" style="background: #10b981; color: white; display: none;">
-                      <i class="fas fa-cloud-upload-alt"></i>
-                      <%= lang === 'de' ? 'Hochladen' : 'Upload' %>
-                    </button>
-                  </div>
-                  <div class="help-text">
-                    <i class="fas fa-info-circle"></i>
-                    <span><%= lang === 'de' ? 'PNG, JPG, GIF, WEBP - Max. 5MB' : 'PNG, JPG, GIF, WEBP - Max. 5MB' %></span>
-                  </div>
-                </div>
-
-                <!-- URL Input (Alternative) -->
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-link"></i>
-                    <span><%= lang === 'de' ? 'Oder Avatar-URL eingeben' : 'Or enter Avatar URL' %></span>
-                  </div>
-                  <input
-                    type="url"
-                    name="customAvatarUrl"
-                    value="<%= cfg.customAvatarUrl || '' %>"
-                    placeholder="<%= t.premium.custom_avatar_placeholder %>">
-                  <div class="help-text">
-                    <i class="fas fa-lightbulb"></i>
-                    <span><%= lang === 'de' ? 'Direktlink zu einem Bild (PNG, JPG, GIF)' : 'Direct link to an image (PNG, JPG, GIF)' %></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tag System -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                      <i class="fas fa-tags"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'Tag/Label System' : 'Tag/Label System' %></span>
-                  </div>
-                  <p class="card-description">
-                    <%= lang === 'de'
-                      ? 'Erstelle benutzerdefinierte Tags für eine bessere Ticket-Organisation. Tags können per /tag add/remove verwaltet werden.'
-                      : 'Create custom tags for better ticket organization. Tags can be managed via /tag add/remove.'
-                    %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <!-- Existing Tags Container -->
-                <div id="tagsContainer" style="margin-bottom: 1rem;">
-                  <% const customTags = cfg.customTags || [];
-                     if (customTags.length > 0) {
-                       customTags.forEach((tag, index) => { %>
-                  <div class="tag-item" style="margin-bottom: 1rem; padding: 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.75rem; align-items: center;">
-                    <input type="hidden" name="tag_id_<%= index %>" value="<%= tag.id %>">
-
-                    <div class="form-group" style="margin: 0;">
-                      <div class="form-label" style="margin-bottom: 0.25rem;">
-                        <i class="fas fa-tag"></i>
-                        <span><%= lang === 'de' ? 'Label' : 'Label' %></span>
-                      </div>
-                      <input type="text" name="tag_label_<%= index %>"
-                        value="<%= tag.label || '' %>"
-                        placeholder="<%= lang === 'de' ? 'z.B. Bug, Dringend' : 'e.g. Bug, Urgent' %>"
-                        maxlength="50"
-                        style="width: 100%;">
-                    </div>
-
-                    <div class="form-group" style="margin: 0;">
-                      <div class="form-label" style="margin-bottom: 0.25rem;">
-                        <i class="fas fa-smile"></i>
-                        <span><%= lang === 'de' ? 'Emoji' : 'Emoji' %></span>
-                      </div>
-                      <input type="text" name="tag_emoji_<%= index %>"
-                        value="<%= tag.emoji || '' %>"
-                        placeholder="🏷️"
-                        maxlength="10"
-                        style="width: 100%;">
-                    </div>
-
-                    <div class="form-group" style="margin: 0;">
-                      <div class="form-label" style="margin-bottom: 0.25rem;">
-                        <i class="fas fa-palette"></i>
-                        <span><%= lang === 'de' ? 'Farbe' : 'Color' %></span>
-                      </div>
-                      <input type="color" name="tag_color_<%= index %>"
-                        value="<%= tag.color || '#00ff88' %>"
-                        style="width: 100%; height: 38px; cursor: pointer;">
-                    </div>
-
-                    <button type="button" onclick="this.parentElement.remove()"
-                      class="btn-icon"
-                      style="background: var(--error-color); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer; height: fit-content; margin-top: 1.5rem;">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </div>
-                  <% });
-                  } else { %>
-                  <div class="alert" style="background: rgba(234, 179, 8, 0.1); border-color: rgba(234, 179, 8, 0.3); color: var(--text-color);">
-                    <i class="fas fa-info-circle"></i>
-                    <span><%= lang === 'de' ? 'Noch keine Tags erstellt. Klicke auf "Tag hinzufügen", um zu beginnen.' : 'No tags created yet. Click "Add Tag" to get started.' %></span>
-                  </div>
-                  <% } %>
-                </div>
-
-                <!-- Add Tag Button -->
-                <button type="button" onclick="addTag()" class="btn btn-outline" style="width: 100%;">
-                  <i class="fas fa-plus"></i>
-                  <%= lang === 'de' ? 'Tag hinzufügen' : 'Add Tag' %>
-                </button>
-
-                <div class="help-text" style="margin-top: 1rem;">
-                  <i class="fas fa-lightbulb"></i>
-                  <span><%= lang === 'de'
-                    ? 'Tags helfen dabei, Tickets zu kategorisieren. User können Tags über /tag add/remove hinzufügen.'
-                    : 'Tags help categorize tickets. Users can add tags via /tag add/remove.'
-                  %></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Template System -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                      <i class="fas fa-file-alt"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'Ticket-Vorlagen System' : 'Ticket Templates System' %></span>
-                  </div>
-                  <p class="card-description">
-                    <%= lang === 'de'
-                      ? 'Erstelle vordefinierte Antworten für wiederkehrende Fragen. Team-Mitglieder können diese per /template use schnell in Tickets senden.'
-                      : 'Create predefined responses for recurring questions. Team members can quickly send them in tickets via /template use.'
-                    %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <!-- Existing Templates Container -->
-                <div id="templatesContainer" style="margin-bottom: 1rem;">
-                  <% const templates = cfg.templates || [];
-                     if (templates.length > 0) {
-                       templates.forEach((template, index) => { %>
-                  <div class="template-item" style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
-                    <input type="hidden" name="template_id_<%= index %>" value="<%= template.id %>">
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                      <strong style="color: var(--accent-color); font-size: 1.1rem;">
-                        <%= lang === 'de' ? 'Vorlage' : 'Template' %> #<%= index + 1 %>
-                      </strong>
-                      <button type="button" onclick="this.parentElement.parentElement.remove()"
-                        class="btn-icon"
-                        style="background: var(--error-color); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer;">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </div>
-
-                    <div class="grid grid-2" style="gap: 1rem; margin-bottom: 1rem;">
-                      <div class="form-group" style="margin: 0;">
-                        <div class="form-label">
-                          <i class="fas fa-signature"></i>
-                          <span><%= lang === 'de' ? 'Vorlagenname' : 'Template Name' %></span>
-                        </div>
-                        <input type="text" name="template_name_<%= index %>"
-                          value="<%= template.name || '' %>"
-                          placeholder="<%= lang === 'de' ? 'z.B. Willkommensnachricht' : 'e.g. Welcome Message' %>"
-                          maxlength="100"
-                          style="width: 100%;">
-                      </div>
-
-                      <div class="form-group" style="margin: 0;">
-                        <div class="form-label">
-                          <i class="fas fa-palette"></i>
-                          <span><%= lang === 'de' ? 'Embed-Farbe' : 'Embed Color' %></span>
-                        </div>
-                        <input type="color" name="template_color_<%= index %>"
-                          value="<%= template.color || '#0ea5e9' %>"
-                          style="width: 100%; height: 38px; cursor: pointer;">
-                      </div>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                      <div class="form-label">
-                        <i class="fas fa-info-circle"></i>
-                        <span><%= lang === 'de' ? 'Beschreibung (optional)' : 'Description (optional)' %></span>
-                      </div>
-                      <input type="text" name="template_description_<%= index %>"
-                        value="<%= template.description || '' %>"
-                        placeholder="<%= lang === 'de' ? 'Kurze Beschreibung der Vorlage' : 'Short description of the template' %>"
-                        maxlength="150"
-                        style="width: 100%;">
-                    </div>
-
-                    <div class="form-group" style="margin: 0;">
-                      <div class="form-label">
-                        <i class="fas fa-comment-dots"></i>
-                        <span><%= lang === 'de' ? 'Vorlagen-Inhalt' : 'Template Content' %></span>
-                      </div>
-                      <textarea name="template_content_<%= index %>" rows="5"
-                        placeholder="<%= lang === 'de' ? 'Der Text, der gesendet wird...' : 'The text that will be sent...' %>"
-                        maxlength="2000"
-                        style="width: 100%;"><%= template.content || '' %></textarea>
-                      <div class="help-text">
-                        <i class="fas fa-lightbulb"></i>
-                        <span><%= lang === 'de' ? 'Markdown-Formatierung wird unterstützt' : 'Markdown formatting is supported' %></span>
-                      </div>
-                    </div>
-                  </div>
-                  <% });
-                  } else { %>
-                  <div class="alert" style="background: rgba(234, 179, 8, 0.1); border-color: rgba(234, 179, 8, 0.3); color: var(--text-color);">
-                    <i class="fas fa-info-circle"></i>
-                    <span><%= lang === 'de' ? 'Noch keine Vorlagen erstellt. Klicke auf "Vorlage hinzufügen", um zu beginnen.' : 'No templates created yet. Click "Add Template" to get started.' %></span>
-                  </div>
-                  <% } %>
-                </div>
-
-                <!-- Add Template Button -->
-                <button type="button" onclick="addTemplate()" class="btn btn-outline" style="width: 100%;">
-                  <i class="fas fa-plus"></i>
-                  <%= lang === 'de' ? 'Vorlage hinzufügen' : 'Add Template' %>
-                </button>
-
-                <div class="help-text" style="margin-top: 1rem;">
-                  <i class="fas fa-lightbulb"></i>
-                  <span><%= lang === 'de'
-                    ? 'Vorlagen helfen deinem Team, schnell auf häufige Anfragen zu antworten. Verwendung: /template use'
-                    : 'Templates help your team quickly respond to common requests. Usage: /template use'
-                  %></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Multi-Department System -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                      <i class="fas fa-building"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'Abteilungs-System' : 'Department System' %></span>
-                  </div>
-                  <p class="card-description">
-                    <%= lang === 'de'
-                      ? 'Erstelle verschiedene Abteilungen (Sales, Support, Billing) mit separaten Teams. Tickets können zwischen Abteilungen weitergeleitet werden.'
-                      : 'Create different departments (Sales, Support, Billing) with separate teams. Tickets can be forwarded between departments.'
-                    %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <!-- Existing Departments Container -->
-                <div id="departmentsContainer" style="margin-bottom: 1rem;">
-                  <% const departments = cfg.departments || [];
-                     if (departments.length > 0) {
-                       departments.forEach((dept, index) => { %>
-                  <div class="department-item" style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
-                    <input type="hidden" name="dept_id_<%= index %>" value="<%= dept.id %>">
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                      <strong style="color: var(--accent-color); font-size: 1.1rem;">
-                        <%= lang === 'de' ? 'Abteilung' : 'Department' %> #<%= index + 1 %>
-                      </strong>
-                      <button type="button" onclick="this.parentElement.parentElement.remove()"
-                        class="btn-icon"
-                        style="background: var(--error-color); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer;">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                      <div>
-                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
-                          <%= lang === 'de' ? 'Abteilungsname' : 'Department Name' %>
-                        </label>
-                        <input type="text" name="dept_name_<%= index %>"
-                          value="<%= dept.name %>"
-                          placeholder="<%= lang === 'de' ? 'z.B. Support' : 'e.g. Support' %>"
-                          required
-                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
-                      </div>
-
-                      <div>
-                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
-                          <%= lang === 'de' ? 'Emoji' : 'Emoji' %>
-                        </label>
-                        <input type="text" name="dept_emoji_<%= index %>"
-                          value="<%= dept.emoji || '' %>"
-                          placeholder="📁"
-                          maxlength="10"
-                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
-                      </div>
-                    </div>
-
-                    <div style="margin-bottom: 1rem;">
-                      <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
-                        <%= lang === 'de' ? 'Beschreibung' : 'Description' %>
-                      </label>
-                      <textarea name="dept_description_<%= index %>"
-                        placeholder="<%= lang === 'de' ? 'Kurze Beschreibung der Abteilung...' : 'Short description of the department...' %>"
-                        rows="2"
-                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color); resize: vertical;"><%= dept.description || '' %></textarea>
-                    </div>
-
-                    <div>
-                      <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
-                        <%= lang === 'de' ? 'Team-Rolle (Optional)' : 'Team Role (Optional)' %>
-                      </label>
-                      <input type="text" name="dept_teamRole_<%= index %>"
-                        value="<%= dept.teamRole || '' %>"
-                        placeholder="<%= lang === 'de' ? 'Rollen-ID (Nur Mitglieder dieser Rolle sehen Tickets dieser Abteilung)' : 'Role ID (Only members with this role can see tickets from this department)' %>"
-                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
-                      <small style="color: var(--muted-color); display: block; margin-top: 0.5rem;">
-                        <%= lang === 'de'
-                          ? 'Rechtsklick auf Rolle → Rolle-ID kopieren (Developer Mode muss aktiviert sein)'
-                          : 'Right-click role → Copy Role ID (Developer Mode must be enabled)'
-                        %>
-                      </small>
-                    </div>
-                  </div>
-                  <% });
-                     } else { %>
-                  <p style="color: var(--muted-color); text-align: center; padding: 2rem;">
-                    <%= lang === 'de'
-                      ? 'Noch keine Abteilungen erstellt. Klicke auf "Abteilung hinzufügen" um zu starten.'
-                      : 'No departments created yet. Click "Add Department" to get started.'
-                    %>
-                  </p>
-                  <% } %>
-                </div>
-
-                <!-- Add Department Button -->
-                <button type="button" onclick="addDepartment()"
-                  style="width: 100%; padding: 0.75rem; border: 2px dashed var(--accent-color); background: transparent; color: var(--accent-color); border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.3s ease;">
-                  <i class="fas fa-plus"></i>
-                  <%= lang === 'de' ? 'Abteilung hinzufügen' : 'Add Department' %>
-                </button>
-
-                <!-- Info Box -->
-                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; border-radius: 8px;">
-                  <i class="fas fa-lightbulb"></i>
-                  <span><%= lang === 'de'
-                    ? 'Tickets können mit /department forward zwischen Abteilungen weitergeleitet werden. Die Team-Rollen wechseln automatisch.'
-                    : 'Tickets can be forwarded between departments using /department forward. Team roles switch automatically.'
-                  %></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Pro Features -->
-            <% if (premiumTier === 'pro' || premiumTier === 'beta' || premiumTier === 'partner') { %>
-
-            <!-- Custom Branding (Pro) -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #ec4899, #be185d);">
-                      <i class="fas fa-palette"></i>
-                    </div>
-                    <span><%= lang === 'de' ? 'Custom Branding' : 'Custom Branding' %></span>
-                    <span class="priority-badge" style="background: #ec4899; color: white; border-color: #ec4899;">PRO</span>
-                  </div>
-                  <p class="card-description">
-                    <%= lang === 'de'
-                      ? 'Passe die Farben und Texte deiner Ticket-Embeds an deine Marke an.'
-                      : 'Customize the colors and texts of your ticket embeds to match your brand.'
-                    %>
-                  </p>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="grid grid-2" style="gap: 1rem; margin-bottom: 1rem;">
-                  <!-- Primary Embed Color -->
-                  <div class="form-group" style="margin: 0;">
-                    <div class="form-label">
                       <i class="fas fa-paint-brush"></i>
-                      <span><%= lang === 'de' ? 'Primäre Embed-Farbe' : 'Primary Embed Color' %></span>
                     </div>
-                    <input type="color" name="brandingPrimaryColor"
-                      value="<%= cfg.branding?.primaryColor || '#0ea5e9' %>"
-                      style="width: 100%; height: 48px; cursor: pointer;">
-                    <div class="help-text">
-                      <i class="fas fa-lightbulb"></i>
-                      <span><%= lang === 'de' ? 'Wird für Ticket-Embeds verwendet' : 'Used for ticket embeds' %></span>
-                    </div>
-                  </div>
-
-                  <!-- Success Color -->
-                  <div class="form-group" style="margin: 0;">
-                    <div class="form-label">
-                      <i class="fas fa-check-circle"></i>
-                      <span><%= lang === 'de' ? 'Erfolg-Farbe' : 'Success Color' %></span>
-                    </div>
-                    <input type="color" name="brandingSuccessColor"
-                      value="<%= cfg.branding?.successColor || '#00ff88' %>"
-                      style="width: 100%; height: 48px; cursor: pointer;">
-                    <div class="help-text">
-                      <i class="fas fa-lightbulb"></i>
-                      <span><%= lang === 'de' ? 'Für Bestätigungen & Erfolge' : 'For confirmations & successes' %></span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="grid grid-2" style="gap: 1rem; margin-bottom: 1.5rem;">
-                  <!-- Error Color -->
-                  <div class="form-group" style="margin: 0;">
-                    <div class="form-label">
-                      <i class="fas fa-exclamation-circle"></i>
-                      <span><%= lang === 'de' ? 'Fehler-Farbe' : 'Error Color' %></span>
-                    </div>
-                    <input type="color" name="brandingErrorColor"
-                      value="<%= cfg.branding?.errorColor || '#ff4444' %>"
-                      style="width: 100%; height: 48px; cursor: pointer;">
-                    <div class="help-text">
-                      <i class="fas fa-lightbulb"></i>
-                      <span><%= lang === 'de' ? 'Für Fehlermeldungen' : 'For error messages' %></span>
-                    </div>
-                  </div>
-
-                  <!-- Warning Color -->
-                  <div class="form-group" style="margin: 0;">
-                    <div class="form-label">
-                      <i class="fas fa-triangle-exclamation"></i>
-                      <span><%= lang === 'de' ? 'Warnungs-Farbe' : 'Warning Color' %></span>
-                    </div>
-                    <input type="color" name="brandingWarningColor"
-                      value="<%= cfg.branding?.warningColor || '#ff9900' %>"
-                      style="width: 100%; height: 48px; cursor: pointer;">
-                    <div class="help-text">
-                      <i class="fas fa-lightbulb"></i>
-                      <span><%= lang === 'de' ? 'Für Warnungen' : 'For warnings' %></span>
-                    </div>
-                  </div>
-                </div>
-
-                <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
-
-                <!-- Custom Button Texts -->
-                <h3 style="color: var(--accent-color); margin-bottom: 1rem;">
-                  <i class="fas fa-square-check"></i> <%= lang === 'de' ? 'Button-Texte' : 'Button Texts' %>
-                </h3>
-
-                <div class="grid grid-2" style="gap: 1rem;">
-                  <!-- Claim Button -->
-                  <div class="form-group" style="margin: 0;">
-                    <div class="form-label">
-                      <i class="fas fa-hand"></i>
-                      <span><%= lang === 'de' ? 'Claim Button' : 'Claim Button' %></span>
-                    </div>
-                    <input type="text" name="brandingClaimButtonText"
-                      value="<%= cfg.branding?.claimButtonText || 'Ticket claimen' %>"
-                      placeholder="Ticket claimen"
-                      maxlength="50"
-                      style="width: 100%;">
-                  </div>
-
-                  <!-- Close Button -->
-                  <div class="form-group" style="margin: 0;">
-                    <div class="form-label">
-                      <i class="fas fa-times-circle"></i>
-                      <span><%= lang === 'de' ? 'Close Button' : 'Close Button' %></span>
-                    </div>
-                    <input type="text" name="brandingCloseButtonText"
-                      value="<%= cfg.branding?.closeButtonText || 'Ticket schließen' %>"
-                      placeholder="Ticket schließen"
-                      maxlength="50"
-                      style="width: 100%;">
-                  </div>
-                </div>
-
-                <div class="grid grid-2" style="gap: 1rem; margin-top: 1rem;">
-                  <!-- Unclaim Button -->
-                  <div class="form-group" style="margin: 0;">
-                    <div class="form-label">
-                      <i class="fas fa-undo"></i>
-                      <span><%= lang === 'de' ? 'Unclaim Button' : 'Unclaim Button' %></span>
-                    </div>
-                    <input type="text" name="brandingUnclaimButtonText"
-                      value="<%= cfg.branding?.unclaimButtonText || 'Unclaimen' %>"
-                      placeholder="Unclaimen"
-                      maxlength="50"
-                      style="width: 100%;">
-                  </div>
-
-                  <!-- Reopen Button -->
-                  <div class="form-group" style="margin: 0;">
-                    <div class="form-label">
-                      <i class="fas fa-folder-open"></i>
-                      <span><%= lang === 'de' ? 'Reopen Button' : 'Reopen Button' %></span>
-                    </div>
-                    <input type="text" name="brandingReopenButtonText"
-                      value="<%= cfg.branding?.reopenButtonText || 'Erneut öffnen' %>"
-                      placeholder="Erneut öffnen"
-                      maxlength="50"
-                      style="width: 100%;">
-                  </div>
-                </div>
-
-                <div class="help-text" style="margin-top: 1.5rem;">
-                  <i class="fas fa-lightbulb"></i>
-                  <span><%= lang === 'de'
-                    ? 'Branding-Einstellungen werden auf alle Ticket-Embeds und Buttons angewendet.'
-                    : 'Branding settings will be applied to all ticket embeds and buttons.'
-                  %></span>
-                </div>
-              </div>
-            </div>
-
-            <% } %>
-
-            <!-- FREE Features - Email & Auto-Close -->
-            <div class="grid grid-2">
-              <!-- Email Notifications -->
-              <div class="card">
-                <div class="card-header">
-                  <div>
-                    <div class="card-title">
-                      <div class="card-icon" style="background: linear-gradient(135deg, #764ba2, #667eea);">
-                        <i class="fas fa-envelope"></i>
-                      </div>
-                      <span><%= t.premium.email_notifications_label %></span>
-                      <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <div class="form-group">
-                    <input
-                      type="email"
-                      name="notificationEmail"
-                      value="<%= cfg.notificationEmail || '' %>"
-                      placeholder="<%= t.premium.email_notifications_placeholder %>">
-                    <div class="help-text">
-                      <i class="fas fa-lightbulb"></i>
-                      <span><%= t.premium.email_notifications_description %></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Auto-Close System -->
-              <div class="card">
-                <div class="card-header">
-                  <div>
-                    <div class="card-title">
-                      <div class="card-icon" style="background: linear-gradient(135deg, #764ba2, #667eea);">
-                        <i class="fas fa-clock"></i>
-                      </div>
-                      <span><%= lang === 'de' ? 'Auto-Close System' : 'Auto-Close System' %></span>
-                      <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px; cursor: pointer;">
-                    <input
-                      type="checkbox"
-                      name="autoCloseEnabled"
-                      <%= (cfg.autoClose && cfg.autoClose.enabled) ? 'checked' : '' %>
-                      style="width: auto; margin: 0;">
-                    <span style="font-weight: 500;"><%= lang === 'de' ? 'Tickets automatisch bei Inaktivität schließen' : 'Automatically close tickets after inactivity' %></span>
-                  </label>
-
-                  <div class="grid grid-2">
-                    <div class="form-group">
-                      <div class="form-label">
-                        <i class="fas fa-calendar-days"></i>
-                        <span><%= lang === 'de' ? 'Inaktivitäts-Tage' : 'Inactivity Days' %></span>
-                      </div>
-                      <input
-                        type="number"
-                        name="autoCloseInactiveDays"
-                        value="<%= (cfg.autoClose && cfg.autoClose.inactiveDays) || 7 %>"
-                        min="1"
-                        max="365"
-                        placeholder="7">
-                      <div class="help-text">
-                        <i class="fas fa-lightbulb"></i>
-                        <span><%= lang === 'de' ? 'Ticket wird nach X Tagen ohne Aktivität geschlossen' : 'Ticket will be closed after X days without activity' %></span>
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <div class="form-label">
-                        <i class="fas fa-bell"></i>
-                        <span><%= lang === 'de' ? 'Warn-Tage vorher' : 'Warning Days Before' %></span>
-                      </div>
-                      <input
-                        type="number"
-                        name="autoCloseWarningDays"
-                        value="<%= (cfg.autoClose && cfg.autoClose.warningDays) || 2 %>"
-                        min="1"
-                        max="30"
-                        placeholder="2">
-                      <div class="help-text">
-                        <i class="fas fa-lightbulb"></i>
-                        <span><%= lang === 'de' ? 'Warnung X Tage vor Auto-Close senden' : 'Send warning X days before auto-close' %></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <div class="form-label">
-                      <i class="fas fa-filter"></i>
-                      <span><%= lang === 'de' ? 'Prioritäten ausschließen' : 'Exclude Priorities' %></span>
-                    </div>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; padding: 0.75rem; background: var(--glass-bg); border-radius: 8px;">
-                      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                        <input
-                          type="checkbox"
-                          name="autoCloseExcludePriority"
-                          value="0"
-                          <%= (cfg.autoClose && cfg.autoClose.excludePriority && cfg.autoClose.excludePriority.includes(0)) ? 'checked' : '' %>
-                          style="width: auto; margin: 0;">
-                        <span>🟢 <%= lang === 'de' ? 'Niedrig' : 'Low' %></span>
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                        <input
-                          type="checkbox"
-                          name="autoCloseExcludePriority"
-                          value="1"
-                          <%= (cfg.autoClose && cfg.autoClose.excludePriority && cfg.autoClose.excludePriority.includes(1)) ? 'checked' : '' %>
-                          style="width: auto; margin: 0;">
-                        <span>🟠 <%= lang === 'de' ? 'Mittel' : 'Medium' %></span>
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                        <input
-                          type="checkbox"
-                          name="autoCloseExcludePriority"
-                          value="2"
-                          <%= (cfg.autoClose && cfg.autoClose.excludePriority && cfg.autoClose.excludePriority.includes(2)) ? 'checked' : '' %>
-                          style="width: auto; margin: 0;">
-                        <span>🔴 <%= lang === 'de' ? 'Hoch' : 'High' %></span>
-                      </label>
-                    </div>
-                    <div class="help-text">
-                      <i class="fas fa-lightbulb"></i>
-                      <span><%= lang === 'de' ? 'Tickets mit diesen Prioritäten werden NICHT automatisch geschlossen' : 'Tickets with these priorities will NOT be auto-closed' %></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- DM Notifications -->
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">
-                    <div class="card-icon" style="background: linear-gradient(135deg, #764ba2, #667eea);">
-                      <i class="fas fa-bell"></i>
-                    </div>
-                    <span><%= t.premium.dm_notifications_label %></span>
-                    <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
+                    <span><%= lang === 'de' ? 'Whitelabel (Eigener Bot)' : 'Whitelabel (Custom Bot)' %></span>
+                    <span class="badge badge-premium" style="margin-left: 0.5rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">PREMIUM</span>
                   </div>
                   <p class="card-description">
-                    <%= t.premium.dm_notifications_description %>
+                    <%= lang === 'de'
+                      ? 'Nutze deinen eigenen Discord Bot mit Custom Name, Avatar, Banner, Status und Token'
+                      : 'Use your own Discord bot with custom name, avatar, banner, status and token'
+                    %>
                   </p>
                 </div>
               </div>
               <div class="card-body">
-                <div class="form-group">
-                  <div class="form-label">
-                    <i class="fas fa-users"></i>
-                    <span><%= lang === 'de' ? 'Benutzer-IDs (eine pro Zeile)' : 'User IDs (one per line)' %></span>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                  <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 12px;">
+                    <h4 style="color: var(--accent-color); margin-bottom: 1rem; font-size: 1.1rem;">
+                      <i class="fas fa-star"></i>
+                      <%= lang === 'de' ? 'Premium Whitelabel-Features' : 'Premium Whitelabel Features' %>
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <span><%= lang === 'de' ? 'Eigener Bot-Name' : 'Custom Bot Name' %></span>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <span><%= lang === 'de' ? 'Custom Bot-Avatar' : 'Custom Bot Avatar' %></span>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <span><%= lang === 'de' ? 'Custom Bot-Banner' : 'Custom Bot Banner' %></span>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <span><%= lang === 'de' ? 'Custom Bot-Status' : 'Custom Bot Status' %></span>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <span><%= lang === 'de' ? 'Eigener Bot-Token' : 'Own Bot Token' %></span>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <span><%= lang === 'de' ? 'Custom Fußzeilen-Bild' : 'Custom Footer Image' %></span>
+                      </div>
+                    </div>
+                    <a href="/whitelabel?guildId=<%= guildId %>" class="btn btn-primary" style="width: 100%;">
+                      <i class="fas fa-paint-brush"></i>
+                      <%= lang === 'de' ? 'Whitelabel konfigurieren' : 'Configure Whitelabel' %>
+                    </a>
                   </div>
-                  <textarea
-                    name="dmNotificationUsers"
-                    rows="6"
-                    placeholder="<%= t.premium.dm_notifications_placeholder %>"
-                  ><%= (cfg.dmNotificationUsers || []).join('\n') %></textarea>
+
+                  <div class="alert" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3);">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                      <strong><%= lang === 'de' ? 'Hinweis:' : 'Note:' %></strong>
+                      <%= lang === 'de'
+                        ? 'Alle anderen Features (Ratings, Statistiken, Auto-Assignment, etc.) sind 100% KOSTENLOS für alle! Premium bietet NUR Whitelabel.'
+                        : 'All other features (Ratings, Statistics, Auto-Assignment, etc.) are 100% FREE for everyone! Premium only offers Whitelabel.'
+                      %>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Link to Premium Page -->
-            <div class="btn-group">
-              <a href="/premium" class="btn btn-outline">
-                <i class="fas fa-gem"></i>
-                <%= t.premium.manage_subscription %>
-              </a>
+            <% } else { %>
+            <!-- Free User - Upgrade CTA -->
+            <div class="alert" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border-color: #667eea;">
+              <i class="fas fa-info-circle"></i>
+              <div>
+                <strong style="font-size: 1.1rem;">
+                  <%= lang === 'de' ? '🆓 Free Version' : '🆓 Free Version' %>
+                </strong><br>
+                <span style="opacity: 0.9;">
+                  <%= lang === 'de'
+                    ? 'Du nutzt alle Features kostenlos! Premium bietet nur Whitelabel (eigener Bot).'
+                    : 'You\'re using all features for free! Premium only offers Whitelabel (custom bot).'
+                  %>
+                </span>
+              </div>
             </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                      <i class="fas fa-crown"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Premium Upgrade' : 'Premium Upgrade' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Upgrade zu Premium für Whitelabel-Zugriff (eigener Discord Bot)'
+                      : 'Upgrade to Premium for Whitelabel access (own Discord bot)'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 12px; margin-bottom: 1.5rem;">
+                  <h4 style="color: var(--accent-color); margin-bottom: 1rem;">
+                    <i class="fas fa-paint-brush"></i>
+                    <%= lang === 'de' ? 'Whitelabel - Eigener Bot' : 'Whitelabel - Custom Bot' %>
+                  </h4>
+                  <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                      <span><%= lang === 'de' ? 'Eigener Bot mit Custom Name, Avatar & Banner' : 'Own bot with custom name, avatar & banner' %></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                      <span><%= lang === 'de' ? 'Custom Bot-Status und Präsenz' : 'Custom bot status and presence' %></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                      <span><%= lang === 'de' ? 'Eigener Bot-Token (volle Kontrolle)' : 'Own bot token (full control)' %></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                      <span><%= lang === 'de' ? 'Custom Fußzeilen-Bild in Embeds' : 'Custom footer image in embeds' %></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="alert alert-success" style="margin-bottom: 1.5rem;">
+                  <i class="fas fa-gift"></i>
+                  <div>
+                    <strong><%= lang === 'de' ? 'Alle anderen Features sind KOSTENLOS!' : 'All other features are FREE!' %></strong><br>
+                    <%= lang === 'de'
+                      ? 'Ratings, Statistiken, Auto-Assignment, Email-Benachrichtigungen, DM-Benachrichtigungen, Auto-Close, Tags, Templates, Voice Support, Bewerbungssystem und mehr - 100% kostenlos!'
+                      : 'Ratings, Statistics, Auto-Assignment, Email Notifications, DM Notifications, Auto-Close, Tags, Templates, Voice Support, Application System and more - 100% free!'
+                    %>
+                  </div>
+                </div>
+
+                <a href="/premium" class="btn btn-primary" style="width: 100%;">
+                  <i class="fas fa-crown"></i>
+                  <%= lang === 'de' ? 'Premium-Pläne ansehen' : 'View Premium Plans' %>
+                </a>
+              </div>
+            </div>
+            <% } %>
+
           </div>
 
         </div>
