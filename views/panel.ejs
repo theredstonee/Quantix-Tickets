@@ -2477,6 +2477,10 @@
               <i class="fas fa-crown"></i>
               <span>Premium</span>
             </button>
+            <button type="button" class="tab-btn" data-tab="notifications">
+              <i class="fas fa-bell"></i>
+              <span><%= lang === 'de' ? 'Benachrichtigungen' : 'Notifications' %></span>
+            </button>
           </div>
 
           <!-- Tab: Overview -->
@@ -4983,6 +4987,103 @@
               </div>
             </div>
             <% } %>
+
+          </div>
+
+          <!-- Tab: Notifications -->
+          <div class="tab-content" id="tab-notifications">
+            <div class="alert" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3);">
+              <i class="fas fa-info-circle"></i>
+              <div>
+                <strong><%= lang === 'de' ? 'Benachrichtigungen konfigurieren' : 'Configure Notifications' %></strong><br>
+                <%= lang === 'de'
+                  ? 'Alle Benachrichtigungs-Features sind 100% KOSTENLOS für alle Benutzer!'
+                  : 'All notification features are 100% FREE for all users!'
+                %>
+              </div>
+            </div>
+
+            <!-- Email Notifications -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                      <i class="fas fa-envelope"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Email-Benachrichtigungen' : 'Email Notifications' %></span>
+                    <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Erhalte Email-Benachrichtigungen für neue Tickets und wichtige Events'
+                      : 'Receive email notifications for new tickets and important events'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-at"></i>
+                    <span><%= lang === 'de' ? 'Email-Adresse' : 'Email Address' %></span>
+                  </div>
+                  <input
+                    type="email"
+                    name="notificationEmail"
+                    value="<%= cfg.notificationEmail || '' %>"
+                    placeholder="<%= lang === 'de' ? 'admin@beispiel.de' : 'admin@example.com' %>">
+                  <div class="help-text">
+                    <i class="fas fa-lightbulb"></i>
+                    <span><%= lang === 'de'
+                      ? 'Du erhältst Benachrichtigungen bei neuen Tickets, geschlossenen Tickets und wichtigen Events'
+                      : 'You will receive notifications for new tickets, closed tickets and important events'
+                    %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DM Notifications -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                      <i class="fas fa-bell"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'DM-Benachrichtigungen' : 'DM Notifications' %></span>
+                    <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Sende Discord-DMs an bestimmte Benutzer bei Ticket-Events'
+                      : 'Send Discord DMs to specific users on ticket events'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-users"></i>
+                    <span><%= lang === 'de' ? 'Benutzer-IDs (eine pro Zeile)' : 'User IDs (one per line)' %></span>
+                  </div>
+                  <textarea
+                    name="dmNotificationUsers"
+                    rows="8"
+                    placeholder="<%= lang === 'de' ? '123456789012345678\n987654321098765432' : '123456789012345678\n987654321098765432' %>"
+                  ><%= (cfg.dmNotificationUsers || []).join('\n') %></textarea>
+                  <div class="help-text">
+                    <i class="fas fa-lightbulb"></i>
+                    <span><%= lang === 'de'
+                      ? 'Diese Benutzer erhalten DMs bei neuen Tickets, Nachrichten und anderen Events. Eine Benutzer-ID pro Zeile.'
+                      : 'These users will receive DMs for new tickets, messages and other events. One user ID per line.'
+                    %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
           </div>
 
