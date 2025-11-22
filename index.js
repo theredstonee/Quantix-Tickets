@@ -8424,4 +8424,20 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
-client.login(TOKEN);
+// Login main bot
+client.login(TOKEN).then(async () => {
+  console.log('[Main Bot] ✅ Logged in successfully');
+
+  // Load custom bots for premium servers with whitelabel
+  try {
+    const customBotManager = require('./custom-bot-manager.js');
+    console.log('[Main Bot] Loading custom bots...');
+    await customBotManager.loadAllBots();
+    console.log('[Main Bot] ✅ Custom bots loaded');
+  } catch (error) {
+    console.error('[Main Bot] ❌ Error loading custom bots:', error);
+  }
+}).catch(error => {
+  console.error('[Main Bot] ❌ Login failed:', error);
+  process.exit(1);
+});

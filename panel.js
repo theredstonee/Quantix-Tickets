@@ -6633,11 +6633,100 @@ module.exports = (client)=>{
       saveCfg(guildId, cfg);
 
       console.log(`[Whitelabel] Config updated for guild ${guildId}`);
+
+      // Auto-start/restart custom bot if token is provided
+      if (cfg.whitelabel.botToken && cfg.whitelabel.botToken.length > 10) {
+        try {
+          const customBotManager = require('./custom-bot-manager.js');
+
+          // Check if bot is already running
+          if (customBotManager.getBot(guildId)) {
+            console.log(`[Whitelabel] Restarting custom bot for guild ${guildId}...`);
+            await customBotManager.restartBot(guildId);
+          } else {
+            console.log(`[Whitelabel] Starting custom bot for guild ${guildId}...`);
+            await customBotManager.startBot(guildId);
+          }
+        } catch (error) {
+          console.error(`[Whitelabel] Error starting/restarting custom bot:`, error);
+          // Don't fail the save if bot startup fails
+        }
+      }
+
       res.status(200).send('Gespeichert');
 
     } catch (err) {
       console.error('[Whitelabel] Error saving:', err);
       res.status(500).send('Fehler beim Speichern');
+    }
+  });
+
+  // Custom Bot Control API
+  router.post('/api/custom-bot/start', ensureAuthenticated, isAuth, async (req, res) => {
+    try {
+      const guildId = req.session.selectedGuild;
+      const customBotManager = require('./custom-bot-manager.js');
+
+      const result = await customBotManager.startBot(guildId);
+      if (result.success) {
+        res.json({ success: true, message: 'Bot gestartet' });
+      } else {
+        res.status(400).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error('[Custom Bot API] Start error:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  router.post('/api/custom-bot/stop', ensureAuthenticated, isAuth, async (req, res) => {
+    try {
+      const guildId = req.session.selectedGuild;
+      const customBotManager = require('./custom-bot-manager.js');
+
+      const result = await customBotManager.stopBot(guildId);
+      res.json({ success: true, message: 'Bot gestoppt' });
+    } catch (error) {
+      console.error('[Custom Bot API] Stop error:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  router.post('/api/custom-bot/restart', ensureAuthenticated, isAuth, async (req, res) => {
+    try {
+      const guildId = req.session.selectedGuild;
+      const customBotManager = require('./custom-bot-manager.js');
+
+      const result = await customBotManager.restartBot(guildId);
+      if (result.success) {
+        res.json({ success: true, message: 'Bot neugestartet' });
+      } else {
+        res.status(400).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error('[Custom Bot API] Restart error:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  router.get('/api/custom-bot/status', ensureAuthenticated, isAuth, async (req, res) => {
+    try {
+      const guildId = req.session.selectedGuild;
+      const customBotManager = require('./custom-bot-manager.js');
+
+      const bot = customBotManager.getBot(guildId);
+      const status = customBotManager.getBotStatus(guildId);
+
+      res.json({
+        running: bot !== null,
+        status: status.status,
+        error: status.error,
+        username: bot?.user?.username || null,
+        tag: bot?.user?.tag || null
+      });
+    } catch (error) {
+      console.error('[Custom Bot API] Status error:', error);
+      res.status(500).json({ success: false, error: error.message });
     }
   });
 

@@ -268,6 +268,28 @@
       Mit Whitelabel kannst du deinen eigenen Discord Bot verwenden. Alle Einstellungen hier gelten nur für deinen Server.
     </div>
 
+    <!-- Bot Status Card -->
+    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-color: var(--accent-color);">
+      <h2><i class="fas fa-robot"></i> Bot Status</h2>
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+        <div id="botStatusIndicator" style="display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fas fa-circle" style="color: #6b7280; font-size: 0.8rem;"></i>
+          <span>Lade Status...</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button type="button" class="upload-btn" id="startBotBtn" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
+          <i class="fas fa-play"></i> Bot starten
+        </button>
+        <button type="button" class="upload-btn" id="stopBotBtn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+          <i class="fas fa-stop"></i> Bot stoppen
+        </button>
+        <button type="button" class="upload-btn" id="restartBotBtn" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+          <i class="fas fa-redo"></i> Bot neustarten
+        </button>
+      </div>
+    </div>
+
     <form id="whitelabelForm">
       <!-- Bot-Name -->
       <div class="card">
@@ -429,6 +451,115 @@
   </div>
 
   <script>
+    // Bot Status & Control
+    async function loadBotStatus() {
+      try {
+        const response = await fetch('/api/custom-bot/status');
+        const data = await response.json();
+
+        const indicator = document.getElementById('botStatusIndicator');
+        if (!indicator) return;
+
+        if (data.running) {
+          indicator.innerHTML = `
+            <i class="fas fa-circle" style="color: #22c55e; font-size: 0.8rem;"></i>
+            <span style="color: #22c55e; font-weight: 600;">Online</span>
+            <span style="opacity: 0.7;">• ${data.tag || 'Unbekannt'}</span>
+          `;
+        } else if (data.status === 'error') {
+          indicator.innerHTML = `
+            <i class="fas fa-circle" style="color: #ef4444; font-size: 0.8rem;"></i>
+            <span style="color: #ef4444; font-weight: 600;">Fehler</span>
+            <span style="opacity: 0.7;">• ${data.error || 'Unbekannter Fehler'}</span>
+          `;
+        } else {
+          indicator.innerHTML = `
+            <i class="fas fa-circle" style="color: #6b7280; font-size: 0.8rem;"></i>
+            <span style="color: #6b7280; font-weight: 600;">Offline</span>
+            <span style="opacity: 0.7;">• Bot nicht gestartet</span>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading bot status:', error);
+      }
+    }
+
+    // Bot Control Buttons
+    const startBtn = document.getElementById('startBotBtn');
+    const stopBtn = document.getElementById('stopBotBtn');
+    const restartBtn = document.getElementById('restartBotBtn');
+
+    if (startBtn) {
+      startBtn.addEventListener('click', async () => {
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starte...';
+        try {
+          const response = await fetch('/api/custom-bot/start', { method: 'POST' });
+          const data = await response.json();
+          if (data.success) {
+            alert('✅ Bot gestartet!');
+            await loadBotStatus();
+          } else {
+            alert('❌ Fehler: ' + data.error);
+          }
+        } catch (error) {
+          alert('❌ Fehler: ' + error.message);
+        }
+        startBtn.disabled = false;
+        startBtn.innerHTML = '<i class="fas fa-play"></i> Bot starten';
+      });
+    }
+
+    if (stopBtn) {
+      stopBtn.addEventListener('click', async () => {
+        if (!confirm('Bot wirklich stoppen?')) return;
+        stopBtn.disabled = true;
+        stopBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Stoppe...';
+        try {
+          const response = await fetch('/api/custom-bot/stop', { method: 'POST' });
+          const data = await response.json();
+          if (data.success) {
+            alert('✅ Bot gestoppt!');
+            await loadBotStatus();
+          } else {
+            alert('❌ Fehler: ' + data.error);
+          }
+        } catch (error) {
+          alert('❌ Fehler: ' + error.message);
+        }
+        stopBtn.disabled = false;
+        stopBtn.innerHTML = '<i class="fas fa-stop"></i> Bot stoppen';
+      });
+    }
+
+    if (restartBtn) {
+      restartBtn.addEventListener('click', async () => {
+        if (!confirm('Bot wirklich neustarten?')) return;
+        restartBtn.disabled = true;
+        restartBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starte neu...';
+        try {
+          const response = await fetch('/api/custom-bot/restart', { method: 'POST' });
+          const data = await response.json();
+          if (data.success) {
+            alert('✅ Bot neugestartet!');
+            await loadBotStatus();
+          } else {
+            alert('❌ Fehler: ' + data.error);
+          }
+        } catch (error) {
+          alert('❌ Fehler: ' + error.message);
+        }
+        restartBtn.disabled = false;
+        restartBtn.innerHTML = '<i class="fas fa-redo"></i> Bot neustarten';
+      });
+    }
+
+    // Load initial status
+    loadBotStatus();
+
+    // Refresh status every 10 seconds
+    setInterval(loadBotStatus, 10000);
+
     // Character counters
     const nameInput = document.getElementById('botName');
     const statusInput = document.getElementById('statusText');
