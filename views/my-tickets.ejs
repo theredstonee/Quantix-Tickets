@@ -532,14 +532,14 @@
           `;
         }
 
-        // Transcript button - only for closed tickets
-        const transcriptBtn = !isOpen
-          ? `<a href="/panel/transcripts/${ticket.guildId}/${ticket.id}" target="_blank" class="btn-transcript">
-              <i class="fas fa-file-alt"></i> Transcript ansehen
+        // Transcript buttons - Live for open, Final for closed
+        const transcriptBtn = isOpen
+          ? `<a href="/panel/live-transcript/${ticket.guildId}/${ticket.id}" target="_blank" class="btn-transcript" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
+              <i class="fas fa-broadcast-tower"></i> Live Transcript
             </a>`
-          : `<span class="btn-transcript disabled" title="Transcript verfügbar nach Schließung">
-              <i class="fas fa-file-alt"></i> Ticket noch offen
-            </span>`;
+          : `<a href="/panel/transcripts/${ticket.guildId}/${ticket.id}" target="_blank" class="btn-transcript">
+              <i class="fas fa-file-alt"></i> Transcript ansehen
+            </a>`;
 
         const card = document.createElement('div');
         card.className = 'ticket-card';

@@ -31,7 +31,7 @@ function getDefaultConfig() {
       subscriptionId: null,
       customerId: null,
       features: {
-        // Alle operativen Features sind jetzt kostenlos
+        // ALLE operativen Features sind 100% KOSTENLOS
         ratingSystem: true,
         statistics: true,
         customAvatar: true,
@@ -51,29 +51,40 @@ function getDefaultConfig() {
         ticketBlacklist: true,
         unlimitedCategories: true,
         maxCategories: 999,
-        // Pro-Features (nur Customization)
+        advancedAnalytics: true,
+        // NUR Premium: Whitelabel/Bot-Customization Features
         customBotToken: false,
         whiteLabel: false,
-        customDomain: false,
-        removeBranding: false,
-        customColors: false,
-        customEmojis: false,
-        prioritySupport: false,
-        noAds: false
+        customBotName: false,
+        customBotAvatar: false,
+        customBotBanner: false,
+        customBotStatus: false
       }
+    },
+    whitelabel: {
+      enabled: false,
+      botName: '',
+      botToken: '',
+      botAvatar: '',
+      botBanner: '',
+      botStatus: {
+        type: 'online', // online, idle, dnd, invisible
+        text: ''
+      },
+      footerImage: ''
     }
   };
 }
 
 // Premium Tiers Definition
-// NEUE STRUKTUR: Alle operativen Features sind FREE, Pro = Bot Customization
+// NEUE STRUKTUR: ALLE Features sind FREE, NUR Whitelabel ist Premium
 const PREMIUM_TIERS = {
   none: {
     name: 'Free',
     price: 0,
     priceId: null,
     features: {
-      // Alle operativen Features sind jetzt KOSTENLOS
+      // ALLE operativen Features sind 100% KOSTENLOS für JEDEN
       ratingSystem: true,
       statistics: true,
       customAvatar: true,
@@ -93,23 +104,22 @@ const PREMIUM_TIERS = {
       ticketBlacklist: true,
       unlimitedCategories: true,
       maxCategories: 999,
-      // Pro-Features (nur für Customization)
+      advancedAnalytics: true,
+      // NUR Premium: Whitelabel/Bot-Customization
       customBotToken: false,
       whiteLabel: false,
-      customDomain: false,
-      removeBranding: false,
-      customColors: false,
-      customEmojis: false,
-      prioritySupport: false,
-      noAds: false
+      customBotName: false,
+      customBotAvatar: false,
+      customBotBanner: false,
+      customBotStatus: false
     }
   },
   pro: {
-    name: 'Premium Pro',
+    name: 'Premium',
     price: 9.99,
     priceId: 'price_pro_monthly', // Ersetze mit echter Stripe Price ID
     features: {
-      // Alle Free Features
+      // ALLE Free Features (= ALLES außer Whitelabel)
       ratingSystem: true,
       statistics: true,
       customAvatar: true,
@@ -129,15 +139,14 @@ const PREMIUM_TIERS = {
       ticketBlacklist: true,
       unlimitedCategories: true,
       maxCategories: 999,
-      // Pro-exklusive Features (Bot Customization)
+      advancedAnalytics: true,
+      // Premium-exklusive Features: NUR Whitelabel/Bot-Customization
       customBotToken: true,
       whiteLabel: true,
-      customDomain: true,
-      removeBranding: true,
-      customColors: true,
-      customEmojis: true,
-      prioritySupport: true,
-      noAds: true
+      customBotName: true,
+      customBotAvatar: true,
+      customBotBanner: true,
+      customBotStatus: true
     }
   },
   beta: {
@@ -145,7 +154,7 @@ const PREMIUM_TIERS = {
     price: 0,
     priceId: null,
     features: {
-      // Alle Free Features
+      // ALLE Free Features
       ratingSystem: true,
       statistics: true,
       customAvatar: true,
@@ -165,15 +174,14 @@ const PREMIUM_TIERS = {
       ticketBlacklist: true,
       unlimitedCategories: true,
       maxCategories: 999,
-      // Pro Features (Betatester bekommen volle Customization)
+      advancedAnalytics: true,
+      // Betatester bekommen volle Whitelabel-Features
       customBotToken: true,
       whiteLabel: true,
-      customDomain: true,
-      removeBranding: true,
-      customColors: true,
-      customEmojis: true,
-      prioritySupport: true,
-      noAds: true
+      customBotName: true,
+      customBotAvatar: true,
+      customBotBanner: true,
+      customBotStatus: true
     }
   }
 };
@@ -201,9 +209,9 @@ function isPremium(guildId, requiredTier = 'pro') {
     return true;
   }
 
-  // Partner haben Pro-Level Access (lifetime)
+  // Partner haben KEIN Premium mehr - nur Free-Level
   if (cfg.premium.tier === 'partner') {
-    return true;
+    return false;
   }
 
   // Betatester haben Pro-Level Access
@@ -249,9 +257,9 @@ function hasFeature(guildId, feature) {
   // Get current tier
   let tier = cfg.premium.tier;
 
-  // Partner haben alle Pro-Features
+  // Partner haben NUR Free-Features (kein Premium mehr)
   if (tier === 'partner') {
-    return PREMIUM_TIERS.pro.features[feature] || false;
+    return PREMIUM_TIERS.none.features[feature] || false;
   }
 
   // Prüfe ob abgelaufen (nicht für Lifetime)
@@ -344,10 +352,10 @@ function getPremiumInfo(guildId) {
     tier: tier,
     tierName: tierName,
     price: tier === 'partner' ? 0 : (PREMIUM_TIERS[tier]?.price || 0),
-    features: tier === 'partner' ? PREMIUM_TIERS.pro.features : (PREMIUM_TIERS[tier]?.features || PREMIUM_TIERS.none.features),
+    features: tier === 'partner' ? PREMIUM_TIERS.none.features : (PREMIUM_TIERS[tier]?.features || PREMIUM_TIERS.none.features),
     expiresAt: cfg.premium?.expiresAt || null,
-    isActive: tier !== 'none',
-    isLifetime: isLifetime || isPartner,
+    isActive: tier !== 'none' && tier !== 'partner', // Partner ist NICHT aktiv (kein Premium)
+    isLifetime: isLifetime,
     isPartner: isPartner,
     isTrial: isTrial,
     trialInfo: trialInfo,
@@ -989,12 +997,12 @@ function activatePartner(guildId, partnerUserId, partnerLink = null) {
     partnerUserId: partnerUserId,
     partnerLink: partnerLink,
     partner: true,
-    lifetime: true,
-    features: { ...PREMIUM_TIERS.pro.features }
+    lifetime: false, // Partner ist NICHT Lifetime Premium
+    features: { ...PREMIUM_TIERS.none.features } // Partner hat nur FREE Features
   };
 
   saveCfg(guildId, cfg);
-  console.log(`🤝 Partner aktiviert für Guild ${guildId} (User: ${partnerUserId})`);
+  console.log(`🤝 Partner aktiviert für Guild ${guildId} (User: ${partnerUserId}) - NUR Free-Features`);
 
   return {
     success: true,

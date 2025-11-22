@@ -3521,20 +3521,24 @@ module.exports = (client)=>{
   router.get('/my-tickets', ensureAuthenticated, async (req,res)=>{
     try {
       const userId = req.user.id;
-      const userGuilds = req.user.guilds || [];
 
-      // Collect all user's tickets across all their servers where the bot exists
+      // Collect all user's tickets across all servers where the bot exists
       let allUserTickets = [];
       const guildMap = {};
 
-      for(const guildEntry of userGuilds) {
+      console.log(`[My Tickets] Loading tickets for user ${userId}`);
+
+      // Iterate through ALL guilds where the bot is present
+      for(const [guildId, guild] of client.guilds.cache) {
         try {
-          const guildId = guildEntry.id;
-          const guild = await client.guilds.fetch(guildId).catch(()=>null);
-          if(!guild) continue; // Bot not on this server
+          // Check if user is a member of this guild
+          const member = await guild.members.fetch(userId).catch(() => null);
+          if(!member) continue; // User not in this guild
 
           const tickets = loadTickets(guildId);
           const userTickets = tickets.filter(t => t.userId === userId);
+
+          console.log(`[My Tickets] Guild ${guild.name} (${guildId}): Found ${userTickets.length} tickets`);
 
           if(userTickets.length > 0) {
             guildMap[guildId] = {
@@ -3549,9 +3553,11 @@ module.exports = (client)=>{
             });
           }
         } catch(err) {
-          console.error(`Error loading tickets for guild ${guildEntry.id}:`, err);
+          console.error(`[My Tickets] Error loading tickets for guild ${guildId}:`, err.message);
         }
       }
+
+      console.log(`[My Tickets] Total tickets found: ${allUserTickets.length}`);
 
       // Sort by timestamp (newest first)
       allUserTickets.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -3563,7 +3569,7 @@ module.exports = (client)=>{
         version: VERSION
       });
     } catch(e){
-      console.error('Error in /my-tickets:', e);
+      console.error('[My Tickets] Error:', e);
       res.status(500).send('Fehler beim Laden deiner Tickets');
     }
   });
@@ -3622,6 +3628,241 @@ module.exports = (client)=>{
     } catch (err) {
       console.error('Error in /panel/transcripts:', err);
       return res.status(500).send('Fehler beim Laden des Transcripts');
+    }
+  });
+
+  // Live transcript for open tickets (shows current channel messages)
+  router.get('/panel/live-transcript/:guildId/:ticketId', ensureAuthenticated, async (req, res) => {
+    try {
+      const { guildId, ticketId } = req.params;
+      const userId = req.user.id;
+
+      // Validate inputs
+      if (!guildId || !ticketId) {
+        return res.status(400).send('Guild ID oder Ticket ID fehlt');
+      }
+
+      const cleanGuildId = guildId.replace(/[^0-9]/g, '');
+      const cleanTicketId = ticketId.replace(/[^0-9]/g, '');
+
+      // Check if user owns this ticket
+      const tickets = loadTickets(cleanGuildId);
+      const ticket = tickets.find(t => t.id === parseInt(cleanTicketId));
+
+      if (!ticket) {
+        return res.status(404).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>📄 Ticket nicht gefunden</h2><p>Das Ticket existiert nicht.</p></div></body></html>');
+      }
+
+      // Check if ticket is closed
+      if (ticket.status === 'geschlossen' || ticket.status === 'closed') {
+        return res.redirect(`/panel/transcripts/${cleanGuildId}/${cleanTicketId}`);
+      }
+
+      // Check permission: user must be ticket creator OR team member
+      const isCreator = ticket.userId === userId;
+      let isTeam = false;
+
+      try {
+        const guild = await client.guilds.fetch(cleanGuildId).catch(() => null);
+        if (!guild) {
+          return res.status(404).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>🚫 Server nicht gefunden</h2><p>Der Server wurde nicht gefunden.</p></div></body></html>');
+        }
+
+        const member = await guild.members.fetch(userId).catch(() => null);
+        if (member) {
+          isTeam = member.permissions.has('ManageMessages') || member.permissions.has('Administrator');
+        }
+
+        if (!isCreator && !isTeam) {
+          return res.status(403).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>🚫 Zugriff verweigert</h2><p>Du hast keinen Zugriff auf dieses Ticket.</p></div></body></html>');
+        }
+
+        // Fetch ticket channel
+        const channel = await guild.channels.fetch(ticket.channelId).catch(() => null);
+        if (!channel) {
+          return res.status(404).send('<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;"><div style="text-align:center;"><h2>📄 Channel nicht gefunden</h2><p>Der Ticket-Channel wurde nicht gefunden.</p></div></body></html>');
+        }
+
+        // Fetch messages (last 100)
+        const messages = await channel.messages.fetch({ limit: 100 }).catch(() => new Map());
+        const messageArray = Array.from(messages.values()).reverse(); // Oldest first
+
+        // Generate HTML
+        let html = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Transcript - Ticket #${String(ticket.id).padStart(5, '0')}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #1a1a1a;
+      color: #dcddde;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 30px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    .header h1 {
+      color: #fff;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    .header p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+    }
+    .live-badge {
+      display: inline-block;
+      background: #22c55e;
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .message {
+      background: #2b2d31;
+      padding: 15px 20px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border-left: 3px solid #5865f2;
+    }
+    .message-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 10px;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #5865f2;
+    }
+    .author {
+      font-weight: 600;
+      color: #fff;
+    }
+    .timestamp {
+      color: #949ba4;
+      font-size: 12px;
+      margin-left: auto;
+    }
+    .content {
+      color: #dcddde;
+      word-wrap: break-word;
+    }
+    .attachment {
+      margin-top: 10px;
+      padding: 10px;
+      background: #1a1a1a;
+      border-radius: 5px;
+    }
+    .attachment a {
+      color: #00b0f4;
+      text-decoration: none;
+    }
+    .refresh-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s;
+    }
+    .refresh-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📝 Live Transcript <span class="live-badge">🔴 LIVE</span></h1>
+    <p>Ticket #${String(ticket.id).padStart(5, '0')} • ${sanitizeString(ticket.topic || 'Kein Thema', 50)} • ${guild.name}</p>
+  </div>
+`;
+
+        // Add messages
+        for (const msg of messageArray) {
+          const timestamp = msg.createdAt.toLocaleString('de-DE');
+          const author = sanitizeString(msg.author.username, 50);
+          const content = sanitizeString(msg.content || '(Keine Nachricht)', 2000);
+          const avatarUrl = msg.author.displayAvatarURL({ size: 64 });
+
+          html += `
+  <div class="message">
+    <div class="message-header">
+      <img src="${avatarUrl}" alt="${author}" class="avatar">
+      <span class="author">${author}</span>
+      <span class="timestamp">${timestamp}</span>
+    </div>
+    <div class="content">${content.replace(/\n/g, '<br>')}</div>
+`;
+
+          // Add attachments
+          if (msg.attachments.size > 0) {
+            html += '<div class="attachment">';
+            for (const [, attachment] of msg.attachments) {
+              if (attachment.contentType?.startsWith('image/')) {
+                html += `<img src="${attachment.url}" alt="Attachment" style="max-width: 100%; border-radius: 5px; margin-top: 5px;">`;
+              } else {
+                html += `<a href="${attachment.url}" target="_blank">📎 ${sanitizeString(attachment.name, 100)}</a><br>`;
+              }
+            }
+            html += '</div>';
+          }
+
+          html += `
+  </div>
+`;
+        }
+
+        html += `
+  <button class="refresh-btn" onclick="location.reload()">🔄 Aktualisieren</button>
+  <script>
+    // Auto-refresh every 30 seconds
+    setTimeout(() => location.reload(), 30000);
+  </script>
+</body>
+</html>
+`;
+
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+        res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+        return res.send(html);
+
+      } catch (e) {
+        console.error('[Live Transcript] Error:', e);
+        return res.status(500).send('Fehler beim Laden des Live-Transcripts');
+      }
+
+    } catch (err) {
+      console.error('[Live Transcript] Error:', err);
+      return res.status(500).send('Fehler beim Laden des Live-Transcripts');
     }
   });
 
@@ -6312,6 +6553,92 @@ module.exports = (client)=>{
   router.use((req, res, next) => {
     req.app.locals.client = client;
     next();
+  });
+
+  // Whitelabel Page (Premium only)
+  router.get('/whitelabel', ensureAuthenticated, isAuth, async (req, res) => {
+    try {
+      const guildId = req.session.selectedGuild;
+      const cfg = readCfg(guildId);
+
+      const premiumInfo = getPremiumInfo(guildId);
+      const hasPremium = premiumInfo.tier === 'pro' || premiumInfo.tier === 'beta';
+
+      res.render('whitelabel', {
+        config: cfg,
+        isPremium: hasPremium,
+        premiumInfo: premiumInfo,
+        user: req.user,
+        version: VERSION
+      });
+    } catch (err) {
+      console.error('[Whitelabel] Error loading page:', err);
+      res.status(500).send('Fehler beim Laden der Whitelabel-Seite');
+    }
+  });
+
+  // Whitelabel Save API (Premium only)
+  router.post('/api/whitelabel/save', ensureAuthenticated, isAuth, async (req, res) => {
+    try {
+      const guildId = req.session.selectedGuild;
+      const cfg = readCfg(guildId);
+
+      // Check premium
+      const premiumInfo = getPremiumInfo(guildId);
+      const hasPremium = premiumInfo.tier === 'pro' || premiumInfo.tier === 'beta';
+
+      if (!hasPremium) {
+        return res.status(403).send('Premium erforderlich');
+      }
+
+      // Initialize whitelabel object if not exists
+      if (!cfg.whitelabel) {
+        cfg.whitelabel = {
+          enabled: false,
+          botName: '',
+          botToken: '',
+          botAvatar: '',
+          botBanner: '',
+          botStatus: { type: 'online', text: '' },
+          footerImage: ''
+        };
+      }
+
+      // Update whitelabel config
+      cfg.whitelabel.botName = sanitizeText(req.body.botName || '');
+      cfg.whitelabel.botStatus = {
+        type: sanitizeText(req.body.statusType || 'online'),
+        text: sanitizeText(req.body.statusText || '')
+      };
+
+      // Only update token if provided
+      if (req.body.botToken && req.body.botToken.length > 10) {
+        cfg.whitelabel.botToken = req.body.botToken; // Store encrypted in production!
+      }
+
+      // Handle file uploads (if multer is configured)
+      // For now, we'll handle base64 encoded images from frontend
+      if (req.body.botAvatarData) {
+        cfg.whitelabel.botAvatar = req.body.botAvatarData;
+      }
+      if (req.body.botBannerData) {
+        cfg.whitelabel.botBanner = req.body.botBannerData;
+      }
+      if (req.body.footerImageData) {
+        cfg.whitelabel.footerImage = req.body.footerImageData;
+      }
+
+      cfg.whitelabel.enabled = true;
+
+      saveCfg(guildId, cfg);
+
+      console.log(`[Whitelabel] Config updated for guild ${guildId}`);
+      res.status(200).send('Gespeichert');
+
+    } catch (err) {
+      console.error('[Whitelabel] Error saving:', err);
+      res.status(500).send('Fehler beim Speichern');
+    }
   });
 
   // Mount API routes

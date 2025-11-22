@@ -812,28 +812,24 @@
     <div class="section">
       <h2 class="section-title">
         <i class="fas fa-gem"></i>
-        Premium Statistiken
+        Premium Statistiken (Nur Whitelabel ist Premium)
       </h2>
       <div class="premium-grid">
         <div class="premium-card">
           <div class="premium-count"><%= premiumStats.none %></div>
-          <div class="premium-label">Free</div>
+          <div class="premium-label">Free (Alle Features)</div>
         </div>
-        <div class="premium-card">
-          <div class="premium-count"><%= premiumStats.basic %></div>
-          <div class="premium-label">Basic</div>
+        <div class="premium-card" style="border-color: #764ba2;">
+          <div class="premium-count" style="color: #764ba2;"><%= premiumStats.pro %></div>
+          <div class="premium-label">⭐ Premium (Whitelabel)</div>
         </div>
-        <div class="premium-card">
-          <div class="premium-count"><%= premiumStats.pro %></div>
-          <div class="premium-label">Pro</div>
+        <div class="premium-card" style="border-color: #fbbf24;">
+          <div class="premium-count" style="color: #fbbf24;"><%= premiumStats.beta %></div>
+          <div class="premium-label">🧪 Betatester</div>
         </div>
-        <div class="premium-card">
-          <div class="premium-count"><%= premiumStats.beta %></div>
-          <div class="premium-label">Betatester</div>
-        </div>
-        <div class="premium-card" style="border-color: #00ff88;">
-          <div class="premium-count" style="color: #00ff88;"><%= premiumStats.partner %></div>
-          <div class="premium-label">🤝 Partner</div>
+        <div class="premium-card" style="border-color: #6b7280;">
+          <div class="premium-count" style="color: #6b7280;"><%= premiumStats.partner %></div>
+          <div class="premium-label">🤝 Partner (Badge)</div>
         </div>
       </div>
     </div>
@@ -1147,13 +1143,11 @@
                 Lifetime Premium
               </h4>
             </div>
-            <p style="opacity: 0.8; font-size: 0.9rem; margin-bottom: 1rem;">Unbegrenzter Zugang ohne Ablaufdatum</p>
+            <p style="opacity: 0.8; font-size: 0.9rem; margin-bottom: 0.5rem;">Unbegrenzter Zugang zu <strong>Whitelabel-Features</strong></p>
+            <p style="opacity: 0.7; font-size: 0.85rem; margin-bottom: 1rem;">Eigener Bot mit Custom Name, Icon, Banner, Status & Token</p>
             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <button class="modal-btn" style="background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%); color: #fff; flex: 1; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); border: none; transition: all 0.3s;" onclick="showPremiumConfirm('lifetime', 'basic')">
-                <i class="fas fa-gem"></i> Lifetime Basic
-              </button>
-              <button class="modal-btn" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); color: #fff; flex: 1; box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3); border: none; transition: all 0.3s;" onclick="showPremiumConfirm('lifetime', 'pro')">
-                <i class="fas fa-crown"></i> Lifetime Pro
+              <button class="modal-btn" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); color: #fff; width: 100%; box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3); border: none; transition: all 0.3s;" onclick="showPremiumConfirm('lifetime', 'pro')">
+                <i class="fas fa-crown"></i> Lifetime Premium aktivieren
               </button>
             </div>
           </div>
@@ -1197,10 +1191,11 @@
                 Partner
               </h4>
             </div>
-            <p style="opacity: 0.8; font-size: 0.9rem; margin-bottom: 1rem;">Lifetime Pro-Features für Partner-Server</p>
+            <p style="opacity: 0.8; font-size: 0.9rem; margin-bottom: 0.5rem;"><strong>NUR Badge/Anzeige</strong> - Keine Premium-Features</p>
+            <p style="opacity: 0.7; font-size: 0.85rem; margin-bottom: 1rem;">Partner haben Free-Features wie alle anderen Nutzer</p>
             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <button class="modal-btn" style="background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%); color: #000; font-weight: 600; flex: 1; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4); border: none; transition: all 0.3s;" onclick="showPremiumConfirm('partner')">
-                <i class="fas fa-handshake"></i> Partner aktivieren
+              <button class="modal-btn" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: #fff; font-weight: 600; flex: 1; box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4); border: none; transition: all 0.3s;" onclick="showPremiumConfirm('partner')">
+                <i class="fas fa-handshake"></i> Partner Badge aktivieren
               </button>
             </div>
           </div>
@@ -1423,31 +1418,31 @@
 
       if (type === 'lifetime') {
         icon = 'fa-crown';
-        iconColor = tier === 'pro' ? '#764ba2' : '#667eea';
-        title = `Lifetime ${tier === 'pro' ? 'PRO' : 'Basic'} Premium aktivieren?`;
-        message = `<strong>Unbegrenzter Zugang</strong> ohne Ablaufdatum für diesen Server.<br><br>` +
-                  `✓ ${tier === 'pro' ? 'Alle Pro-Features' : 'Alle Basic-Features'}<br>` +
+        iconColor = '#764ba2';
+        title = 'Lifetime Premium aktivieren?';
+        message = `<strong>Unbegrenzter Zugang zu Whitelabel</strong> ohne Ablaufdatum.<br><br>` +
+                  `✓ Eigener Bot (Name, Icon, Banner, Status, Token)<br>` +
                   `✓ Keine monatlichen Kosten<br>` +
-                  `✓ Lebenslang gültig`;
-        buttonStyle = `background: linear-gradient(135deg, ${tier === 'pro' ? '#764ba2' : '#667eea'} 0%, ${tier === 'pro' ? '#667eea' : '#5a67d8'} 100%); color: #fff;`;
-        pendingPremiumAction = { type: 'lifetime', tier, days: null };
+                  `✓ Lebenslang gültig<br>` +
+                  `<br><small>Hinweis: Alle anderen Features sind FREE für alle!</small>`;
+        buttonStyle = `background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); color: #fff;`;
+        pendingPremiumAction = { type: 'lifetime', tier: 'pro', days: null };
       } else if (type === 'partner') {
         icon = 'fa-handshake';
-        iconColor = '#00ff88';
-        title = 'Partner-Status aktivieren?';
-        message = `<strong>Lifetime Pro-Features</strong> für Partner-Server.<br><br>` +
-                  `✓ Alle Pro-Features<br>` +
-                  `✓ Lifetime Zugang<br>` +
+        iconColor = '#6b7280';
+        title = 'Partner Badge aktivieren?';
+        message = `<strong>Partner Badge</strong> - Nur Anzeige, keine Premium-Features.<br><br>` +
                   `✓ Partner-Badge im Dashboard<br>` +
-                  `✓ Perfekt für Kooperationen`;
-        buttonStyle = `background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%); color: #000; font-weight: 600;`;
+                  `✓ Perfekt für Kooperationen<br>` +
+                  `<br><strong style="color: #ef4444;">Achtung:</strong> Partner haben NUR Free-Features (wie alle anderen auch)!`;
+        buttonStyle = `background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: #fff; font-weight: 600;`;
         pendingPremiumAction = { type: 'partner', tier: null, days: null };
       } else if (type === 'betatester') {
         icon = 'fa-flask';
         iconColor = 'var(--accent-color)';
         title = `Betatester für ${days} Tage aktivieren?`;
-        message = `<strong>Pro-Level Features</strong> zum Testen für begrenzte Zeit.<br><br>` +
-                  `✓ Alle Pro-Features<br>` +
+        message = `<strong>Whitelabel-Features testen</strong> für begrenzte Zeit.<br><br>` +
+                  `✓ Alle Whitelabel-Features (eigener Bot)<br>` +
                   `✓ Läuft automatisch ab<br>` +
                   `✓ Perfekt zum Testen`;
         buttonStyle = `background: linear-gradient(135deg, var(--accent-color) 0%, #00dd77 100%); color: #000; font-weight: 600;`;
@@ -1456,11 +1451,12 @@
         icon = 'fa-times-circle';
         iconColor = '#e74c3c';
         title = 'Premium wirklich entfernen?';
-        message = `<strong style="color: #e74c3c;">Achtung:</strong> Alle Premium-Features werden deaktiviert!<br><br>` +
-                  `✗ Entfernt <strong>Lifetime Premium</strong>, Betatester, Partner und alle anderen Premium-Typen<br>` +
-                  `✗ Kategorien-Limit wird auf Free (5) wiederhergestellt<br>` +
-                  `✗ Alle Pro-Features werden sofort deaktiviert<br>` +
-                  `✗ Diese Aktion ist <strong>sofort wirksam</strong> und kann nicht rückgängig gemacht werden`;
+        message = `<strong style="color: #e74c3c;">Achtung:</strong> Premium-Status wird entfernt!<br><br>` +
+                  `✗ Entfernt <strong>Lifetime Premium</strong>, Betatester, Partner<br>` +
+                  `✗ Whitelabel-Features werden deaktiviert<br>` +
+                  `✗ Server wird auf Free herabgestuft<br>` +
+                  `✗ Diese Aktion ist <strong>sofort wirksam</strong><br>` +
+                  `<br><small>Hinweis: Alle operativen Features bleiben verfügbar (sind FREE)</small>`;
         buttonStyle = `background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: #fff;`;
         pendingPremiumAction = { type: 'remove', tier: null, days: null };
       }

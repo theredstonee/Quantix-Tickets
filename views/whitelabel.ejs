@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <script src="/js/theme-manager.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whitelabel - Quantix Tickets</title>
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #f0f8ff;
+      --text-color: #1a1a2e;
+      --border-color: #bdd7ee;
+      --accent-color: #0ea5e9;
+      --accent-hover: #0284c7;
+      --glass-bg: rgba(240, 248, 255, 0.7);
+      --glass-border: rgba(14, 165, 233, 0.3);
+      --shadow-color: rgba(14, 165, 233, 0.15);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #000000;
+      --text-color: #3b82f6;
+      --border-color: #1e293b;
+      --accent-color: #3b82f6;
+      --accent-hover: #60a5fa;
+      --glass-bg: rgba(10, 10, 20, 0.7);
+      --glass-border: rgba(59, 130, 246, 0.3);
+      --shadow-color: rgba(59, 130, 246, 0.2);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: var(--accent-color);
+      margin-bottom: 1rem;
+    }
+
+    .premium-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #000;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-left: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 16px var(--shadow-color);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .form-group small {
+      display: block;
+      margin-top: 0.25rem;
+      opacity: 0.7;
+      font-size: 0.85rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--bg-color);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-color);
+      font-size: 1rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--accent-color);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    .save-btn {
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+    }
+
+    .save-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .preview-box {
+      background: var(--bg-color);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .preview-box img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 50%;
+      margin: 1rem 0;
+    }
+
+    .preview-box .banner-img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 12px;
+    }
+
+    .status-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .status-option {
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .status-option.active {
+      border-color: var(--accent-color);
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    .status-option i {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 1.5rem;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .alert-warning {
+      background: rgba(251, 191, 36, 0.2);
+      border: 2px solid #fbbf24;
+      color: var(--text-color);
+    }
+
+    .alert-info {
+      background: rgba(59, 130, 246, 0.2);
+      border: 2px solid #3b82f6;
+      color: var(--text-color);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      color: var(--accent-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 16px var(--shadow-color);
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 0.85rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+  </button>
+
+  <div class="container">
+    <h1>
+      <i class="fas fa-paint-brush"></i>
+      Whitelabel
+      <span class="premium-badge"><i class="fas fa-crown"></i> Premium</span>
+    </h1>
+
+    <% if (!isPremium) { %>
+    <div class="alert alert-warning">
+      <strong><i class="fas fa-lock"></i> Premium erforderlich</strong><br>
+      Whitelabel ist ein Premium-Feature. Upgrade auf Premium, um deinen eigenen Bot zu nutzen!
+    </div>
+    <% } else { %>
+
+    <div class="alert alert-info">
+      <strong><i class="fas fa-info-circle"></i> Hinweis</strong><br>
+      Mit Whitelabel kannst du deinen eigenen Discord Bot verwenden. Alle Einstellungen hier gelten nur für deinen Server.
+    </div>
+
+    <form id="whitelabelForm">
+      <!-- Bot-Name -->
+      <div class="card">
+        <h2><i class="fas fa-signature"></i> Bot-Name</h2>
+        <div class="form-group">
+          <label for="botName">Name, wie der Bot heißen soll</label>
+          <input
+            type="text"
+            id="botName"
+            name="botName"
+            placeholder="TRS Modcore"
+            maxlength="32"
+            value="<%= config.whitelabel?.botName || '' %>"
+          >
+          <div class="char-count"><span id="nameCount">0</span>/32</div>
+        </div>
+      </div>
+
+      <!-- Bot-Icon -->
+      <div class="card">
+        <h2><i class="fas fa-image"></i> Bot-Icon</h2>
+        <div class="form-group">
+          <label>Icon, das der Bot haben soll</label>
+          <input
+            type="file"
+            id="botAvatar"
+            accept="image/*"
+            style="display: none;"
+          >
+          <button type="button" class="upload-btn" onclick="document.getElementById('botAvatar').click()">
+            <i class="fas fa-upload"></i> Upload möglich
+          </button>
+          <small>Empfohlen: 512x512px, PNG/JPG, max. 8MB</small>
+        </div>
+        <div class="preview-box" id="avatarPreview">
+          <% if (config.whitelabel?.botAvatar) { %>
+          <img src="<%= config.whitelabel.botAvatar %>" alt="Bot Avatar">
+          <% } else { %>
+          <i class="fas fa-robot" style="font-size: 4rem; opacity: 0.3;"></i>
+          <p style="opacity: 0.5;">Kein Icon hochgeladen</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Profil-Banner -->
+      <div class="card">
+        <h2><i class="fas fa-panorama"></i> Profil-Banner</h2>
+        <div class="form-group">
+          <label>Banner, das im Profil vom Bot angezeigt wird</label>
+          <input
+            type="file"
+            id="botBanner"
+            accept="image/*"
+            style="display: none;"
+          >
+          <button type="button" class="upload-btn" onclick="document.getElementById('botBanner').click()">
+            <i class="fas fa-upload"></i> Upload möglich
+          </button>
+          <small>Empfohlen: 600x240px, PNG/JPG, max. 8MB</small>
+        </div>
+        <div class="preview-box" id="bannerPreview">
+          <% if (config.whitelabel?.botBanner) { %>
+          <img src="<%= config.whitelabel.botBanner %>" alt="Bot Banner" class="banner-img">
+          <% } else { %>
+          <i class="fas fa-image" style="font-size: 4rem; opacity: 0.3;"></i>
+          <p style="opacity: 0.5;">Kein Banner hochgeladen</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="card">
+        <h2><i class="fas fa-circle"></i> Status</h2>
+        <div class="form-group">
+          <label>Status, der beim Bot angezeigt wird</label>
+          <div class="status-selector">
+            <div class="status-option <%= (config.whitelabel?.botStatus?.type || 'online') === 'online' ? 'active' : '' %>" data-status="online">
+              <i class="fas fa-circle" style="color: #22c55e;"></i>
+              <span>Online</span>
+            </div>
+            <div class="status-option <%= (config.whitelabel?.botStatus?.type) === 'idle' ? 'active' : '' %>" data-status="idle">
+              <i class="fas fa-circle" style="color: #fbbf24;"></i>
+              <span>Idle</span>
+            </div>
+            <div class="status-option <%= (config.whitelabel?.botStatus?.type) === 'dnd' ? 'active' : '' %>" data-status="dnd">
+              <i class="fas fa-circle" style="color: #ef4444;"></i>
+              <span>DND</span>
+            </div>
+            <div class="status-option <%= (config.whitelabel?.botStatus?.type) === 'invisible' ? 'active' : '' %>" data-status="invisible">
+              <i class="fas fa-circle" style="color: #6b7280;"></i>
+              <span>Unsichtbar</span>
+            </div>
+          </div>
+          <input type="hidden" id="statusType" name="statusType" value="<%= config.whitelabel?.botStatus?.type || 'online' %>">
+        </div>
+        <div class="form-group">
+          <label for="statusText">Custom Status Text</label>
+          <input
+            type="text"
+            id="statusText"
+            name="statusText"
+            placeholder="Im Unversehrten schläft der stille Triumph"
+            maxlength="100"
+            value="<%= config.whitelabel?.botStatus?.text || '' %>"
+          >
+          <div class="char-count"><span id="statusCount">0</span>/100</div>
+        </div>
+      </div>
+
+      <!-- Bot-Token -->
+      <div class="card">
+        <h2><i class="fas fa-key"></i> Bot-Token</h2>
+        <div class="form-group">
+          <label for="botToken">Token vom Bot, mit dem er sich bei Discord authentifiziert. Ändere dies nur, wenn du weißt, was du tust.</label>
+          <input
+            type="password"
+            id="botToken"
+            name="botToken"
+            placeholder="••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••"
+            value="<%= config.whitelabel?.botToken || '' %>"
+          >
+          <small style="color: #ef4444;"><i class="fas fa-exclamation-triangle"></i> Warnung: Ein falscher Token kann deinen Bot unbrauchbar machen!</small>
+        </div>
+      </div>
+
+      <!-- Fußzeilen-Bild -->
+      <div class="card">
+        <h2><i class="fas fa-align-left"></i> Fußzeilen-Bild</h2>
+        <div class="form-group">
+          <label>Bild für Footer/Fußzeilen</label>
+          <input
+            type="file"
+            id="footerImage"
+            accept="image/*"
+            style="display: none;"
+          >
+          <button type="button" class="upload-btn" onclick="document.getElementById('footerImage').click()">
+            <i class="fas fa-upload"></i> Upload möglich
+          </button>
+          <small>Empfohlen: 400x100px, PNG/JPG mit transparentem Hintergrund</small>
+        </div>
+        <div class="preview-box" id="footerPreview">
+          <% if (config.whitelabel?.footerImage) { %>
+          <img src="<%= config.whitelabel.footerImage %>" alt="Footer Image" style="max-width: 400px;">
+          <% } else { %>
+          <i class="fas fa-image" style="font-size: 4rem; opacity: 0.3;"></i>
+          <p style="opacity: 0.5;">Kein Fußzeilen-Bild hochgeladen</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <button type="submit" class="save-btn">
+        <i class="fas fa-save"></i> Speichern
+      </button>
+    </form>
+
+    <% } %>
+  </div>
+
+  <script>
+    // Character counters
+    const nameInput = document.getElementById('botName');
+    const statusInput = document.getElementById('statusText');
+    const nameCount = document.getElementById('nameCount');
+    const statusCount = document.getElementById('statusCount');
+
+    if (nameInput) {
+      nameInput.addEventListener('input', () => {
+        nameCount.textContent = nameInput.value.length;
+      });
+      nameCount.textContent = nameInput.value.length;
+    }
+
+    if (statusInput) {
+      statusInput.addEventListener('input', () => {
+        statusCount.textContent = statusInput.value.length;
+      });
+      statusCount.textContent = statusInput.value.length;
+    }
+
+    // Status selector
+    const statusOptions = document.querySelectorAll('.status-option');
+    const statusTypeInput = document.getElementById('statusType');
+
+    statusOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        statusOptions.forEach(o => o.classList.remove('active'));
+        option.classList.add('active');
+        statusTypeInput.value = option.dataset.status;
+      });
+    });
+
+    // Image previews and base64 storage
+    let avatarBase64 = '';
+    let bannerBase64 = '';
+    let footerBase64 = '';
+
+    const avatarInput = document.getElementById('botAvatar');
+    const bannerInput = document.getElementById('botBanner');
+    const footerInput = document.getElementById('footerImage');
+
+    // Form submission
+    const form = document.getElementById('whitelabelForm');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const data = {
+          botName: document.getElementById('botName').value,
+          botToken: document.getElementById('botToken').value,
+          statusType: document.getElementById('statusType').value,
+          statusText: document.getElementById('statusText').value
+        };
+
+        // Add base64 images if uploaded
+        if (avatarBase64) {
+          data.botAvatarData = avatarBase64;
+        }
+        if (bannerBase64) {
+          data.botBannerData = bannerBase64;
+        }
+        if (footerBase64) {
+          data.footerImageData = footerBase64;
+        }
+
+        try {
+          const response = await fetch('/api/whitelabel/save', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+
+          if (response.ok) {
+            alert('✅ Whitelabel-Einstellungen gespeichert!');
+            location.reload();
+          } else {
+            const error = await response.text();
+            alert('❌ Fehler: ' + error);
+          }
+        } catch (err) {
+          console.error('Error:', err);
+          alert('❌ Fehler beim Speichern');
+        }
+      });
+    }
+
+    // Update image handlers to store base64
+    if (avatarInput) {
+      avatarInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            avatarBase64 = e.target.result;
+            document.getElementById('avatarPreview').innerHTML = `<img src="${e.target.result}" alt="Bot Avatar">`;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    if (bannerInput) {
+      bannerInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            bannerBase64 = e.target.result;
+            document.getElementById('bannerPreview').innerHTML = `<img src="${e.target.result}" alt="Bot Banner" class="banner-img">`;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    if (footerInput) {
+      footerInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            footerBase64 = e.target.result;
+            document.getElementById('footerPreview').innerHTML = `<img src="${e.target.result}" alt="Footer Image" style="max-width: 400px;">`;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
