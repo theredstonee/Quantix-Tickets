@@ -6,6 +6,8 @@ module.exports = {
     .setDescription('Link zum Admin-Panel anzeigen')
     .setDMPermission(false),
   async execute(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
     const PANEL_URL = process.env.PUBLIC_BASE_URL
       ? process.env.PUBLIC_BASE_URL.replace(/\/$/, '')
       : 'https://tickets.quantix-bot.de';
@@ -55,10 +57,9 @@ module.exports = {
         .setEmoji('💬')
     );
 
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [embed],
-      components: [buttonRow],
-      ephemeral: true
+      components: [buttonRow]
     });
   }
 };

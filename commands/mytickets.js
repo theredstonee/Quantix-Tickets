@@ -34,6 +34,8 @@ module.exports = {
     .setDMPermission(false),
 
   async execute(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
     const guildId = interaction.guild.id;
     const userId = interaction.user.id;
 
@@ -51,7 +53,7 @@ module.exports = {
         .setFooter({ text: `Quantix Tickets • ${interaction.guild.name}` })
         .setTimestamp();
 
-      return interaction.reply({ embeds: [embed], ephemeral: true });
+      return interaction.editReply({ embeds: [embed] });
     }
 
     const openTickets = userTickets.filter(t => t.status === 'offen');
@@ -133,10 +135,9 @@ module.exports = {
         .setEmoji('💬')
     );
 
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [embed],
-      components: [buttonRow],
-      ephemeral: true
+      components: [buttonRow]
     });
   }
 };

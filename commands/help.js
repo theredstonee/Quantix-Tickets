@@ -20,6 +20,8 @@ module.exports = {
     }),
 
   async execute(interaction) {
+    await interaction.deferReply();
+
     try {
       const guildId = interaction.guild?.id;
       const lang = getGuildLanguage(guildId);
@@ -109,17 +111,15 @@ module.exports = {
           .setEmoji('📝')
       );
 
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [helpEmbed],
-        components: [buttonRow],
-        ephemeral: false
+        components: [buttonRow]
       });
 
     } catch (err) {
       console.error('Error in help command:', err);
-      await interaction.reply({
-        content: '❌ Ein Fehler ist aufgetreten. Bitte versuche es später erneut.',
-        ephemeral: true
+      await interaction.editReply({
+        content: '❌ Ein Fehler ist aufgetreten. Bitte versuche es später erneut.'
       }).catch(() => {});
     }
   }
