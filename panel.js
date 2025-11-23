@@ -918,9 +918,15 @@ module.exports = (client)=>{
 
       const memberRoles = member.roles.cache.map(r => `${r.name} (${r.id})`);
       console.log('Member Roles:', memberRoles);
-      console.log('Has Team Role:', member.roles.cache.has(cfg.teamRoleId));
 
-      if(member.roles.cache.has(cfg.teamRoleId)) {
+      // Support both string and array for teamRoleId
+      const teamRoleIds = Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : [cfg.teamRoleId];
+      console.log('Team Role IDs to check:', teamRoleIds);
+
+      const hasTeamRole = teamRoleIds.some(roleId => member.roles.cache.has(roleId));
+      console.log('Has Team Role:', hasTeamRole);
+
+      if(hasTeamRole) {
         console.log('✅ Team-Mitglied hat Zugriff!');
         req.isAdmin = false; // Team-Mitglied, kein Admin
         return next();
