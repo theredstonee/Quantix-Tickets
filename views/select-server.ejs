@@ -942,8 +942,32 @@
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-content">
       <div class="loading-spinner"></div>
-      <div class="loading-text">Lade Server...</div>
-      <div class="loading-subtext">Bitte warten</div>
+      <div class="loading-text"><%
+        const loadingTexts = {
+          de: 'Lade Server...',
+          en: 'Loading Server...',
+          he: 'טוען שרת...',
+          ja: 'サーバーを読み込み中...',
+          ru: 'Загрузка сервера...',
+          pt: 'Carregando Servidor...',
+          es: 'Cargando Servidor...',
+          id: 'Memuat Server...',
+          ar: 'تحميل الخادم...'
+        };
+      %><%= loadingTexts[lang] || loadingTexts.de %></div>
+      <div class="loading-subtext"><%
+        const loadingSubtexts = {
+          de: 'Bitte warten',
+          en: 'Please wait',
+          he: 'אנא המתן',
+          ja: 'お待ちください',
+          ru: 'Пожалуйста, подождите',
+          pt: 'Por favor, aguarde',
+          es: 'Por favor, espere',
+          id: 'Mohon tunggu',
+          ar: 'يرجى الانتظار'
+        };
+      %><%= loadingSubtexts[lang] || loadingSubtexts.de %></div>
     </div>
   </div>
 
