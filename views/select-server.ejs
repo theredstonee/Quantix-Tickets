@@ -993,7 +993,28 @@
         card.classList.add('selected');
 
         // Show loading overlay
-        document.getElementById('loadingOverlay').classList.add('show');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        loadingOverlay.classList.add('show');
+
+        // Hide loading after 15 seconds if still visible (connection timeout)
+        const timeoutId = setTimeout(() => {
+          if (loadingOverlay.classList.contains('show')) {
+            loadingOverlay.classList.remove('show');
+            const lang = '<%= lang || "de" %>';
+            const timeoutMessages = {
+              de: '⚠️ Zeitüberschreitung beim Laden des Servers. Bitte versuche es erneut oder prüfe deine Internetverbindung.',
+              en: '⚠️ Server loading timeout. Please try again or check your internet connection.',
+              he: '⚠️ פג תוקף טעינת השרת. אנא נסה שוב או בדוק את חיבור האינטרנט שלך.',
+              ja: '⚠️ サーバー読み込みタイムアウト。もう一度試すか、インターネット接続を確認してください。',
+              ru: '⚠️ Превышено время ожидания загрузки сервера. Повторите попытку или проверьте подключение к Интернету.',
+              pt: '⚠️ Tempo limite de carregamento do servidor. Por favor, tente novamente ou verifique sua conexão com a internet.',
+              es: '⚠️ Tiempo de espera de carga del servidor. Por favor, inténtalo de nuevo o verifica tu conexión a internet.',
+              id: '⚠️ Waktu tunggu pemuatan server habis. Silakan coba lagi atau periksa koneksi internet Anda.',
+              ar: '⚠️ انتهت مهلة تحميل الخادم. يرجى المحاولة مرة أخرى أو التحقق من اتصالك بالإنترنت.'
+            };
+            alert(timeoutMessages[lang] || timeoutMessages.de);
+          }
+        }, 15000);
 
         // Auto-submit form after selection
         setTimeout(() => {

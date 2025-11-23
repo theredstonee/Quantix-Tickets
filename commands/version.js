@@ -12,6 +12,9 @@ module.exports = {
     .setDMPermission(false),
 
   async execute(interaction) {
+    // Defer reply to prevent timeout on slow connections
+    await interaction.deferReply();
+
     const guildId = interaction.guild?.id;
     const client = interaction.client;
 
@@ -72,10 +75,9 @@ module.exports = {
         .setEmoji('🎫')
     );
 
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [embed],
-      components: [buttonRow],
-      ephemeral: false
+      components: [buttonRow]
     });
   }
 };
