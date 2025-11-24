@@ -128,8 +128,7 @@ passport.use(new Strategy({
   clientSecret: process.env.CLIENT_SECRET,
   callbackURL: BASE ? `${BASE.replace(/\/$/,'')}/auth/discord/callback` : '/auth/discord/callback',
   scope: ['identify','guilds','guilds.members.read'],
-  state: true,
-  prompt: 'none'
+  state: true
 }, (_a,_b,profile,done)=>done(null,profile)));
 
 module.exports = (client)=>{
@@ -1400,7 +1399,7 @@ module.exports = (client)=>{
     }
     req.session.lastLoginAttempt = now;
     next();
-  }, passport.authenticate('discord'));
+  }, passport.authenticate('discord', { prompt: 'none' }));
 
   router.get('/auth/discord/callback', (req,res,next)=>{
     passport.authenticate('discord',(err,user)=>{
