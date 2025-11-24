@@ -187,8 +187,8 @@ module.exports = (client)=>{
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
-      secure: /^https:\/\//i.test(BASE),
-      maxAge: 12 * 60 * 60 * 1000 // 12 hours (bis Mitternacht ca.)
+      secure: /^https:\/\//i.test(BASE)
+      // No maxAge = Session cookie (expires when browser closes, but rolling keeps it alive)
     }
   };
 
@@ -229,8 +229,8 @@ module.exports = (client)=>{
         console.warn('⚠️  Redis connection failed, using FileStore fallback:', err.message);
         sessionConfig.store = new FileStore({
           path: './sessions',
-          ttl: 12 * 60 * 60, // 12 hours in seconds
           retries: 0
+          // No TTL = Sessions persist indefinitely
         });
         console.log('✅ FileStore session store initialized');
       });
@@ -238,8 +238,8 @@ module.exports = (client)=>{
       console.warn('⚠️  Redis initialization failed, using FileStore fallback:', err.message);
       sessionConfig.store = new FileStore({
         path: './sessions',
-        ttl: 12 * 60 * 60,
         retries: 0
+        // No TTL = Sessions persist indefinitely
       });
       console.log('✅ FileStore session store initialized');
     }
@@ -247,8 +247,8 @@ module.exports = (client)=>{
     // Use FileStore instead of MemoryStore (survives restarts)
     sessionConfig.store = new FileStore({
       path: './sessions',
-      ttl: 12 * 60 * 60, // 12 hours in seconds
       retries: 0
+      // No TTL = Sessions persist indefinitely
     });
     console.log('✅ FileStore session store initialized (sessions survive restarts)');
   }
@@ -258,26 +258,7 @@ module.exports = (client)=>{
   router.use(passport.initialize());
   router.use(passport.session());
 
-  // Middleware: Logout sessions created on a different day (midnight expiry)
-  router.use((req, res, next) => {
-    if (req.session && req.session.createdDate) {
-      const today = new Date().toDateString();
-      if (req.session.createdDate !== today) {
-        console.log(`⏰ Session expired (created ${req.session.createdDate}, now ${today})`);
-        req.logout(() => {
-          req.session.destroy(() => {
-            res.clearCookie('connect.sid');
-            next();
-          });
-        });
-        return;
-      }
-    } else if (req.session && req.isAuthenticated && req.isAuthenticated()) {
-      // Set creation date if not set
-      req.session.createdDate = new Date().toDateString();
-    }
-    next();
-  });
+  // Auto-logout middleware removed - sessions now persist indefinitely
 
   router.use(checkUserBlacklist); // Check if user is blacklisted
   router.use(express.urlencoded({extended:true}));
@@ -6532,7 +6513,7 @@ module.exports = (client)=>{
 
       saveTickets(guildId, tickets);
 
-      // Send message in new channel
+      // Send message in new channel with buttons
       const reopenEmbed = new EmbedBuilder()
         .setColor(0x10b981)
         .setTitle('🔄 Ticket wiedereröffnet')
@@ -6545,9 +6526,52 @@ module.exports = (client)=>{
         .setFooter({ text: 'Quantix Tickets • Ticket wiedereröffnet' })
         .setTimestamp();
 
+      // Create ticket control buttons
+      const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+      const row1 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('request_close')
+          .setEmoji('📩')
+          .setLabel('Schließung anfragen')
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      const row2 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('close')
+          .setEmoji('🔐')
+          .setLabel('Schließen')
+          .setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
+          .setCustomId('priority_down')
+          .setEmoji('⬇️')
+          .setLabel('Priorität -')
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId('priority_up')
+          .setEmoji('⬆️')
+          .setLabel('Priorität +')
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId('claim')
+          .setEmoji('✨')
+          .setLabel('Claim')
+          .setStyle(ButtonStyle.Success)
+      );
+
+      const row3 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('add_user')
+          .setEmoji('👥')
+          .setLabel('User hinzufügen')
+          .setStyle(ButtonStyle.Secondary)
+      );
+
       await newChannel.send({
         content: `<@${ticket.userId}>`,
-        embeds: [reopenEmbed]
+        embeds: [reopenEmbed],
+        components: [row1, row2, row3]
       });
 
       res.json({

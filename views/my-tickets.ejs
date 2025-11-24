@@ -473,9 +473,15 @@
     const tickets = JSON.parse('<%- tickets %>');
     const guildMap = JSON.parse('<%- guildMap %>');
 
-    // Calculate stats - handle both 'offen'/'open' and 'geschlossen'/'closed'
-    const openTickets = tickets.filter(t => t.status === 'offen' || t.status === 'open');
-    const closedTickets = tickets.filter(t => t.status === 'geschlossen' || t.status === 'closed' || !t.status);
+    // Calculate stats - handle both 'status' field and 'closed' boolean
+    const openTickets = tickets.filter(t => {
+      if (t.status) return t.status === 'offen' || t.status === 'open';
+      return !t.closed;  // If no status field, use closed boolean
+    });
+    const closedTickets = tickets.filter(t => {
+      if (t.status) return t.status === 'geschlossen' || t.status === 'closed';
+      return t.closed === true;  // If no status field, use closed boolean
+    });
 
     document.getElementById('totalCount').textContent = tickets.length;
     document.getElementById('openCount').textContent = openTickets.length;
@@ -489,9 +495,15 @@
 
       let filteredTickets = tickets;
       if (filter === 'open') {
-        filteredTickets = tickets.filter(t => t.status === 'offen' || t.status === 'open');
+        filteredTickets = tickets.filter(t => {
+          if (t.status) return t.status === 'offen' || t.status === 'open';
+          return !t.closed;
+        });
       } else if (filter === 'closed') {
-        filteredTickets = tickets.filter(t => t.status === 'geschlossen' || t.status === 'closed' || !t.status);
+        filteredTickets = tickets.filter(t => {
+          if (t.status) return t.status === 'geschlossen' || t.status === 'closed';
+          return t.closed === true;
+        });
       }
 
       if (filteredTickets.length === 0) {
@@ -510,7 +522,10 @@
         const priorityLabel = priorityLabels[ticket.priority || 0];
         const priorityClass = `priority-${ticket.priority || 0}`;
 
-        const isOpen = ticket.status === 'offen' || ticket.status === 'open';
+        // Check both status field and closed boolean
+        const isOpen = ticket.status
+          ? (ticket.status === 'offen' || ticket.status === 'open')
+          : !ticket.closed;
         const statusClass = isOpen ? 'status-offen' : 'status-geschlossen';
         const statusLabel = isOpen ? 'Offen' : 'Geschlossen';
 

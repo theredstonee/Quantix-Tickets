@@ -1,7 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { t } = require('../translations');
+const { hasFeature, isPremium } = require('../premium');
 
 const CONFIG_DIR = path.join(__dirname, '..', 'configs');
 
@@ -203,7 +204,55 @@ module.exports = {
           option
             .setName('user')
             .setDescription('User to check')
-            .setRequired(true))),
+            .setRequired(true)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('forward')
+        .setDescription('Forward ticket to another team member or role')
+        .addUserOption(option =>
+          option
+            .setName('user')
+            .setDescription('User to forward the ticket to')
+            .setRequired(false))
+        .addRoleOption(option =>
+          option
+            .setName('role')
+            .setDescription('Role to forward the ticket to')
+            .setRequired(false)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('note-add')
+        .setDescription('Add an internal note to this ticket (team only)')
+        .addStringOption(option =>
+          option
+            .setName('note')
+            .setDescription('The note content')
+            .setRequired(true)
+            .setMaxLength(1000)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('note-list')
+        .setDescription('List all internal notes for this ticket (team only)'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('tag-add')
+        .setDescription('Add a tag to this ticket (Premium)'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('tag-remove')
+        .setDescription('Remove a tag from this ticket (Premium)'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('tag-list')
+        .setDescription('List all available tags (Premium)'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('department-forward')
+        .setDescription('Forward ticket to another department (Premium)'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('department-list')
+        .setDescription('List all departments (Premium)')),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -356,6 +405,9 @@ module.exports = {
 
     // ===== SUBCOMMAND: HIDE =====
     if (subcommand === 'hide') {
+      // Defer reply immediately to prevent timeout
+      await interaction.deferReply();
+
       // Load tickets and find current ticket
       const log = loadTickets(guildId);
       const ticket = log.find(t => t.channelId === interaction.channel.id);
@@ -368,7 +420,7 @@ module.exports = {
           .setFooter({ text: 'Quantix Tickets • Fehler' })
           .setTimestamp();
 
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
+        return interaction.editReply({ embeds: [noTicketEmbed] });
       }
 
       // Check if user is the claimer
@@ -384,7 +436,7 @@ module.exports = {
           .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
           .setTimestamp();
 
-        return interaction.reply({ embeds: [notClaimerEmbed], ephemeral: true });
+        return interaction.editReply({ embeds: [notClaimerEmbed] });
       }
 
       try {
@@ -432,7 +484,7 @@ module.exports = {
           .setFooter({ text: 'Quantix Tickets • Ticket versteckt' })
           .setTimestamp();
 
-        await interaction.reply({ embeds: [successEmbed] });
+        await interaction.editReply({ embeds: [successEmbed] });
 
         // Log event
         logEvent(interaction.guild, `🔒 **Ticket versteckt:** <@${interaction.user.id}> hat Ticket #${ticket.id} versteckt`);
@@ -452,12 +504,15 @@ module.exports = {
           .setFooter({ text: 'Quantix Tickets • Fehler' })
           .setTimestamp();
 
-        return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+        return interaction.editReply({ embeds: [errorEmbed] });
       }
     }
 
     // ===== SUBCOMMAND: UNHIDE =====
     if (subcommand === 'unhide') {
+      // Defer reply immediately to prevent timeout
+      await interaction.deferReply();
+
       // Load tickets and find current ticket
       const log = loadTickets(guildId);
       const ticket = log.find(t => t.channelId === interaction.channel.id);
@@ -470,7 +525,7 @@ module.exports = {
           .setFooter({ text: 'Quantix Tickets • Fehler' })
           .setTimestamp();
 
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
+        return interaction.editReply({ embeds: [noTicketEmbed] });
       }
 
       // Check if user is the claimer
@@ -486,7 +541,7 @@ module.exports = {
           .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
           .setTimestamp();
 
-        return interaction.reply({ embeds: [notClaimerEmbed], ephemeral: true });
+        return interaction.editReply({ embeds: [notClaimerEmbed] });
       }
 
       try {
@@ -504,7 +559,7 @@ module.exports = {
             .setFooter({ text: 'Quantix Tickets • Bereits sichtbar' })
             .setTimestamp();
 
-          return interaction.reply({ embeds: [notHiddenEmbed], ephemeral: true });
+          return interaction.editReply({ embeds: [notHiddenEmbed] });
         }
 
         // Get all team roles and priority-based roles
@@ -546,7 +601,7 @@ module.exports = {
           .setFooter({ text: 'Quantix Tickets • Ticket sichtbar' })
           .setTimestamp();
 
-        await interaction.reply({ embeds: [successEmbed] });
+        await interaction.editReply({ embeds: [successEmbed] });
 
         // Log event
         logEvent(interaction.guild, `👁️ **Ticket eingeblendet:** <@${interaction.user.id}> hat Ticket #${ticket.id} wieder sichtbar gemacht`);
@@ -566,7 +621,7 @@ module.exports = {
           .setFooter({ text: 'Quantix Tickets • Fehler' })
           .setTimestamp();
 
-        return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+        return interaction.editReply({ embeds: [errorEmbed] });
       }
     }
 
@@ -1183,6 +1238,443 @@ module.exports = {
         .setTimestamp();
 
       await interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    // ===== SUBCOMMAND: FORWARD =====
+    if (subcommand === 'forward') {
+      const targetUser = interaction.options.getUser('user');
+      const targetRole = interaction.options.getRole('role');
+
+      if (!targetUser && !targetRole) {
+        return interaction.reply({
+          content: '❌ Du musst entweder einen Benutzer oder eine Rolle angeben.',
+          ephemeral: true
+        });
+      }
+
+      const premiumInfo = isPremium(guildId, 'pro');
+      if (!premiumInfo) {
+        return interaction.reply({
+          content: '⚠️ **Premium Feature**\n\nDie Ticket-Weiterleitung ist ein Pro-Feature. Upgrade auf Pro, um diese Funktion zu nutzen!\n\nhttps://tickets.quantix-bot.de/premium',
+          ephemeral: true
+        });
+      }
+
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket) {
+        return interaction.reply({
+          content: '❌ Dieser Channel ist kein aktives Ticket.',
+          ephemeral: true
+        });
+      }
+
+      if (ticket.closed) {
+        return interaction.reply({
+          content: '❌ Dieses Ticket ist bereits geschlossen.',
+          ephemeral: true
+        });
+      }
+
+      if (!ticket.claimer || ticket.claimer === '') {
+        return interaction.reply({
+          content: '❌ Dieses Ticket muss zuerst geclaimed werden.',
+          ephemeral: true
+        });
+      }
+
+      if (String(ticket.claimer) !== String(interaction.user.id)) {
+        return interaction.reply({
+          content: `❌ Nur der aktuelle Claimer kann dieses Ticket weiterleiten.\n\nAktueller Claimer: <@${ticket.claimer}>`,
+          ephemeral: true
+        });
+      }
+
+      if (targetUser) {
+        if (targetUser.id === interaction.user.id) {
+          return interaction.reply({
+            content: '❌ Du kannst das Ticket nicht an dich selbst weiterleiten.',
+            ephemeral: true
+          });
+        }
+
+        if (targetUser.id === ticket.userId) {
+          return interaction.reply({
+            content: '❌ Du kannst das Ticket nicht an den Ticket-Ersteller weiterleiten.',
+            ephemeral: true
+          });
+        }
+
+        if (targetUser.bot) {
+          return interaction.reply({
+            content: '❌ Du kannst das Ticket nicht an einen Bot weiterleiten.',
+            ephemeral: true
+          });
+        }
+      }
+
+      const targetId = targetUser ? targetUser.id : targetRole.id;
+      const targetType = targetUser ? 'user' : 'role';
+
+      const modal = new ModalBuilder()
+        .setCustomId(`forward_modal_${targetType}_${targetId}`)
+        .setTitle('Ticket weiterleiten');
+
+      const reasonInput = new TextInputBuilder()
+        .setCustomId('forward_reason')
+        .setLabel('Grund für die Weiterleitung')
+        .setPlaceholder('Bitte gib den Grund für die Weiterleitung ein...')
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true)
+        .setMinLength(10)
+        .setMaxLength(500);
+
+      const row = new ActionRowBuilder().addComponents(reasonInput);
+      modal.addComponents(row);
+
+      await interaction.showModal(modal);
+    }
+
+    // ===== SUBCOMMAND: NOTE-ADD =====
+    if (subcommand === 'note-add') {
+      const member = interaction.member;
+
+      if (!hasAnyTeamRole(member, guildId)) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Keine Berechtigung')
+          .setDescription('Nur Team-Mitglieder können interne Notizen hinzufügen.')
+          .setFooter({ text: 'Quantix Tickets • Fehlende Berechtigung' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Kein Ticket-Channel')
+          .setDescription('Dieser Befehl kann nur in einem Ticket-Channel verwendet werden.')
+          .setFooter({ text: 'Quantix Tickets • Ungültiger Channel' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      const noteContent = interaction.options.getString('note');
+
+      if (!ticket.notes) {
+        ticket.notes = [];
+      }
+
+      const note = {
+        content: noteContent,
+        authorId: interaction.user.id,
+        authorTag: interaction.user.tag,
+        timestamp: Date.now()
+      };
+
+      ticket.notes.push(note);
+      saveTickets(guildId, tickets);
+
+      const embed = new EmbedBuilder()
+        .setColor(0x00ff88)
+        .setTitle('📝 Interne Notiz hinzugefügt')
+        .setDescription(`**Notiz:**\n${noteContent}`)
+        .addFields(
+          {
+            name: '👤 Autor',
+            value: `<@${interaction.user.id}>`,
+            inline: true
+          },
+          {
+            name: '🎫 Ticket',
+            value: `#${String(ticket.id).padStart(5, '0')}`,
+            inline: true
+          },
+          {
+            name: '📊 Notizen gesamt',
+            value: `${ticket.notes.length}`,
+            inline: true
+          }
+        )
+        .setFooter({
+          text: `Quantix Tickets • Nur für Team sichtbar`,
+          iconURL: interaction.guild.iconURL({ size: 64 })
+        })
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    // ===== SUBCOMMAND: NOTE-LIST =====
+    if (subcommand === 'note-list') {
+      const member = interaction.member;
+
+      if (!hasAnyTeamRole(member, guildId)) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Keine Berechtigung')
+          .setDescription('Nur Team-Mitglieder können interne Notizen einsehen.')
+          .setFooter({ text: 'Quantix Tickets • Fehlende Berechtigung' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Kein Ticket-Channel')
+          .setDescription('Dieser Befehl kann nur in einem Ticket-Channel verwendet werden.')
+          .setFooter({ text: 'Quantix Tickets • Ungültiger Channel' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      if (!ticket.notes || ticket.notes.length === 0) {
+        const embed = new EmbedBuilder()
+          .setColor(0xff9900)
+          .setTitle('📝 Interne Notizen')
+          .setDescription(`**Ticket #${String(ticket.id).padStart(5, '0')}**\n\nKeine internen Notizen vorhanden.`)
+          .setFooter({
+            text: `Quantix Tickets • Nur für Team sichtbar`,
+            iconURL: interaction.guild.iconURL({ size: 64 })
+          })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      const notesText = ticket.notes
+        .map((note, index) => {
+          const timestamp = `<t:${Math.floor(note.timestamp / 1000)}:R>`;
+          const author = `<@${note.authorId}>`;
+          const content = note.content.length > 200 ? note.content.substring(0, 200) + '...' : note.content;
+          return `**${index + 1}.** ${author} • ${timestamp}\n> ${content}\n`;
+        })
+        .join('\n');
+
+      const embed = new EmbedBuilder()
+        .setColor(0x00ff88)
+        .setTitle('📝 Interne Notizen')
+        .setDescription(
+          `**Ticket #${String(ticket.id).padStart(5, '0')}**\n` +
+          `**Topic:** ${ticket.topic}\n` +
+          `**Ersteller:** <@${ticket.userId}>\n\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+          notesText
+        )
+        .addFields({
+          name: '📊 Statistik',
+          value: `Gesamt: **${ticket.notes.length}** Notizen`,
+          inline: false
+        })
+        .setFooter({
+          text: `Quantix Tickets • Nur für Team sichtbar`,
+          iconURL: interaction.guild.iconURL({ size: 64 })
+        })
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    // ===== SUBCOMMAND: TAG-ADD, TAG-REMOVE, TAG-LIST =====
+    if (subcommand === 'tag-add' || subcommand === 'tag-remove' || subcommand === 'tag-list') {
+      if (!hasFeature(guildId, 'customTags')) {
+        return interaction.reply({
+          content: '❌ **Premium Basic+** Feature! Tags sind nur mit Premium Basic+ oder höher verfügbar.\n🔗 Upgrade: https://tickets.quantix-bot.de/premium',
+          ephemeral: true
+        });
+      }
+
+      const cfg = readCfg(guildId);
+      const customTags = cfg.customTags || [];
+
+      if (customTags.length === 0) {
+        return interaction.reply({
+          content: '❌ Keine Tags konfiguriert! Ein Admin muss zuerst Tags im Panel erstellen.',
+          ephemeral: true
+        });
+      }
+
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket && subcommand !== 'tag-list') {
+        return interaction.reply({
+          content: '❌ Dieser Command kann nur in einem Ticket-Channel verwendet werden.',
+          ephemeral: true
+        });
+      }
+
+      if (subcommand === 'tag-list') {
+        const embed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('📋 Available Tags')
+          .setDescription(customTags.map(tag =>
+            `${tag.emoji || '🏷️'} **${tag.label}**`
+          ).join('\n') || 'Keine Tags verfügbar')
+          .setFooter({ text: 'Verwende /ticket tag-add um einen Tag hinzuzufügen' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      if (subcommand === 'tag-add') {
+        if (!ticket.tags) ticket.tags = [];
+
+        const availableTags = customTags.filter(tag => !ticket.tags.includes(tag.id));
+
+        if (availableTags.length === 0) {
+          return interaction.reply({
+            content: '✅ Alle Tags sind bereits zu diesem Ticket hinzugefügt!',
+            ephemeral: true
+          });
+        }
+
+        const selectMenu = new StringSelectMenuBuilder()
+          .setCustomId('tag_add_select')
+          .setPlaceholder('Wähle einen Tag zum Hinzufügen')
+          .addOptions(
+            availableTags.slice(0, 25).map(tag => ({
+              label: tag.label,
+              value: tag.id,
+              emoji: tag.emoji || '🏷️',
+              description: `"${tag.label}" Tag hinzufügen`
+            }))
+          );
+
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+
+        return interaction.reply({
+          content: '📋 **Wähle einen Tag zum Hinzufügen:**',
+          components: [row],
+          ephemeral: true
+        });
+      }
+
+      if (subcommand === 'tag-remove') {
+        if (!ticket.tags || ticket.tags.length === 0) {
+          return interaction.reply({
+            content: '❌ Keine Tags auf diesem Ticket!',
+            ephemeral: true
+          });
+        }
+
+        const currentTags = customTags.filter(tag => ticket.tags.includes(tag.id));
+
+        if (currentTags.length === 0) {
+          return interaction.reply({
+            content: '❌ Keine Tags auf diesem Ticket!',
+            ephemeral: true
+          });
+        }
+
+        const selectMenu = new StringSelectMenuBuilder()
+          .setCustomId('tag_remove_select')
+          .setPlaceholder('Wähle einen Tag zum Entfernen')
+          .addOptions(
+            currentTags.slice(0, 25).map(tag => ({
+              label: tag.label,
+              value: tag.id,
+              emoji: tag.emoji || '🏷️',
+              description: `"${tag.label}" Tag entfernen`
+            }))
+          );
+
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+
+        return interaction.reply({
+          content: '📋 **Wähle einen Tag zum Entfernen:**',
+          components: [row],
+          ephemeral: true
+        });
+      }
+    }
+
+    // ===== SUBCOMMAND: DEPARTMENT-FORWARD, DEPARTMENT-LIST =====
+    if (subcommand === 'department-forward' || subcommand === 'department-list') {
+      if (!hasFeature(guildId, 'multiDepartment')) {
+        return interaction.reply({
+          content: '❌ **Premium Basic+** Feature! Multi-Department Support ist nur mit Premium Basic+ oder höher verfügbar.\n🔗 Upgrade: https://tickets.quantix-bot.de/premium',
+          ephemeral: true
+        });
+      }
+
+      const cfg = readCfg(guildId);
+      const departments = cfg.departments || [];
+
+      if (departments.length === 0) {
+        return interaction.reply({
+          content: '❌ Keine Abteilungen konfiguriert! Ein Admin muss zuerst Abteilungen im Panel erstellen.',
+          ephemeral: true
+        });
+      }
+
+      if (subcommand === 'department-list') {
+        const embed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('🏢 Abteilungen')
+          .setDescription(departments.map((dept, index) =>
+            `**${index + 1}.** ${dept.emoji || '📁'} **${dept.name}**\n${dept.description || '_Keine Beschreibung_'}\n${dept.teamRole ? `👥 Team: <@&${dept.teamRole}>` : '❌ Kein Team'}`
+          ).join('\n\n') || 'Keine Abteilungen verfügbar')
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+
+      if (subcommand === 'department-forward') {
+        const tickets = loadTickets(guildId);
+        const ticketIndex = tickets.findIndex(t => t.channelId === interaction.channel.id);
+
+        if (ticketIndex === -1) {
+          return interaction.reply({
+            content: '❌ Dieser Command kann nur in einem Ticket-Channel verwendet werden.',
+            ephemeral: true
+          });
+        }
+
+        const ticket = tickets[ticketIndex];
+        const currentDept = ticket.department || 'none';
+
+        const availableDepts = departments.filter(d => d.id !== currentDept);
+
+        if (availableDepts.length === 0) {
+          return interaction.reply({
+            content: '❌ Keine anderen Abteilungen verfügbar.',
+            ephemeral: true
+          });
+        }
+
+        const selectMenu = new StringSelectMenuBuilder()
+          .setCustomId('department_forward_select')
+          .setPlaceholder('Wähle eine Abteilung')
+          .addOptions(
+            availableDepts.slice(0, 25).map(dept => ({
+              label: dept.name,
+              value: dept.id,
+              emoji: dept.emoji || '📁',
+              description: dept.description ? dept.description.substring(0, 100) : 'An diese Abteilung weiterleiten'
+            }))
+          );
+
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+
+        return interaction.reply({
+          content: '🔄 **Ticket weiterleiten**\nWähle die Ziel-Abteilung:',
+          components: [row],
+          ephemeral: true
+        });
+      }
     }
   },
 };

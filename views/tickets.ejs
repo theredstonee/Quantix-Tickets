@@ -1173,29 +1173,68 @@
   }
 
   async function reopenTicket(ticketId) {
-    if (!confirm('Möchtest du Ticket #' + ticketId + ' wirklich wiedereröffnen?\n\nEin neuer Channel wird erstellt.')) {
-      return;
-    }
+    // Create beautiful modern modal
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:10000;backdrop-filter:blur(4px);animation:fadeIn 0.2s;';
 
-    try {
-      const response = await fetch('/api/ticket/reopen', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticketId: ticketId })
-      });
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = 'background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:2.5rem;border-radius:20px;max-width:450px;width:90%;box-shadow:0 20px 60px rgba(102,126,234,0.5);text-align:center;color:white;animation:slideUp 0.3s;';
 
-      const data = await response.json();
+    modalContent.innerHTML = `
+      <div style="font-size:3rem;margin-bottom:1rem">🔄</div>
+      <h2 style="margin:0 0 1rem;font-size:1.8rem;font-weight:700">Ticket wiedereröffnen</h2>
+      <p style="margin:0 0 1.5rem;opacity:0.95;font-size:1.05rem;line-height:1.6">
+        Möchtest du Ticket <strong>#${ticketId}</strong> wirklich wiedereröffnen?
+        <br><br>
+        <span style="font-size:0.9rem;opacity:0.8">
+          📢 Ein neuer Discord-Channel wird erstellt<br>
+          🎫 Alle Permissions werden wiederhergestellt<br>
+          ✅ Ticket-Buttons werden hinzugefügt
+        </span>
+      </p>
+      <div style="display:flex;gap:1rem;justify-content:center">
+        <button id="cancelBtn" style="padding:0.8rem 2rem;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);color:white;border-radius:10px;cursor:pointer;font-size:1rem;font-weight:600;transition:all 0.2s">Abbrechen</button>
+        <button id="confirmBtn" style="padding:0.8rem 2rem;background:linear-gradient(135deg,#00ff88 0%,#00dd77 100%);border:none;color:#000;border-radius:10px;cursor:pointer;font-size:1rem;font-weight:700;transition:all 0.2s;box-shadow:0 4px 15px rgba(0,255,136,0.4)">🔄 Wiedereröffnen</button>
+      </div>
+    `;
 
-      if (response.ok && data.success) {
-        alert('✅ Ticket #' + ticketId + ' wurde erfolgreich wiedereröffnet!\n\nNeuer Channel: ' + (data.channelName || 'ticket-' + ticketId));
-        reloadData();
-      } else {
-        alert('❌ Fehler: ' + (data.error || 'Unbekannter Fehler'));
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    const style = document.createElement('style');
+    style.textContent = '@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slideUp{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}';
+    document.head.appendChild(style);
+
+    const confirmBtn = modal.querySelector('#confirmBtn');
+    const cancelBtn = modal.querySelector('#cancelBtn');
+
+    confirmBtn.addEventListener('mouseenter',()=>{confirmBtn.style.transform='translateY(-2px)';confirmBtn.style.boxShadow='0 6px 20px rgba(0,255,136,0.6)'});
+    confirmBtn.addEventListener('mouseleave',()=>{confirmBtn.style.transform='translateY(0)';confirmBtn.style.boxShadow='0 4px 15px rgba(0,255,136,0.4)'});
+    cancelBtn.addEventListener('mouseenter',()=>{cancelBtn.style.background='rgba(255,255,255,0.25)';cancelBtn.style.transform='translateY(-2px)'});
+    cancelBtn.addEventListener('mouseleave',()=>{cancelBtn.style.background='rgba(255,255,255,0.15)';cancelBtn.style.transform='translateY(0)'});
+
+    cancelBtn.onclick=()=>{modal.style.animation='fadeIn 0.2s reverse';setTimeout(()=>{modal.remove();style.remove()},200)};
+
+    confirmBtn.onclick=async()=>{
+      confirmBtn.disabled=true;
+      confirmBtn.innerHTML='<span style="display:inline-block;animation:spin 1s linear infinite">⏳</span> Öffne...';
+
+      try{
+        const response=await fetch('/api/ticket/reopen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticketId})});
+        const data=await response.json();
+
+        if(response.ok&&data.success){
+          modalContent.innerHTML=`<div style="font-size:4rem;margin-bottom:1rem;animation:bounce 0.6s">✅</div><h2 style="margin:0 0 1rem;font-size:1.8rem;font-weight:700">Erfolgreich wiedereröffnet!</h2><p style="margin:0;opacity:0.95;font-size:1.05rem">Ticket <strong>#${ticketId}</strong> wurde wiedereröffnet!<br><span style="font-size:0.9rem;opacity:0.8">Neuer Channel: <strong>${data.channelName||'ticket-'+ticketId}</strong></span></p>`;
+          setTimeout(()=>{modal.style.animation='fadeIn 0.2s reverse';setTimeout(()=>{modal.remove();style.remove();reloadData()},200)},2000);
+        }else{
+          throw new Error(data.error||'Unbekannter Fehler');
+        }
+      }catch(err){
+        console.error('Reopen error:',err);
+        modalContent.innerHTML=`<div style="font-size:4rem;margin-bottom:1rem">❌</div><h2 style="margin:0 0 1rem;font-size:1.8rem;font-weight:700">Fehler!</h2><p style="margin:0;opacity:0.95;font-size:1.05rem">${err.message||'Fehler beim Wiedereröffnen'}</p>`;
+        setTimeout(()=>{modal.style.animation='fadeIn 0.2s reverse';setTimeout(()=>{modal.remove();style.remove()},200)},2000);
       }
-    } catch (err) {
-      console.error('Reopen error:', err);
-      alert('❌ Fehler beim Wiedereröffnen des Tickets');
-    }
+    };
   }
 
   // Populate tag filter dropdown
