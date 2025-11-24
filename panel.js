@@ -129,7 +129,6 @@ passport.use(new Strategy({
   callbackURL: BASE ? `${BASE.replace(/\/$/,'')}/auth/discord/callback` : '/auth/discord/callback',
   scope: ['identify','guilds','guilds.members.read','dm_channels.messages.write'],
   state: true
-  prompt: 'none'
 }, (_a,_b,profile,done)=>done(null,profile)));
 
 module.exports = (client)=>{
