@@ -1,6 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
+// Uptime Robot API Cache (1 Stunde)
+let uptimeCache = {
+  data: null,
+  timestamp: 0
+};
+const CACHE_DURATION = 60 * 60 * 1000; // 1 Stunde in Millisekunden
+
 // Middleware: Check if user is authenticated
 function isAuthenticated(req, res, next) {
   if (req.isAuthenticated && req.isAuthenticated()) {
@@ -341,6 +348,19 @@ router.get('/uptime', async (req, res) => {
       });
     }
 
+    // Check cache first (1 hour cache)
+    const now = Date.now();
+    const cacheAge = now - uptimeCache.timestamp;
+    const cacheValid = uptimeCache.data && cacheAge < CACHE_DURATION;
+
+    if (cacheValid) {
+      const remainingTime = Math.ceil((CACHE_DURATION - cacheAge) / 1000 / 60);
+      console.log(`[UptimeRobot API] ✅ Cache HIT - Returning cached data (${remainingTime} min remaining)`);
+      return res.json(uptimeCache.data);
+    }
+
+    console.log('[UptimeRobot API] ❌ Cache MISS - Fetching fresh data from API');
+
     // Fetch data from UptimeRobot API
     console.log('[UptimeRobot API] Starte API-Abfrage...');
     const uptimeData = await getUptimeRobotData(apiKey, monitorId);
@@ -440,6 +460,13 @@ router.get('/uptime', async (req, res) => {
       status: response.status,
       uptime30Days: response.uptime.day30 + '%'
     });
+
+    // Cache the response for 1 hour
+    uptimeCache = {
+      data: response,
+      timestamp: Date.now()
+    };
+    console.log('[UptimeRobot API] 💾 Data cached for 1 hour');
 
     res.json(response);
 
