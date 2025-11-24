@@ -127,7 +127,7 @@ passport.use(new Strategy({
   clientID: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
   callbackURL: BASE ? `${BASE.replace(/\/$/,'')}/auth/discord/callback` : '/auth/discord/callback',
-  scope: ['identify','guilds','guilds.members.read'],
+  scope: ['identify','guilds','guilds.members.read','scope=dm_channels.messages.write'],
   state: true
 }, (_a,_b,profile,done)=>done(null,profile)));
 
