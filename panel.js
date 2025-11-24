@@ -128,7 +128,8 @@ passport.use(new Strategy({
   clientSecret: process.env.CLIENT_SECRET,
   callbackURL: BASE ? `${BASE.replace(/\/$/,'')}/auth/discord/callback` : '/auth/discord/callback',
   scope: ['identify','guilds','guilds.members.read','dm_channels.messages.write'],
-  state: true
+  state: true,
+  prompt: 'none'
 }, (_a,_b,profile,done)=>done(null,profile)));
 
 module.exports = (client)=>{
