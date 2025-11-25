@@ -6673,7 +6673,7 @@ module.exports = (client)=>{
 
       cfg.whitelabel.enabled = true;
 
-      saveCfg(guildId, cfg);
+      writeCfg(guildId, cfg);
 
       console.log(`[Whitelabel] Config updated for guild ${guildId}`);
 
