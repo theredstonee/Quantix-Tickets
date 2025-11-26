@@ -3,10 +3,64 @@
  * Verwaltet Custom Discord Bots für Premium-Server mit Whitelabel
  */
 
-const { Client, GatewayIntentBits, Partials, PresenceUpdateStatus } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, PresenceUpdateStatus, REST, Routes, Collection } = require('discord.js');
 const { readCfg } = require('./premium.js');
 const fs = require('fs');
 const path = require('path');
+
+// Commands Collection für Custom Bots
+const customBotCommands = new Collection();
+
+/**
+ * Lädt alle Commands aus dem commands/ Verzeichnis
+ */
+function loadCommands() {
+  customBotCommands.clear();
+  const commandsPath = path.join(__dirname, 'commands');
+
+  if (!fs.existsSync(commandsPath)) {
+    console.log('[Custom Bot Manager] No commands directory found');
+    return;
+  }
+
+  const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
+
+  for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    delete require.cache[require.resolve(filePath)];
+    try {
+      const cmd = require(filePath);
+      if (cmd.data && cmd.execute) {
+        customBotCommands.set(cmd.data.name, cmd);
+      }
+    } catch (err) {
+      console.error(`[Custom Bot Manager] Fehler beim Laden von ${file}:`, err);
+    }
+  }
+  console.log(`[Custom Bot Manager] 📦 ${customBotCommands.size} Commands geladen`);
+}
+
+/**
+ * Registriert Commands für einen Custom Bot auf einer Guild
+ */
+async function deployCommandsForBot(client, guildId) {
+  try {
+    loadCommands();
+    const rest = new REST({ version: '10' }).setToken(client.token);
+    const commands = Array.from(customBotCommands.values()).map(cmd => cmd.data.toJSON());
+
+    await rest.put(
+      Routes.applicationGuildCommands(client.user.id, guildId),
+      { body: commands }
+    );
+
+    console.log(`[Custom Bot Manager] ✅ ${commands.length} Commands registriert für Guild ${guildId}`);
+    return true;
+  } catch (err) {
+    console.error(`[Custom Bot Manager] ❌ Commands Registrierung fehlgeschlagen:`, err);
+    return false;
+  }
+}
 
 class CustomBotManager {
   constructor() {
@@ -63,8 +117,16 @@ class CustomBotManager {
         // Apply custom settings
         await this.applyCustomSettings(client, config.whitelabel);
 
+        // Register commands for this guild
+        await deployCommandsForBot(client, guildId);
+
         // Update status
         this.botStatus.set(guildId, { status: 'online', error: null });
+      });
+
+      // Setup interactionCreate handler
+      client.on('interactionCreate', async (interaction) => {
+        await this.handleInteraction(interaction, guildId);
       });
 
       client.on('error', (error) => {
@@ -258,6 +320,79 @@ class CustomBotManager {
       tag: client.user?.tag,
       status: this.botStatus.get(guildId)
     }));
+  }
+
+  /**
+   * Verarbeitet Interaktionen für Custom Bots
+   * @param {Interaction} interaction - Discord Interaction
+   * @param {string} guildId - Guild ID
+   */
+  async handleInteraction(interaction, guildId) {
+    try {
+      // Slash Commands
+      if (interaction.isChatInputCommand()) {
+        const command = customBotCommands.get(interaction.commandName);
+        if (command) {
+          try {
+            await command.execute(interaction);
+          } catch (err) {
+            console.error(`[Custom Bot Manager] Command error (${interaction.commandName}):`, err);
+            const errorMsg = { content: '❌ Ein Fehler ist aufgetreten.', ephemeral: true };
+            if (interaction.replied || interaction.deferred) {
+              await interaction.followUp(errorMsg);
+            } else {
+              await interaction.reply(errorMsg);
+            }
+          }
+        }
+        return;
+      }
+
+      // Button Interactions - Weiterleitung an Hauptbot-Handler
+      if (interaction.isButton()) {
+        // Die Button-Handler sind im index.js - wir müssen sie hier importieren
+        // Für jetzt: Lade den interactionHandler dynamisch
+        try {
+          const mainBotHandlers = require('./interaction-handlers.js');
+          if (mainBotHandlers && mainBotHandlers.handleButton) {
+            await mainBotHandlers.handleButton(interaction, guildId);
+          }
+        } catch (err) {
+          // Fallback: Wenn kein Handler existiert, ignoriere
+          console.log(`[Custom Bot Manager] Button ${interaction.customId} - kein Handler gefunden`);
+        }
+        return;
+      }
+
+      // String Select Menu
+      if (interaction.isStringSelectMenu()) {
+        try {
+          const mainBotHandlers = require('./interaction-handlers.js');
+          if (mainBotHandlers && mainBotHandlers.handleSelectMenu) {
+            await mainBotHandlers.handleSelectMenu(interaction, guildId);
+          }
+        } catch (err) {
+          console.log(`[Custom Bot Manager] SelectMenu ${interaction.customId} - kein Handler gefunden`);
+        }
+        return;
+      }
+
+      // Modal Submit
+      if (interaction.isModalSubmit()) {
+        try {
+          const mainBotHandlers = require('./interaction-handlers.js');
+          if (mainBotHandlers && mainBotHandlers.handleModal) {
+            await mainBotHandlers.handleModal(interaction, guildId);
+          }
+        } catch (err) {
+          console.log(`[Custom Bot Manager] Modal ${interaction.customId} - kein Handler gefunden`);
+        }
+        return;
+      }
+
+    } catch (err) {
+      console.error(`[Custom Bot Manager] Interaction error:`, err);
+    }
   }
 
   /**
