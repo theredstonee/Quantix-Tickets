@@ -4310,14 +4310,18 @@
                       <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
                         <%= lang === 'de' ? 'Team-Rolle (Optional)' : 'Team Role (Optional)' %>
                       </label>
-                      <input type="text" name="dept_teamRole_<%= index %>"
-                        value="<%= dept.teamRoleId || '' %>"
-                        placeholder="<%= lang === 'de' ? 'Rollen-ID (Nur Mitglieder dieser Rolle sehen Tickets dieser Abteilung)' : 'Role ID (Only members with this role can see tickets from this department)' %>"
-                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
+                      <select name="dept_teamRole_<%= index %>" style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
+                        <option value=""><%= lang === 'de' ? '-- Keine Rolle --' : '-- No Role --' %></option>
+                        <% roles.forEach(role => { %>
+                          <option value="<%= role.id %>" <%= dept.teamRoleId === role.id ? 'selected' : '' %> style="color: <%= role.color %>">
+                            @<%= role.name %>
+                          </option>
+                        <% }); %>
+                      </select>
                       <small style="color: var(--muted-color); display: block; margin-top: 0.5rem;">
                         <%= lang === 'de'
-                          ? 'Rechtsklick auf Rolle → Rolle-ID kopieren (Developer Mode muss aktiviert sein)'
-                          : 'Right-click role → Copy Role ID (Developer Mode must be enabled)'
+                          ? 'Nur Mitglieder dieser Rolle sehen Tickets dieser Abteilung'
+                          : 'Only members with this role can see tickets from this department'
                         %>
                       </small>
                     </div>
@@ -5478,6 +5482,9 @@
   <!-- JavaScript -->
   <script src="/js/ux-enhancements.js"></script>
   <script>
+    // Server roles for dynamic dropdowns
+    window.serverRoles = <%- JSON.stringify(roles.map(r => ({ id: r.id, name: r.name, color: r.color || '#ffffff' }))) %>;
+
     // Ensure all code runs after DOM is fully loaded
     document.addEventListener('DOMContentLoaded', function() {
       // Read-Only Mode für Team-Mitglieder (ohne Admin-Rechte)
@@ -6751,13 +6758,14 @@
             <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
               ${lang === 'de' ? 'Team-Rolle (Optional)' : 'Team Role (Optional)'}
             </label>
-            <input type="text" name="dept_teamRole_${newIndex}"
-              placeholder="${lang === 'de' ? 'Rollen-ID (Nur Mitglieder dieser Rolle sehen Tickets dieser Abteilung)' : 'Role ID (Only members with this role can see tickets from this department)'}"
-              style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
+            <select name="dept_teamRole_${newIndex}" style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
+              <option value="">${lang === 'de' ? '-- Keine Rolle --' : '-- No Role --'}</option>
+              ${window.serverRoles.map(role => `<option value="${role.id}" style="color: ${role.color}">@${role.name}</option>`).join('')}
+            </select>
             <small style="color: var(--muted-color); display: block; margin-top: 0.5rem;">
               ${lang === 'de'
-                ? 'Rechtsklick auf Rolle → Rolle-ID kopieren (Developer Mode muss aktiviert sein)'
-                : 'Right-click role → Copy Role ID (Developer Mode must be enabled)'
+                ? 'Nur Mitglieder dieser Rolle sehen Tickets dieser Abteilung'
+                : 'Only members with this role can see tickets from this department'
               }
             </small>
           </div>
