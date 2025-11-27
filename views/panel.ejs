@@ -3950,6 +3950,389 @@
               </div>
             </div>
 
+            <!-- FAQ / Auto-Response System -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">
+                      <i class="fas fa-question-circle"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '❓ FAQ / Auto-Antworten' : '❓ FAQ / Auto-Responses' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Automatische Antworten basierend auf Keywords im Ticket-Thema'
+                      : 'Automatic responses based on keywords in ticket topic'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="toggle-container" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-label">
+                    <input type="checkbox" name="autoResponsesEnabled" <%= cfg.autoResponses?.enabled !== false ? 'checked' : '' %>>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">
+                      <strong><%= lang === 'de' ? 'Auto-Antworten aktivieren' : 'Enable Auto-Responses' %></strong>
+                    </span>
+                  </label>
+                </div>
+
+                <div id="faqContainer">
+                  <% if (!cfg.autoResponses?.responses || cfg.autoResponses.responses.length === 0) { %>
+                  <div class="alert alert-info" style="margin-bottom: 1rem;">
+                    <i class="fas fa-info-circle"></i>
+                    <span><%= lang === 'de' ? 'Noch keine FAQs erstellt. Klicke auf "FAQ hinzufügen" um zu beginnen.' : 'No FAQs created yet. Click "Add FAQ" to get started.' %></span>
+                  </div>
+                  <% } else { %>
+                  <% cfg.autoResponses.responses.forEach((faq, index) => { %>
+                  <div class="faq-item" style="margin-bottom: 1rem; padding: 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                      <strong style="color: var(--accent-color);">FAQ #<%= index + 1 %></strong>
+                      <button type="button" onclick="this.parentElement.parentElement.remove()" class="btn-icon" style="background: var(--error-color); color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-question"></i>
+                        <span><%= lang === 'de' ? 'Frage' : 'Question' %></span>
+                      </div>
+                      <input
+                        type="text"
+                        name="autoResponse_question_<%= index %>"
+                        value="<%= faq.question || '' %>"
+                        placeholder="<%= lang === 'de' ? 'z.B. Wie ändere ich mein Passwort?' : 'e.g. How do I change my password?' %>"
+                        maxlength="500">
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-comment-dots"></i>
+                        <span><%= lang === 'de' ? 'Antwort' : 'Answer' %></span>
+                      </div>
+                      <textarea
+                        name="autoResponse_answer_<%= index %>"
+                        rows="3"
+                        placeholder="<%= lang === 'de' ? 'Die ausführliche Antwort auf die Frage...' : 'The detailed answer to the question...' %>"
+                        maxlength="2000"><%= faq.answer || '' %></textarea>
+                    </div>
+
+                    <div class="form-group">
+                      <div class="form-label">
+                        <i class="fas fa-tags"></i>
+                        <span><%= lang === 'de' ? 'Keywords (kommagetrennt)' : 'Keywords (comma-separated)' %></span>
+                      </div>
+                      <input
+                        type="text"
+                        name="autoResponse_keywords_<%= index %>"
+                        value="<%= (faq.keywords || []).join(', ') %>"
+                        placeholder="<%= lang === 'de' ? 'z.B. passwort, login, anmeldung' : 'e.g. password, login, authentication' %>"
+                        maxlength="500">
+                      <div class="help-text">
+                        <i class="fas fa-lightbulb"></i>
+                        <span><%= lang === 'de' ? 'FAQ wird angezeigt, wenn ein Keyword im Ticket-Thema vorkommt' : 'FAQ will be shown if a keyword matches the ticket topic' %></span>
+                      </div>
+                    </div>
+                  </div>
+                  <% }); %>
+                  <% } %>
+                </div>
+
+                <button type="button" class="btn btn-success" onclick="addFAQ()" style="width: 100%;">
+                  <i class="fas fa-plus"></i>
+                  <%= lang === 'de' ? 'FAQ hinzufügen' : 'Add FAQ' %>
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Tags -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #f472b6, #ec4899);">
+                      <i class="fas fa-tags"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '🏷️ Benutzerdefinierte Tags' : '🏷️ Custom Tags' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Erstelle Tags zum Kategorisieren von Tickets (z.B. Bug, Feature, Dringend)'
+                      : 'Create tags for categorizing tickets (e.g. Bug, Feature, Urgent)'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="tagsContainer">
+                  <% if (!cfg.customTags || cfg.customTags.length === 0) { %>
+                  <div class="alert alert-info" style="margin-bottom: 1rem;">
+                    <i class="fas fa-info-circle"></i>
+                    <span><%= lang === 'de' ? 'Noch keine Tags erstellt. Klicke auf "Tag hinzufügen" um zu beginnen.' : 'No tags created yet. Click "Add Tag" to get started.' %></span>
+                  </div>
+                  <% } else { %>
+                  <% cfg.customTags.forEach((tag, index) => { %>
+                  <div class="tag-item" style="margin-bottom: 1rem; padding: 1rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.75rem; align-items: center;">
+                    <input type="hidden" name="tag_id_<%= index %>" value="<%= tag.id || '' %>">
+
+                    <div class="form-group" style="margin: 0;">
+                      <div class="form-label" style="margin-bottom: 0.25rem;">
+                        <i class="fas fa-tag"></i>
+                        <span><%= lang === 'de' ? 'Label' : 'Label' %></span>
+                      </div>
+                      <input type="text" name="tag_label_<%= index %>"
+                        value="<%= tag.label || '' %>"
+                        placeholder="<%= lang === 'de' ? 'z.B. Bug, Dringend' : 'e.g. Bug, Urgent' %>"
+                        maxlength="50"
+                        style="width: 100%;">
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                      <div class="form-label" style="margin-bottom: 0.25rem;">
+                        <i class="fas fa-smile"></i>
+                        <span><%= lang === 'de' ? 'Emoji' : 'Emoji' %></span>
+                      </div>
+                      <input type="text" name="tag_emoji_<%= index %>"
+                        value="<%= tag.emoji || '' %>"
+                        placeholder="🏷️"
+                        maxlength="10"
+                        style="width: 100%;">
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                      <div class="form-label" style="margin-bottom: 0.25rem;">
+                        <i class="fas fa-palette"></i>
+                        <span><%= lang === 'de' ? 'Farbe' : 'Color' %></span>
+                      </div>
+                      <input type="color" name="tag_color_<%= index %>"
+                        value="<%= tag.color || '#00ff88' %>"
+                        style="width: 100%; height: 38px; cursor: pointer;">
+                    </div>
+
+                    <button type="button" onclick="this.parentElement.remove()"
+                      class="btn-icon"
+                      style="background: var(--error-color); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer; height: fit-content; margin-top: 1.5rem;">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                  <% }); %>
+                  <% } %>
+                </div>
+
+                <button type="button" class="btn btn-success" onclick="addTag()" style="width: 100%;">
+                  <i class="fas fa-plus"></i>
+                  <%= lang === 'de' ? 'Tag hinzufügen' : 'Add Tag' %>
+                </button>
+              </div>
+            </div>
+
+            <!-- Templates -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #a78bfa, #8b5cf6);">
+                      <i class="fas fa-file-alt"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '📄 Antwortvorlagen' : '📄 Response Templates' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Vordefinierte Antworten für häufige Fragen und Situationen'
+                      : 'Predefined responses for common questions and situations'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="templatesContainer">
+                  <% if (!cfg.templates || cfg.templates.length === 0) { %>
+                  <div class="alert alert-info" style="margin-bottom: 1rem;">
+                    <i class="fas fa-info-circle"></i>
+                    <span><%= lang === 'de' ? 'Noch keine Vorlagen erstellt. Klicke auf "Vorlage hinzufügen" um zu beginnen.' : 'No templates created yet. Click "Add Template" to get started.' %></span>
+                  </div>
+                  <% } else { %>
+                  <% cfg.templates.forEach((template, index) => { %>
+                  <div class="template-item" style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
+                    <input type="hidden" name="template_id_<%= index %>" value="<%= template.id || '' %>">
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                      <strong style="color: var(--accent-color); font-size: 1.1rem;">
+                        <%= lang === 'de' ? 'Vorlage' : 'Template' %> #<%= index + 1 %>
+                      </strong>
+                      <button type="button" onclick="this.parentElement.parentElement.remove()"
+                        class="btn-icon"
+                        style="background: var(--error-color); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+
+                    <div class="grid grid-2" style="gap: 1rem; margin-bottom: 1rem;">
+                      <div class="form-group" style="margin: 0;">
+                        <div class="form-label">
+                          <i class="fas fa-signature"></i>
+                          <span><%= lang === 'de' ? 'Vorlagenname' : 'Template Name' %></span>
+                        </div>
+                        <input type="text" name="template_name_<%= index %>"
+                          value="<%= template.name || '' %>"
+                          placeholder="<%= lang === 'de' ? 'z.B. Willkommensnachricht' : 'e.g. Welcome Message' %>"
+                          maxlength="100"
+                          style="width: 100%;">
+                      </div>
+
+                      <div class="form-group" style="margin: 0;">
+                        <div class="form-label">
+                          <i class="fas fa-palette"></i>
+                          <span><%= lang === 'de' ? 'Embed-Farbe' : 'Embed Color' %></span>
+                        </div>
+                        <input type="color" name="template_color_<%= index %>"
+                          value="<%= template.color || '#0ea5e9' %>"
+                          style="width: 100%; height: 38px; cursor: pointer;">
+                      </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                      <div class="form-label">
+                        <i class="fas fa-info-circle"></i>
+                        <span><%= lang === 'de' ? 'Beschreibung (optional)' : 'Description (optional)' %></span>
+                      </div>
+                      <input type="text" name="template_description_<%= index %>"
+                        value="<%= template.description || '' %>"
+                        placeholder="<%= lang === 'de' ? 'Kurze Beschreibung der Vorlage' : 'Short description of the template' %>"
+                        maxlength="150"
+                        style="width: 100%;">
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                      <div class="form-label">
+                        <i class="fas fa-comment-dots"></i>
+                        <span><%= lang === 'de' ? 'Vorlagen-Inhalt' : 'Template Content' %></span>
+                      </div>
+                      <textarea name="template_content_<%= index %>" rows="5"
+                        placeholder="<%= lang === 'de' ? 'Der Text, der gesendet wird...' : 'The text that will be sent...' %>"
+                        maxlength="2000"
+                        style="width: 100%;"><%= template.content || '' %></textarea>
+                      <div class="help-text">
+                        <i class="fas fa-lightbulb"></i>
+                        <span><%= lang === 'de' ? 'Markdown-Formatierung wird unterstützt' : 'Markdown formatting is supported' %></span>
+                      </div>
+                    </div>
+                  </div>
+                  <% }); %>
+                  <% } %>
+                </div>
+
+                <button type="button" class="btn btn-success" onclick="addTemplate()" style="width: 100%;">
+                  <i class="fas fa-plus"></i>
+                  <%= lang === 'de' ? 'Vorlage hinzufügen' : 'Add Template' %>
+                </button>
+              </div>
+            </div>
+
+            <!-- Departments -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #22d3ee, #06b6d4);">
+                      <i class="fas fa-building"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '🏢 Abteilungen' : '🏢 Departments' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Organisiere Tickets nach Abteilungen mit separaten Team-Rollen'
+                      : 'Organize tickets by departments with separate team roles'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="departmentsContainer">
+                  <% if (!cfg.departments || cfg.departments.length === 0) { %>
+                  <p style="color: var(--muted-color); text-align: center; padding: 1rem;">
+                    <%= lang === 'de' ? 'Noch keine Abteilungen erstellt. Klicke auf "Abteilung hinzufügen" um zu beginnen.' : 'No departments created yet. Click "Add Department" to get started.' %>
+                  </p>
+                  <% } else { %>
+                  <% cfg.departments.forEach((dept, index) => { %>
+                  <div class="department-item" style="margin-bottom: 1.5rem; padding: 1.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
+                    <input type="hidden" name="dept_id_<%= index %>" value="<%= dept.id || '' %>">
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                      <strong style="color: var(--accent-color); font-size: 1.1rem;">
+                        <%= dept.emoji || '📁' %> <%= lang === 'de' ? 'Abteilung' : 'Department' %> #<%= index + 1 %>
+                      </strong>
+                      <button type="button" onclick="this.parentElement.parentElement.remove()"
+                        class="btn-icon"
+                        style="background: var(--error-color); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                      <div>
+                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
+                          <%= lang === 'de' ? 'Abteilungsname' : 'Department Name' %>
+                        </label>
+                        <input type="text" name="dept_name_<%= index %>"
+                          value="<%= dept.name || '' %>"
+                          placeholder="<%= lang === 'de' ? 'z.B. Support' : 'e.g. Support' %>"
+                          required
+                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
+                      </div>
+
+                      <div>
+                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
+                          <%= lang === 'de' ? 'Emoji' : 'Emoji' %>
+                        </label>
+                        <input type="text" name="dept_emoji_<%= index %>"
+                          value="<%= dept.emoji || '' %>"
+                          placeholder="📁"
+                          maxlength="10"
+                          style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
+                      </div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                      <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
+                        <%= lang === 'de' ? 'Beschreibung' : 'Description' %>
+                      </label>
+                      <textarea name="dept_description_<%= index %>"
+                        placeholder="<%= lang === 'de' ? 'Kurze Beschreibung der Abteilung...' : 'Short description of the department...' %>"
+                        rows="2"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color); resize: vertical;"><%= dept.description || '' %></textarea>
+                    </div>
+
+                    <div>
+                      <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">
+                        <%= lang === 'de' ? 'Team-Rolle (Optional)' : 'Team Role (Optional)' %>
+                      </label>
+                      <input type="text" name="dept_teamRole_<%= index %>"
+                        value="<%= dept.teamRoleId || '' %>"
+                        placeholder="<%= lang === 'de' ? 'Rollen-ID (Nur Mitglieder dieser Rolle sehen Tickets dieser Abteilung)' : 'Role ID (Only members with this role can see tickets from this department)' %>"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 6px; background: var(--bg-color); color: var(--text-color);">
+                      <small style="color: var(--muted-color); display: block; margin-top: 0.5rem;">
+                        <%= lang === 'de'
+                          ? 'Rechtsklick auf Rolle → Rolle-ID kopieren (Developer Mode muss aktiviert sein)'
+                          : 'Right-click role → Copy Role ID (Developer Mode must be enabled)'
+                        %>
+                      </small>
+                    </div>
+                  </div>
+                  <% }); %>
+                  <% } %>
+                </div>
+
+                <button type="button" class="btn btn-success" onclick="addDepartment()" style="width: 100%;">
+                  <i class="fas fa-plus"></i>
+                  <%= lang === 'de' ? 'Abteilung hinzufügen' : 'Add Department' %>
+                </button>
+              </div>
+            </div>
+
             <!-- Save Button & Backup -->
             <div class="save-footer" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
               <button type="submit" class="btn btn-primary">
