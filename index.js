@@ -7622,21 +7622,26 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   if (cfg.autoPriorityConfig && cfg.autoPriorityConfig.length > 0) {
     try {
       const member = await interaction.guild.members.fetch(interaction.user.id);
+      console.log(`Auto-Priority Check: User ${interaction.user.tag}, Config:`, JSON.stringify(cfg.autoPriorityConfig));
+      console.log(`User roles:`, member.roles.cache.map(r => `${r.name}(${r.id})`).join(', '));
+
       // Find highest priority role the user has
       let highestPriority = -1;
       for (const config of cfg.autoPriorityConfig) {
+        const level = parseInt(config.level, 10) || 0;
+        console.log(`Checking role ${config.roleId} with level ${level}, user has role: ${member.roles.cache.has(config.roleId)}`);
         if (member.roles.cache.has(config.roleId)) {
-          const level = config.level !== undefined ? config.level : 2;
           if (level > highestPriority) {
             highestPriority = level;
             ticketPriority = level;
             const role = member.roles.cache.get(config.roleId);
             autoPriorityRoleName = role ? role.name : null;
+            console.log(`Found matching role: ${autoPriorityRoleName}, setting priority to ${ticketPriority}`);
           }
         }
       }
       if (highestPriority >= 0) {
-        console.log(`Auto-Priority: User ${interaction.user.tag} has role ${autoPriorityRoleName}, setting priority to ${ticketPriority}`);
+        console.log(`Auto-Priority FINAL: User ${interaction.user.tag} -> Priority ${ticketPriority} (Role: ${autoPriorityRoleName})`);
       }
     } catch (err) {
       console.error('Error checking auto-priority roles:', err);

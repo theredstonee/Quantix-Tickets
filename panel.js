@@ -2510,8 +2510,17 @@ module.exports = (client)=>{
       if (req.body.autoPriorityConfig) {
         try {
           const config = JSON.parse(req.body.autoPriorityConfig);
-          cfg.autoPriorityConfig = Array.isArray(config) ? config.filter(item => item.roleId && item.roleId.trim()) : [];
+          cfg.autoPriorityConfig = Array.isArray(config)
+            ? config
+                .filter(item => item.roleId && item.roleId.trim())
+                .map(item => ({
+                  roleId: item.roleId.trim(),
+                  level: parseInt(item.level, 10) || 0
+                }))
+            : [];
+          console.log('Saved autoPriorityConfig:', JSON.stringify(cfg.autoPriorityConfig));
         } catch (e) {
+          console.error('Error parsing autoPriorityConfig:', e);
           cfg.autoPriorityConfig = [];
         }
       } else {
