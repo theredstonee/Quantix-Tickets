@@ -2854,9 +2854,9 @@ module.exports = (client)=>{
         };
       }
 
-      cfg.ticketRating.enabled = req.body.ticketRatingEnabled !== 'off';
+      cfg.ticketRating.enabled = req.body.ticketRatingEnabled === 'on';
       cfg.ticketRating.requireFeedback = req.body.ticketRatingRequireFeedback === 'on';
-      cfg.ticketRating.showInAnalytics = req.body.ticketRatingShowInAnalytics !== 'off';
+      cfg.ticketRating.showInAnalytics = req.body.ticketRatingShowInAnalytics === 'on';
 
       // Survey System Configuration (Basic+ Feature)
       if (!cfg.surveySystem) {

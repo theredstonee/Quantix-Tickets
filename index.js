@@ -6397,8 +6397,8 @@ client.on(Events.InteractionCreate, async i => {
               const { sendSurveyDM } = require('./survey-system');
               await sendSurveyDM(user, ticket, guildId, cfg);
               console.log(`✅ Survey DM sent to ${user.tag} for ticket #${ticket.id}`);
-            } else if (!cfg.ticketRating || cfg.ticketRating.enabled !== false) {
-              // Use old Rating System (backwards compatibility)
+            } else if (cfg.ticketRating && cfg.ticketRating.enabled === true) {
+              // Use old Rating System (only if explicitly enabled)
               const ratingEmbed = new EmbedBuilder()
                 .setColor(0x3b82f6)
                 .setTitle('⭐ Wie war deine Support-Erfahrung?')
@@ -6896,8 +6896,8 @@ client.on(Events.InteractionCreate, async i => {
                 const { sendSurveyDM } = require('./survey-system');
                 await sendSurveyDM(user, ticket, guildId, cfg);
                 console.log(`✅ Survey DM sent to ${user.tag} for ticket #${ticket.id}`);
-              } else if (!cfg.ticketRating || cfg.ticketRating.enabled !== false) {
-                // Use old Rating System (backwards compatibility)
+              } else if (cfg.ticketRating && cfg.ticketRating.enabled === true) {
+                // Use old Rating System (only if explicitly enabled)
                 const ratingEmbed = new EmbedBuilder()
                   .setColor(0x3b82f6)
                   .setTitle('⭐ Wie war deine Support-Erfahrung?')
