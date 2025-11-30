@@ -6322,9 +6322,13 @@ client.on(Events.InteractionCreate, async i => {
         let files = null;
         try {
           files = await createTranscript(i.channel, ticket, { resolveMentions: true });
-        } catch {}
+          console.log(`✅ Transcript erstellt für Ticket #${ticket.id}:`, files ? 'OK' : 'LEER');
+        } catch (err) {
+          console.error(`❌ Fehler beim Erstellen des Transcripts für Ticket #${ticket.id}:`, err.message);
+        }
 
         // Transcripts senden
+        console.log(`📁 Transcript-Config: channelIds=${JSON.stringify(cfg.transcriptChannelId)}, sendToCreator=${cfg.sendTranscriptToCreator}`);
         const transcriptChannelIds = Array.isArray(cfg.transcriptChannelId) && cfg.transcriptChannelId.length > 0
           ? cfg.transcriptChannelId
           : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : (Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : [])));
@@ -6883,11 +6887,70 @@ client.on(Events.InteractionCreate, async i => {
           await i.channel.send({ embeds: [closeEmbed] });
 
           // Generate transcript
-          await createTranscript(i.channel, ticket, { guildId });
+          let files = null;
+          try {
+            files = await createTranscript(i.channel, ticket, { guildId });
+            console.log(`✅ Transcript erstellt für Ticket #${ticket.id}:`, files ? 'OK' : 'LEER');
+          } catch (err) {
+            console.error(`❌ Fehler beim Erstellen des Transcripts für Ticket #${ticket.id}:`, err.message);
+          }
+
+          const cfg = readCfg(guildId);
+
+          // Send transcript to channel
+          const transcriptChannelIds = Array.isArray(cfg.transcriptChannelId) && cfg.transcriptChannelId.length > 0
+            ? cfg.transcriptChannelId
+            : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : []);
+
+          if (transcriptChannelIds.length > 0 && files) {
+            for (const channelId of transcriptChannelIds) {
+              try {
+                const tc = await i.guild.channels.fetch(channelId);
+                if (tc) {
+                  await tc.send({
+                    content: `📁 Transcript Ticket #${ticket.id}`,
+                    files: [files.txt, files.html]
+                  });
+                  console.log(`✅ Transcript an Channel ${channelId} gesendet`);
+                }
+              } catch (err) {
+                console.error(`❌ Transcript-Channel ${channelId} nicht gefunden:`, err.message);
+              }
+            }
+          }
+
+          // Send transcript to ticket creator via DM
+          if (cfg.sendTranscriptToCreator && files) {
+            try {
+              const creator = await client.users.fetch(ticket.userId).catch(() => null);
+              if (creator) {
+                const transcriptEmbed = new EmbedBuilder()
+                  .setColor(0x3b82f6)
+                  .setTitle('📄 Dein Ticket-Transcript')
+                  .setDescription(
+                    `Dein Ticket **#${ticket.id}** wurde geschlossen.\n` +
+                    `Hier ist das Transcript für deine Unterlagen.`
+                  )
+                  .addFields(
+                    { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+                    { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true }
+                  )
+                  .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+                  .setTimestamp();
+
+                await creator.send({
+                  embeds: [transcriptEmbed],
+                  files: [files.txt, files.html]
+                });
+                console.log(`✅ Transcript-DM gesendet an User ${creator.tag} für Ticket #${ticket.id}`);
+              }
+            } catch (dmErr) {
+              console.log('Konnte Transcript-DM nicht senden:', dmErr.message);
+            }
+          }
 
           // Send rating/survey request DM (immer nach jedem Ticket)
           try {
-            const cfg = readCfg(guildId);
             const user = await client.users.fetch(ticket.userId).catch(() => null);
             if (user) {
               // Check if new Survey System is enabled (replaces old rating system)
