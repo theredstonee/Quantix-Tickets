@@ -2976,8 +2976,8 @@
                         <option value="2" <%= item.level === 2 ? 'selected' : '' %>>🔴</option>
                       </select>
                     </div>
-                    <button type="button" class="btn btn-danger btn-sm remove-auto-priority" style="padding: 0.5rem 1rem;">
-                      <i class="fas fa-trash"></i>
+                    <button type="button" class="btn btn-danger btn-sm remove-auto-priority" style="width: 32px; height: 32px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                      <i class="fas fa-trash" style="font-size: 12px;"></i>
                     </button>
                   </div>
                   <% }) } %>
@@ -3046,8 +3046,8 @@
                           '<option value="2"' + (level === 2 ? ' selected' : '') + '>🔴</option>' +
                         '</select>' +
                       '</div>' +
-                      '<button type="button" class="btn btn-danger btn-sm remove-auto-priority" style="padding: 0.5rem 1rem;">' +
-                        '<i class="fas fa-trash"></i>' +
+                      '<button type="button" class="btn btn-danger btn-sm remove-auto-priority" style="width: 32px; height: 32px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;">' +
+                        '<i class="fas fa-trash" style="font-size: 12px;"></i>' +
                       '</button>';
 
                     row.querySelector('.remove-auto-priority').addEventListener('click', function() {
