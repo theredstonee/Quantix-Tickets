@@ -2951,48 +2951,133 @@
                 </div>
               </div>
               <div class="card-body">
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                  <label><%= lang === 'de' ? 'Rollen für automatische Priorität' : 'Roles for automatic priority' %></label>
-                  <select name="autoPriorityRoles" multiple size="5">
-                    <%
-                    const autoPrioRoles = cfg.autoPriorityRoles || [];
-                    roles.forEach(role => { %>
-                      <option value="<%= role.id %>" <%= autoPrioRoles.includes(role.id) ? 'selected' : '' %>>
-                        @ <%= role.name %>
-                      </option>
-                    <% }) %>
-                  </select>
-                  <small class="form-text text-muted">
-                    <%= lang === 'de' ? 'Halte Strg/Cmd gedrückt um mehrere Rollen auszuwählen' : 'Hold Ctrl/Cmd to select multiple roles' %>
-                  </small>
+                <div id="autoPriorityRolesContainer">
+                  <%
+                  const autoPrioConfig = cfg.autoPriorityConfig || [];
+                  if (autoPrioConfig.length > 0) {
+                    autoPrioConfig.forEach((item, index) => {
+                      const selectedRole = roles.find(r => r.id === item.roleId);
+                  %>
+                  <div class="auto-priority-row" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="flex: 2;">
+                      <select name="autoPriorityRole_<%= index %>" class="form-control auto-priority-role-select">
+                        <option value=""><%= lang === 'de' ? '-- Rolle wählen --' : '-- Select role --' %></option>
+                        <% roles.forEach(role => { %>
+                          <option value="<%= role.id %>" <%= item.roleId === role.id ? 'selected' : '' %>>
+                            @ <%= role.name %>
+                          </option>
+                        <% }) %>
+                      </select>
+                    </div>
+                    <div style="flex: 1;">
+                      <select name="autoPriorityLevel_<%= index %>" class="form-control auto-priority-level-select">
+                        <option value="0" <%= item.level === 0 ? 'selected' : '' %>>🟢</option>
+                        <option value="1" <%= item.level === 1 ? 'selected' : '' %>>🟠</option>
+                        <option value="2" <%= item.level === 2 ? 'selected' : '' %>>🔴</option>
+                      </select>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm remove-auto-priority" style="padding: 0.5rem 1rem;">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                  <% }) } %>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                  <label><%= lang === 'de' ? 'Ziel-Priorität für diese Rollen' : 'Target priority for these roles' %></label>
-                  <select name="autoPriorityLevel" class="form-control">
-                    <% const autoPrioLevel = cfg.autoPriorityLevel !== undefined ? cfg.autoPriorityLevel : 2; %>
-                    <option value="0" <%= autoPrioLevel === 0 ? 'selected' : '' %>>
-                      <%= lang === 'de' ? '🟢 Niedrig (Grün)' : '🟢 Low (Green)' %>
-                    </option>
-                    <option value="1" <%= autoPrioLevel === 1 ? 'selected' : '' %>>
-                      <%= lang === 'de' ? '🟠 Mittel (Orange)' : '🟠 Medium (Orange)' %>
-                    </option>
-                    <option value="2" <%= autoPrioLevel === 2 ? 'selected' : '' %>>
-                      <%= lang === 'de' ? '🔴 Hoch (Rot)' : '🔴 High (Red)' %>
-                    </option>
-                  </select>
-                </div>
+                <button type="button" id="addAutoPriorityRole" class="btn btn-secondary" style="margin-bottom: 1.5rem;">
+                  <i class="fas fa-plus"></i> <%= lang === 'de' ? 'Rolle hinzufügen' : 'Add role' %>
+                </button>
 
                 <div class="alert alert-info" style="margin-top: 1rem;">
                   <i class="fas fa-info-circle"></i>
                   <div>
                     <strong><%= lang === 'de' ? 'Wie funktioniert es?' : 'How does it work?' %></strong><br>
                     <%= lang === 'de'
-                      ? 'Wenn ein Nutzer mit einer der ausgewählten Rollen ein Ticket erstellt, wird die Priorität automatisch auf die gewählte Stufe gesetzt. Im Ticket-Embed wird angezeigt, warum die Priorität automatisch gesetzt wurde.'
-                      : 'When a user with one of the selected roles creates a ticket, the priority is automatically set to the chosen level. The ticket embed shows why the priority was automatically set.'
+                      ? 'Wähle eine Rolle und die gewünschte Priorität (🟢 Niedrig, 🟠 Mittel, 🔴 Hoch). Wenn ein Nutzer mit dieser Rolle ein Ticket erstellt, wird die Priorität automatisch gesetzt.'
+                      : 'Select a role and the desired priority (🟢 Low, 🟠 Medium, 🔴 High). When a user with this role creates a ticket, the priority is automatically set.'
                     %>
                   </div>
                 </div>
+
+                <!-- Hidden field to store JSON data -->
+                <input type="hidden" name="autoPriorityConfig" id="autoPriorityConfigData" value="<%= JSON.stringify(autoPrioConfig).replace(/"/g, '&quot;') %>">
+
+                <script>
+                (function() {
+                  const container = document.getElementById('autoPriorityRolesContainer');
+                  const addBtn = document.getElementById('addAutoPriorityRole');
+                  const hiddenInput = document.getElementById('autoPriorityConfigData');
+                  const roles = <%- JSON.stringify(roles.map(r => ({ id: r.id, name: r.name }))) %>;
+                  let rowIndex = <%= autoPrioConfig.length %>;
+
+                  function updateHiddenInput() {
+                    const rows = container.querySelectorAll('.auto-priority-row');
+                    const config = [];
+                    rows.forEach(row => {
+                      const roleSelect = row.querySelector('.auto-priority-role-select');
+                      const levelSelect = row.querySelector('.auto-priority-level-select');
+                      if (roleSelect.value) {
+                        config.push({
+                          roleId: roleSelect.value,
+                          level: parseInt(levelSelect.value, 10)
+                        });
+                      }
+                    });
+                    hiddenInput.value = JSON.stringify(config);
+                  }
+
+                  function createRow(index, roleId = '', level = 2) {
+                    const row = document.createElement('div');
+                    row.className = 'auto-priority-row';
+                    row.style.cssText = 'display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;';
+
+                    let roleOptions = '<option value="">-- <%= lang === 'de' ? 'Rolle wählen' : 'Select role' %> --</option>';
+                    roles.forEach(r => {
+                      roleOptions += '<option value="' + r.id + '"' + (r.id === roleId ? ' selected' : '') + '>@ ' + r.name + '</option>';
+                    });
+
+                    row.innerHTML =
+                      '<div style="flex: 2;">' +
+                        '<select name="autoPriorityRole_' + index + '" class="form-control auto-priority-role-select">' + roleOptions + '</select>' +
+                      '</div>' +
+                      '<div style="flex: 1;">' +
+                        '<select name="autoPriorityLevel_' + index + '" class="form-control auto-priority-level-select">' +
+                          '<option value="0"' + (level === 0 ? ' selected' : '') + '>🟢</option>' +
+                          '<option value="1"' + (level === 1 ? ' selected' : '') + '>🟠</option>' +
+                          '<option value="2"' + (level === 2 ? ' selected' : '') + '>🔴</option>' +
+                        '</select>' +
+                      '</div>' +
+                      '<button type="button" class="btn btn-danger btn-sm remove-auto-priority" style="padding: 0.5rem 1rem;">' +
+                        '<i class="fas fa-trash"></i>' +
+                      '</button>';
+
+                    row.querySelector('.remove-auto-priority').addEventListener('click', function() {
+                      row.remove();
+                      updateHiddenInput();
+                    });
+
+                    row.querySelector('.auto-priority-role-select').addEventListener('change', updateHiddenInput);
+                    row.querySelector('.auto-priority-level-select').addEventListener('change', updateHiddenInput);
+
+                    return row;
+                  }
+
+                  addBtn.addEventListener('click', function() {
+                    container.appendChild(createRow(rowIndex++));
+                    updateHiddenInput();
+                  });
+
+                  container.querySelectorAll('.remove-auto-priority').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                      btn.closest('.auto-priority-row').remove();
+                      updateHiddenInput();
+                    });
+                  });
+
+                  container.querySelectorAll('.auto-priority-role-select, .auto-priority-level-select').forEach(select => {
+                    select.addEventListener('change', updateHiddenInput);
+                  });
+                })();
+                </script>
               </div>
             </div>
 

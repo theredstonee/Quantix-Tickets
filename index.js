@@ -7615,21 +7615,28 @@ async function createTicketChannel(interaction, topic, formData, cfg){
 
   const nr = nextTicket(guildId);
 
-  // Auto-Priority System: Check if user has auto-priority role
+  // Auto-Priority System: Check if user has auto-priority role (per-role config)
   let ticketPriority = 0;
   let autoPriorityRoleName = null;
 
-  if (cfg.autoPriorityRoles && cfg.autoPriorityRoles.length > 0) {
+  if (cfg.autoPriorityConfig && cfg.autoPriorityConfig.length > 0) {
     try {
       const member = await interaction.guild.members.fetch(interaction.user.id);
-      for (const roleId of cfg.autoPriorityRoles) {
-        if (member.roles.cache.has(roleId)) {
-          ticketPriority = cfg.autoPriorityLevel !== undefined ? cfg.autoPriorityLevel : 2;
-          const role = member.roles.cache.get(roleId);
-          autoPriorityRoleName = role ? role.name : null;
-          console.log(`Auto-Priority: User ${interaction.user.tag} has role ${autoPriorityRoleName}, setting priority to ${ticketPriority}`);
-          break;
+      // Find highest priority role the user has
+      let highestPriority = -1;
+      for (const config of cfg.autoPriorityConfig) {
+        if (member.roles.cache.has(config.roleId)) {
+          const level = config.level !== undefined ? config.level : 2;
+          if (level > highestPriority) {
+            highestPriority = level;
+            ticketPriority = level;
+            const role = member.roles.cache.get(config.roleId);
+            autoPriorityRoleName = role ? role.name : null;
+          }
         }
+      }
+      if (highestPriority >= 0) {
+        console.log(`Auto-Priority: User ${interaction.user.tag} has role ${autoPriorityRoleName}, setting priority to ${ticketPriority}`);
       }
     } catch (err) {
       console.error('Error checking auto-priority roles:', err);
