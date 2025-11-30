@@ -2512,19 +2512,16 @@ module.exports = (client)=>{
           const config = JSON.parse(req.body.autoPriorityConfig);
           cfg.autoPriorityConfig = Array.isArray(config)
             ? config
-                .filter(item => item.roleId && item.roleId.trim())
+                .filter(item => item && item.roleId && typeof item.roleId === 'string' && item.roleId.trim())
                 .map(item => ({
-                  roleId: item.roleId.trim(),
+                  roleId: String(item.roleId).trim(),
                   level: parseInt(item.level, 10) || 0
                 }))
             : [];
-          console.log('Saved autoPriorityConfig:', JSON.stringify(cfg.autoPriorityConfig));
         } catch (e) {
           console.error('Error parsing autoPriorityConfig:', e);
-          cfg.autoPriorityConfig = [];
+          cfg.autoPriorityConfig = cfg.autoPriorityConfig || [];
         }
-      } else {
-        cfg.autoPriorityConfig = [];
       }
 
       if(req.body.githubWebhookChannelId){
