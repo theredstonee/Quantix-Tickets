@@ -7615,6 +7615,27 @@ async function createTicketChannel(interaction, topic, formData, cfg){
 
   const nr = nextTicket(guildId);
 
+  // Auto-Priority System: Check if user has auto-priority role
+  let ticketPriority = 0;
+  let autoPriorityRoleName = null;
+
+  if (cfg.autoPriorityRoles && cfg.autoPriorityRoles.length > 0) {
+    try {
+      const member = await interaction.guild.members.fetch(interaction.user.id);
+      for (const roleId of cfg.autoPriorityRoles) {
+        if (member.roles.cache.has(roleId)) {
+          ticketPriority = cfg.autoPriorityLevel !== undefined ? cfg.autoPriorityLevel : 2;
+          const role = member.roles.cache.get(roleId);
+          autoPriorityRoleName = role ? role.name : null;
+          console.log(`Auto-Priority: User ${interaction.user.tag} has role ${autoPriorityRoleName}, setting priority to ${ticketPriority}`);
+          break;
+        }
+      }
+    } catch (err) {
+      console.error('Error checking auto-priority roles:', err);
+    }
+  }
+
   let parentId = null;
 
   // VIP users get their own category if configured
@@ -7659,7 +7680,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     }
   }
 
-  const priorityRoles = getPriorityRoles(guildId, 0);
+  const priorityRoles = getPriorityRoles(guildId, ticketPriority);
   for(const roleId of priorityRoles){
     if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
       try {
@@ -7672,7 +7693,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   }
 
   const ch = await interaction.guild.channels.create({
-    name: buildChannelName(nr, 0, isVIP),
+    name: buildChannelName(nr, ticketPriority, isVIP),
     type: ChannelType.GuildText,
     parent: parentId,
     permissionOverwrites: permOverwrites
@@ -7690,13 +7711,24 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   }
 
   // SLA Field hinzufügen (nur für Pro mit SLA enabled)
-  const tempSlaDeadline = calculateSLADeadline(guildId, 0, Date.now());
+  const tempSlaDeadline = calculateSLADeadline(guildId, ticketPriority, Date.now());
   if(tempSlaDeadline && hasFeature(guildId, 'slaSystem')){
     const slaDate = new Date(tempSlaDeadline);
     const slaText = `<t:${Math.floor(tempSlaDeadline / 1000)}:R>`;
     embed.addFields({
       name: '⏱️ SLA-Deadline',
       value: slaText,
+      inline: true
+    });
+  }
+
+  // Auto-Priority Field hinzufügen (wenn gesetzt)
+  if(autoPriorityRoleName && ticketPriority > 0){
+    const priorityEmojis = ['🟢', '🟠', '🔴'];
+    const priorityNames = ['Niedrig', 'Mittel', 'Hoch'];
+    embed.addFields({
+      name: '⚡ Auto-Priorität',
+      value: `${priorityEmojis[ticketPriority]} ${priorityNames[ticketPriority]} (Rolle: ${autoPriorityRoleName})`,
       inline: true
     });
   }
@@ -7711,8 +7743,8 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   }
 
   const mentions = [];
-  const greenRoles = getPriorityRoles(guildId, 0);
-  for(const roleId of greenRoles){
+  const ticketRoles = getPriorityRoles(guildId, ticketPriority);
+  for(const roleId of ticketRoles){
     if(roleId && roleId.trim() && roleId !== TEAM_ROLE){
       mentions.push(`<@&${roleId}>`);
     }
@@ -7733,7 +7765,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   const log = safeRead(ticketsPath, []);
 
   const createdAt = Date.now();
-  const slaDeadline = calculateSLADeadline(guildId, 0, createdAt);
+  const slaDeadline = calculateSLADeadline(guildId, ticketPriority, createdAt);
 
   log.push({
     id:nr,
@@ -7742,12 +7774,13 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     userId:interaction.user.id,
     topic:topic.value,
     status:'offen',
-    priority:0,
+    priority: ticketPriority,
     timestamp:createdAt,
     formData,
     addedUsers:[],
     notes: [],
     isVIP: isVIP || false,
+    autoPriorityRole: autoPriorityRoleName,
     slaDeadline: slaDeadline,
     slaWarned: false,
     statusHistory: [{

@@ -2506,6 +2506,15 @@ module.exports = (client)=>{
         ? req.body.priorityRoles_2.filter(r => r && r.trim())
         : (req.body.priorityRoles_2 ? [req.body.priorityRoles_2.trim()] : []);
 
+      // Auto-Priority System
+      cfg.autoPriorityRoles = Array.isArray(req.body.autoPriorityRoles)
+        ? req.body.autoPriorityRoles.filter(r => r && r.trim())
+        : (req.body.autoPriorityRoles ? [req.body.autoPriorityRoles.trim()] : []);
+
+      cfg.autoPriorityLevel = req.body.autoPriorityLevel
+        ? parseInt(req.body.autoPriorityLevel, 10)
+        : 2;
+
       if(req.body.githubWebhookChannelId){
         cfg.githubWebhookChannelId = req.body.githubWebhookChannelId.trim();
       } else {
