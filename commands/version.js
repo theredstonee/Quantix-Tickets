@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { t } = require('../translations');
+const { t, getGuildLanguage } = require('../translations');
 const { VERSION, RELEASE_DATE, REPOSITORY, COPYRIGHT } = require('../version.config');
+const changelog = require('../changelog.json');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -17,6 +18,12 @@ module.exports = {
 
     const guildId = interaction.guild?.id;
     const client = interaction.client;
+    const lang = getGuildLanguage(guildId) || 'de';
+
+    // Lade aktuellen Changelog
+    const currentChangelog = changelog.versions[0];
+    const changes = currentChangelog?.changes[lang] || currentChangelog?.changes['en'] || currentChangelog?.changes['de'] || [];
+    const changelogText = changes.slice(0, 5).map(c => `\`•\` ${c}`).join('\n') || 'Keine Änderungen';
 
     const embed = new EmbedBuilder()
       .setTitle('🤖 Quantix Tickets Bot')
@@ -29,13 +36,8 @@ module.exports = {
         { name: '📅 Release', value: `${RELEASE_DATE}`, inline: true },
         { name: '🌐 Sprachen', value: '9 verfügbar', inline: true },
         {
-          name: '✨ Neu in Version 1.5.1',
-          value:
-            '`•` **Ticket Split:** Tickets in verbundene Sub-Tickets aufteilen\n' +
-            '`•` **Ticket Open-As:** Tickets für andere User erstellen (Team-only)\n' +
-            '`•` **Panel Wiedereröffnen:** Geschlossene Tickets aus Panel erneut öffnen\n' +
-            '`•` **Transcript DMs:** Automatischer Transcript-Versand an Ticket-Ersteller\n' +
-            '`•` **Config Backup:** Backup/Restore System im Web Panel',
+          name: `✨ Neu in Version ${VERSION}`,
+          value: changelogText,
           inline: false
         },
         {
