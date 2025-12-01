@@ -1,6 +1,75 @@
 {
-  "currentVersion": "1.5.1",
+  "currentVersion": "1.5.2",
   "versions": [
+    {
+      "version": "1.5.2",
+      "date": "2025-12-01",
+      "changes": {
+        "de": [
+          "🔗 Ticket-Merge - Mehrere Tickets zu einem zusammenführen",
+          "📦 Quell-Ticket wird automatisch archiviert und gesperrt",
+          "👥 Übernimmt alle Benutzer, Notizen und Nachrichten-Log",
+          "🔘 Neuer Merge-Button in geclaimten Tickets (Team-only)",
+          "📋 Bidirektionale Verlinkung zwischen gemergten Tickets"
+        ],
+        "en": [
+          "🔗 Ticket Merge - Merge multiple tickets into one",
+          "📦 Source ticket is automatically archived and locked",
+          "👥 Transfers all users, notes, and message log",
+          "🔘 New Merge button in claimed tickets (Team-only)",
+          "📋 Bidirectional linking between merged tickets"
+        ],
+        "es": [
+          "🔗 Fusión de Tickets - Fusionar múltiples tickets en uno",
+          "📦 El ticket de origen se archiva y bloquea automáticamente",
+          "👥 Transfiere todos los usuarios, notas y registro de mensajes",
+          "🔘 Nuevo botón Fusionar en tickets asignados (solo equipo)",
+          "📋 Enlace bidireccional entre tickets fusionados"
+        ],
+        "pt": [
+          "🔗 Mesclagem de Tickets - Mesclar múltiplos tickets em um",
+          "📦 Ticket de origem é automaticamente arquivado e bloqueado",
+          "👥 Transfere todos os usuários, notas e log de mensagens",
+          "🔘 Novo botão Mesclar em tickets reivindicados (apenas equipe)",
+          "📋 Linkagem bidirecional entre tickets mesclados"
+        ],
+        "ru": [
+          "🔗 Объединение тикетов - Объединить несколько тикетов в один",
+          "📦 Исходный тикет автоматически архивируется и блокируется",
+          "👥 Переносит всех пользователей, заметки и историю сообщений",
+          "🔘 Новая кнопка Объединить в заявленных тикетах (только для команды)",
+          "📋 Двусторонняя связь между объединёнными тикетами"
+        ],
+        "ja": [
+          "🔗 チケット統合 - 複数のチケットを1つに統合",
+          "📦 ソースチケットは自動的にアーカイブされロックされます",
+          "👥 すべてのユーザー、メモ、メッセージログを転送",
+          "🔘 クレーム済みチケットに新しい統合ボタン（チームのみ）",
+          "📋 統合されたチケット間の双方向リンク"
+        ],
+        "he": [
+          "🔗 מיזוג כרטיסים - מיזוג מספר כרטיסים לאחד",
+          "📦 כרטיס המקור מועבר לארכיון ונעול אוטומטית",
+          "👥 מעביר את כל המשתמשים, ההערות ויומן ההודעות",
+          "🔘 כפתור מיזוג חדש בכרטיסים שנתפסו (צוות בלבד)",
+          "📋 קישור דו-כיווני בין כרטיסים ממוזגים"
+        ],
+        "ar": [
+          "🔗 دمج التذاكر - دمج تذاكر متعددة في تذكرة واحدة",
+          "📦 يتم أرشفة وقفل التذكرة المصدر تلقائياً",
+          "👥 ينقل جميع المستخدمين والملاحظات وسجل الرسائل",
+          "🔘 زر دمج جديد في التذاكر المطالب بها (الفريق فقط)",
+          "📋 ربط ثنائي الاتجاه بين التذاكر المدمجة"
+        ],
+        "id": [
+          "🔗 Penggabungan Tiket - Gabungkan beberapa tiket menjadi satu",
+          "📦 Tiket sumber otomatis diarsipkan dan dikunci",
+          "👥 Mentransfer semua pengguna, catatan, dan log pesan",
+          "🔘 Tombol Gabung baru di tiket yang diklaim (Tim saja)",
+          "📋 Tautan dua arah antara tiket yang digabungkan"
+        ]
+      }
+    },
     {
       "version": "1.5.1",
       "date": "2025-01-21",

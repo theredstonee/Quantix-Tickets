@@ -44,7 +44,19 @@
     "priority_up": "優先度 ↑",
     "priority_down": "優先度 ↓",
     "add_user": "ユーザー追加",
-    "request_close": "クローズをリクエスト"
+    "request_close": "クローズをリクエスト",
+    "merge": "統合"
+  },
+  "merge": {
+    "title": "🔗 チケットを統合",
+    "description": "このチケットに統合するチケットを選択してください。\n\n**注意:** 選択されたチケットはアーカイブされ、すべてのユーザー、メモ、メッセージログが転送されます。",
+    "select_ticket": "統合するチケットを選択...",
+    "no_tickets": "❌ 統合可能な他のオープンチケットが見つかりません。",
+    "complete_title": "🔗 チケットが統合されました",
+    "complete_description": "チケット **#{sourceId}** （<@{userId}>）がこのチケットに統合されました。",
+    "archived_title": "📦 チケットがアーカイブされました",
+    "archived_description": "このチケットは **チケット #{targetId}** に統合されました。\n\nチャンネルはロックされています。",
+    "success": "✅ チケットが正常に統合されました！"
   },
   "messages": {
     "ticket_closed": "✅ チケットがクローズされました。",
@@ -152,6 +164,7 @@
     "user_added": "➕ ユーザー{user}がチケット #{id} に追加されました",
     "close_requested": "❓ チケット #{id} のクローズを{user}がリクエスト",
     "priority_changed": "⚙️ チケット #{id} 優先度 {direction}: {priority}",
+    "ticket_merged": "🔗 チケット #{sourceId} が #{targetId} に統合されました （{user}）",
     "config_updated": "⚙️ **設定が更新されました** パネルから",
     "panel_sent": "📤 **パネルメッセージを送信** {channel}へ",
     "panel_edited": "✏️ **パネルメッセージを更新** {channel}で",

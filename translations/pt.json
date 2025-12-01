@@ -44,7 +44,19 @@
     "priority_up": "Prioridade ↑",
     "priority_down": "Prioridade ↓",
     "add_user": "Adicionar usuário",
-    "request_close": "Solicitar fechamento"
+    "request_close": "Solicitar fechamento",
+    "merge": "Mesclar"
+  },
+  "merge": {
+    "title": "🔗 Mesclar Tickets",
+    "description": "Selecione o ticket que será mesclado neste.\n\n**Nota:** O ticket selecionado será arquivado e todos os usuários, notas e um registro de mensagens serão transferidos.",
+    "select_ticket": "Selecione um ticket para mesclar...",
+    "no_tickets": "❌ Nenhum outro ticket aberto encontrado para mesclar.",
+    "complete_title": "🔗 Ticket Mesclado",
+    "complete_description": "O ticket **#{sourceId}** de <@{userId}> foi mesclado neste ticket.",
+    "archived_title": "📦 Ticket Arquivado",
+    "archived_description": "Este ticket foi mesclado no **Ticket #{targetId}**.\n\nO canal agora está bloqueado.",
+    "success": "✅ Ticket mesclado com sucesso!"
   },
   "messages": {
     "ticket_closed": "✅ Ticket foi fechado.",
@@ -152,6 +164,7 @@
     "user_added": "➕ Usuário {user} adicionado ao ticket #{id}",
     "close_requested": "❓ Fechamento do ticket #{id} solicitado por {user}",
     "priority_changed": "⚙️ Ticket #{id} prioridade {direction}: {priority}",
+    "ticket_merged": "🔗 Ticket #{sourceId} mesclado em #{targetId} por {user}",
     "config_updated": "⚙️ **Configuração atualizada** através do painel",
     "panel_sent": "📤 **Mensagem do painel enviada** em {channel}",
     "panel_edited": "✏️ **Mensagem do painel atualizada** em {channel}",

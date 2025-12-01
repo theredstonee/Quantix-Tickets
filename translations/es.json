@@ -44,7 +44,19 @@
     "priority_up": "Prioridad ↑",
     "priority_down": "Prioridad ↓",
     "add_user": "Añadir usuario",
-    "request_close": "Solicitar cierre"
+    "request_close": "Solicitar cierre",
+    "merge": "Fusionar"
+  },
+  "merge": {
+    "title": "🔗 Fusionar Tickets",
+    "description": "Selecciona el ticket que se fusionará con este.\n\n**Nota:** El ticket seleccionado será archivado y todos los usuarios, notas y un registro de mensajes serán transferidos.",
+    "select_ticket": "Selecciona un ticket para fusionar...",
+    "no_tickets": "❌ No se encontraron otros tickets abiertos para fusionar.",
+    "complete_title": "🔗 Ticket Fusionado",
+    "complete_description": "El ticket **#{sourceId}** de <@{userId}> ha sido fusionado con este ticket.",
+    "archived_title": "📦 Ticket Archivado",
+    "archived_description": "Este ticket ha sido fusionado con el **Ticket #{targetId}**.\n\nEl canal ahora está bloqueado.",
+    "success": "✅ ¡Ticket fusionado exitosamente!"
   },
   "messages": {
     "ticket_closed": "✅ Ticket cerrado.",
@@ -154,6 +166,7 @@
     "user_added": "➕ Usuario {user} añadido al ticket #{id}",
     "close_requested": "❓ Cierre del ticket #{id} solicitado por {user}",
     "priority_changed": "⚙️ Ticket #{id} prioridad {direction}: {priority}",
+    "ticket_merged": "🔗 Ticket #{sourceId} fusionado en #{targetId} por {user}",
     "config_updated": "⚙️ **Configuración actualizada** desde el panel",
     "panel_sent": "📤 **Mensaje del panel enviado** en {channel}",
     "panel_edited": "✏️ **Mensaje del panel actualizado** en {channel}",

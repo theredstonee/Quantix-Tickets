@@ -590,6 +590,17 @@ function buttonRows(claimed, guildId = null, ticket = null){
     }
   }
 
+  // Merge-Button (nur wenn claimed - Team-only)
+  if (claimed && ticket) {
+    row3Components.push(
+      new ButtonBuilder()
+        .setCustomId('merge_ticket')
+        .setEmoji('🔗')
+        .setLabel(t(guildId, 'buttons.merge') || 'Zusammenführen')
+        .setStyle(ButtonStyle.Secondary)
+    );
+  }
+
   const row3 = new ActionRowBuilder().addComponents(...row3Components);
   return [row1,row2,row3];
 }
@@ -2838,6 +2849,176 @@ client.on(Events.InteractionCreate, async i => {
     // Department System Menu Handler
     if(i.isStringSelectMenu() && i.customId === 'department_forward_select') {
       return await handleDepartmentForward(i);
+    }
+
+    // Ticket Merge Select Menu Handler
+    if(i.isStringSelectMenu() && i.customId.startsWith('merge_ticket_select:')){
+      const guildId = i.guild.id;
+      const targetTicketId = parseInt(i.customId.split(':')[1]);
+      const sourceTicketId = parseInt(i.values[0]);
+
+      await i.deferUpdate();
+
+      try {
+        const cfg = readCfg(guildId);
+        const tickets = loadTickets(guildId);
+
+        const targetTicket = tickets.find(t => t.id === targetTicketId);
+        const sourceTicket = tickets.find(t => t.id === sourceTicketId);
+
+        if (!targetTicket || !sourceTicket) {
+          return i.followUp({ content: '❌ Ticket nicht gefunden.', ephemeral: true });
+        }
+
+        if (sourceTicket.status === 'merged' || sourceTicket.status !== 'offen') {
+          return i.followUp({ content: '❌ Das Quell-Ticket kann nicht zusammengeführt werden.', ephemeral: true });
+        }
+
+        // 1. Übernehme Added Users
+        const newAddedUsers = [...new Set([
+          ...(targetTicket.addedUsers || []),
+          ...(sourceTicket.addedUsers || []),
+          sourceTicket.userId
+        ])].filter(uid => uid !== targetTicket.userId);
+
+        targetTicket.addedUsers = newAddedUsers;
+
+        // 2. Übernehme Notizen
+        if (sourceTicket.notes && sourceTicket.notes.length > 0) {
+          if (!targetTicket.notes) targetTicket.notes = [];
+          for (const note of sourceTicket.notes) {
+            targetTicket.notes.push({
+              ...note,
+              content: `[Aus Ticket #${sourceTicketId}] ${note.content}`
+            });
+          }
+        }
+
+        // 3. Übernehme FormData als Notiz
+        if (sourceTicket.formData && Object.keys(sourceTicket.formData).length > 0) {
+          if (!targetTicket.notes) targetTicket.notes = [];
+          const formSummary = Object.entries(sourceTicket.formData)
+            .map(([k, v]) => `**${k}:** ${v}`)
+            .join('\n');
+          targetTicket.notes.push({
+            userId: i.user.id,
+            content: `[Formular aus Ticket #${sourceTicketId}]\n${formSummary}`,
+            timestamp: Date.now()
+          });
+        }
+
+        // 4. Speichere Merge-Verlinkung
+        if (!targetTicket.mergedFrom) targetTicket.mergedFrom = [];
+        targetTicket.mergedFrom.push(sourceTicketId);
+
+        sourceTicket.mergedTo = targetTicketId;
+        sourceTicket.mergedAt = Date.now();
+        sourceTicket.mergedBy = i.user.id;
+        sourceTicket.status = 'merged';
+
+        // 5. Hole Nachrichten-Log aus Quell-Ticket
+        let messageLog = '';
+        try {
+          const sourceChannel = await i.guild.channels.fetch(sourceTicket.channelId).catch(() => null);
+          if (sourceChannel) {
+            const messages = await sourceChannel.messages.fetch({ limit: 50 });
+            const sortedMessages = [...messages.values()].reverse();
+            messageLog = sortedMessages
+              .filter(m => !m.author.bot)
+              .slice(0, 20)
+              .map(m => `**${m.author.username}** (${new Date(m.createdTimestamp).toLocaleString('de-DE')}): ${m.content.substring(0, 200)}${m.content.length > 200 ? '...' : ''}`)
+              .join('\n');
+          }
+        } catch (e) {
+          console.error('Fehler beim Laden der Nachrichten:', e);
+        }
+
+        saveTickets(guildId, tickets);
+
+        // 6. Sende Merge-Embed ins Ziel-Ticket
+        const mergeCompleteEmbed = new EmbedBuilder()
+          .setColor(0x5865F2)
+          .setTitle(t(guildId, 'merge.complete_title') || '🔗 Ticket zusammengeführt')
+          .setDescription(t(guildId, 'merge.complete_description', {
+            sourceId: sourceTicketId,
+            userId: sourceTicket.userId
+          }) || `Ticket **#${sourceTicketId}** von <@${sourceTicket.userId}> wurde in dieses Ticket zusammengeführt.`)
+          .addFields(
+            { name: '📋 Quell-Ticket', value: `#${sourceTicketId}`, inline: true },
+            { name: '👤 Ersteller', value: `<@${sourceTicket.userId}>`, inline: true },
+            { name: '🔗 Zusammengeführt von', value: `<@${i.user.id}>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Ticket Merge' })
+          .setTimestamp();
+
+        // Füge Nachrichten-Log hinzu wenn vorhanden
+        if (messageLog && messageLog.length > 0) {
+          const truncatedLog = messageLog.length > 1000 ? messageLog.substring(0, 1000) + '...' : messageLog;
+          mergeCompleteEmbed.addFields({ name: '💬 Letzte Nachrichten', value: truncatedLog, inline: false });
+        }
+
+        await i.channel.send({ embeds: [mergeCompleteEmbed] });
+
+        // 7. Füge Berechtigungen für neue User hinzu
+        for (const uid of newAddedUsers) {
+          try {
+            await i.channel.permissionOverwrites.create(uid, {
+              ViewChannel: true,
+              SendMessages: true,
+              ReadMessageHistory: true
+            });
+          } catch (e) {
+            console.error(`Fehler beim Setzen der Berechtigung für ${uid}:`, e);
+          }
+        }
+
+        // 8. Archiviere Quell-Ticket (sperren + Nachricht)
+        try {
+          const sourceChannel = await i.guild.channels.fetch(sourceTicket.channelId).catch(() => null);
+          if (sourceChannel) {
+            const archiveEmbed = new EmbedBuilder()
+              .setColor(0x808080)
+              .setTitle(t(guildId, 'merge.archived_title') || '📦 Ticket archiviert')
+              .setDescription(t(guildId, 'merge.archived_description', { targetId: targetTicketId }) || `Dieses Ticket wurde in **Ticket #${targetTicketId}** zusammengeführt.\n\nDer Channel ist jetzt gesperrt.`)
+              .addFields(
+                { name: '🎯 Ziel-Ticket', value: `<#${targetTicket.channelId}>`, inline: true },
+                { name: '🔗 Zusammengeführt von', value: `<@${i.user.id}>`, inline: true }
+              )
+              .setFooter({ text: 'Quantix Tickets • Archiviert' })
+              .setTimestamp();
+
+            await sourceChannel.send({ embeds: [archiveEmbed] });
+
+            // Sperre den Channel (niemand kann mehr schreiben)
+            await sourceChannel.permissionOverwrites.edit(i.guild.id, {
+              SendMessages: false
+            });
+
+            // Rename Channel um Status zu zeigen
+            const newName = sourceChannel.name.replace(/^(🟢|🟠|🔴)?/, '📦-merged-');
+            await sourceChannel.setName(newName.substring(0, 100)).catch(() => {});
+          }
+        } catch (e) {
+          console.error('Fehler beim Archivieren des Quell-Tickets:', e);
+        }
+
+        // Log Event
+        logEvent(i.guild, t(guildId, 'logs.ticket_merged', {
+          sourceId: sourceTicketId,
+          targetId: targetTicketId,
+          user: `<@${i.user.id}>`
+        }) || `🔗 Ticket #${sourceTicketId} wurde in #${targetTicketId} zusammengeführt von <@${i.user.id}>`);
+
+        await i.followUp({
+          content: t(guildId, 'merge.success') || `✅ Ticket #${sourceTicketId} wurde erfolgreich zusammengeführt!`,
+          ephemeral: true
+        });
+
+      } catch (err) {
+        console.error('Merge Fehler:', err);
+        await i.followUp({ content: '❌ Fehler beim Zusammenführen der Tickets.', ephemeral: true });
+      }
+      return;
     }
 
     // Application Category Select Menu Handler
@@ -6863,6 +7044,54 @@ client.on(Events.InteractionCreate, async i => {
             new TextInputBuilder().setCustomId('user').setLabel('User @ oder ID').setRequired(true).setStyle(TextInputStyle.Short)
           ));
           return i.showModal(modal);
+        }
+        case 'merge_ticket': {
+          // Nur Team-Mitglieder dürfen mergen
+          const mergeConfig = readCfg(guildId);
+          const teamRoleIds = Array.isArray(mergeConfig.teamRoleId) ? mergeConfig.teamRoleId : [mergeConfig.teamRoleId];
+          const hasTeamRole = teamRoleIds.some(roleId => roleId && i.member.roles.cache.has(roleId));
+
+          if (!hasTeamRole && !i.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return i.reply({ content: t(guildId, 'messages.only_team'), ephemeral: true });
+          }
+
+          // Finde andere offene Tickets die merged werden können
+          const allTickets = loadTickets(guildId);
+          const openTickets = allTickets.filter(t =>
+            t.status === 'offen' &&
+            t.id !== ticket.id &&
+            !t.isApplication &&
+            t.status !== 'merged'
+          );
+
+          if (openTickets.length === 0) {
+            return i.reply({
+              content: t(guildId, 'merge.no_tickets') || '❌ Keine anderen offenen Tickets zum Zusammenführen gefunden.',
+              ephemeral: true
+            });
+          }
+
+          // Max 25 Optionen für Select Menu
+          const ticketOptions = openTickets.slice(0, 25).map(t => ({
+            label: `Ticket #${t.id}`,
+            description: `${t.topic || 'Kein Thema'} - ${t.username || 'Unbekannt'}`.substring(0, 100),
+            value: `${t.id}`
+          }));
+
+          const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`merge_ticket_select:${ticket.id}`)
+            .setPlaceholder(t(guildId, 'merge.select_ticket') || 'Wähle ein Ticket zum Zusammenführen...')
+            .addOptions(ticketOptions);
+
+          const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+
+          const mergeEmbed = new EmbedBuilder()
+            .setColor(0x5865F2)
+            .setTitle(t(guildId, 'merge.title') || '🔗 Tickets zusammenführen')
+            .setDescription(t(guildId, 'merge.description') || 'Wähle das Ticket, das in dieses Ticket zusammengeführt werden soll.\n\n**Hinweis:** Das ausgewählte Ticket wird archiviert und alle Benutzer, Notizen und ein Nachrichten-Log werden übernommen.')
+            .setFooter({ text: `Ziel-Ticket: #${ticket.id}` });
+
+          return i.reply({ embeds: [mergeEmbed], components: [selectRow], ephemeral: true });
         }
         case 'close': {
           await i.deferReply({ ephemeral: true });

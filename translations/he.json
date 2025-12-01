@@ -44,7 +44,19 @@
     "priority_up": "עדיפות ↑",
     "priority_down": "עדיפות ↓",
     "add_user": "הוסף משתמש",
-    "request_close": "בקש סגירה"
+    "request_close": "בקש סגירה",
+    "merge": "מיזוג"
+  },
+  "merge": {
+    "title": "🔗 מיזוג כרטיסים",
+    "description": "בחר את הכרטיס שימוזג לכרטיס זה.\n\n**הערה:** הכרטיס שנבחר יועבר לארכיון וכל המשתמשים, ההערות ויומן ההודעות יועברו.",
+    "select_ticket": "בחר כרטיס למיזוג...",
+    "no_tickets": "❌ לא נמצאו כרטיסים פתוחים אחרים למיזוג.",
+    "complete_title": "🔗 הכרטיס מוזג",
+    "complete_description": "הכרטיס **#{sourceId}** מ-<@{userId}> מוזג לכרטיס זה.",
+    "archived_title": "📦 הכרטיס הועבר לארכיון",
+    "archived_description": "כרטיס זה מוזג ל**כרטיס #{targetId}**.\n\nהערוץ נעול כעת.",
+    "success": "✅ הכרטיס מוזג בהצלחה!"
   },
   "messages": {
     "ticket_closed": "✅ הכרטיס נסגר.",
@@ -149,6 +161,7 @@
     "user_added": "➕ משתמש {user} נוסף לכרטיס #{id}",
     "close_requested": "❓ בקשת סגירה לכרטיס #{id} על ידי {user}",
     "priority_changed": "⚙️ כרטיס #{id} עדיפות {direction}: {priority}",
+    "ticket_merged": "🔗 כרטיס #{sourceId} מוזג ל-#{targetId} על ידי {user}",
     "config_updated": "⚙️ **תצורה עודכנה** דרך הפאנל",
     "panel_sent": "📤 **הודעת פאנל נשלחה** ב-{channel}",
     "panel_edited": "✏️ **הודעת פאנל עודכנה** ב-{channel}",

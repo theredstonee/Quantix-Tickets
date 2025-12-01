@@ -54,7 +54,23 @@
     "confirm": "Konfirmasi",
     "save": "Simpan",
     "edit": "Edit",
-    "back": "Kembali"
+    "back": "Kembali",
+    "merge": "Gabungkan",
+    "add_user": "Tambah Pengguna",
+    "priority_up": "Prioritas ↑",
+    "priority_down": "Prioritas ↓",
+    "request_close": "Minta Tutup"
+  },
+  "merge": {
+    "title": "🔗 Gabungkan Tiket",
+    "description": "Pilih tiket yang akan digabungkan ke tiket ini.\n\n**Catatan:** Tiket yang dipilih akan diarsipkan dan semua pengguna, catatan, dan log pesan akan ditransfer.",
+    "select_ticket": "Pilih tiket untuk digabungkan...",
+    "no_tickets": "❌ Tidak ada tiket terbuka lain yang ditemukan untuk digabungkan.",
+    "complete_title": "🔗 Tiket Digabungkan",
+    "complete_description": "Tiket **#{sourceId}** dari <@{userId}> telah digabungkan ke tiket ini.",
+    "archived_title": "📦 Tiket Diarsipkan",
+    "archived_description": "Tiket ini telah digabungkan ke **Tiket #{targetId}**.\n\nChannel sekarang terkunci.",
+    "success": "✅ Tiket berhasil digabungkan!"
   },
   "messages": {
     "ticketCreated": "✅ Tiket Anda **#{ticketNumber}** telah dibuat: {channelMention}",
@@ -192,6 +208,7 @@
     "user_added": "➕ Pengguna {user} ditambahkan ke Tiket #{id}",
     "close_requested": "❓ Permintaan Tutup Tiket #{id} dari {user}",
     "priority_changed": "⚙️ Tiket #{id} Prioritas {direction}: {priority}",
+    "ticket_merged": "🔗 Tiket #{sourceId} digabungkan ke #{targetId} oleh {user}",
     "config_updated": "⚙️ **Konfigurasi diperbarui** melalui panel",
     "panel_sent": "📤 **Pesan panel dikirim** di {channel}",
     "panel_edited": "✏️ **Pesan panel diperbarui** di {channel}",

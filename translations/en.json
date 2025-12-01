@@ -44,7 +44,19 @@
     "priority_up": "Priority ↑",
     "priority_down": "Priority ↓",
     "add_user": "Add User",
-    "request_close": "Request Close"
+    "request_close": "Request Close",
+    "merge": "Merge"
+  },
+  "merge": {
+    "title": "🔗 Merge Tickets",
+    "description": "Select the ticket to merge into this one.\n\n**Note:** The selected ticket will be archived and all users, notes, and a message log will be transferred.",
+    "select_ticket": "Select a ticket to merge...",
+    "no_tickets": "❌ No other open tickets found to merge.",
+    "complete_title": "🔗 Ticket Merged",
+    "complete_description": "Ticket **#{sourceId}** from <@{userId}> has been merged into this ticket.",
+    "archived_title": "📦 Ticket Archived",
+    "archived_description": "This ticket has been merged into **Ticket #{targetId}**.\n\nThe channel is now locked.",
+    "success": "✅ Ticket has been successfully merged!"
   },
   "messages": {
     "ticket_closed": "✅ Ticket has been closed.",
@@ -188,6 +200,7 @@
     "user_added": "➕ User {user} added to Ticket #{id}",
     "close_requested": "❓ Close-Request Ticket #{id} by {user}",
     "priority_changed": "⚙️ Ticket #{id} Priority {direction}: {priority}",
+    "ticket_merged": "🔗 Ticket #{sourceId} merged into #{targetId} by {user}",
     "config_updated": "⚙️ **Configuration updated** via panel",
     "panel_sent": "📤 **Panel message sent** in {channel}",
     "panel_edited": "✏️ **Panel message updated** in {channel}",

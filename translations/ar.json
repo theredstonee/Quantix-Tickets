@@ -44,7 +44,19 @@
     "priority_up": "الأولوية ↑",
     "priority_down": "الأولوية ↓",
     "add_user": "إضافة مستخدم",
-    "request_close": "طلب الإغلاق"
+    "request_close": "طلب الإغلاق",
+    "merge": "دمج"
+  },
+  "merge": {
+    "title": "🔗 دمج التذاكر",
+    "description": "اختر التذكرة التي سيتم دمجها في هذه التذكرة.\n\n**ملاحظة:** سيتم أرشفة التذكرة المحددة وسيتم نقل جميع المستخدمين والملاحظات وسجل الرسائل.",
+    "select_ticket": "اختر تذكرة للدمج...",
+    "no_tickets": "❌ لم يتم العثور على تذاكر مفتوحة أخرى للدمج.",
+    "complete_title": "🔗 تم دمج التذكرة",
+    "complete_description": "تم دمج التذكرة **#{sourceId}** من <@{userId}> في هذه التذكرة.",
+    "archived_title": "📦 تم أرشفة التذكرة",
+    "archived_description": "تم دمج هذه التذكرة في **التذكرة #{targetId}**.\n\nالقناة مقفلة الآن.",
+    "success": "✅ تم دمج التذكرة بنجاح!"
   },
   "messages": {
     "ticket_closed": "✅ تم إغلاق التذكرة.",
@@ -151,6 +163,7 @@
     "user_added": "➕ تمت إضافة المستخدم {user} إلى التذكرة #{id}",
     "close_requested": "❓ طلب إغلاق التذكرة #{id} بواسطة {user}",
     "priority_changed": "⚙️ أولوية التذكرة #{id} {direction}: {priority}",
+    "ticket_merged": "🔗 تم دمج التذكرة #{sourceId} في #{targetId} بواسطة {user}",
     "config_updated": "⚙️ **تم تحديث التكوين** عبر اللوحة",
     "panel_sent": "📤 **تم إرسال رسالة اللوحة** في {channel}",
     "panel_edited": "✏️ **تم تحديث رسالة اللوحة** في {channel}",
