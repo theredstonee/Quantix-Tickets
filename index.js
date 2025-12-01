@@ -590,19 +590,23 @@ function buttonRows(claimed, guildId = null, ticket = null){
     }
   }
 
-  // Merge-Button (nur wenn claimed - Team-only)
+  const row3 = new ActionRowBuilder().addComponents(...row3Components);
+
+  // Row 4: Merge-Button (nur wenn claimed - Team-only)
+  const rows = [row1, row2, row3];
+
   if (claimed && ticket) {
-    row3Components.push(
+    const row4 = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('merge_ticket')
         .setEmoji('🔗')
         .setLabel(t(guildId, 'buttons.merge') || 'Zusammenführen')
         .setStyle(ButtonStyle.Secondary)
     );
+    rows.push(row4);
   }
 
-  const row3 = new ActionRowBuilder().addComponents(...row3Components);
-  return [row1,row2,row3];
+  return rows;
 }
 
 function buildPanelSelect(cfg){
@@ -6623,6 +6627,28 @@ client.on(Events.InteractionCreate, async i => {
 
               await user.send({ embeds: [ratingEmbed], components: [ratingButtons] });
               console.log(`✅ Bewertungs-DM gesendet an User ${user.tag} für Ticket #${ticket.id}`);
+            } else if (files && !cfg.sendTranscriptToCreator) {
+              // Fallback: Wenn kein Rating/Survey aktiv UND sendTranscriptToCreator nicht aktiviert,
+              // sende trotzdem das Transcript per DM
+              const transcriptEmbed = new EmbedBuilder()
+                .setColor(0x3b82f6)
+                .setTitle('📄 Dein Ticket-Transcript')
+                .setDescription(
+                  `Dein Ticket **#${ticket.id}** wurde geschlossen.\n` +
+                  `Hier ist das Transcript für deine Unterlagen.`
+                )
+                .addFields(
+                  { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+                  { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true }
+                )
+                .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+                .setTimestamp();
+
+              await user.send({
+                embeds: [transcriptEmbed],
+                files: [files.txt, files.html]
+              });
+              console.log(`✅ Transcript-DM (Fallback) gesendet an User ${user.tag} für Ticket #${ticket.id}`);
             }
           }
         } catch (dmErr) {
@@ -7229,6 +7255,28 @@ client.on(Events.InteractionCreate, async i => {
 
                 await user.send({ embeds: [ratingEmbed], components: [ratingButtons] });
                 console.log(`✅ Bewertungs-DM gesendet an User ${user.tag} für Ticket #${ticket.id}`);
+              } else if (files && !cfg.sendTranscriptToCreator) {
+                // Fallback: Wenn kein Rating/Survey aktiv UND sendTranscriptToCreator nicht aktiviert,
+                // sende trotzdem das Transcript per DM
+                const transcriptEmbed = new EmbedBuilder()
+                  .setColor(0x3b82f6)
+                  .setTitle('📄 Dein Ticket-Transcript')
+                  .setDescription(
+                    `Dein Ticket **#${ticket.id}** wurde geschlossen.\n` +
+                    `Hier ist das Transcript für deine Unterlagen.`
+                  )
+                  .addFields(
+                    { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
+                    { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true }
+                  )
+                  .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+                  .setTimestamp();
+
+                await user.send({
+                  embeds: [transcriptEmbed],
+                  files: [files.txt, files.html]
+                });
+                console.log(`✅ Transcript-DM (Fallback) gesendet an User ${user.tag} für Ticket #${ticket.id}`);
               }
             }
           } catch (dmErr) {
