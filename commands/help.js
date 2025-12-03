@@ -55,11 +55,6 @@ module.exports = {
             inline: false
           },
           {
-            name: `${translations.premium.emoji} ${translations.premium.title}`,
-            value: translations.premium.info,
-            inline: false
-          },
-          {
             name: `${translations.tips.emoji} ${translations.tips.title}`,
             value: translations.tips.list,
             inline: false
@@ -71,21 +66,6 @@ module.exports = {
         })
         .setTimestamp();
 
-      // Premium badge if active
-      if (premiumInfo.isActive) {
-        const premiumBadge = premiumInfo.tier === 'partner' ? '🤝 Partner' :
-                            premiumInfo.tier === 'pro' ? '👑 Premium Pro' :
-                            premiumInfo.tier === 'beta' ? '🧪 Betatester' : '';
-
-        if (premiumBadge) {
-          helpEmbed.setThumbnail(interaction.guild.iconURL({ size: 256 }));
-          helpEmbed.addFields({
-            name: `✨ ${translations.currentPlan}`,
-            value: `**${premiumBadge}**${premiumInfo.isLifetime ? ' (Lifetime)' : ''}`,
-            inline: true
-          });
-        }
-      }
 
       // Build button row
       const buttonRow = new ActionRowBuilder().addComponents(
@@ -94,11 +74,6 @@ module.exports = {
           .setStyle(ButtonStyle.Link)
           .setLabel(translations.buttons.dashboard)
           .setEmoji('🎛️'),
-        new ButtonBuilder()
-          .setURL((process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de') + '/premium')
-          .setStyle(ButtonStyle.Link)
-          .setLabel(translations.buttons.premium)
-          .setEmoji('⭐'),
         new ButtonBuilder()
           .setURL('https://discord.gg/mnYbnpyyBS')
           .setStyle(ButtonStyle.Link)
@@ -153,7 +128,7 @@ function getHelpTranslations(lang) {
           '• **📝 Notizen** - Interne Notizen zu Tickets\n' +
           '• **🚫 Moderation** - Blacklist und User-Verwaltung\n' +
           '• **⚙️ Server-Einstellungen** - Bot konfigurieren\n' +
-          '• **📊 Analytics** - Statistiken und Auswertungen (Pro)\n' +
+          '• **📊 Analytics** - Statistiken und Auswertungen\n' +
           '• **ℹ️ Information** - Version, Status, Commands\n\n' +
           '💡 Nutze `/commands` für die vollständige Liste!'
       },
@@ -163,22 +138,12 @@ function getHelpTranslations(lang) {
         list:
           '🌍 **Multi-Language**: 9 Sprachen verfügbar\n' +
           '🎨 **Anpassbar**: Custom Embeds, Formulare & Farben\n' +
-          '📊 **Analytics**: Detaillierte Statistiken (Pro)\n' +
+          '📊 **Analytics**: Detaillierte Statistiken\n' +
           '🎯 **Priority System**: 3 Prioritätsstufen mit Rollen\n' +
           '📝 **Live Transcripts**: HTML & TXT Formate\n' +
-          '⏱️ **SLA System**: Automatische Eskalation (Pro)\n' +
-          '🔔 **Benachrichtigungen**: DM & Email Support (Pro)\n' +
+          '⏱️ **Auto-Close**: Automatisches Schließen inaktiver Tickets\n' +
+          '🔔 **Benachrichtigungen**: DM & Email Support\n' +
           '⭐ **Rating System**: 5-Sterne Bewertungen'
-      },
-      premium: {
-        emoji: '💎',
-        title: 'Premium Features',
-        info:
-          '**🆓 Free**: 5 Kategorien, Basis-Features\n' +
-          '**💎 Basic** (€2.99): 7 Kategorien, File Upload, Custom Avatar\n' +
-          '**👑 Pro** (€4.99): Unbegrenzt, Analytics, SLA, Auto-Close\n' +
-          '**🤝 Partner**: Lifetime Pro-Features\n\n' +
-          '➡️ [Premium kaufen](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -188,9 +153,8 @@ function getHelpTranslations(lang) {
           '• Team-Rollen können hierarchisch konfiguriert werden\n' +
           '• Transcripts werden automatisch bei Ticket-Schließung erstellt\n' +
           '• DM-Benachrichtigungen können pro User konfiguriert werden\n' +
-          '• Der Bot unterstützt mehrere Ticket-Systeme pro Server (Pro)'
+          '• Der Bot unterstützt mehrere Ticket-Systeme pro Server'
       },
-      currentPlan: 'Dein aktueller Plan',
       footer: 'Brauchst du Hilfe? Tritt unserem Support-Server bei!',
       buttons: {
         dashboard: 'Dashboard',
@@ -220,7 +184,7 @@ function getHelpTranslations(lang) {
           '• **📝 Notes** - Internal notes for tickets\n' +
           '• **🚫 Moderation** - Blacklist and user management\n' +
           '• **⚙️ Server Settings** - Configure the bot\n' +
-          '• **📊 Analytics** - Statistics and insights (Pro)\n' +
+          '• **📊 Analytics** - Statistics and insights\n' +
           '• **ℹ️ Information** - Version, status, commands\n\n' +
           '💡 Use `/commands` for the complete list!'
       },
@@ -230,22 +194,12 @@ function getHelpTranslations(lang) {
         list:
           '🌍 **Multi-Language**: 9 languages available\n' +
           '🎨 **Customizable**: Custom embeds, forms & colors\n' +
-          '📊 **Analytics**: Detailed statistics (Pro)\n' +
+          '📊 **Analytics**: Detailed statistics\n' +
           '🎯 **Priority System**: 3 priority levels with roles\n' +
           '📝 **Live Transcripts**: HTML & TXT formats\n' +
-          '⏱️ **SLA System**: Automatic escalation (Pro)\n' +
-          '🔔 **Notifications**: DM & Email support (Pro)\n' +
+          '⏱️ **Auto-Close**: Automatic closing of inactive tickets\n' +
+          '🔔 **Notifications**: DM & Email support\n' +
           '⭐ **Rating System**: 5-star ratings'
-      },
-      premium: {
-        emoji: '💎',
-        title: 'Premium Features',
-        info:
-          '**🆓 Free**: 5 categories, basic features\n' +
-          '**💎 Basic** (€2.99): 7 categories, file upload, custom avatar\n' +
-          '**👑 Pro** (€4.99): Unlimited, analytics, SLA, auto-close\n' +
-          '**🤝 Partner**: Lifetime Pro features\n\n' +
-          '➡️ [Get Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -255,9 +209,8 @@ function getHelpTranslations(lang) {
           '• Team roles can be configured hierarchically\n' +
           '• Transcripts are automatically created when closing tickets\n' +
           '• DM notifications can be configured per user\n' +
-          '• The bot supports multiple ticket systems per server (Pro)'
+          '• The bot supports multiple ticket systems per server'
       },
-      currentPlan: 'Your Current Plan',
       footer: 'Need help? Join our support server!',
       buttons: {
         dashboard: 'Dashboard',
@@ -287,7 +240,7 @@ function getHelpTranslations(lang) {
           '• **📝 Notlar** - Destek için dahili notlar\n' +
           '• **🚫 Moderasyon** - Kara liste ve kullanıcı yönetimi\n' +
           '• **⚙️ Sunucu Ayarları** - Botu yapılandırın\n' +
-          '• **📊 Analitik** - İstatistikler ve analizler (Pro)\n' +
+          '• **📊 Analitik** - İstatistikler ve analizler\n' +
           '• **ℹ️ Bilgi** - Sürüm, durum, komutlar\n\n' +
           '💡 Tam liste için `/commands` kullanın!'
       },
@@ -297,22 +250,12 @@ function getHelpTranslations(lang) {
         list:
           '🌍 **Çok Dilli**: 9 dil mevcut\n' +
           '🎨 **Özelleştirilebilir**: Özel embed\'ler, formlar ve renkler\n' +
-          '📊 **Analitik**: Detaylı istatistikler (Pro)\n' +
+          '📊 **Analitik**: Detaylı istatistikler\n' +
           '🎯 **Öncelik Sistemi**: Rollerle 3 öncelik seviyesi\n' +
           '📝 **Canlı Transkriptler**: HTML ve TXT formatları\n' +
-          '⏱️ **SLA Sistemi**: Otomatik yükseltme (Pro)\n' +
-          '🔔 **Bildirimler**: DM ve Email desteği (Pro)\n' +
+          '⏱️ **Otomatik Kapatma**: İnaktif biletleri otomatik kapat\n' +
+          '🔔 **Bildirimler**: DM ve Email desteği\n' +
           '⭐ **Değerlendirme Sistemi**: 5 yıldızlı değerlendirmeler'
-      },
-      premium: {
-        emoji: '💎',
-        title: 'Premium Özellikler',
-        info:
-          '**🆓 Ücretsiz**: 5 kategori, temel özellikler\n' +
-          '**💎 Basic** (€2.99): 7 kategori, dosya yükleme, özel avatar\n' +
-          '**👑 Pro** (€4.99): Sınırsız, analitik, SLA, otomatik kapatma\n' +
-          '**🤝 Partner**: Ömür boyu Pro özellikleri\n\n' +
-          '➡️ [Premium Al](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -322,9 +265,8 @@ function getHelpTranslations(lang) {
           '• Takım rolleri hiyerarşik olarak yapılandırılabilir\n' +
           '• Transkriptler destek kapandığında otomatik oluşturulur\n' +
           '• DM bildirimleri kullanıcı başına yapılandırılabilir\n' +
-          '• Bot sunucu başına birden fazla destek sistemini destekler (Pro)'
+          '• Bot sunucu başına birden fazla destek sistemini destekler'
       },
-      currentPlan: 'Mevcut Planınız',
       footer: 'Yardıma mı ihtiyacınız var? Destek sunucumuza katılın!',
       buttons: {
         dashboard: 'Panel',
@@ -354,7 +296,7 @@ function getHelpTranslations(lang) {
           '• **📝 メモ** - チケットの内部メモ\n' +
           '• **🚫 モデレーション** - ブラックリストとユーザー管理\n' +
           '• **⚙️ サーバー設定** - ボットの設定\n' +
-          '• **📊 分析** - 統計と洞察 (Pro)\n' +
+          '• **📊 分析** - 統計と洞察\n' +
           '• **ℹ️ 情報** - バージョン、ステータス、コマンド\n\n' +
           '💡 完全なリストは `/commands` を使用！'
       },
@@ -364,22 +306,12 @@ function getHelpTranslations(lang) {
         list:
           '🌍 **多言語対応**: 9言語利用可能\n' +
           '🎨 **カスタマイズ可能**: カスタム埋め込み、フォーム、色\n' +
-          '📊 **分析**: 詳細な統計 (Pro)\n' +
+          '📊 **分析**: 詳細な統計\n' +
           '🎯 **優先度システム**: ロール付き3段階優先度\n' +
           '📝 **ライブトランスクリプト**: HTMLとTXT形式\n' +
-          '⏱️ **SLAシステム**: 自動エスカレーション (Pro)\n' +
-          '🔔 **通知**: DMとメールサポート (Pro)\n' +
+          '⏱️ **自動クローズ**: 非アクティブチケットの自動クローズ\n' +
+          '🔔 **通知**: DMとメールサポート\n' +
           '⭐ **評価システム**: 5つ星評価'
-      },
-      premium: {
-        emoji: '💎',
-        title: 'プレミアム機能',
-        info:
-          '**🆓 無料**: 5カテゴリ、基本機能\n' +
-          '**💎 Basic** (€2.99): 7カテゴリ、ファイルアップロード、カスタムアバター\n' +
-          '**👑 Pro** (€4.99): 無制限、分析、SLA、自動クローズ\n' +
-          '**🤝 Partner**: 生涯Pro機能\n\n' +
-          '➡️ [プレミアムを取得](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -389,9 +321,8 @@ function getHelpTranslations(lang) {
           '• チームロールは階層的に設定可能\n' +
           '• トランスクリプトはチケット終了時に自動作成\n' +
           '• DM通知はユーザーごとに設定可能\n' +
-          '• ボットはサーバーごとに複数のチケットシステムをサポート (Pro)'
+          '• ボットはサーバーごとに複数のチケットシステムをサポート'
       },
-      currentPlan: '現在のプラン',
       footer: 'ヘルプが必要ですか？サポートサーバーに参加！',
       buttons: {
         dashboard: 'ダッシュボード',
@@ -421,7 +352,7 @@ function getHelpTranslations(lang) {
           '• **📝 Заметки** - Внутренние заметки для тикетов\n' +
           '• **🚫 Модерация** - Черный список и управление пользователями\n' +
           '• **⚙️ Настройки Сервера** - Настройка бота\n' +
-          '• **📊 Аналитика** - Статистика и аналитика (Pro)\n' +
+          '• **📊 Аналитика** - Статистика и аналитика\n' +
           '• **ℹ️ Информация** - Версия, статус, команды\n\n' +
           '💡 Используйте `/commands` для полного списка!'
       },
@@ -431,22 +362,12 @@ function getHelpTranslations(lang) {
         list:
           '🌍 **Мультиязычность**: Доступно 9 языков\n' +
           '🎨 **Настраиваемость**: Пользовательские встраивания, формы и цвета\n' +
-          '📊 **Аналитика**: Подробная статистика (Pro)\n' +
+          '📊 **Аналитика**: Подробная статистика\n' +
           '🎯 **Система Приоритетов**: 3 уровня с ролями\n' +
           '📝 **Живые Транскрипты**: Форматы HTML и TXT\n' +
-          '⏱️ **SLA Система**: Автоматическая эскалация (Pro)\n' +
-          '🔔 **Уведомления**: Поддержка DM и Email (Pro)\n' +
+          '⏱️ **Авто-закрытие**: Автоматическое закрытие неактивных тикетов\n' +
+          '🔔 **Уведомления**: Поддержка DM и Email\n' +
           '⭐ **Система Оценок**: 5-звездочные оценки'
-      },
-      premium: {
-        emoji: '💎',
-        title: 'Premium Функции',
-        info:
-          '**🆓 Бесплатно**: 5 категорий, базовые функции\n' +
-          '**💎 Basic** (€2.99): 7 категорий, загрузка файлов, пользовательский аватар\n' +
-          '**👑 Pro** (€4.99): Неограниченно, аналитика, SLA, авто-закрытие\n' +
-          '**🤝 Partner**: Пожизненные Pro функции\n\n' +
-          '➡️ [Получить Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -456,9 +377,8 @@ function getHelpTranslations(lang) {
           '• Роли команды можно настроить иерархически\n' +
           '• Транскрипты создаются автоматически при закрытии тикетов\n' +
           '• DM уведомления можно настроить для каждого пользователя\n' +
-          '• Бот поддерживает несколько систем тикетов на сервер (Pro)'
+          '• Бот поддерживает несколько систем тикетов на сервер'
       },
-      currentPlan: 'Ваш Текущий План',
       footer: 'Нужна помощь? Присоединяйтесь к нашему серверу поддержки!',
       buttons: {
         dashboard: 'Панель',
@@ -488,7 +408,7 @@ function getHelpTranslations(lang) {
           '• **📝 Notas** - Notas internas para tickets\n' +
           '• **🚫 Moderação** - Lista negra e gestão de usuários\n' +
           '• **⚙️ Configurações do Servidor** - Configurar o bot\n' +
-          '• **📊 Análises** - Estatísticas e insights (Pro)\n' +
+          '• **📊 Análises** - Estatísticas e insights\n' +
           '• **ℹ️ Informação** - Versão, status, comandos\n\n' +
           '💡 Use `/commands` para a lista completa!'
       },
@@ -498,22 +418,12 @@ function getHelpTranslations(lang) {
         list:
           '🌍 **Multi-idioma**: 9 idiomas disponíveis\n' +
           '🎨 **Personalizável**: Embeds, formulários e cores personalizados\n' +
-          '📊 **Análises**: Estatísticas detalhadas (Pro)\n' +
+          '📊 **Análises**: Estatísticas detalhadas\n' +
           '🎯 **Sistema de Prioridade**: 3 níveis com funções\n' +
           '📝 **Transcrições ao Vivo**: Formatos HTML e TXT\n' +
-          '⏱️ **Sistema SLA**: Escalação automática (Pro)\n' +
-          '🔔 **Notificações**: Suporte DM e Email (Pro)\n' +
+          '⏱️ **Fechamento Automático**: Fechamento automático de tickets inativos\n' +
+          '🔔 **Notificações**: Suporte DM e Email\n' +
           '⭐ **Sistema de Avaliação**: Avaliações de 5 estrelas'
-      },
-      premium: {
-        emoji: '💎',
-        title: 'Recursos Premium',
-        info:
-          '**🆓 Grátis**: 5 categorias, recursos básicos\n' +
-          '**💎 Basic** (€2.99): 7 categorias, upload de arquivos, avatar personalizado\n' +
-          '**👑 Pro** (€4.99): Ilimitado, análises, SLA, fechamento automático\n' +
-          '**🤝 Partner**: Recursos Pro vitalícios\n\n' +
-          '➡️ [Obter Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -523,9 +433,8 @@ function getHelpTranslations(lang) {
           '• Funções da equipe podem ser configuradas hierarquicamente\n' +
           '• Transcrições são criadas automaticamente ao fechar tickets\n' +
           '• Notificações DM podem ser configuradas por usuário\n' +
-          '• O bot suporta vários sistemas de tickets por servidor (Pro)'
+          '• O bot suporta vários sistemas de tickets por servidor'
       },
-      currentPlan: 'Seu Plano Atual',
       footer: 'Precisa de ajuda? Junte-se ao nosso servidor de suporte!',
       buttons: {
         dashboard: 'Painel',
@@ -555,7 +464,7 @@ function getHelpTranslations(lang) {
           '• **📝 Notas** - Notas internas para tickets\n' +
           '• **🚫 Moderación** - Lista negra y gestión de usuarios\n' +
           '• **⚙️ Configuración del Servidor** - Configurar el bot\n' +
-          '• **📊 Análisis** - Estadísticas e información (Pro)\n' +
+          '• **📊 Análisis** - Estadísticas e información\n' +
           '• **ℹ️ Información** - Versión, estado, comandos\n\n' +
           '💡 ¡Usa `/commands` para la lista completa!'
       },
@@ -565,22 +474,12 @@ function getHelpTranslations(lang) {
         list:
           '🌍 **Multi-idioma**: 9 idiomas disponibles\n' +
           '🎨 **Personalizable**: Embeds, formularios y colores personalizados\n' +
-          '📊 **Análisis**: Estadísticas detalladas (Pro)\n' +
+          '📊 **Análisis**: Estadísticas detalladas\n' +
           '🎯 **Sistema de Prioridad**: 3 niveles con roles\n' +
           '📝 **Transcripciones en Vivo**: Formatos HTML y TXT\n' +
-          '⏱️ **Sistema SLA**: Escalación automática (Pro)\n' +
-          '🔔 **Notificaciones**: Soporte DM y Email (Pro)\n' +
+          '⏱️ **Cierre Automático**: Cierre automático de tickets inactivos\n' +
+          '🔔 **Notificaciones**: Soporte DM y Email\n' +
           '⭐ **Sistema de Calificación**: Calificaciones de 5 estrellas'
-      },
-      premium: {
-        emoji: '💎',
-        title: 'Características Premium',
-        info:
-          '**🆓 Gratis**: 5 categorías, características básicas\n' +
-          '**💎 Basic** (€2.99): 7 categorías, carga de archivos, avatar personalizado\n' +
-          '**👑 Pro** (€4.99): Ilimitado, análisis, SLA, cierre automático\n' +
-          '**🤝 Partner**: Características Pro de por vida\n\n' +
-          '➡️ [Obtener Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -590,9 +489,8 @@ function getHelpTranslations(lang) {
           '• Los roles del equipo se pueden configurar jerárquicamente\n' +
           '• Las transcripciones se crean automáticamente al cerrar tickets\n' +
           '• Las notificaciones DM se pueden configurar por usuario\n' +
-          '• El bot admite múltiples sistemas de tickets por servidor (Pro)'
+          '• El bot admite múltiples sistemas de tickets por servidor'
       },
-      currentPlan: 'Tu Plan Actual',
       footer: '¿Necesitas ayuda? ¡Únete a nuestro servidor de soporte!',
       buttons: {
         dashboard: 'Panel',
@@ -622,7 +520,7 @@ function getHelpTranslations(lang) {
           '• **📝 Catatan** - Catatan internal untuk tiket\n' +
           '• **🚫 Moderasi** - Daftar hitam dan manajemen pengguna\n' +
           '• **⚙️ Pengaturan Server** - Konfigurasi bot\n' +
-          '• **📊 Analitik** - Statistik dan wawasan (Pro)\n' +
+          '• **📊 Analitik** - Statistik dan wawasan\n' +
           '• **ℹ️ Informasi** - Versi, status, perintah\n\n' +
           '💡 Gunakan `/commands` untuk daftar lengkap!'
       },
@@ -632,22 +530,12 @@ function getHelpTranslations(lang) {
         list:
           '🌍 **Multi-Bahasa**: 9 bahasa tersedia\n' +
           '🎨 **Dapat Disesuaikan**: Embed, formulir & warna kustom\n' +
-          '📊 **Analitik**: Statistik terperinci (Pro)\n' +
+          '📊 **Analitik**: Statistik terperinci\n' +
           '🎯 **Sistem Prioritas**: 3 tingkat dengan peran\n' +
           '📝 **Transkrip Langsung**: Format HTML & TXT\n' +
-          '⏱️ **Sistem SLA**: Eskalasi otomatis (Pro)\n' +
-          '🔔 **Notifikasi**: Dukungan DM & Email (Pro)\n' +
+          '⏱️ **Tutup Otomatis**: Penutupan otomatis tiket tidak aktif\n' +
+          '🔔 **Notifikasi**: Dukungan DM & Email\n' +
           '⭐ **Sistem Penilaian**: Penilaian 5 bintang'
-      },
-      premium: {
-        emoji: '💎',
-        title: 'Fitur Premium',
-        info:
-          '**🆓 Gratis**: 5 kategori, fitur dasar\n' +
-          '**💎 Basic** (€2.99): 7 kategori, unggah file, avatar kustom\n' +
-          '**👑 Pro** (€4.99): Tidak terbatas, analitik, SLA, tutup otomatis\n' +
-          '**🤝 Partner**: Fitur Pro seumur hidup\n\n' +
-          '➡️ [Dapatkan Premium](https://tickets.quantix-bot.de/premium)'
       },
       tips: {
         emoji: '💡',
@@ -657,9 +545,8 @@ function getHelpTranslations(lang) {
           '• Peran tim dapat dikonfigurasi secara hierarkis\n' +
           '• Transkrip dibuat otomatis saat menutup tiket\n' +
           '• Notifikasi DM dapat dikonfigurasi per pengguna\n' +
-          '• Bot mendukung beberapa sistem tiket per server (Pro)'
+          '• Bot mendukung beberapa sistem tiket per server'
       },
-      currentPlan: 'Paket Anda Saat Ini',
       footer: 'Butuh bantuan? Bergabunglah dengan server dukungan kami!',
       buttons: {
         dashboard: 'Panel',

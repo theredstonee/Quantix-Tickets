@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { hasFeature } = require('../premium');
 
 // Owner and Founder IDs
 const OWNER_IDS = ['928901974106202113', '1159182333316968530', '1415387837359984740', '1048900200497954868'];
@@ -12,10 +11,6 @@ function getCommandsList(userId, member, guildId) {
   const isTeam = member.roles.cache.some(role =>
     role.permissions.has('ManageMessages') || role.permissions.has('Administrator')
   );
-
-  // Check premium features
-  const hasBasic = hasFeature(guildId, 'statistics');
-  const hasPro = hasFeature(guildId, 'analytics');
 
   const commands = [
     {
@@ -41,35 +36,35 @@ function getCommandsList(userId, member, guildId) {
           description: 'Leite ein Ticket an ein anderes Team-Mitglied weiter',
           permission: 'Claimer',
           canUse: isTeam,
-          premium: 'Pro'
+          premium: null
         },
         {
           name: '/tag',
           description: 'Verwalte Tags für bessere Ticket-Organisation',
           permission: 'Team',
           canUse: isTeam,
-          premium: 'Basic+'
+          premium: null
         },
         {
           name: '/template',
           description: 'Vordefinierte Antwort-Vorlagen verwenden',
           permission: 'Team',
           canUse: isTeam,
-          premium: 'Basic+'
+          premium: null
         },
         {
           name: '/department',
           description: 'Abteilungsverwaltung und Ticket-Weiterleitung',
           permission: 'Team',
           canUse: isTeam,
-          premium: 'Basic+'
+          premium: null
         },
         {
           name: '/depart',
           description: 'Verlasse deine aktuelle Abteilung',
           permission: 'Team',
           canUse: isTeam,
-          premium: 'Basic+'
+          premium: null
         }
       ]
     },
@@ -82,14 +77,14 @@ function getCommandsList(userId, member, guildId) {
           description: 'Füge eine interne Notiz zu einem Ticket hinzu',
           permission: 'Team',
           canUse: isTeam,
-          premium: 'Basic+'
+          premium: null
         },
         {
           name: '/note-list',
           description: 'Zeige alle Notizen eines Tickets',
           permission: 'Team',
           canUse: isTeam,
-          premium: 'Basic+'
+          premium: null
         },
         {
           name: '/status',
@@ -164,14 +159,14 @@ function getCommandsList(userId, member, guildId) {
           description: 'Bewerbungs-Panel in einen Channel senden',
           permission: 'Administrator',
           canUse: isAdmin,
-          premium: 'Basic+'
+          premium: null
         },
         {
           name: '/send-panel-advanced',
           description: 'Erweitertes Ticket-Panel mit System-Auswahl',
           permission: 'Administrator',
           canUse: isAdmin,
-          premium: 'Pro'
+          premium: null
         },
         {
           name: '/github-commits',
@@ -192,7 +187,7 @@ function getCommandsList(userId, member, guildId) {
           description: 'Team-Mitglied Verfügbarkeit setzen',
           permission: 'Team',
           canUse: isTeam,
-          premium: 'Pro'
+          premium: null
         }
       ]
     },
@@ -204,8 +199,8 @@ function getCommandsList(userId, member, guildId) {
           name: 'Analytics Dashboard',
           description: 'Web-basierte Analytics (Tickets, Ratings, Performance)',
           permission: 'Team/Admin',
-          canUse: hasPro || isAdmin,
-          premium: 'Pro'
+          canUse: isTeam || isAdmin,
+          premium: null
         },
         {
           name: 'Ticket History',
@@ -391,14 +386,7 @@ function buildCommandEmbed(commands, username) {
       '**Hier findest du alle verfügbaren Bot-Commands.**\n\n' +
       '**Legende:**\n' +
       '✅ = Du kannst diesen Command verwenden\n' +
-      '❌ = Keine Berechtigung\n' +
-      '⭐ **Basic+** = Basic Premium oder höher erforderlich\n' +
-      '🌟 **Pro** = Pro Premium, Partner oder Betatester erforderlich\n\n' +
-      '**Premium Tiers:**\n' +
-      '• 🆓 **Free**: Basis-Features, 5 Kategorien\n' +
-      '• 💎 **Basic**: 7 Kategorien, File Upload, Custom Avatar\n' +
-      '• 👑 **Pro**: Unbegrenzt, Analytics, SLA, Auto-Close\n' +
-      '• 🤝 **Partner**: Lifetime Pro-Features\n\n' +
+      '❌ = Keine Berechtigung\n\n' +
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
     )
     .setFooter({ text: `Angefordert von ${username} • Quantix Tickets` })
@@ -410,11 +398,8 @@ function buildCommandEmbed(commands, username) {
 
     for (const cmd of category.items) {
       const icon = cmd.canUse ? '✅' : '❌';
-      const premiumBadge = cmd.premium
-        ? cmd.premium === 'Pro' ? ' 🌟' : ' ⭐'
-        : '';
 
-      fieldValue += `${icon} **${cmd.name}**${premiumBadge}\n`;
+      fieldValue += `${icon} **${cmd.name}**\n`;
       fieldValue += `   └ ${cmd.description}\n`;
       fieldValue += `   └ *${cmd.permission}*\n\n`;
     }
@@ -446,11 +431,6 @@ function buildButtonRow() {
       .setStyle(ButtonStyle.Link)
       .setLabel('Dashboard')
       .setEmoji('🎛️'),
-    new ButtonBuilder()
-      .setURL('https://tickets.quantix-bot.de/premium')
-      .setStyle(ButtonStyle.Link)
-      .setLabel('Premium')
-      .setEmoji('⭐'),
     new ButtonBuilder()
       .setURL('https://discord.com/invite/mnYbnpyyBS')
       .setStyle(ButtonStyle.Link)

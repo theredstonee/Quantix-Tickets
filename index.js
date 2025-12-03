@@ -1560,39 +1560,8 @@ async function sendWelcomeMessage(guild) {
 
     const dashboardUrl = (process.env.PUBLIC_BASE_URL || 'https://tickets.quantix-bot.de').replace(/\/+$/, '');
 
-    // Check if trial is active
-    const trialActive = isTrialActive(guild.id);
-    const trialInfo = trialActive ? getTrialInfo(guild.id) : null;
-
-    // Build description with trial banner
-    let description = '';
-
-    if (trialActive && trialInfo) {
-      // Trial Banner
-      description += isGerman
-        ? `## 🎁 **14 Tage Premium Pro - KOSTENLOS!**\n` +
-          `🎉 Dein Server hat **Premium Pro** für **14 Tage gratis** aktiviert!\n` +
-          `⏰ Noch **${trialInfo.daysRemaining} Tage** verbleibend\n\n` +
-          `**💎 Du hast jetzt Zugriff auf:**\n` +
-          `✅ Unbegrenzte Kategorien\n` +
-          `✅ Auto-Close für inaktive Tickets\n` +
-          `✅ Email-Benachrichtigungen\n` +
-          `✅ Discord DM-Benachrichtigungen\n` +
-          `✅ Erweiterte Analytics\n` +
-          `✅ Priority Support\n\n`
-        : `## 🎁 **14 Days Premium Pro - FREE!**\n` +
-          `🎉 Your server has **Premium Pro** activated for **14 days free**!\n` +
-          `⏰ **${trialInfo.daysRemaining} days** remaining\n\n` +
-          `**💎 You now have access to:**\n` +
-          `✅ Unlimited categories\n` +
-          `✅ Auto-close for inactive tickets\n` +
-          `✅ Email notifications\n` +
-          `✅ Discord DM notifications\n` +
-          `✅ Advanced analytics\n` +
-          `✅ Priority support\n\n`;
-    }
-
-    description += isGerman
+    // Build description
+    let description = isGerman
       ? `Vielen Dank, dass du Quantix Tickets zu deinem Server hinzugefügt hast!\n\n` +
         `**🚀 Schnellstart:**\n` +
         `1️⃣ Öffne das **[Dashboard](${dashboardUrl})** und melde dich mit Discord an\n` +
@@ -1624,7 +1593,7 @@ async function sendWelcomeMessage(guild) {
     const welcomeEmbed = new EmbedBuilder()
       .setTitle(isGerman ? '🎫 Willkommen bei Quantix Tickets!' : '🎫 Welcome to Quantix Tickets!')
       .setDescription(description)
-      .setColor(trialActive ? 0xf093fb : 0x00ff88)
+      .setColor(0x00ff88)
       .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
       .setFooter({ text: COPYRIGHT })
       .setTimestamp();
@@ -1676,19 +1645,6 @@ client.on(Events.GuildCreate, async (guild) => {
     }
   } catch (err) {
     console.error('❌ Error checking blacklist:', err);
-  }
-
-  // Activate 14-day auto-trial for new servers
-  try {
-    const trialResult = activateAutoTrial(guild.id);
-
-    if (trialResult.success) {
-      console.log(`🎁 Auto-Trial aktiviert für ${guild.name} (${guild.id}) - 14 Tage Premium Pro`);
-    } else if (trialResult.alreadyHadTrial) {
-      console.log(`ℹ️ ${guild.name} (${guild.id}) hatte bereits Trial`);
-    }
-  } catch (err) {
-    console.error('❌ Error activating auto-trial:', err);
   }
 
   try {
