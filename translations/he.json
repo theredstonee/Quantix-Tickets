@@ -22,11 +22,24 @@
   "autoClose": {
     "warning_title": "אזהרת חוסר פעילות",
     "warning_description": "כרטיס זה לא עודכן זמן מה ויסגר אוטומטית תוך **{days} ימים** אם לא תהיה פעילות נוספת.",
+    "warning_description_hours": "כרטיס זה ייסגר אוטומטית תוך **{hours} שעות** אם לא תהיה פעילות נוספת.",
     "prevent_title": "כיצד למנוע סגירה אוטומטית",
-    "prevent_description": "פשוט שלח הודעה בערוץ זה כדי לשמור על הכרטיס פעיל.",
+    "prevent_description": "פשוט שלח הודעה בערוץ זה או לחץ על הכפתור כדי לשמור על הכרטיס פעיל.",
     "closed_title": "כרטיס נסגר אוטומטית",
     "closed_description": "כרטיס זה נסגר אוטומטית עקב חוסר פעילות.",
-    "reason_inactivity": "אין פעילות"
+    "reason_inactivity": "אין פעילות",
+    "reason": "סיבה",
+    "hours": "שעות",
+    "time_remaining": "זמן נותר",
+    "inactivity_limit": "מגבלת חוסר פעילות",
+    "inactive_for": "לא פעיל מאז",
+    "cancel_button": "בטל סגירה אוטומטית",
+    "cancelled_title": "סגירה אוטומטית בוטלה",
+    "cancelled_description": "טיימר הסגירה האוטומטית אופס על ידי **{user}**.\n\nהכרטיס נשאר פתוח.",
+    "timer_reset": "הטיימר אופס",
+    "timer_reset_desc": "טיימר חוסר הפעילות אופס.",
+    "dm_title": "כרטיס נסגר אוטומטית",
+    "dm_description": "הכרטיס שלך נסגר אוטומטית עקב חוסר פעילות.\n\n**שרת:** {server}\n**כרטיס:** #{ticketId}\n**נושא:** {topic}\n**סיבה:** אין פעילות במשך {hours} שעות"
   },
   "faq": {
     "title": "שאלות נפוצות",

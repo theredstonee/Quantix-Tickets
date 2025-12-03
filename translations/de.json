@@ -22,11 +22,24 @@
   "autoClose": {
     "warning_title": "Inaktivitäts-Warnung",
     "warning_description": "Dieses Ticket wurde seit längerer Zeit nicht aktualisiert und wird automatisch in **{days} Tagen** geschlossen, wenn keine weitere Aktivität stattfindet.",
+    "warning_description_hours": "Dieses Ticket wird in **{hours} Stunden** automatisch geschlossen, wenn keine weitere Aktivität stattfindet.",
     "prevent_title": "So verhinderst du das automatische Schließen",
-    "prevent_description": "Sende einfach eine Nachricht in diesem Channel, um das Ticket aktiv zu halten.",
+    "prevent_description": "Sende einfach eine Nachricht in diesem Channel oder klicke den Button, um das Ticket aktiv zu halten.",
     "closed_title": "Ticket automatisch geschlossen",
     "closed_description": "Dieses Ticket wurde wegen Inaktivität automatisch geschlossen.",
-    "reason_inactivity": "Keine Aktivität"
+    "reason_inactivity": "Keine Aktivität",
+    "reason": "Grund",
+    "hours": "Stunden",
+    "time_remaining": "Verbleibende Zeit",
+    "inactivity_limit": "Inaktivitäts-Limit",
+    "inactive_for": "Inaktiv seit",
+    "cancel_button": "Auto-Close abbrechen",
+    "cancelled_title": "Auto-Close abgebrochen",
+    "cancelled_description": "Der Auto-Close Timer wurde von **{user}** zurückgesetzt.\n\nDas Ticket bleibt offen.",
+    "timer_reset": "Timer zurückgesetzt",
+    "timer_reset_desc": "Der Inaktivitäts-Timer wurde zurückgesetzt.",
+    "dm_title": "Ticket automatisch geschlossen",
+    "dm_description": "Dein Ticket wurde wegen Inaktivität automatisch geschlossen.\n\n**Server:** {server}\n**Ticket:** #{ticketId}\n**Thema:** {topic}\n**Grund:** Keine Aktivität seit {hours} Stunden"
   },
   "faq": {
     "title": "Häufig gestellte Fragen",

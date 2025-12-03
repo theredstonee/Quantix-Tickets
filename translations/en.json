@@ -22,11 +22,24 @@
   "autoClose": {
     "warning_title": "Inactivity Warning",
     "warning_description": "This ticket has not been updated for a while and will be automatically closed in **{days} days** if there is no further activity.",
+    "warning_description_hours": "This ticket will be automatically closed in **{hours} hours** if there is no further activity.",
     "prevent_title": "How to prevent auto-close",
-    "prevent_description": "Simply send a message in this channel to keep the ticket active.",
+    "prevent_description": "Simply send a message in this channel or click the button to keep the ticket active.",
     "closed_title": "Ticket automatically closed",
     "closed_description": "This ticket was automatically closed due to inactivity.",
-    "reason_inactivity": "No activity"
+    "reason_inactivity": "No activity",
+    "reason": "Reason",
+    "hours": "hours",
+    "time_remaining": "Time remaining",
+    "inactivity_limit": "Inactivity limit",
+    "inactive_for": "Inactive for",
+    "cancel_button": "Cancel Auto-Close",
+    "cancelled_title": "Auto-Close cancelled",
+    "cancelled_description": "The auto-close timer was reset by **{user}**.\n\nThe ticket remains open.",
+    "timer_reset": "Timer reset",
+    "timer_reset_desc": "The inactivity timer has been reset.",
+    "dm_title": "Ticket automatically closed",
+    "dm_description": "Your ticket was automatically closed due to inactivity.\n\n**Server:** {server}\n**Ticket:** #{ticketId}\n**Topic:** {topic}\n**Reason:** No activity for {hours} hours"
   },
   "faq": {
     "title": "Frequently Asked Questions",

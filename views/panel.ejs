@@ -3305,6 +3305,112 @@
               </div>
             </div>
 
+            <!-- Auto-Close System -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                      <i class="fas fa-clock"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '⏰ Auto-Close System' : '⏰ Auto-Close System' %></span>
+                    <span class="priority-badge" style="background: #10b981; color: white; border-color: #10b981;">FREE</span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Schließe inaktive Tickets automatisch nach einer bestimmten Zeit'
+                      : 'Automatically close inactive tickets after a specified time'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="toggle-container" style="margin-bottom: 1.5rem;">
+                  <label class="toggle-label">
+                    <input type="checkbox" name="autoCloseEnabled" <%= cfg.autoClose?.enabled ? 'checked' : '' %>>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">
+                      <strong><%= lang === 'de' ? 'Auto-Close aktivieren' : 'Enable Auto-Close' %></strong>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+                  <i class="fas fa-info-circle"></i>
+                  <div>
+                    <strong><%= lang === 'de' ? 'Wie funktioniert Auto-Close?' : 'How does Auto-Close work?' %></strong><br>
+                    <%= lang === 'de'
+                      ? 'Tickets werden nach der eingestellten Zeit der Inaktivität automatisch geschlossen. 24 Stunden vor dem Schließen wird eine Warnung mit Abbrechen-Button gesendet. Jede neue Nachricht im Ticket setzt den Timer zurück.'
+                      : 'Tickets will be automatically closed after the set inactivity time. A warning with a cancel button is sent 24 hours before closing. Each new message in the ticket resets the timer.'
+                    %>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-hourglass-half"></i>
+                    <span><%= lang === 'de' ? 'Inaktivitäts-Zeit (Stunden)' : 'Inactivity Time (Hours)' %></span>
+                  </div>
+                  <input type="number" name="autoCloseInactiveHours"
+                    value="<%= cfg.autoClose?.inactiveHours || 72 %>"
+                    min="25" max="720" placeholder="72" style="width: 100%;">
+                  <div class="help-text">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>
+                      <%= lang === 'de'
+                        ? 'Nach wie vielen Stunden ohne Aktivität soll das Ticket geschlossen werden? (Min: 25h, Max: 720h/30 Tage). Die Warnung erscheint 24h vorher.'
+                        : 'After how many hours of inactivity should the ticket be closed? (Min: 25h, Max: 720h/30 days). Warning appears 24h before.'
+                      %>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="form-label">
+                    <i class="fas fa-shield-alt"></i>
+                    <span><%= lang === 'de' ? 'Ausgeschlossene Prioritäten' : 'Excluded Priorities' %></span>
+                  </div>
+                  <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                      <input type="checkbox" name="autoCloseExcludePriority" value="0"
+                        <%= cfg.autoClose?.excludePriority?.includes(0) ? 'checked' : '' %>>
+                      <span style="color: #22c55e;">🟢 <%= lang === 'de' ? 'Niedrig' : 'Low' %></span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                      <input type="checkbox" name="autoCloseExcludePriority" value="1"
+                        <%= cfg.autoClose?.excludePriority?.includes(1) ? 'checked' : '' %>>
+                      <span style="color: #f97316;">🟠 <%= lang === 'de' ? 'Mittel' : 'Medium' %></span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                      <input type="checkbox" name="autoCloseExcludePriority" value="2"
+                        <%= cfg.autoClose?.excludePriority?.includes(2) ? 'checked' : '' %>>
+                      <span style="color: #ef4444;">🔴 <%= lang === 'de' ? 'Hoch' : 'High' %></span>
+                    </label>
+                  </div>
+                  <div class="help-text">
+                    <i class="fas fa-info-circle"></i>
+                    <span>
+                      <%= lang === 'de'
+                        ? 'Tickets mit diesen Prioritäten werden nicht automatisch geschlossen'
+                        : 'Tickets with these priorities will not be automatically closed'
+                      %>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="alert" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); margin-top: 1rem;">
+                  <i class="fas fa-bell" style="color: #f59e0b;"></i>
+                  <div>
+                    <strong><%= lang === 'de' ? 'Timer-Verhalten' : 'Timer Behavior' %></strong><br>
+                    <%= lang === 'de'
+                      ? '• Timer startet bei letzter Nachricht\n• Warnung erscheint immer 24h vorher\n• Jeder kann den Auto-Close im Ticket abbrechen'
+                      : '• Timer starts at last message\n• Warning always appears 24h before\n• Anyone in the ticket can cancel auto-close'
+                    %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Application/Bewerbungs-System -->
             <div class="card">
               <div class="card-header">

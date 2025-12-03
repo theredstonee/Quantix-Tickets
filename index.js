@@ -5525,6 +5525,65 @@ client.on(Events.InteractionCreate, async i => {
         return;
       }
 
+      // Auto-Close Cancel Button Handler
+      if(i.customId.startsWith('cancel_auto_close_')){
+        const ticketId = i.customId.replace('cancel_auto_close_', '');
+        const guildId = i.guild.id;
+        const cfg = readCfg(guildId);
+
+        // Lade Ticket
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.id === parseInt(ticketId) || t.id === ticketId);
+
+        if(!ticket){
+          return i.reply({ephemeral:true,content:'❌ Ticket nicht gefunden.'});
+        }
+
+        // Prüfe Berechtigung: Ersteller, Team oder hinzugefügte User
+        const isCreator = ticket.userId === i.user.id;
+        const isTeam = hasAnyTeamRole(i.member, guildId);
+        const isAddedUser = ticket.addedUsers && ticket.addedUsers.includes(i.user.id);
+
+        if(!isCreator && !isTeam && !isAddedUser){
+          return i.reply({
+            ephemeral:true,
+            content:'❌ Du bist nicht berechtigt, den Auto-Close Timer abzubrechen.'
+          });
+        }
+
+        // Cancel Auto-Close (Timer zurücksetzen)
+        const { cancelAutoClose } = require('./auto-close-service');
+        const result = await cancelAutoClose(guildId, ticketId, i.user.id);
+
+        if(!result.success){
+          return i.reply({ephemeral:true,content:'❌ Fehler: ' + result.error});
+        }
+
+        // Update die Warn-Nachricht (Button entfernen)
+        const embed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('✅ ' + t(guildId, 'autoClose.cancelled_title'))
+          .setDescription(
+            t(guildId, 'autoClose.cancelled_description', { user: i.user.tag }) ||
+            `Der Auto-Close Timer wurde von **${i.user.tag}** zurückgesetzt.\n\nDas Ticket bleibt offen.`
+          )
+          .addFields(
+            {
+              name: '⏰ ' + (t(guildId, 'autoClose.timer_reset') || 'Timer zurückgesetzt'),
+              value: t(guildId, 'autoClose.timer_reset_desc') || 'Der Inaktivitäts-Timer wurde zurückgesetzt.',
+              inline: false
+            }
+          )
+          .setFooter({ text: 'Quantix Tickets • Auto-Close' })
+          .setTimestamp();
+
+        await i.update({ embeds: [embed], components: [] });
+
+        // Log event
+        await logEvent(i.guild, `⏰ Auto-Close abgebrochen für Ticket #${String(ticket.id).padStart(5, '0')} von <@${i.user.id}>`);
+        return;
+      }
+
       // Application System: Accept Button Handler
       if(i.customId.startsWith('accept_application_')){
         const guildId = i.customId.replace('accept_application_', '');
@@ -8575,6 +8634,18 @@ client.on(Events.MessageCreate, async (message) => {
 
       if (ticket) {
         await appendToLiveTranscript(message, ticket, guildId);
+
+        // Update lastMessageAt für Auto-Close Timer
+        const ticketIndex = tickets.findIndex(t => t.id === ticket.id);
+        if (ticketIndex !== -1) {
+          tickets[ticketIndex].lastMessageAt = Date.now();
+          // Wenn Warnung gesendet wurde, setze sie zurück (Aktivität erkannt)
+          if (tickets[ticketIndex].autoCloseWarningSent) {
+            tickets[ticketIndex].autoCloseWarningSent = false;
+            tickets[ticketIndex].autoCloseWarningAt = null;
+          }
+          safeWrite(ticketsPath, tickets);
+        }
       }
     }
   }

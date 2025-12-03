@@ -22,11 +22,24 @@
   "autoClose": {
     "warning_title": "Aviso de Inatividade",
     "warning_description": "Este ticket não foi atualizado há algum tempo e será automaticamente fechado em **{days} dias** se não houver mais atividade.",
+    "warning_description_hours": "Este ticket será automaticamente fechado em **{hours} horas** se não houver mais atividade.",
     "prevent_title": "Como evitar o fechamento automático",
-    "prevent_description": "Simplesmente envie uma mensagem neste canal para manter o ticket ativo.",
+    "prevent_description": "Simplesmente envie uma mensagem neste canal ou clique no botão para manter o ticket ativo.",
     "closed_title": "Ticket fechado automaticamente",
     "closed_description": "Este ticket foi automaticamente fechado devido à inatividade.",
-    "reason_inactivity": "Sem atividade"
+    "reason_inactivity": "Sem atividade",
+    "reason": "Motivo",
+    "hours": "horas",
+    "time_remaining": "Tempo restante",
+    "inactivity_limit": "Limite de inatividade",
+    "inactive_for": "Inativo desde",
+    "cancel_button": "Cancelar fechamento automático",
+    "cancelled_title": "Fechamento automático cancelado",
+    "cancelled_description": "O temporizador de fechamento automático foi reiniciado por **{user}**.\n\nO ticket permanece aberto.",
+    "timer_reset": "Temporizador reiniciado",
+    "timer_reset_desc": "O temporizador de inatividade foi reiniciado.",
+    "dm_title": "Ticket fechado automaticamente",
+    "dm_description": "Seu ticket foi automaticamente fechado devido à inatividade.\n\n**Servidor:** {server}\n**Ticket:** #{ticketId}\n**Tópico:** {topic}\n**Motivo:** Sem atividade por {hours} horas"
   },
   "faq": {
     "title": "Perguntas Frequentes",

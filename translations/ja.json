@@ -22,11 +22,24 @@
   "autoClose": {
     "warning_title": "非アクティブ警告",
     "warning_description": "このチケットはしばらく更新されておらず、さらなる活動がない場合は**{days}日**で自動的にクローズされます。",
+    "warning_description_hours": "このチケットは活動がない場合、**{hours}時間**で自動的にクローズされます。",
     "prevent_title": "自動クローズを防ぐ方法",
-    "prevent_description": "このチャンネルでメッセージを送信するだけで、チケットをアクティブに保つことができます。",
+    "prevent_description": "このチャンネルでメッセージを送信するか、ボタンをクリックしてチケットをアクティブに保ちます。",
     "closed_title": "チケットが自動的にクローズされました",
     "closed_description": "このチケットは非アクティブのため自動的にクローズされました。",
-    "reason_inactivity": "アクティビティなし"
+    "reason_inactivity": "アクティビティなし",
+    "reason": "理由",
+    "hours": "時間",
+    "time_remaining": "残り時間",
+    "inactivity_limit": "非アクティブ制限",
+    "inactive_for": "非アクティブ期間",
+    "cancel_button": "自動クローズをキャンセル",
+    "cancelled_title": "自動クローズがキャンセルされました",
+    "cancelled_description": "自動クローズタイマーが**{user}**によってリセットされました。\n\nチケットは開いたままです。",
+    "timer_reset": "タイマーリセット",
+    "timer_reset_desc": "非アクティブタイマーがリセットされました。",
+    "dm_title": "チケットが自動的にクローズされました",
+    "dm_description": "非アクティブのためチケットが自動的にクローズされました。\n\n**サーバー:** {server}\n**チケット:** #{ticketId}\n**トピック:** {topic}\n**理由:** {hours}時間活動なし"
   },
   "faq": {
     "title": "よくある質問",

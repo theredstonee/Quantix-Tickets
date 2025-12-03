@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { EmbedBuilder } = require('discord.js');
-const { hasFeature } = require('./premium');
+const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const { getGuildLanguage, t } = require('./translations');
 
 const CONFIG_DIR = path.join(__dirname, 'configs');
@@ -41,7 +40,16 @@ function saveTickets(guildId, tickets) {
 }
 
 function getLastActivity(ticket) {
-  // Get the most recent activity timestamp
+  // Prüfe ob Auto-Close Timer manuell zurückgesetzt wurde
+  if (ticket.autoCloseResetAt) {
+    return ticket.autoCloseResetAt;
+  }
+
+  // Prüfe lastMessageAt für letzte Nachricht
+  if (ticket.lastMessageAt) {
+    return ticket.lastMessageAt;
+  }
+
   // Check statusHistory first, then fall back to timestamp
   if (ticket.statusHistory && ticket.statusHistory.length > 0) {
     const lastStatus = ticket.statusHistory[ticket.statusHistory.length - 1];
@@ -58,28 +66,29 @@ async function checkAutoClose(client) {
 
   for (const [guildId, guild] of guilds) {
     try {
-      // Check if guild has Pro and auto-close enabled
-      if (!hasFeature(guildId, 'autoClose')) {
-        continue;
-      }
-
       const cfg = readCfg(guildId);
       if (!cfg.autoClose || !cfg.autoClose.enabled) {
         continue;
       }
 
-      const inactiveDays = cfg.autoClose.inactiveDays || 7;
-      const warningDays = cfg.autoClose.warningDays || 2;
+      // Zeit in Stunden (Standard: 72h = 3 Tage)
+      const inactiveHours = cfg.autoClose.inactiveHours || 72;
       const excludePriority = cfg.autoClose.excludePriority || [];
 
-      const inactiveMs = inactiveDays * 24 * 60 * 60 * 1000;
-      const warningMs = warningDays * 24 * 60 * 60 * 1000;
+      // Konvertiere zu Millisekunden
+      const inactiveMs = inactiveHours * 60 * 60 * 1000;
+      const warningMs = 24 * 60 * 60 * 1000; // Warnung immer 24h vorher
 
       const tickets = loadTickets(guildId);
       const openTickets = tickets.filter(t => t.status === 'offen');
 
       for (const ticket of openTickets) {
-        // Skip if priority is excluded
+        // Skip wenn Auto-Close für dieses Ticket deaktiviert wurde
+        if (ticket.autoCloseDisabled) {
+          continue;
+        }
+
+        // Skip wenn Priority ausgeschlossen
         if (excludePriority.includes(ticket.priority)) {
           continue;
         }
@@ -87,13 +96,13 @@ async function checkAutoClose(client) {
         const lastActivity = getLastActivity(ticket);
         const timeSinceActivity = now - lastActivity;
 
-        // Check if ticket should be closed
+        // Check ob Ticket geschlossen werden soll
         if (timeSinceActivity >= inactiveMs) {
-          await closeInactiveTicket(client, guild, ticket, cfg, guildId);
+          await closeInactiveTicket(client, guild, ticket, cfg, guildId, inactiveHours);
         }
-        // Check if warning should be sent
+        // Check ob Warnung gesendet werden soll (24h vor Schließung)
         else if (timeSinceActivity >= (inactiveMs - warningMs) && !ticket.autoCloseWarningSent) {
-          await sendAutoCloseWarning(client, guild, ticket, cfg, guildId, warningDays);
+          await sendAutoCloseWarning(client, guild, ticket, cfg, guildId, inactiveHours);
         }
       }
     } catch (err) {
@@ -104,36 +113,60 @@ async function checkAutoClose(client) {
   console.log('[Auto-Close] Check completed');
 }
 
-async function sendAutoCloseWarning(client, guild, ticket, cfg, guildId, warningDays) {
+async function sendAutoCloseWarning(client, guild, ticket, cfg, guildId, inactiveHours) {
   try {
     const channel = await guild.channels.fetch(ticket.channelId).catch(() => null);
     if (!channel) return;
 
-    const lang = getGuildLanguage(guildId);
+    // Berechne verbleibende Zeit (24h)
+    const hoursRemaining = 24;
+
     const embed = new EmbedBuilder()
       .setColor(0xff9900)
       .setTitle('⚠️ ' + t(guildId, 'autoClose.warning_title'))
       .setDescription(
-        t(guildId, 'autoClose.warning_description', { days: warningDays })
+        t(guildId, 'autoClose.warning_description_hours', { hours: hoursRemaining }) ||
+        `Dieses Ticket wird in **${hoursRemaining} Stunden** automatisch geschlossen, wenn keine weitere Aktivität stattfindet.`
       )
       .addFields(
         {
           name: t(guildId, 'autoClose.prevent_title'),
           value: t(guildId, 'autoClose.prevent_description'),
           inline: false
+        },
+        {
+          name: '⏰ ' + (t(guildId, 'autoClose.time_remaining') || 'Verbleibende Zeit'),
+          value: `${hoursRemaining} ${t(guildId, 'autoClose.hours') || 'Stunden'}`,
+          inline: true
+        },
+        {
+          name: '📊 ' + (t(guildId, 'autoClose.inactivity_limit') || 'Inaktivitäts-Limit'),
+          value: `${inactiveHours} ${t(guildId, 'autoClose.hours') || 'Stunden'}`,
+          inline: true
         }
       )
-      .setFooter({ text: 'Quantix Tickets • Auto-Close Warnung' })
+      .setFooter({ text: 'Quantix Tickets • Auto-Close' })
       .setTimestamp();
 
-    await channel.send({
+    // Abbrechen-Button
+    const cancelButton = new ButtonBuilder()
+      .setCustomId(`cancel_auto_close_${ticket.id}`)
+      .setLabel(t(guildId, 'autoClose.cancel_button') || 'Auto-Close abbrechen')
+      .setEmoji('❌')
+      .setStyle(ButtonStyle.Danger);
+
+    const row = new ActionRowBuilder().addComponents(cancelButton);
+
+    const warningMessage = await channel.send({
       content: `<@${ticket.userId}>`,
-      embeds: [embed]
+      embeds: [embed],
+      components: [row]
     });
 
-    // Mark warning as sent
+    // Mark warning as sent und speichere Message-ID
     ticket.autoCloseWarningSent = true;
     ticket.autoCloseWarningAt = Date.now();
+    ticket.autoCloseWarningMessageId = warningMessage.id;
 
     const tickets = loadTickets(guildId);
     const index = tickets.findIndex(t => t.id === ticket.id);
@@ -148,11 +181,11 @@ async function sendAutoCloseWarning(client, guild, ticket, cfg, guildId, warning
   }
 }
 
-async function closeInactiveTicket(client, guild, ticket, cfg, guildId) {
+async function closeInactiveTicket(client, guild, ticket, cfg, guildId, inactiveHours) {
   try {
     const channel = await guild.channels.fetch(ticket.channelId).catch(() => null);
     if (!channel) {
-      // Channel doesn't exist, just mark as closed
+      // Channel existiert nicht, nur als geschlossen markieren
       ticket.status = 'geschlossen';
       ticket.closedAt = Date.now();
       ticket.closedBy = 'auto-close';
@@ -173,7 +206,6 @@ async function closeInactiveTicket(client, guild, ticket, cfg, guildId) {
       return;
     }
 
-    const lang = getGuildLanguage(guildId);
     const embed = new EmbedBuilder()
       .setColor(0xff4444)
       .setTitle('🔐 ' + t(guildId, 'autoClose.closed_title'))
@@ -185,8 +217,13 @@ async function closeInactiveTicket(client, guild, ticket, cfg, guildId) {
           inline: true
         },
         {
-          name: '📅 Grund',
+          name: '📅 ' + (t(guildId, 'autoClose.reason') || 'Grund'),
           value: t(guildId, 'autoClose.reason_inactivity'),
+          inline: true
+        },
+        {
+          name: '⏰ ' + (t(guildId, 'autoClose.inactive_for') || 'Inaktiv seit'),
+          value: `${inactiveHours} ${t(guildId, 'autoClose.hours') || 'Stunden'}`,
           inline: true
         }
       )
@@ -221,13 +258,19 @@ async function closeInactiveTicket(client, guild, ticket, cfg, guildId) {
         if (creator) {
           const dmEmbed = new EmbedBuilder()
             .setColor(0xff4444)
-            .setTitle('🔐 Ticket automatisch geschlossen')
+            .setTitle('🔐 ' + (t(guildId, 'autoClose.dm_title') || 'Ticket automatisch geschlossen'))
             .setDescription(
+              (t(guildId, 'autoClose.dm_description', {
+                server: guild.name,
+                ticketId: String(ticket.id).padStart(5, '0'),
+                topic: ticket.topic,
+                hours: inactiveHours
+              }) ||
               `Dein Ticket wurde wegen Inaktivität automatisch geschlossen.\n\n` +
               `**Server:** ${guild.name}\n` +
               `**Ticket:** #${String(ticket.id).padStart(5, '0')}\n` +
               `**Thema:** ${ticket.topic}\n` +
-              `**Grund:** Keine Aktivität seit ${cfg.autoClose.inactiveDays} Tagen`
+              `**Grund:** Keine Aktivität seit ${inactiveHours} Stunden`)
             )
             .setFooter({ text: `Quantix Tickets • ${guild.name}` })
             .setTimestamp();
@@ -243,23 +286,19 @@ async function closeInactiveTicket(client, guild, ticket, cfg, guildId) {
     setTimeout(async () => {
       if (cfg.archiveEnabled && cfg.archiveCategoryId) {
         try {
-          // Verschiebe Channel in Archiv-Kategorie
           await channel.setParent(cfg.archiveCategoryId, {
             lockPermissions: false
           });
 
-          // Benenne Channel um zu "closed-ticket-####"
           const newName = `closed-${channel.name}`;
           await channel.setName(newName);
 
-          console.log(`✅ Auto-Close: Ticket #${ticket.id} in Archiv verschoben`);
+          console.log(`[Auto-Close] Ticket #${ticket.id} archived`);
         } catch (err) {
-          console.error('Fehler beim Archivieren (Auto-Close):', err);
-          // Fallback: Lösche Channel
+          console.error('Error archiving (Auto-Close):', err);
           await channel.delete().catch(() => {});
         }
       } else {
-        // Kein Archiv aktiv: Lösche Channel
         await channel.delete().catch(() => {});
       }
     }, 5000);
@@ -270,23 +309,62 @@ async function closeInactiveTicket(client, guild, ticket, cfg, guildId) {
   }
 }
 
+// Funktion zum Abbrechen/Zurücksetzen des Auto-Close Timers
+async function cancelAutoClose(guildId, ticketId, userId) {
+  try {
+    const tickets = loadTickets(guildId);
+    const index = tickets.findIndex(t => t.id === ticketId || t.id === parseInt(ticketId));
+
+    if (index === -1) {
+      return { success: false, error: 'Ticket nicht gefunden' };
+    }
+
+    const ticket = tickets[index];
+
+    // Reset Auto-Close Timer
+    ticket.autoCloseWarningSent = false;
+    ticket.autoCloseWarningAt = null;
+    ticket.autoCloseResetAt = Date.now();
+    ticket.autoCloseResetBy = userId;
+
+    // Speichere in Status-History
+    if (!ticket.statusHistory) ticket.statusHistory = [];
+    ticket.statusHistory.push({
+      action: 'auto_close_cancelled',
+      timestamp: Date.now(),
+      userId: userId
+    });
+
+    tickets[index] = ticket;
+    saveTickets(guildId, tickets);
+
+    return { success: true, ticket };
+  } catch (err) {
+    console.error('[Auto-Close] Error cancelling:', err);
+    return { success: false, error: err.message };
+  }
+}
+
 function startAutoCloseService(client) {
   console.log('[Auto-Close] Service started');
 
-  // Check every hour
-  const checkInterval = 60 * 60 * 1000; // 1 hour
+  // Check every 30 minutes (for better accuracy with hours)
+  const checkInterval = 30 * 60 * 1000; // 30 minutes
 
   setInterval(() => {
     checkAutoClose(client);
   }, checkInterval);
 
-  // Initial check after 5 minutes
+  // Initial check after 2 minutes
   setTimeout(() => {
     checkAutoClose(client);
-  }, 5 * 60 * 1000);
+  }, 2 * 60 * 1000);
 }
 
 module.exports = {
   startAutoCloseService,
-  checkAutoClose
+  checkAutoClose,
+  cancelAutoClose,
+  loadTickets,
+  saveTickets
 };

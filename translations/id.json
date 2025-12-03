@@ -24,11 +24,24 @@
   "autoClose": {
     "warning_title": "Peringatan Tidak Aktif",
     "warning_description": "Tiket ini belum diperbarui untuk sementara waktu dan akan ditutup secara otomatis dalam **{days} hari** jika tidak ada aktivitas lebih lanjut.",
+    "warning_description_hours": "Tiket ini akan ditutup secara otomatis dalam **{hours} jam** jika tidak ada aktivitas lebih lanjut.",
     "prevent_title": "Cara mencegah penutupan otomatis",
-    "prevent_description": "Cukup kirim pesan di saluran ini untuk menjaga tiket tetap aktif.",
+    "prevent_description": "Cukup kirim pesan di saluran ini atau klik tombol untuk menjaga tiket tetap aktif.",
     "closed_title": "Tiket ditutup secara otomatis",
     "closed_description": "Tiket ini ditutup secara otomatis karena tidak aktif.",
-    "reason_inactivity": "Tidak ada aktivitas"
+    "reason_inactivity": "Tidak ada aktivitas",
+    "reason": "Alasan",
+    "hours": "jam",
+    "time_remaining": "Waktu tersisa",
+    "inactivity_limit": "Batas tidak aktif",
+    "inactive_for": "Tidak aktif selama",
+    "cancel_button": "Batalkan penutupan otomatis",
+    "cancelled_title": "Penutupan otomatis dibatalkan",
+    "cancelled_description": "Timer penutupan otomatis telah direset oleh **{user}**.\n\nTiket tetap terbuka.",
+    "timer_reset": "Timer direset",
+    "timer_reset_desc": "Timer tidak aktif telah direset.",
+    "dm_title": "Tiket ditutup secara otomatis",
+    "dm_description": "Tiket Anda ditutup secara otomatis karena tidak aktif.\n\n**Server:** {server}\n**Tiket:** #{ticketId}\n**Topik:** {topic}\n**Alasan:** Tidak ada aktivitas selama {hours} jam"
   },
   "faq": {
     "title": "Pertanyaan yang Sering Diajukan",

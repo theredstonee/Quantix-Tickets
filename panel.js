@@ -2805,11 +2805,11 @@ module.exports = (client)=>{
         footer:      sanitizeString(take('applicationEmbedFooter',      prevAE.footer), 2048)
       };
 
-      // Auto-Close Configuration (Premium Pro)
+      // Auto-Close Configuration (kostenlos für alle)
       if (!cfg.autoClose) cfg.autoClose = {};
       cfg.autoClose.enabled = req.body.autoCloseEnabled === 'on';
-      cfg.autoClose.inactiveDays = sanitizeNumber(req.body.autoCloseInactiveDays, 1, 365) || 7;
-      cfg.autoClose.warningDays = sanitizeNumber(req.body.autoCloseWarningDays, 1, 30) || 2;
+      // Zeit in Stunden (min: 25h damit Warnung 24h vorher funktioniert, max: 720h = 30 Tage)
+      cfg.autoClose.inactiveHours = sanitizeNumber(req.body.autoCloseInactiveHours, 25, 720) || 72;
 
       // Parse excludePriority as array
       if (req.body.autoCloseExcludePriority) {
