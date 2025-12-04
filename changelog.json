@@ -1,6 +1,93 @@
 {
-  "currentVersion": "1.5.2",
+  "currentVersion": "1.5.3",
   "versions": [
+    {
+      "version": "1.5.3",
+      "date": "2025-12-04",
+      "changes": {
+        "de": [
+          "⏰ Auto-Close System - Inaktive Tickets automatisch schließen",
+          "⚙️ Zeit in Stunden konfigurierbar (25-720h) im Panel",
+          "⚠️ Warnung erscheint 24h vor Schließung mit Abbrechen-Button",
+          "🔄 Timer wird bei jeder Nachricht automatisch zurückgesetzt",
+          "📊 Nachrichtenstatistiken bei Ticket-Schließung (wer hat wie viele Nachrichten)",
+          "📧 Transcript-Embed zeigt User-Statistiken im Log-Channel und per DM",
+          "🆓 Alle Features jetzt kostenlos (nur Whitelabel bleibt Premium)"
+        ],
+        "en": [
+          "⏰ Auto-Close System - Automatically close inactive tickets",
+          "⚙️ Time configurable in hours (25-720h) in panel",
+          "⚠️ Warning appears 24h before closing with cancel button",
+          "🔄 Timer resets automatically with each message",
+          "📊 Message statistics on ticket close (who sent how many messages)",
+          "📧 Transcript embed shows user statistics in log channel and via DM",
+          "🆓 All features now free (only Whitelabel remains premium)"
+        ],
+        "es": [
+          "⏰ Sistema Auto-Close - Cerrar tickets inactivos automáticamente",
+          "⚙️ Tiempo configurable en horas (25-720h) en el panel",
+          "⚠️ Advertencia aparece 24h antes del cierre con botón cancelar",
+          "🔄 Temporizador se reinicia automáticamente con cada mensaje",
+          "📊 Estadísticas de mensajes al cerrar ticket (quién envió cuántos mensajes)",
+          "📧 Embed de transcript muestra estadísticas de usuarios en canal de logs y por DM",
+          "🆓 Todas las funciones ahora gratis (solo Whitelabel sigue siendo premium)"
+        ],
+        "pt": [
+          "⏰ Sistema Auto-Close - Fechar tickets inativos automaticamente",
+          "⚙️ Tempo configurável em horas (25-720h) no painel",
+          "⚠️ Aviso aparece 24h antes do fechamento com botão cancelar",
+          "🔄 Timer reinicia automaticamente com cada mensagem",
+          "📊 Estatísticas de mensagens ao fechar ticket (quem enviou quantas mensagens)",
+          "📧 Embed de transcript mostra estatísticas de usuários no canal de logs e por DM",
+          "🆓 Todas as funcionalidades agora gratuitas (apenas Whitelabel permanece premium)"
+        ],
+        "ru": [
+          "⏰ Система Auto-Close - Автоматическое закрытие неактивных тикетов",
+          "⚙️ Время настраивается в часах (25-720ч) в панели",
+          "⚠️ Предупреждение появляется за 24ч до закрытия с кнопкой отмены",
+          "🔄 Таймер сбрасывается автоматически с каждым сообщением",
+          "📊 Статистика сообщений при закрытии тикета (кто отправил сколько сообщений)",
+          "📧 Embed транскрипта показывает статистику пользователей в канале логов и через DM",
+          "🆓 Все функции теперь бесплатны (только Whitelabel остаётся премиум)"
+        ],
+        "ja": [
+          "⏰ Auto-Closeシステム - 非アクティブなチケットを自動的にクローズ",
+          "⚙️ パネルで時間を設定可能（25-720時間）",
+          "⚠️ クローズ24時間前にキャンセルボタン付きの警告が表示",
+          "🔄 メッセージごとにタイマーが自動的にリセット",
+          "📊 チケットクローズ時のメッセージ統計（誰が何通送ったか）",
+          "📧 トランスクリプトEmbedがログチャンネルとDMでユーザー統計を表示",
+          "🆓 すべての機能が無料に（Whitelabelのみプレミアム）"
+        ],
+        "he": [
+          "⏰ מערכת סגירה אוטומטית - סגירה אוטומטית של כרטיסים לא פעילים",
+          "⚙️ זמן ניתן להגדרה בשעות (25-720 שעות) בפאנל",
+          "⚠️ אזהרה מופיעה 24 שעות לפני הסגירה עם כפתור ביטול",
+          "🔄 טיימר מתאפס אוטומטית עם כל הודעה",
+          "📊 סטטיסטיקות הודעות בסגירת כרטיס (מי שלח כמה הודעות)",
+          "📧 Embed תמליל מציג סטטיסטיקות משתמשים בערוץ לוגים ובDM",
+          "🆓 כל התכונות עכשיו חינם (רק Whitelabel נשאר פרימיום)"
+        ],
+        "ar": [
+          "⏰ نظام الإغلاق التلقائي - إغلاق التذاكر غير النشطة تلقائياً",
+          "⚙️ الوقت قابل للتكوين بالساعات (25-720 ساعة) في اللوحة",
+          "⚠️ تظهر التحذير قبل 24 ساعة من الإغلاق مع زر إلغاء",
+          "🔄 يتم إعادة تعيين المؤقت تلقائياً مع كل رسالة",
+          "📊 إحصائيات الرسائل عند إغلاق التذكرة (من أرسل كم رسالة)",
+          "📧 يعرض Embed النسخة إحصائيات المستخدمين في قناة السجلات وعبر DM",
+          "🆓 جميع الميزات الآن مجانية (Whitelabel فقط يبقى مميزاً)"
+        ],
+        "id": [
+          "⏰ Sistem Auto-Close - Tutup tiket tidak aktif secara otomatis",
+          "⚙️ Waktu dapat dikonfigurasi dalam jam (25-720 jam) di panel",
+          "⚠️ Peringatan muncul 24 jam sebelum penutupan dengan tombol batal",
+          "🔄 Timer direset secara otomatis dengan setiap pesan",
+          "📊 Statistik pesan saat tiket ditutup (siapa mengirim berapa pesan)",
+          "📧 Embed transcript menampilkan statistik pengguna di channel log dan via DM",
+          "🆓 Semua fitur sekarang gratis (hanya Whitelabel tetap premium)"
+        ]
+      }
+    },
     {
       "version": "1.5.2",
       "date": "2025-12-01",
