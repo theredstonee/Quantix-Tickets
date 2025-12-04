@@ -3247,6 +3247,130 @@ client.on(Events.InteractionCreate, async i => {
       return;
     }
 
+    // Forward Modal Handler
+    if(i.isModalSubmit() && i.customId.startsWith('forward_modal_')){
+      const parts = i.customId.replace('forward_modal_', '').split('_');
+      const targetType = parts[0]; // 'user' or 'role'
+      const targetId = parts[1];
+      const reason = i.fields.getTextInputValue('forward_reason');
+      const guildId = i.guild.id;
+
+      await i.deferReply();
+
+      try {
+        const tickets = loadTickets(guildId);
+        const ticketIndex = tickets.findIndex(t => t.channelId === i.channel.id);
+
+        if(ticketIndex === -1){
+          return i.editReply({ content: '❌ Ticket nicht gefunden.' });
+        }
+
+        const ticket = tickets[ticketIndex];
+        const oldClaimer = ticket.claimer;
+
+        if(targetType === 'user'){
+          // Forward to specific user
+          ticket.claimer = targetId;
+
+          // Update channel permissions
+          await i.channel.permissionOverwrites.edit(oldClaimer, {
+            ViewChannel: true,
+            SendMessages: false
+          }).catch(() => {});
+
+          await i.channel.permissionOverwrites.edit(targetId, {
+            ViewChannel: true,
+            SendMessages: true,
+            AttachFiles: true,
+            EmbedLinks: true
+          });
+
+          // Add forward history
+          if(!ticket.forwardHistory) ticket.forwardHistory = [];
+          ticket.forwardHistory.push({
+            from: oldClaimer,
+            to: targetId,
+            type: 'user',
+            reason: reason,
+            timestamp: Date.now()
+          });
+
+          tickets[ticketIndex] = ticket;
+          saveTickets(guildId, tickets);
+
+          const forwardEmbed = new EmbedBuilder()
+            .setColor(0x5865F2)
+            .setTitle('🔄 Ticket weitergeleitet')
+            .setDescription(`Dieses Ticket wurde an <@${targetId}> weitergeleitet.`)
+            .addFields(
+              { name: '👤 Von', value: `<@${oldClaimer}>`, inline: true },
+              { name: '👤 An', value: `<@${targetId}>`, inline: true },
+              { name: '📝 Grund', value: reason, inline: false }
+            )
+            .setFooter({ text: 'Quantix Tickets • Weiterleitung' })
+            .setTimestamp();
+
+          await i.editReply({ embeds: [forwardEmbed] });
+
+          // Ping new claimer
+          await i.channel.send({ content: `<@${targetId}> Du hast ein weitergeleitetes Ticket erhalten!` });
+
+        } else if(targetType === 'role'){
+          // Forward to role - unclaim and notify role
+          ticket.claimer = null;
+
+          // Reset channel permissions for role
+          await i.channel.permissionOverwrites.edit(oldClaimer, {
+            ViewChannel: true,
+            SendMessages: false
+          }).catch(() => {});
+
+          await i.channel.permissionOverwrites.edit(targetId, {
+            ViewChannel: true,
+            SendMessages: true
+          });
+
+          // Add forward history
+          if(!ticket.forwardHistory) ticket.forwardHistory = [];
+          ticket.forwardHistory.push({
+            from: oldClaimer,
+            to: targetId,
+            type: 'role',
+            reason: reason,
+            timestamp: Date.now()
+          });
+
+          tickets[ticketIndex] = ticket;
+          saveTickets(guildId, tickets);
+
+          const forwardEmbed = new EmbedBuilder()
+            .setColor(0x5865F2)
+            .setTitle('🔄 Ticket weitergeleitet')
+            .setDescription(`Dieses Ticket wurde an <@&${targetId}> weitergeleitet.`)
+            .addFields(
+              { name: '👤 Von', value: `<@${oldClaimer}>`, inline: true },
+              { name: '👥 An Rolle', value: `<@&${targetId}>`, inline: true },
+              { name: '📝 Grund', value: reason, inline: false }
+            )
+            .setFooter({ text: 'Quantix Tickets • Weiterleitung' })
+            .setTimestamp();
+
+          await i.editReply({ embeds: [forwardEmbed] });
+
+          // Ping role
+          await i.channel.send({ content: `<@&${targetId}> Dieses Ticket wartet auf Übernahme!` });
+        }
+
+        // Log event
+        await logEvent(i.guild, `🔄 **Ticket weitergeleitet:** <@${oldClaimer}> hat Ticket #${ticket.id} an ${targetType === 'user' ? `<@${targetId}>` : `<@&${targetId}>`} weitergeleitet. Grund: ${reason}`);
+
+      } catch(err){
+        console.error('Forward modal error:', err);
+        await i.editReply({ content: '❌ Fehler beim Weiterleiten des Tickets.' });
+      }
+      return;
+    }
+
     if(i.isModalSubmit() && i.customId.startsWith('modal_newticket:')){
       const topicValue = i.customId.split(':')[1];
       const topic = cfg.topics?.find(t=>t.value===topicValue);
