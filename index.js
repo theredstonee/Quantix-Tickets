@@ -4108,25 +4108,7 @@ client.on(Events.InteractionCreate, async i => {
 
         await i.channel.send({ embeds: [acceptEmbed] });
 
-        // Send DM to applicant
-        try {
-          const user = await client.users.fetch(ticket.userId);
-          const dmEmbed = new EmbedBuilder()
-            .setColor(0x00ff88)
-            .setTitle('🎉 Glückwunsch! Deine Bewerbung wurde angenommen!')
-            .setDescription(
-              `**Server:** ${i.guild.name}\n` +
-              `**Bewerbung:** #${String(ticket.id).padStart(5, '0')}\n` +
-              `**Zugewiesene Rolle:** ${targetRole.name}\n\n` +
-              `**Nachricht vom Team:**\n${reason}`
-            )
-            .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
-            .setTimestamp();
-
-          await user.send({ embeds: [dmEmbed] }).catch(() => {});
-        } catch(dmErr){
-          console.error('DM notification error:', dmErr);
-        }
+        // DM wird später mit dem schönen Transcript-Embed gesendet (unten)
 
         // Log event
         await logEvent(i.guild, `✅ Bewerbung **#${ticket.id}** von <@${ticket.userId}> wurde angenommen von <@${i.user.id}>`);
@@ -4180,23 +4162,20 @@ client.on(Events.InteractionCreate, async i => {
         // Neues Bewerbungs-Transcript Embed
         const appTranscriptEmbed = new EmbedBuilder()
           .setColor(0x22c55e)
-          .setTitle('📧 » Bewerbung abgeschlossen «')
-          .setDescription('*Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.*')
+          .setTitle('🎉 » Glückwunsch! Bewerbung angenommen «')
+          .setDescription(`*Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.*\n\n**📝 Nachricht vom Team:**\n${reason}`)
           .addFields(
-            { name: '» Nachrichten «', value: `${appMessageStats?.totalMessages || 0} Nachrichten`, inline: true },
-            { name: '» Bewerbung «', value: `| 📋 | ${appChannelName}`, inline: true },
-            { name: '» Bewerber «', value: `<@${ticket.userId}>`, inline: true },
+            { name: '» Server «', value: i.guild.name, inline: true },
+            { name: '» Bewerbung «', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+            { name: '» Zugewiesene Rolle «', value: targetRole.name, inline: true },
             { name: '» Kategorie «', value: ticket.applicationCategory || 'Unbekannt', inline: true },
             { name: '» Status «', value: '✅ Angenommen', inline: true },
-            { name: '» Rolle «', value: `<@&${targetRole.id}>`, inline: true },
-            { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
             { name: '» Bearbeitet von «', value: `<@${i.user.id}>`, inline: true },
+            { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
             { name: '» Voting «', value: votingResult, inline: true },
-            { name: '» Interview «', value: interviewStatus, inline: true },
-            { name: '» Notizen «', value: `${notesCount} Notiz(en)`, inline: true },
-            { name: '» Bewerbungs-User «', value: appUserStats, inline: false }
+            { name: '» Nachrichten «', value: `${appMessageStats?.totalMessages || 0}`, inline: true }
           )
-          .setFooter({ text: i.guild.name })
+          .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
           .setTimestamp();
 
         // Sende Transcript an Bewerber per DM
@@ -4308,25 +4287,7 @@ client.on(Events.InteractionCreate, async i => {
 
         await i.channel.send({ embeds: [rejectEmbed] });
 
-        // Send DM to applicant
-        try {
-          const user = await client.users.fetch(ticket.userId);
-          const dmEmbed = new EmbedBuilder()
-            .setColor(0xff4444)
-            .setTitle('📄 Update zu deiner Bewerbung')
-            .setDescription(
-              `**Server:** ${i.guild.name}\n` +
-              `**Bewerbung:** #${String(ticket.id).padStart(5, '0')}\n\n` +
-              `Leider müssen wir dir mitteilen, dass deine Bewerbung abgelehnt wurde.\n\n` +
-              `**Nachricht vom Team:**\n${reason}`
-            )
-            .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
-            .setTimestamp();
-
-          await user.send({ embeds: [dmEmbed] }).catch(() => {});
-        } catch(dmErr){
-          console.error('DM notification error:', dmErr);
-        }
+        // DM wird später mit dem schönen Transcript-Embed gesendet (unten)
 
         // Log event
         await logEvent(i.guild, `❌ Bewerbung **#${ticket.id}** von <@${ticket.userId}> wurde abgelehnt von <@${i.user.id}>`);
@@ -4380,23 +4341,19 @@ client.on(Events.InteractionCreate, async i => {
         // Neues Bewerbungs-Transcript Embed
         const appTranscriptEmbed = new EmbedBuilder()
           .setColor(0xef4444)
-          .setTitle('📧 » Bewerbung abgeschlossen «')
-          .setDescription('*Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.*')
+          .setTitle('📄 » Update zu deiner Bewerbung «')
+          .setDescription(`*Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.*\n\nLeider müssen wir dir mitteilen, dass deine Bewerbung abgelehnt wurde.\n\n**📝 Nachricht vom Team:**\n${reason}`)
           .addFields(
-            { name: '» Nachrichten «', value: `${appMessageStats?.totalMessages || 0} Nachrichten`, inline: true },
-            { name: '» Bewerbung «', value: `| 📋 | ${appChannelName}`, inline: true },
-            { name: '» Bewerber «', value: `<@${ticket.userId}>`, inline: true },
+            { name: '» Server «', value: i.guild.name, inline: true },
+            { name: '» Bewerbung «', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
             { name: '» Kategorie «', value: ticket.applicationCategory || 'Unbekannt', inline: true },
             { name: '» Status «', value: '❌ Abgelehnt', inline: true },
-            { name: '» Grund «', value: reason.substring(0, 100) || 'Keine Angabe', inline: true },
-            { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
             { name: '» Bearbeitet von «', value: `<@${i.user.id}>`, inline: true },
+            { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
             { name: '» Voting «', value: votingResult, inline: true },
-            { name: '» Interview «', value: interviewStatus, inline: true },
-            { name: '» Notizen «', value: `${notesCount} Notiz(en)`, inline: true },
-            { name: '» Bewerbungs-User «', value: appUserStats, inline: false }
+            { name: '» Nachrichten «', value: `${appMessageStats?.totalMessages || 0}`, inline: true }
           )
-          .setFooter({ text: i.guild.name })
+          .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
           .setTimestamp();
 
         // Sende Transcript an Bewerber per DM
