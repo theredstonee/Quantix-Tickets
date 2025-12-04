@@ -129,6 +129,11 @@ class CustomBotManager {
         await this.handleInteraction(interaction, guildId);
       });
 
+      // Setup messageCreate handler
+      client.on('messageCreate', async (message) => {
+        await this.handleMessage(message, guildId);
+      });
+
       client.on('error', (error) => {
         console.error(`[Custom Bot Manager] ❌ Error in custom bot for guild ${guildId}:`, error);
         this.botStatus.set(guildId, { status: 'error', error: error.message });
@@ -301,6 +306,41 @@ class CustomBotManager {
   }
 
   /**
+   * Gibt den aktiven Client für einen Server zurück (Custom Bot oder Haupt-Bot)
+   * @param {string} guildId - Guild ID
+   * @param {Client} mainClient - Der Haupt-Bot Client als Fallback
+   * @returns {Client} - Custom Bot wenn aktiv, sonst Haupt-Bot
+   */
+  getActiveClient(guildId, mainClient) {
+    const customBot = this.bots.get(guildId);
+
+    // Prüfe ob Custom Bot aktiv und bereit ist
+    if (customBot && customBot.isReady()) {
+      const status = this.botStatus.get(guildId);
+      if (status && status.status === 'online') {
+        console.log(`[Custom Bot Manager] Using custom bot for guild ${guildId}: ${customBot.user?.tag}`);
+        return customBot;
+      }
+    }
+
+    // Fallback auf Haupt-Bot
+    return mainClient;
+  }
+
+  /**
+   * Prüft ob ein Custom Bot für einen Server aktiv ist
+   * @param {string} guildId - Guild ID
+   * @returns {boolean}
+   */
+  isCustomBotActive(guildId) {
+    const customBot = this.bots.get(guildId);
+    if (!customBot || !customBot.isReady()) return false;
+
+    const status = this.botStatus.get(guildId);
+    return status && status.status === 'online';
+  }
+
+  /**
    * Gibt den Status eines Bots zurück
    * @param {string} guildId - Guild ID
    * @returns {object}
@@ -392,6 +432,50 @@ class CustomBotManager {
 
     } catch (err) {
       console.error(`[Custom Bot Manager] Interaction error:`, err);
+    }
+  }
+
+  /**
+   * Verarbeitet Nachrichten für Custom Bots (Live Transcript, Force Claim, etc.)
+   * @param {Message} message - Discord Message
+   * @param {string} guildId - Guild ID
+   */
+  async handleMessage(message, guildId) {
+    // Ignore bot messages
+    if (message.author.bot) return;
+
+    try {
+      // Lade die Message Handler dynamisch
+      try {
+        const mainBotHandlers = require('./interaction-handlers.js');
+        if (mainBotHandlers && mainBotHandlers.handleMessage) {
+          await mainBotHandlers.handleMessage(message, guildId);
+        }
+      } catch (err) {
+        // Fallback: Basis-Funktionalität
+        console.log(`[Custom Bot Manager] Message handler not found, using basic handling`);
+
+        // Basis: Live Transcript
+        const { loadTickets } = require('./premium.js');
+        const tickets = loadTickets(guildId);
+        const ticket = tickets.find(t => t.channelId === message.channel.id && t.status === 'offen');
+
+        if (ticket) {
+          // Update lastMessageAt für Auto-Close
+          const ticketsPath = path.join(__dirname, 'configs', `${guildId}_tickets.json`);
+          const ticketIndex = tickets.findIndex(t => t.id === ticket.id);
+          if (ticketIndex !== -1) {
+            tickets[ticketIndex].lastMessageAt = Date.now();
+            if (tickets[ticketIndex].autoCloseWarningSent) {
+              tickets[ticketIndex].autoCloseWarningSent = false;
+              tickets[ticketIndex].autoCloseWarningAt = null;
+            }
+            fs.writeFileSync(ticketsPath, JSON.stringify(tickets, null, 2));
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`[Custom Bot Manager] Message handling error:`, err);
     }
   }
 

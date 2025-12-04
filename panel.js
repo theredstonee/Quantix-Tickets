@@ -3368,7 +3368,11 @@ module.exports = (client)=>{
         return res.redirect('/panel?msg=nopanel');
       }
 
-      const guild   = await client.guilds.fetch(guildId);
+      // Verwende Custom Bot wenn aktiv, sonst Haupt-Bot
+      const customBotManager = require('./custom-bot-manager.js');
+      const activeClient = customBotManager.getActiveClient(guildId, client);
+
+      const guild   = await activeClient.guilds.fetch(guildId);
       const channel = await guild.channels.fetch(cfg.panelChannelId);
       const row = buildPanelSelect(cfg);
       let embed = buildPanelEmbed(cfg, guild);

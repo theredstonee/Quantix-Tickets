@@ -1353,8 +1353,12 @@ function startApplicationServices() {
               console.log(`⏰ Sending interview reminder for Ticket #${ticket.id}`);
               // Send reminder
               try {
-                const applicant = await client.users.fetch(ticket.userId).catch(() => null);
-                const scheduler = await client.users.fetch(ticket.interview.scheduledBy).catch(() => null);
+                // Verwende Custom Bot wenn aktiv
+                const customBotManager = require('./custom-bot-manager.js');
+                const activeClient = customBotManager.getActiveClient(guildId, client);
+
+                const applicant = await activeClient.users.fetch(ticket.userId).catch(() => null);
+                const scheduler = await activeClient.users.fetch(ticket.interview.scheduledBy).catch(() => null);
 
                 const reminderEmbed = new EmbedBuilder()
                   .setColor(0xfbbf24)
@@ -1379,7 +1383,7 @@ function startApplicationServices() {
                 }
 
                 // Ping im Ticket-Channel
-                const ticketChannel = await client.channels.fetch(ticket.channelId).catch(() => null);
+                const ticketChannel = await activeClient.channels.fetch(ticket.channelId).catch(() => null);
                 if (ticketChannel) {
                   await ticketChannel.send({
                     content: `<@${ticket.userId}> ⏰ **Dein Interview beginnt in ${reminderMinutes} Minuten!**`,
@@ -2458,6 +2462,22 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 
 client.on(Events.InteractionCreate, async i => {
   try {
+    // Custom Bot Check - Wenn ein Custom Bot für diese Guild aktiv ist,
+    // soll der Haupt-Bot die Interaction ignorieren (Custom Bot übernimmt)
+    if (i.guild) {
+      try {
+        const customBotManager = require('./custom-bot-manager.js');
+        if (customBotManager.isCustomBotActive(i.guild.id)) {
+          // Custom Bot ist aktiv - Haupt-Bot ignoriert diese Interaction
+          // Der Custom Bot hat seinen eigenen Handler
+          return;
+        }
+      } catch (err) {
+        // Fehler beim Laden des Custom Bot Managers - Haupt-Bot übernimmt
+        console.error('[Main Bot] Custom Bot Manager error, taking over:', err.message);
+      }
+    }
+
     // Maintenance Mode Check
     const maintenanceFile = path.join(__dirname, 'maintenance.json');
     let maintenanceState = { enabled: false };
@@ -8579,6 +8599,18 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
 client.on(Events.MessageCreate, async (message) => {
   if(message.author.bot) return;
 
+  // Custom Bot Check - Wenn ein Custom Bot für diese Guild aktiv ist, ignoriere
+  if (message.guild) {
+    try {
+      const customBotManager = require('./custom-bot-manager.js');
+      if (customBotManager.isCustomBotActive(message.guild.id)) {
+        return; // Custom Bot übernimmt
+      }
+    } catch (err) {
+      // Fehler - Haupt-Bot übernimmt
+    }
+  }
+
   // Live Transcript: Schreibe Nachrichten in Ticket-Channels live
   if (message.channel.name && message.channel.name.startsWith(PREFIX) && message.guild) {
     const guildId = message.guild.id;
@@ -8793,6 +8825,16 @@ client.on(Events.MessageCreate, async (message) => {
 
   // Only process messages in guilds
   if (!message.guild) return;
+
+  // Custom Bot Check - Wenn ein Custom Bot für diese Guild aktiv ist, ignoriere
+  try {
+    const customBotManager = require('./custom-bot-manager.js');
+    if (customBotManager.isCustomBotActive(message.guild.id)) {
+      return; // Custom Bot übernimmt
+    }
+  } catch (err) {
+    // Fehler - Haupt-Bot übernimmt
+  }
 
   try {
     const guildId = message.guild.id;
