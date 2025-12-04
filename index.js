@@ -6535,30 +6535,7 @@ client.on(Events.InteractionCreate, async i => {
         });
         saveTickets(guildId, log);
 
-        // DM Benachrichtigung an Ersteller
-        if (cfg.notifyUserOnStatusChange !== false) {
-          try {
-            const creator = await client.users.fetch(ticket.userId).catch(() => null);
-            if (creator) {
-              const dmEmbed = new EmbedBuilder()
-                .setColor(0xff4444)
-                .setTitle('🔐 Ticket geschlossen')
-                .setDescription(
-                  `Dein Ticket wurde geschlossen.\n\n` +
-                  `**Server:** ${i.guild.name}\n` +
-                  `**Ticket:** #${String(ticket.id).padStart(5, '0')}\n` +
-                  `**Thema:** ${ticket.topic}\n` +
-                  `**Geschlossen durch Zustimmung von:** ${i.user.tag}`
-                )
-                .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
-                .setTimestamp();
-
-              await creator.send({ embeds: [dmEmbed] }).catch(() => {});
-            }
-          } catch (dmErr) {
-            console.error('DM notification error on ticket close:', dmErr);
-          }
-        }
+        // DM mit Transcript wird weiter unten gesendet (einheitliches Format mit Statistiken)
 
         const closer = await i.guild.members.fetch(i.user.id).catch(() => null);
         const closerTag = sanitizeUsername(closer?.user?.tag || i.user.tag || i.user.username || i.user.id);
@@ -6681,8 +6658,8 @@ client.on(Events.InteractionCreate, async i => {
 
         logEvent(i.guild, `🔐 Ticket **#${ticket.id}** geschlossen durch Zustimmung von ${closerTag}`);
 
-        // Send transcript to ticket creator via DM
-        if (cfg.sendTranscriptToCreator && files) {
+        // IMMER Transcript an Creator senden via DM (mit Statistiken)
+        if (files) {
           try {
             const creator = await client.users.fetch(ticket.userId).catch(() => null);
             if (creator) {
@@ -6721,18 +6698,17 @@ client.on(Events.InteractionCreate, async i => {
           }
         }
 
-        // Send rating/survey request DM
+        // Optional: Rating/Survey separat senden (ohne Transcript, das wurde bereits oben gesendet)
         try {
           const user = await client.users.fetch(ticket.userId).catch(() => null);
           if (user) {
-            // Check if new Survey System is enabled (replaces old rating system)
+            // Check if new Survey System is enabled
             if (cfg.surveySystem && cfg.surveySystem.enabled && cfg.surveySystem.sendOnClose) {
-              // Use new Survey System
               const { sendSurveyDM } = require('./survey-system');
               await sendSurveyDM(user, ticket, guildId, cfg);
               console.log(`✅ Survey DM sent to ${user.tag} for ticket #${ticket.id}`);
             } else if (cfg.ticketRating && cfg.ticketRating.enabled === true) {
-              // Use old Rating System (only if explicitly enabled)
+              // Use old Rating System
               const ratingEmbed = new EmbedBuilder()
                 .setColor(0x3b82f6)
                 .setTitle('⭐ Wie war deine Support-Erfahrung?')
@@ -6772,28 +6748,6 @@ client.on(Events.InteractionCreate, async i => {
 
               await user.send({ embeds: [ratingEmbed], components: [ratingButtons] });
               console.log(`✅ Bewertungs-DM gesendet an User ${user.tag} für Ticket #${ticket.id}`);
-            } else if (files && !cfg.sendTranscriptToCreator) {
-              // Fallback: Wenn kein Rating/Survey aktiv UND sendTranscriptToCreator nicht aktiviert,
-              // sende trotzdem das Transcript per DM
-              const transcriptEmbed = new EmbedBuilder()
-                .setColor(0x3b82f6)
-                .setTitle('📄 Dein Ticket-Transcript')
-                .setDescription(
-                  `Dein Ticket **#${ticket.id}** wurde geschlossen.\n` +
-                  `Hier ist das Transcript für deine Unterlagen.`
-                )
-                .addFields(
-                  { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-                  { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true }
-                )
-                .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
-                .setTimestamp();
-
-              await user.send({
-                embeds: [transcriptEmbed],
-                files: [files.txt, files.html]
-              });
-              console.log(`✅ Transcript-DM (Fallback) gesendet an User ${user.tag} für Ticket #${ticket.id}`);
             }
           }
         } catch (dmErr) {
@@ -7357,8 +7311,8 @@ client.on(Events.InteractionCreate, async i => {
             }
           }
 
-          // Send transcript to ticket creator via DM
-          if (cfg.sendTranscriptToCreator && files) {
+          // IMMER Transcript an Creator senden via DM (mit Statistiken)
+          if (files) {
             try {
               const creator = await client.users.fetch(ticket.userId).catch(() => null);
               if (creator) {
@@ -7397,18 +7351,17 @@ client.on(Events.InteractionCreate, async i => {
             }
           }
 
-          // Send rating/survey request DM (immer nach jedem Ticket)
+          // Optional: Rating/Survey separat senden (ohne Transcript, das wurde bereits oben gesendet)
           try {
             const user = await client.users.fetch(ticket.userId).catch(() => null);
             if (user) {
-              // Check if new Survey System is enabled (replaces old rating system)
+              // Check if new Survey System is enabled
               if (cfg.surveySystem && cfg.surveySystem.enabled && cfg.surveySystem.sendOnClose) {
-                // Use new Survey System
                 const { sendSurveyDM } = require('./survey-system');
                 await sendSurveyDM(user, ticket, guildId, cfg);
                 console.log(`✅ Survey DM sent to ${user.tag} for ticket #${ticket.id}`);
               } else if (cfg.ticketRating && cfg.ticketRating.enabled === true) {
-                // Use old Rating System (only if explicitly enabled)
+                // Use old Rating System
                 const ratingEmbed = new EmbedBuilder()
                   .setColor(0x3b82f6)
                   .setTitle('⭐ Wie war deine Support-Erfahrung?')
@@ -7448,41 +7401,10 @@ client.on(Events.InteractionCreate, async i => {
 
                 await user.send({ embeds: [ratingEmbed], components: [ratingButtons] });
                 console.log(`✅ Bewertungs-DM gesendet an User ${user.tag} für Ticket #${ticket.id}`);
-              } else if (files && !cfg.sendTranscriptToCreator) {
-                // Fallback: Wenn kein Rating/Survey aktiv UND sendTranscriptToCreator nicht aktiviert,
-                // sende trotzdem das Transcript per DM mit Statistiken (mit Mentions)
-                let userStatsStringFallback = '';
-                if (messageStats && messageStats.userStats.length > 0) {
-                  userStatsStringFallback = messageStats.userStats
-                    .map(u => `**${u.count}** - <@${u.userId}>`)
-                    .join('\n');
-                } else {
-                  userStatsStringFallback = 'Keine Nachrichten';
-                }
-
-                const transcriptFallbackEmbed = new EmbedBuilder()
-                  .setColor(0x3b82f6)
-                  .setTitle('📧 » Ticket geschlossen «')
-                  .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
-                  .addFields(
-                    { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
-                    { name: '» Ticket Name «', value: `| 📋 | ${ticketDisplayName}`, inline: true },
-                    { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
-                    { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
-                    { name: '» Ticket User «', value: userStatsStringFallback || 'Keine Nutzer', inline: false }
-                  )
-                  .setFooter({ text: i.guild.name })
-                  .setTimestamp();
-
-                await user.send({
-                  embeds: [transcriptFallbackEmbed],
-                  files: [files.txt, files.html]
-                });
-                console.log(`✅ Transcript-DM (Fallback) gesendet an User ${user.tag} für Ticket #${ticket.id}`);
               }
             }
           } catch (dmErr) {
-            console.log('Konnte Bewertungs-DM nicht senden:', dmErr.message);
+            console.log('Konnte Rating/Survey-DM nicht senden:', dmErr.message);
           }
 
           // Lösche Voice-Channel falls vorhanden
