@@ -1754,6 +1754,51 @@ async function logEvent(guild, text){
   }
 }
 
+// Hilfsfunktion: Nachrichtenstatistiken für Ticket berechnen
+async function getTicketMessageStats(channel) {
+  try {
+    let messages = [];
+    let lastId;
+    while (messages.length < 1000) {
+      const fetched = await channel.messages.fetch({ limit: 100, before: lastId }).catch(() => null);
+      if (!fetched || fetched.size === 0) break;
+      messages.push(...fetched.values());
+      lastId = fetched.last().id;
+    }
+
+    // Zähle Nachrichten pro User (nur echte Nachrichten, keine Bots)
+    const userStats = new Map();
+    let totalMessages = 0;
+
+    for (const msg of messages) {
+      // Skip Bot-Nachrichten und System-Nachrichten
+      if (msg.author.bot) continue;
+
+      totalMessages++;
+      const userId = msg.author.id;
+      const userName = msg.author.username || msg.author.tag || userId;
+
+      if (userStats.has(userId)) {
+        userStats.get(userId).count++;
+      } else {
+        userStats.set(userId, { userId, userName, count: 1 });
+      }
+    }
+
+    // Sortiere nach Anzahl (höchste zuerst)
+    const sortedStats = Array.from(userStats.values())
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      totalMessages,
+      userStats: sortedStats
+    };
+  } catch (err) {
+    console.error('Error getting message stats:', err);
+    return { totalMessages: 0, userStats: [] };
+  }
+}
+
 async function createTranscript(channel, ticket, opts = {}) {
   const { AttachmentBuilder } = require('discord.js');
   const resolveMentions = !!opts.resolveMentions;
@@ -6540,7 +6585,10 @@ client.on(Events.InteractionCreate, async i => {
         await i.channel.send({ embeds: [closeEmbed] });
 
         let files = null;
+        let messageStats = null;
         try {
+          // Nachrichtenstatistiken berechnen BEVOR der Kanal gelöscht wird
+          messageStats = await getTicketMessageStats(i.channel);
           files = await createTranscript(i.channel, ticket, { resolveMentions: true });
           console.log(`✅ Transcript erstellt für Ticket #${ticket.id}:`, files ? 'OK' : 'LEER');
         } catch (err) {
@@ -6562,12 +6610,37 @@ client.on(Events.InteractionCreate, async i => {
               .setLabel('📄 Transcript ansehen')
           );
 
+          // Baue User-Statistiken-String
+          let userStatsString = '';
+          if (messageStats && messageStats.userStats.length > 0) {
+            userStatsString = messageStats.userStats
+              .map(u => `**${u.count}** - <@${u.userId}>`)
+              .join('\n');
+          } else {
+            userStatsString = 'Keine Nachrichten';
+          }
+
+          // Erstelle das Transcript-Embed mit Statistiken
+          const transcriptEmbed = new EmbedBuilder()
+            .setColor(0x3b82f6)
+            .setTitle('📧 » Ticket geschlossen «')
+            .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
+            .addFields(
+              { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
+              { name: '» Ticket Name «', value: `| 📋 | ${ticket.topic || 'Unbekannt'}`, inline: true },
+              { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
+              { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+              { name: '» Ticket User «', value: userStatsString || 'Keine Nutzer', inline: false }
+            )
+            .setFooter({ text: i.guild.name })
+            .setTimestamp();
+
           for (const channelId of transcriptChannelIds) {
             try {
               const tc = await i.guild.channels.fetch(channelId);
               if (tc) {
                 await tc.send({
-                  content: `📁 Transcript Ticket #${ticket.id}`,
+                  embeds: [transcriptEmbed],
                   files: [files.txt, files.html],
                   components: [transcriptButton]
                 });
@@ -6585,23 +6658,32 @@ client.on(Events.InteractionCreate, async i => {
           try {
             const creator = await client.users.fetch(ticket.userId).catch(() => null);
             if (creator) {
-              const transcriptEmbed = new EmbedBuilder()
+              // Baue User-Statistiken-String für DM
+              let userStatsStringDM = '';
+              if (messageStats && messageStats.userStats.length > 0) {
+                userStatsStringDM = messageStats.userStats
+                  .map(u => `**${u.count}** - ${u.userName}`)
+                  .join('\n');
+              } else {
+                userStatsStringDM = 'Keine Nachrichten';
+              }
+
+              const transcriptDMEmbed = new EmbedBuilder()
                 .setColor(0x3b82f6)
-                .setTitle('📄 Dein Ticket-Transcript')
-                .setDescription(
-                  `Dein Ticket **#${ticket.id}** wurde geschlossen.\n` +
-                  `Hier ist das Transcript für deine Unterlagen.`
-                )
+                .setTitle('📧 » Ticket geschlossen «')
+                .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
                 .addFields(
-                  { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-                  { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true },
-                  { name: '📅 Geschlossen', value: `<t:${Math.floor(Date.now() / 1000)}:f>`, inline: true }
+                  { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
+                  { name: '» Ticket Name «', value: `| 📋 | ${ticket.topic || 'Unbekannt'}`, inline: true },
+                  { name: '» Erstellt von «', value: creator.tag || creator.username, inline: true },
+                  { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+                  { name: '» Ticket User «', value: userStatsStringDM || 'Keine Nutzer', inline: false }
                 )
-                .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+                .setFooter({ text: i.guild.name })
                 .setTimestamp();
 
               await creator.send({
-                embeds: [transcriptEmbed],
+                embeds: [transcriptDMEmbed],
                 files: [files.txt, files.html]
               });
               console.log(`✅ Transcript-DM gesendet an User ${creator.tag} für Ticket #${ticket.id}`);
@@ -7176,6 +7258,14 @@ client.on(Events.InteractionCreate, async i => {
 
           await i.channel.send({ embeds: [closeEmbed] });
 
+          // Nachrichtenstatistiken berechnen BEVOR Transcript erstellt wird
+          let messageStats = null;
+          try {
+            messageStats = await getTicketMessageStats(i.channel);
+          } catch (err) {
+            console.error('Fehler beim Berechnen der Nachrichtenstatistiken:', err.message);
+          }
+
           // Generate transcript
           let files = null;
           try {
@@ -7193,12 +7283,37 @@ client.on(Events.InteractionCreate, async i => {
             : (cfg.transcriptChannelId ? [cfg.transcriptChannelId] : []);
 
           if (transcriptChannelIds.length > 0 && files) {
+            // Baue User-Statistiken-String
+            let userStatsString = '';
+            if (messageStats && messageStats.userStats.length > 0) {
+              userStatsString = messageStats.userStats
+                .map(u => `**${u.count}** - <@${u.userId}>`)
+                .join('\n');
+            } else {
+              userStatsString = 'Keine Nachrichten';
+            }
+
+            // Erstelle das Transcript-Embed mit Statistiken
+            const transcriptChannelEmbed = new EmbedBuilder()
+              .setColor(0x3b82f6)
+              .setTitle('📧 » Ticket geschlossen «')
+              .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
+              .addFields(
+                { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
+                { name: '» Ticket Name «', value: `| 📋 | ${ticket.topic || 'Unbekannt'}`, inline: true },
+                { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
+                { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+                { name: '» Ticket User «', value: userStatsString || 'Keine Nutzer', inline: false }
+              )
+              .setFooter({ text: i.guild.name })
+              .setTimestamp();
+
             for (const channelId of transcriptChannelIds) {
               try {
                 const tc = await i.guild.channels.fetch(channelId);
                 if (tc) {
                   await tc.send({
-                    content: `📁 Transcript Ticket #${ticket.id}`,
+                    embeds: [transcriptChannelEmbed],
                     files: [files.txt, files.html]
                   });
                   console.log(`✅ Transcript an Channel ${channelId} gesendet`);
@@ -7214,22 +7329,32 @@ client.on(Events.InteractionCreate, async i => {
             try {
               const creator = await client.users.fetch(ticket.userId).catch(() => null);
               if (creator) {
-                const transcriptEmbed = new EmbedBuilder()
+                // Baue User-Statistiken-String für DM
+                let userStatsStringDM = '';
+                if (messageStats && messageStats.userStats.length > 0) {
+                  userStatsStringDM = messageStats.userStats
+                    .map(u => `**${u.count}** - ${u.userName}`)
+                    .join('\n');
+                } else {
+                  userStatsStringDM = 'Keine Nachrichten';
+                }
+
+                const transcriptDMEmbed = new EmbedBuilder()
                   .setColor(0x3b82f6)
-                  .setTitle('📄 Dein Ticket-Transcript')
-                  .setDescription(
-                    `Dein Ticket **#${ticket.id}** wurde geschlossen.\n` +
-                    `Hier ist das Transcript für deine Unterlagen.`
-                  )
+                  .setTitle('📧 » Ticket geschlossen «')
+                  .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
                   .addFields(
-                    { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-                    { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true }
+                    { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
+                    { name: '» Ticket Name «', value: `| 📋 | ${ticket.topic || 'Unbekannt'}`, inline: true },
+                    { name: '» Erstellt von «', value: creator.tag || creator.username, inline: true },
+                    { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+                    { name: '» Ticket User «', value: userStatsStringDM || 'Keine Nutzer', inline: false }
                   )
-                  .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+                  .setFooter({ text: i.guild.name })
                   .setTimestamp();
 
                 await creator.send({
-                  embeds: [transcriptEmbed],
+                  embeds: [transcriptDMEmbed],
                   files: [files.txt, files.html]
                 });
                 console.log(`✅ Transcript-DM gesendet an User ${creator.tag} für Ticket #${ticket.id}`);
@@ -7292,23 +7417,32 @@ client.on(Events.InteractionCreate, async i => {
                 console.log(`✅ Bewertungs-DM gesendet an User ${user.tag} für Ticket #${ticket.id}`);
               } else if (files && !cfg.sendTranscriptToCreator) {
                 // Fallback: Wenn kein Rating/Survey aktiv UND sendTranscriptToCreator nicht aktiviert,
-                // sende trotzdem das Transcript per DM
-                const transcriptEmbed = new EmbedBuilder()
+                // sende trotzdem das Transcript per DM mit Statistiken
+                let userStatsStringFallback = '';
+                if (messageStats && messageStats.userStats.length > 0) {
+                  userStatsStringFallback = messageStats.userStats
+                    .map(u => `**${u.count}** - ${u.userName}`)
+                    .join('\n');
+                } else {
+                  userStatsStringFallback = 'Keine Nachrichten';
+                }
+
+                const transcriptFallbackEmbed = new EmbedBuilder()
                   .setColor(0x3b82f6)
-                  .setTitle('📄 Dein Ticket-Transcript')
-                  .setDescription(
-                    `Dein Ticket **#${ticket.id}** wurde geschlossen.\n` +
-                    `Hier ist das Transcript für deine Unterlagen.`
-                  )
+                  .setTitle('📧 » Ticket geschlossen «')
+                  .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
                   .addFields(
-                    { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-                    { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true }
+                    { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
+                    { name: '» Ticket Name «', value: `| 📋 | ${ticket.topic || 'Unbekannt'}`, inline: true },
+                    { name: '» Erstellt von «', value: user.tag || user.username, inline: true },
+                    { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+                    { name: '» Ticket User «', value: userStatsStringFallback || 'Keine Nutzer', inline: false }
                   )
-                  .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
+                  .setFooter({ text: i.guild.name })
                   .setTimestamp();
 
                 await user.send({
-                  embeds: [transcriptEmbed],
+                  embeds: [transcriptFallbackEmbed],
                   files: [files.txt, files.html]
                 });
                 console.log(`✅ Transcript-DM (Fallback) gesendet an User ${user.tag} für Ticket #${ticket.id}`);
