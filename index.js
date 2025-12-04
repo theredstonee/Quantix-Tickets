@@ -6521,6 +6521,19 @@ client.on(Events.InteractionCreate, async i => {
         // Bestimme wer die Anfrage stellt
         const requesterType = isCreator || (ticket.addedUsers && ticket.addedUsers.includes(i.user.id)) ? 'user' : 'team';
 
+        // SOFORT antworten um Timeout zu vermeiden
+        const confirmEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setDescription(
+            requesterType === 'user'
+              ? '✅ **Schließungsanfrage erfolgreich gesendet!**\n\nEin Team-Mitglied wird deine Anfrage prüfen.'
+              : '✅ **Schließungsanfrage erfolgreich gesendet!**\n\nDer Ticket-Ersteller muss zustimmen.'
+          )
+          .setFooter({ text: 'Quantix Tickets' })
+          .setTimestamp();
+
+        await i.reply({ embeds: [confirmEmbed], ephemeral: true });
+
         // Speichere Schließungsanfrage im Ticket
         if (!ticket.closeRequest) ticket.closeRequest = {};
         ticket.closeRequest = {
@@ -6584,26 +6597,17 @@ client.on(Events.InteractionCreate, async i => {
         // Send ping mentions first (if any), then embed
         let requestMessage;
         if (pingMentions) {
-          await i.channel.send({ content: pingMentions });
-          requestMessage = await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] });
+          await i.channel.send({ content: pingMentions }).catch(() => {});
+          requestMessage = await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] }).catch(() => null);
         } else {
-          requestMessage = await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] });
+          requestMessage = await i.channel.send({ embeds: [requestEmbed], components: [closeButtons] }).catch(() => null);
         }
-        ticket.closeRequest.messageId = requestMessage.id; // Speichere Message-ID
-        saveTickets(guildId, log);
+        if (requestMessage) {
+          ticket.closeRequest.messageId = requestMessage.id;
+          saveTickets(guildId, log);
+        }
         logEvent(i.guild, t(guildId, 'logs.close_requested', { id: ticket.id, user: `<@${i.user.id}>` }));
-
-        const confirmEmbed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setDescription(
-            requesterType === 'user'
-              ? '✅ **Schließungsanfrage erfolgreich gesendet!**\n\nEin Team-Mitglied wird deine Anfrage prüfen.'
-              : '✅ **Schließungsanfrage erfolgreich gesendet!**\n\nDer Ticket-Ersteller muss zustimmen.'
-          )
-          .setFooter({ text: 'Quantix Tickets' })
-          .setTimestamp();
-
-        return i.reply({ embeds: [confirmEmbed], ephemeral: true });
+        return;
       }
 
       // Voice-Support Button Handler
@@ -7167,6 +7171,11 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         try {
+          // SOFORT Buttons aktualisieren um Timeout zu vermeiden
+          delete ticket.claimer;
+          saveTickets(guildId, log);
+          await i.update({ components: buttonRows(false, guildId, ticket) });
+
           const permissions = [
             { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
             { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
@@ -7201,7 +7210,7 @@ client.on(Events.InteractionCreate, async i => {
             }
           }
 
-          await i.channel.permissionOverwrites.set(permissions);
+          await i.channel.permissionOverwrites.set(permissions).catch(err => console.error('Permission error:', err));
 
           const unclaimEmbed = new EmbedBuilder()
             .setColor(0x9b59b6)
@@ -7215,21 +7224,12 @@ client.on(Events.InteractionCreate, async i => {
             .setFooter({ text: 'Quantix Tickets • Ticket freigegeben' })
             .setTimestamp();
 
-          await i.channel.send({ embeds: [unclaimEmbed] });
+          await i.channel.send({ embeds: [unclaimEmbed] }).catch(err => console.error('Unclaim message error:', err));
+          renameChannelIfNeeded(i.channel, ticket);
+          logEvent(i.guild, t(guildId, 'logs.ticket_unclaimed', { id: ticket.id, user: `<@${i.user.id}>` }));
         } catch(err) {
-          console.error('Fehler beim Zurücksetzen der Berechtigungen:', err);
+          console.error('Fehler beim Unclaim:', err);
         }
-
-        delete ticket.claimer; saveTickets(guildId, log);
-
-        // Lade Ticket neu, um aktuelle voiceChannelId zu haben
-        const updatedUnclaimLog = loadTickets(guildId);
-        const updatedUnclaimTicket = updatedUnclaimLog.find(t => t.id === ticket.id);
-
-        console.log(`🔍 Unclaim - Ticket #${ticket.id} voiceChannelId:`, updatedUnclaimTicket?.voiceChannelId);
-
-        await i.update({ components: buttonRows(false, guildId, updatedUnclaimTicket) });
-        logEvent(i.guild, t(guildId, 'logs.ticket_unclaimed', { id: ticket.id, user: `<@${i.user.id}>` }));
         return;
       }
 
@@ -8804,6 +8804,23 @@ async function createTicketChannel(interaction, topic, formData, cfg){
 }
 
 async function updatePriority(interaction, ticket, log, dir, guildId){
+  const state = PRIORITY_STATES[ticket.priority||0];
+
+  // SOFORT antworten um Timeout zu vermeiden
+  const confirmEmbed = new EmbedBuilder()
+    .setColor(0x00ff88)
+    .setTitle('✅ Priorität aktualisiert')
+    .setDescription(`**Die Ticket-Priorität wurde erfolgreich aktualisiert.**`)
+    .addFields(
+      { name: '🎯 Neue Priorität', value: `${state.emoji} ${state.label}`, inline: true },
+      { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
+    )
+    .setFooter({ text: 'Quantix Tickets' })
+    .setTimestamp();
+
+  await interaction.reply({ embeds: [confirmEmbed], ephemeral: true });
+
+  // Restliche Operationen im Hintergrund
   renameChannelIfNeeded(interaction.channel, ticket);
 
   // SLA-Deadline neu berechnen bei Prioritätsänderung
@@ -8819,7 +8836,6 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
   }
 
   const msg = await interaction.channel.messages.fetch({limit:10}).then(c=>c.find(m=>m.embeds.length)).catch(()=>null);
-  const state = PRIORITY_STATES[ticket.priority||0];
 
   if(msg){
     const e = EmbedBuilder.from(msg.embeds[0]);
@@ -8951,20 +8967,6 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
   }
 
   logEvent(interaction.guild, t(guildId, 'logs.priority_changed', { id: ticket.id, direction: dir, priority: state.label }));
-
-  // Ephemeral confirmation for user who changed priority
-  const confirmEmbed = new EmbedBuilder()
-    .setColor(0x00ff88)
-    .setTitle('✅ Priorität aktualisiert')
-    .setDescription(`**Die Ticket-Priorität wurde erfolgreich aktualisiert.**`)
-    .addFields(
-      { name: '🎯 Neue Priorität', value: `${state.emoji} ${state.label}`, inline: true },
-      { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
-    )
-    .setFooter({ text: 'Quantix Tickets' })
-    .setTimestamp();
-
-  await interaction.reply({ embeds: [confirmEmbed], ephemeral: true });
 }
 
 client.on(Events.MessageCreate, async (message) => {
