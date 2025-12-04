@@ -6658,11 +6658,11 @@ client.on(Events.InteractionCreate, async i => {
           try {
             const creator = await client.users.fetch(ticket.userId).catch(() => null);
             if (creator) {
-              // Baue User-Statistiken-String für DM
+              // Baue User-Statistiken-String für DM (mit Mentions)
               let userStatsStringDM = '';
               if (messageStats && messageStats.userStats.length > 0) {
                 userStatsStringDM = messageStats.userStats
-                  .map(u => `**${u.count}** - ${u.userName}`)
+                  .map(u => `**${u.count}** - <@${u.userId}>`)
                   .join('\n');
               } else {
                 userStatsStringDM = 'Keine Nachrichten';
@@ -6675,7 +6675,7 @@ client.on(Events.InteractionCreate, async i => {
                 .addFields(
                   { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
                   { name: '» Ticket Name «', value: `| 📋 | ${ticket.topic || 'Unbekannt'}`, inline: true },
-                  { name: '» Erstellt von «', value: creator.tag || creator.username, inline: true },
+                  { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
                   { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
                   { name: '» Ticket User «', value: userStatsStringDM || 'Keine Nutzer', inline: false }
                 )
@@ -7346,7 +7346,7 @@ client.on(Events.InteractionCreate, async i => {
                   .addFields(
                     { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
                     { name: '» Ticket Name «', value: `| 📋 | ${ticket.topic || 'Unbekannt'}`, inline: true },
-                    { name: '» Erstellt von «', value: creator.tag || creator.username, inline: true },
+                    { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
                     { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
                     { name: '» Ticket User «', value: userStatsStringDM || 'Keine Nutzer', inline: false }
                   )
@@ -7417,11 +7417,11 @@ client.on(Events.InteractionCreate, async i => {
                 console.log(`✅ Bewertungs-DM gesendet an User ${user.tag} für Ticket #${ticket.id}`);
               } else if (files && !cfg.sendTranscriptToCreator) {
                 // Fallback: Wenn kein Rating/Survey aktiv UND sendTranscriptToCreator nicht aktiviert,
-                // sende trotzdem das Transcript per DM mit Statistiken
+                // sende trotzdem das Transcript per DM mit Statistiken (mit Mentions)
                 let userStatsStringFallback = '';
                 if (messageStats && messageStats.userStats.length > 0) {
                   userStatsStringFallback = messageStats.userStats
-                    .map(u => `**${u.count}** - ${u.userName}`)
+                    .map(u => `**${u.count}** - <@${u.userId}>`)
                     .join('\n');
                 } else {
                   userStatsStringFallback = 'Keine Nachrichten';
@@ -7434,7 +7434,7 @@ client.on(Events.InteractionCreate, async i => {
                   .addFields(
                     { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
                     { name: '» Ticket Name «', value: `| 📋 | ${ticket.topic || 'Unbekannt'}`, inline: true },
-                    { name: '» Erstellt von «', value: user.tag || user.username, inline: true },
+                    { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
                     { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
                     { name: '» Ticket User «', value: userStatsStringFallback || 'Keine Nutzer', inline: false }
                   )
