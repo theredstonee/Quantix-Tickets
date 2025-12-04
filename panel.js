@@ -2697,6 +2697,7 @@ module.exports = (client)=>{
         const labelKey = `topic_label_${topicIndex}`;
         const valueKey = `topic_value_${topicIndex}`;
         const emojiKey = `topic_emoji_${topicIndex}`;
+        const ticketNameDisplayKey = `topic_ticketNameDisplay_${topicIndex}`;
 
         // Check if topic exists
         if(!Object.prototype.hasOwnProperty.call(req.body, labelKey)) {
@@ -2706,12 +2707,14 @@ module.exports = (client)=>{
         const label = (req.body[labelKey] || '').trim();
         const value = (req.body[valueKey] || '').trim();
         const emoji = (req.body[emojiKey] || '').trim();
+        const ticketNameDisplay = (req.body[ticketNameDisplayKey] || 'channel').trim();
 
         if(label && value) {
           topics.push({
             label: label,
             value: value,
-            emoji: emoji || '📌'
+            emoji: emoji || '📌',
+            ticketNameDisplay: ticketNameDisplay === 'topic' ? 'topic' : 'channel'
           });
         }
 

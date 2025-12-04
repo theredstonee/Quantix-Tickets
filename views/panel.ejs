@@ -4691,6 +4691,25 @@
                           required>
                       </div>
                     </div>
+
+                    <div class="form-group" style="margin-top: 1rem;">
+                      <div class="form-label">
+                        <i class="fas fa-file-signature"></i>
+                        <span><%= lang === 'de' ? 'Ticket-Name im Transcript' : 'Ticket Name in Transcript' %></span>
+                      </div>
+                      <select name="topic_ticketNameDisplay_<%= index %>" style="width: 100%;">
+                        <option value="channel" <%= topic.ticketNameDisplay === 'channel' || !topic.ticketNameDisplay ? 'selected' : '' %>>
+                          <%= lang === 'de' ? '📝 Channel-Name (z.B. ticket-1234)' : '📝 Channel Name (e.g. ticket-1234)' %>
+                        </option>
+                        <option value="topic" <%= topic.ticketNameDisplay === 'topic' ? 'selected' : '' %>>
+                          <%= lang === 'de' ? '🏷️ Themen-Name (z.B. Support)' : '🏷️ Topic Name (e.g. Support)' %>
+                        </option>
+                      </select>
+                      <div class="help-text">
+                        <i class="fas fa-info-circle"></i>
+                        <span><%= lang === 'de' ? 'Wie soll der Ticket-Name im Transcript-Embed angezeigt werden?' : 'How should the ticket name be displayed in the transcript embed?' %></span>
+                      </div>
+                    </div>
                   </div>
                   <% }); %>
                 </div>
@@ -6687,6 +6706,25 @@
                 style="font-size: 1.5rem; text-align: center;"
                 oninput="updateTopicPreview(this)"
                 required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 1rem;">
+            <div class="form-label">
+              <i class="fas fa-file-signature"></i>
+              <span><%= lang === 'de' ? 'Ticket-Name im Transcript' : 'Ticket Name in Transcript' %></span>
+            </div>
+            <select name="topic_ticketNameDisplay_${newIndex}" style="width: 100%;">
+              <option value="channel" selected>
+                <%= lang === 'de' ? '📝 Channel-Name (z.B. ticket-1234)' : '📝 Channel Name (e.g. ticket-1234)' %>
+              </option>
+              <option value="topic">
+                <%= lang === 'de' ? '🏷️ Themen-Name (z.B. Support)' : '🏷️ Topic Name (e.g. Support)' %>
+              </option>
+            </select>
+            <div class="help-text">
+              <i class="fas fa-info-circle"></i>
+              <span><%= lang === 'de' ? 'Wie soll der Ticket-Name im Transcript-Embed angezeigt werden?' : 'How should the ticket name be displayed in the transcript embed?' %></span>
             </div>
           </div>
         </div>

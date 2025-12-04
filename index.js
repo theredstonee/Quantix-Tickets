@@ -1799,6 +1799,32 @@ async function getTicketMessageStats(channel) {
   }
 }
 
+// Hilfsfunktion: Ticket-Namen für Transcript basierend auf Topic-Einstellung ermitteln
+function getTicketDisplayName(channelName, ticket, cfg) {
+  try {
+    // Wenn kein Topic oder keine Topics-Config, Channel-Namen verwenden
+    if (!ticket.topic || !cfg.topics || !Array.isArray(cfg.topics)) {
+      return channelName;
+    }
+
+    // Topic in Config finden
+    const topicConfig = cfg.topics.find(t => t.value === ticket.topic);
+    if (!topicConfig) {
+      return channelName;
+    }
+
+    // Prüfe ticketNameDisplay-Einstellung
+    if (topicConfig.ticketNameDisplay === 'topic') {
+      return topicConfig.label || channelName;
+    }
+
+    return channelName;
+  } catch (err) {
+    console.error('Error getting ticket display name:', err);
+    return channelName;
+  }
+}
+
 async function createTranscript(channel, ticket, opts = {}) {
   const { AttachmentBuilder } = require('discord.js');
   const resolveMentions = !!opts.resolveMentions;
@@ -6587,6 +6613,7 @@ client.on(Events.InteractionCreate, async i => {
         let files = null;
         let messageStats = null;
         const channelName = i.channel.name; // Speichere Channel-Namen bevor er gelöscht wird
+        const ticketDisplayName = getTicketDisplayName(channelName, ticket, cfg); // Ticket-Name basierend auf Einstellung
         try {
           // Nachrichtenstatistiken berechnen BEVOR der Kanal gelöscht wird
           messageStats = await getTicketMessageStats(i.channel);
@@ -6628,7 +6655,7 @@ client.on(Events.InteractionCreate, async i => {
             .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
             .addFields(
               { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
-              { name: '» Ticket Name «', value: `| 📋 | ${channelName}`, inline: true },
+              { name: '» Ticket Name «', value: `| 📋 | ${ticketDisplayName}`, inline: true },
               { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
               { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
               { name: '» Ticket User «', value: userStatsString || 'Keine Nutzer', inline: false }
@@ -6675,7 +6702,7 @@ client.on(Events.InteractionCreate, async i => {
                 .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
                 .addFields(
                   { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
-                  { name: '» Ticket Name «', value: `| 📋 | ${channelName}`, inline: true },
+                  { name: '» Ticket Name «', value: `| 📋 | ${ticketDisplayName}`, inline: true },
                   { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
                   { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
                   { name: '» Ticket User «', value: userStatsStringDM || 'Keine Nutzer', inline: false }
@@ -7262,6 +7289,10 @@ client.on(Events.InteractionCreate, async i => {
           // Channel-Namen speichern BEVOR er gelöscht wird
           const channelName = i.channel.name;
 
+          // Config laden für Ticket-Display-Name
+          const cfg = readCfg(guildId);
+          const ticketDisplayName = getTicketDisplayName(channelName, ticket, cfg);
+
           // Nachrichtenstatistiken berechnen BEVOR Transcript erstellt wird
           let messageStats = null;
           try {
@@ -7278,8 +7309,6 @@ client.on(Events.InteractionCreate, async i => {
           } catch (err) {
             console.error(`❌ Fehler beim Erstellen des Transcripts für Ticket #${ticket.id}:`, err.message);
           }
-
-          const cfg = readCfg(guildId);
 
           // Send transcript to channel
           const transcriptChannelIds = Array.isArray(cfg.transcriptChannelId) && cfg.transcriptChannelId.length > 0
@@ -7304,7 +7333,7 @@ client.on(Events.InteractionCreate, async i => {
               .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
               .addFields(
                 { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
-                { name: '» Ticket Name «', value: `| 📋 | ${channelName}`, inline: true },
+                { name: '» Ticket Name «', value: `| 📋 | ${ticketDisplayName}`, inline: true },
                 { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
                 { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
                 { name: '» Ticket User «', value: userStatsString || 'Keine Nutzer', inline: false }
@@ -7349,7 +7378,7 @@ client.on(Events.InteractionCreate, async i => {
                   .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
                   .addFields(
                     { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
-                    { name: '» Ticket Name «', value: `| 📋 | ${channelName}`, inline: true },
+                    { name: '» Ticket Name «', value: `| 📋 | ${ticketDisplayName}`, inline: true },
                     { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
                     { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
                     { name: '» Ticket User «', value: userStatsStringDM || 'Keine Nutzer', inline: false }
@@ -7437,7 +7466,7 @@ client.on(Events.InteractionCreate, async i => {
                   .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
                   .addFields(
                     { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
-                    { name: '» Ticket Name «', value: `| 📋 | ${channelName}`, inline: true },
+                    { name: '» Ticket Name «', value: `| 📋 | ${ticketDisplayName}`, inline: true },
                     { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
                     { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
                     { name: '» Ticket User «', value: userStatsStringFallback || 'Keine Nutzer', inline: false }
