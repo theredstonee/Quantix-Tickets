@@ -7273,6 +7273,11 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         try {
+          // SOFORT Buttons aktualisieren um Timeout zu vermeiden
+          ticket.claimer = i.user.id;
+          saveTickets(guildId, log);
+          await i.update({ components: buttonRows(true, guildId, ticket) });
+
           // Set permissions: Remove team role, only claimer + creator + added users
           const permissions = [
             { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
@@ -7301,11 +7306,7 @@ client.on(Events.InteractionCreate, async i => {
             }
           }
 
-          await i.channel.permissionOverwrites.set(permissions);
-
-          // Update ticket
-          ticket.claimer = i.user.id;
-          saveTickets(guildId, log);
+          await i.channel.permissionOverwrites.set(permissions).catch(err => console.error('Permission error:', err));
 
           // Send claim notification WITH PING outside embed
           const claimEmbed = new EmbedBuilder()
@@ -7323,24 +7324,20 @@ client.on(Events.InteractionCreate, async i => {
           await i.channel.send({
             content: `<@${i.user.id}>`,
             embeds: [claimEmbed]
-          });
+          }).catch(err => console.error('Claim message error:', err));
 
           // Update channel name with 🔒 emoji
           renameChannelIfNeeded(i.channel, ticket);
 
-          // Reload ticket to get current voiceChannelId
-          const updatedClaimLog = loadTickets(guildId);
-          const updatedClaimTicket = updatedClaimLog.find(t => t.id === ticket.id);
-
-          // Update buttons to show claimed state
-          await i.update({ components: buttonRows(true, guildId, updatedClaimTicket) });
           logEvent(i.guild, t(guildId, 'logs.ticket_claimed', { id: ticket.id, user: `<@${i.user.id}>` }));
         } catch(err) {
           console.error('Error claiming ticket:', err);
-          return i.reply({
-            content: '❌ Fehler beim Übernehmen des Tickets.',
-            ephemeral: true
-          });
+          if(!i.replied && !i.deferred) {
+            return i.reply({
+              content: '❌ Fehler beim Übernehmen des Tickets.',
+              ephemeral: true
+            });
+          }
         }
         return;
       }
