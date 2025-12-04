@@ -80,11 +80,17 @@ async function checkAutoClose(client) {
       const warningMs = 24 * 60 * 60 * 1000; // Warnung immer 24h vorher
 
       const tickets = loadTickets(guildId);
-      const openTickets = tickets.filter(t => t.status === 'offen');
+      // Prüfe beide Status: 'offen' für Tickets und 'open' für Bewerbungen
+      const openTickets = tickets.filter(t => t.status === 'offen' || t.status === 'open');
 
       for (const ticket of openTickets) {
         // Skip wenn Auto-Close für dieses Ticket deaktiviert wurde
         if (ticket.autoCloseDisabled) {
+          continue;
+        }
+
+        // Skip wenn Auto-Close pausiert ist
+        if (ticket.autoClosePaused) {
           continue;
         }
 
@@ -120,18 +126,20 @@ async function sendAutoCloseWarning(client, guild, ticket, cfg, guildId, inactiv
 
     // Berechne verbleibende Zeit (24h)
     const hoursRemaining = 24;
+    const ticketType = ticket.isApplication ? 'Bewerbung' : 'Ticket';
+    const ticketTypeEmoji = ticket.isApplication ? '📋' : '🎫';
 
     const embed = new EmbedBuilder()
       .setColor(0xff9900)
       .setTitle('⚠️ ' + t(guildId, 'autoClose.warning_title'))
       .setDescription(
         t(guildId, 'autoClose.warning_description_hours', { hours: hoursRemaining }) ||
-        `Dieses Ticket wird in **${hoursRemaining} Stunden** automatisch geschlossen, wenn keine weitere Aktivität stattfindet.`
+        `Diese ${ticketType} wird in **${hoursRemaining} Stunden** automatisch geschlossen, wenn keine weitere Aktivität stattfindet.`
       )
       .addFields(
         {
           name: t(guildId, 'autoClose.prevent_title'),
-          value: t(guildId, 'autoClose.prevent_description'),
+          value: t(guildId, 'autoClose.prevent_description') + '\n\nOder verwende `/ticket pause` um den Timer zu pausieren.',
           inline: false
         },
         {
@@ -143,19 +151,30 @@ async function sendAutoCloseWarning(client, guild, ticket, cfg, guildId, inactiv
           name: '📊 ' + (t(guildId, 'autoClose.inactivity_limit') || 'Inaktivitäts-Limit'),
           value: `${inactiveHours} ${t(guildId, 'autoClose.hours') || 'Stunden'}`,
           inline: true
+        },
+        {
+          name: ticketTypeEmoji + ' Typ',
+          value: ticketType,
+          inline: true
         }
       )
       .setFooter({ text: 'Quantix Tickets • Auto-Close' })
       .setTimestamp();
 
-    // Abbrechen-Button
+    // Abbrechen-Button + Pause-Button
     const cancelButton = new ButtonBuilder()
       .setCustomId(`cancel_auto_close_${ticket.id}`)
       .setLabel(t(guildId, 'autoClose.cancel_button') || 'Auto-Close abbrechen')
       .setEmoji('❌')
       .setStyle(ButtonStyle.Danger);
 
-    const row = new ActionRowBuilder().addComponents(cancelButton);
+    const pauseButton = new ButtonBuilder()
+      .setCustomId(`pause_auto_close_${ticket.id}`)
+      .setLabel('Timer pausieren')
+      .setEmoji('⏸️')
+      .setStyle(ButtonStyle.Secondary);
+
+    const row = new ActionRowBuilder().addComponents(cancelButton, pauseButton);
 
     const warningMessage = await channel.send({
       content: `<@${ticket.userId}>`,

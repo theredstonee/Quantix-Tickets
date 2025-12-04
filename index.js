@@ -1692,12 +1692,16 @@ function buildTicketEmbed(cfg, i, topic, nr){
   return e;
 }
 
-function buildChannelName(ticketNumber, priorityIndex, isVIP = false, isClaimed = false){
+function buildChannelName(ticketNumber, priorityIndex, isVIP = false, isClaimed = false, topicLabel = null){
   const num = ticketNumber.toString().padStart(5,'0');
   const st  = PRIORITY_STATES[priorityIndex] || PRIORITY_STATES[0];
   const vipPrefix = isVIP ? '✨vip-' : '';
   const claimedPrefix = isClaimed ? '🔒' : '';
-  return `${PREFIX}${vipPrefix}${claimedPrefix}${st.dot}ticket-${num}`;
+  // Wenn topicLabel gesetzt, verwende es statt 'ticket'
+  const baseName = topicLabel
+    ? topicLabel.toLowerCase().replace(/[^a-z0-9äöüß\-]/gi, '-').replace(/-+/g, '-').substring(0, 20)
+    : 'ticket';
+  return `${PREFIX}${vipPrefix}${claimedPrefix}${st.dot}${baseName}-${num}`;
 }
 const renameQueue = new Map();
 const RENAME_MIN_INTERVAL_MS = 3000;
@@ -1720,7 +1724,7 @@ function scheduleChannelRename(channel, desired){
 }
 function renameChannelIfNeeded(channel, ticket){
   const isClaimed = ticket.claimedBy ? true : false;
-  const desired = buildChannelName(ticket.id, ticket.priority||0, ticket.isVIP||false, isClaimed);
+  const desired = buildChannelName(ticket.id, ticket.priority||0, ticket.isVIP||false, isClaimed, ticket.topicLabel || null);
   if(channel.name === desired) return;
   scheduleChannelRename(channel, desired);
 }
@@ -5752,6 +5756,81 @@ client.on(Events.InteractionCreate, async i => {
         return;
       }
 
+      // Auto-Close Pause Button Handler
+      if(i.customId.startsWith('pause_auto_close_')){
+        const ticketId = i.customId.replace('pause_auto_close_', '');
+        const guildId = i.guild.id;
+        const cfg = readCfg(guildId);
+
+        // Lade Ticket
+        const tickets = loadTickets(guildId);
+        const ticketIndex = tickets.findIndex(t => t.id === parseInt(ticketId) || t.id === ticketId);
+
+        if(ticketIndex === -1){
+          return i.reply({ephemeral:true,content:'❌ Ticket nicht gefunden.'});
+        }
+
+        const ticket = tickets[ticketIndex];
+
+        // Prüfe Berechtigung: Ersteller, Team oder hinzugefügte User
+        const isCreator = ticket.userId === i.user.id;
+        const isTeam = hasAnyTeamRole(i.member, guildId);
+        const isAddedUser = ticket.addedUsers && ticket.addedUsers.includes(i.user.id);
+
+        if(!isCreator && !isTeam && !isAddedUser){
+          return i.reply({
+            ephemeral:true,
+            content:'❌ Du bist nicht berechtigt, den Auto-Close Timer zu pausieren.'
+          });
+        }
+
+        // Check if already paused
+        if(ticket.autoClosePaused){
+          return i.reply({
+            ephemeral:true,
+            content:'⏸️ Der Auto-Close Timer ist bereits pausiert.'
+          });
+        }
+
+        // Pause Auto-Close Timer
+        tickets[ticketIndex].autoClosePaused = true;
+        tickets[ticketIndex].autoClosePausedAt = Date.now();
+        tickets[ticketIndex].autoClosePausedBy = i.user.id;
+        tickets[ticketIndex].autoCloseWarningSent = false;
+        saveTickets(guildId, tickets);
+
+        const ticketType = ticket.isApplication ? 'Bewerbung' : 'Ticket';
+
+        // Update die Warn-Nachricht
+        const embed = new EmbedBuilder()
+          .setColor(0x5865F2)
+          .setTitle('⏸️ Auto-Close pausiert')
+          .setDescription(
+            `Der Auto-Close Timer wurde von **${i.user.tag}** pausiert.\n\n` +
+            `Diese ${ticketType} wird nicht mehr automatisch geschlossen, bis der Timer mit \`/ticket resume\` fortgesetzt wird.`
+          )
+          .addFields(
+            {
+              name: '👤 Pausiert von',
+              value: `<@${i.user.id}>`,
+              inline: true
+            },
+            {
+              name: '⏰ Zeitpunkt',
+              value: `<t:${Math.floor(Date.now() / 1000)}:R>`,
+              inline: true
+            }
+          )
+          .setFooter({ text: 'Quantix Tickets • Auto-Close pausiert' })
+          .setTimestamp();
+
+        await i.update({ embeds: [embed], components: [] });
+
+        // Log event
+        await logEvent(i.guild, `⏸️ Auto-Close pausiert für ${ticketType} #${String(ticket.id).padStart(5, '0')} von <@${i.user.id}>`);
+        return;
+      }
+
       // Application System: Accept Button Handler
       if(i.customId.startsWith('accept_application_')){
         const guildId = i.customId.replace('accept_application_', '');
@@ -8289,8 +8368,11 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     }
   }
 
+  // Prüfe ob Topic-Name als Channel-Name verwendet werden soll
+  const useTopicLabel = topic.ticketNameDisplay === 'topic' ? topic.label : null;
+
   const ch = await interaction.guild.channels.create({
-    name: buildChannelName(nr, ticketPriority, isVIP),
+    name: buildChannelName(nr, ticketPriority, isVIP, false, useTopicLabel),
     type: ChannelType.GuildText,
     parent: parentId,
     permissionOverwrites: permOverwrites
@@ -8370,6 +8452,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     messageId: ticketMessage.id,  // Store ticket message ID for later updates
     userId:interaction.user.id,
     topic:topic.value,
+    topicLabel: useTopicLabel || null,  // Speichere Topic-Label für Channel-Renames
     status:'offen',
     priority: ticketPriority,
     timestamp:createdAt,
@@ -8452,7 +8535,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
             console.log(`✅ Set claim permissions for ticket #${nr} (removed team role, only claimer + creator + added)`);
 
             // Update channel name with 🔒 emoji
-            const newName = buildChannelName(nr, currentTicket.priority || 0, currentTicket.isVIP || false, true);
+            const newName = buildChannelName(nr, currentTicket.priority || 0, currentTicket.isVIP || false, true, useTopicLabel);
             await scheduleChannelRename(ch, newName);
           } catch (permErr) {
             console.error('Auto-Assignment permission error:', permErr);

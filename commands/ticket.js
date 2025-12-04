@@ -252,7 +252,15 @@ module.exports = {
     .addSubcommand(subcommand =>
       subcommand
         .setName('department-list')
-        .setDescription('List all departments (Premium)')),
+        .setDescription('List all departments (Premium)'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('pause')
+        .setDescription('Pause the auto-close timer for this ticket/application'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('resume')
+        .setDescription('Resume the auto-close timer for this ticket/application')),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -1675,6 +1683,167 @@ module.exports = {
           ephemeral: true
         });
       }
+    }
+
+    // ===== SUBCOMMAND: PAUSE =====
+    if (subcommand === 'pause') {
+      // Check if user is team member or ticket creator
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket) {
+        const noTicketEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Kein Ticket gefunden')
+          .setDescription('**Für diesen Channel wurde kein Ticket/Bewerbung gefunden.**')
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
+      }
+
+      // Only team or ticket creator can pause
+      if (!isTeam && ticket.userId !== interaction.user.id) {
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🚫 Zugriff verweigert')
+          .setDescription('**Nur Team-Mitglieder oder der Ticket-Ersteller können den Auto-Close Timer pausieren!**')
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+
+      // Check if already paused
+      if (ticket.autoClosePaused) {
+        const alreadyPausedEmbed = new EmbedBuilder()
+          .setColor(0xffa500)
+          .setTitle('⏸️ Bereits pausiert')
+          .setDescription('**Der Auto-Close Timer ist bereits pausiert.**')
+          .addFields(
+            { name: '⏰ Pausiert seit', value: ticket.autoClosePausedAt ? `<t:${Math.floor(ticket.autoClosePausedAt / 1000)}:R>` : 'Unbekannt', inline: true },
+            { name: '👤 Pausiert von', value: ticket.autoClosePausedBy ? `<@${ticket.autoClosePausedBy}>` : 'Unbekannt', inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Bereits pausiert' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [alreadyPausedEmbed], ephemeral: true });
+      }
+
+      // Pause the auto-close timer
+      const ticketIndex = tickets.findIndex(t => t.channelId === interaction.channel.id);
+      tickets[ticketIndex].autoClosePaused = true;
+      tickets[ticketIndex].autoClosePausedAt = Date.now();
+      tickets[ticketIndex].autoClosePausedBy = interaction.user.id;
+      // Store remaining time if warning was sent
+      if (ticket.autoCloseWarningSent && ticket.autoCloseWarningAt) {
+        const cfg = readCfg(guildId);
+        const inactiveHours = cfg.autoClose?.inactiveHours || 72;
+        const inactiveMs = inactiveHours * 60 * 60 * 1000;
+        const warningMs = 24 * 60 * 60 * 1000;
+        const lastActivity = ticket.autoCloseResetAt || ticket.lastMessageAt || ticket.timestamp;
+        const closeTime = lastActivity + inactiveMs;
+        tickets[ticketIndex].autoCloseRemainingMs = Math.max(0, closeTime - Date.now());
+      }
+      saveTickets(guildId, tickets);
+
+      const ticketType = ticket.isApplication ? 'Bewerbung' : 'Ticket';
+      const successEmbed = new EmbedBuilder()
+        .setColor(0x00ff88)
+        .setTitle('⏸️ Auto-Close pausiert')
+        .setDescription(`**Der Auto-Close Timer für dieses ${ticketType} wurde pausiert.**\n\nDas ${ticketType} wird nicht mehr automatisch geschlossen, bis der Timer wieder fortgesetzt wird.`)
+        .addFields(
+          { name: '🎫 ' + ticketType, value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+          { name: '👤 Pausiert von', value: `<@${interaction.user.id}>`, inline: true },
+          { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+        )
+        .setFooter({ text: 'Quantix Tickets • Auto-Close pausiert' })
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [successEmbed] });
+
+      // Log event
+      logEvent(interaction.guild, `⏸️ **Auto-Close pausiert:** <@${interaction.user.id}> hat den Auto-Close Timer für ${ticketType} #${ticket.id} pausiert`);
+    }
+
+    // ===== SUBCOMMAND: RESUME =====
+    if (subcommand === 'resume') {
+      // Check if user is team member or ticket creator
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket) {
+        const noTicketEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Kein Ticket gefunden')
+          .setDescription('**Für diesen Channel wurde kein Ticket/Bewerbung gefunden.**')
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
+      }
+
+      // Only team or ticket creator can resume
+      if (!isTeam && ticket.userId !== interaction.user.id) {
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🚫 Zugriff verweigert')
+          .setDescription('**Nur Team-Mitglieder oder der Ticket-Ersteller können den Auto-Close Timer fortsetzen!**')
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+
+      // Check if actually paused
+      if (!ticket.autoClosePaused) {
+        const notPausedEmbed = new EmbedBuilder()
+          .setColor(0xffa500)
+          .setTitle('▶️ Nicht pausiert')
+          .setDescription('**Der Auto-Close Timer ist nicht pausiert.**')
+          .setFooter({ text: 'Quantix Tickets • Nicht pausiert' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [notPausedEmbed], ephemeral: true });
+      }
+
+      // Resume the auto-close timer
+      const ticketIndex = tickets.findIndex(t => t.channelId === interaction.channel.id);
+      const pauseDuration = Date.now() - (ticket.autoClosePausedAt || Date.now());
+
+      // Reset timer by updating lastMessageAt to now (giving full time again)
+      tickets[ticketIndex].autoClosePaused = false;
+      tickets[ticketIndex].autoCloseResumedAt = Date.now();
+      tickets[ticketIndex].autoCloseResumedBy = interaction.user.id;
+      tickets[ticketIndex].autoCloseResetAt = Date.now(); // Reset timer to now
+      tickets[ticketIndex].autoCloseWarningSent = false; // Reset warning
+      tickets[ticketIndex].autoCloseWarningAt = null;
+      delete tickets[ticketIndex].autoCloseRemainingMs;
+      saveTickets(guildId, tickets);
+
+      const cfg = readCfg(guildId);
+      const inactiveHours = cfg.autoClose?.inactiveHours || 72;
+
+      const ticketType = ticket.isApplication ? 'Bewerbung' : 'Ticket';
+      const successEmbed = new EmbedBuilder()
+        .setColor(0x00ff88)
+        .setTitle('▶️ Auto-Close fortgesetzt')
+        .setDescription(`**Der Auto-Close Timer für dieses ${ticketType} wurde fortgesetzt.**\n\nDer Timer wurde zurückgesetzt. Das ${ticketType} wird in **${inactiveHours} Stunden** automatisch geschlossen, wenn keine Aktivität stattfindet.`)
+        .addFields(
+          { name: '🎫 ' + ticketType, value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+          { name: '👤 Fortgesetzt von', value: `<@${interaction.user.id}>`, inline: true },
+          { name: '⏱️ Pause-Dauer', value: `${Math.round(pauseDuration / 1000 / 60)} Minuten`, inline: true },
+          { name: '🔄 Nächste Schließung', value: `<t:${Math.floor((Date.now() + inactiveHours * 60 * 60 * 1000) / 1000)}:R>`, inline: true }
+        )
+        .setFooter({ text: 'Quantix Tickets • Auto-Close fortgesetzt' })
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [successEmbed] });
+
+      // Log event
+      logEvent(interaction.guild, `▶️ **Auto-Close fortgesetzt:** <@${interaction.user.id}> hat den Auto-Close Timer für ${ticketType} #${ticket.id} fortgesetzt`);
     }
   },
 };
