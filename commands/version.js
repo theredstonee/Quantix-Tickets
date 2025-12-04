@@ -1,7 +1,17 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { execSync } = require('child_process');
 const { t, getGuildLanguage } = require('../translations');
 const { VERSION, RELEASE_DATE, REPOSITORY, COPYRIGHT } = require('../version.config');
 const changelog = require('../changelog.json');
+
+// Git Commit ID abrufen
+function getGitCommitId() {
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+  } catch {
+    return 'unknown';
+  }
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,6 +29,7 @@ module.exports = {
     const guildId = interaction.guild?.id;
     const client = interaction.client;
     const lang = getGuildLanguage(guildId) || 'de';
+    const commitId = getGitCommitId();
 
     // Lade aktuellen Changelog
     const currentChangelog = changelog.versions[0];
@@ -33,8 +44,8 @@ module.exports = {
       )
       .addFields(
         { name: '📌 Version', value: `\`${VERSION}\``, inline: true },
+        { name: '🔧 Build', value: `\`${commitId}\``, inline: true },
         { name: '📅 Release', value: `${RELEASE_DATE}`, inline: true },
-        { name: '🌐 Sprachen', value: '9 verfügbar', inline: true },
         {
           name: `✨ Neu in Version ${VERSION}`,
           value: changelogText,
@@ -46,7 +57,7 @@ module.exports = {
             '`•` 🎫 Vollständiges Ticket-System mit Claim\n' +
             '`•` 🎯 3-stufiges Priority-System (Grün/Orange/Rot)\n' +
             '`•` 📝 HTML & TXT Transcripts\n' +
-            '`•` 📊 Analytics Dashboard (Premium)\n' +
+            '`•` 📊 Analytics Dashboard\n' +
             '`•` 🌍 9 Sprachen verfügbar',
           inline: false
         }
