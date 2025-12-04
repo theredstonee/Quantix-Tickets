@@ -1335,7 +1335,7 @@ module.exports = {
         .setPlaceholder('Bitte gib den Grund für die Weiterleitung ein...')
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true)
-        .setMinLength(10)
+        .setMinLength(3)
         .setMaxLength(500);
 
       const row = new ActionRowBuilder().addComponents(reasonInput);
