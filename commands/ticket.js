@@ -260,7 +260,15 @@ module.exports = {
     .addSubcommand(subcommand =>
       subcommand
         .setName('resume')
-        .setDescription('Resume the auto-close timer for this ticket/application')),
+        .setDescription('Resume the auto-close timer for this ticket/application'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('block')
+        .setDescription('Block the ticket - nobody can write messages'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('unblock')
+        .setDescription('Unblock the ticket - restore write permissions')),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -1844,6 +1852,209 @@ module.exports = {
 
       // Log event
       logEvent(interaction.guild, `▶️ **Auto-Close fortgesetzt:** <@${interaction.user.id}> hat den Auto-Close Timer für ${ticketType} #${ticket.id} fortgesetzt`);
+    }
+
+    // ===== SUBCOMMAND: BLOCK =====
+    if (subcommand === 'block') {
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket) {
+        const noTicketEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Kein Ticket gefunden')
+          .setDescription('**Dieser Channel ist kein Ticket.**')
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
+      }
+
+      // Nur Team oder Claimer darf blocken
+      const isClaimer = ticket.claimer === interaction.user.id;
+      if (!isTeam && !isClaimer) {
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🚫 Keine Berechtigung')
+          .setDescription('**Nur Team-Mitglieder oder der Claimer können das Ticket sperren.**')
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+
+      // Check if already blocked
+      if (ticket.blocked) {
+        const alreadyBlockedEmbed = new EmbedBuilder()
+          .setColor(0xffa500)
+          .setTitle('🔒 Bereits gesperrt')
+          .setDescription('**Dieses Ticket ist bereits gesperrt.**')
+          .addFields(
+            { name: '👤 Gesperrt von', value: ticket.blockedBy ? `<@${ticket.blockedBy}>` : 'Unbekannt', inline: true },
+            { name: '⏰ Gesperrt seit', value: ticket.blockedAt ? `<t:${Math.floor(ticket.blockedAt / 1000)}:R>` : 'Unbekannt', inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [alreadyBlockedEmbed], ephemeral: true });
+      }
+
+      // SOFORT antworten
+      await interaction.reply({ content: '🔒 Ticket wird gesperrt...', ephemeral: true });
+
+      try {
+        // Alle Schreibrechte entfernen
+        const permissionOverwrites = interaction.channel.permissionOverwrites.cache;
+        for (const [id, overwrite] of permissionOverwrites) {
+          if (id !== interaction.guild.id) {
+            await interaction.channel.permissionOverwrites.edit(id, {
+              SendMessages: false
+            }).catch(() => {});
+          }
+        }
+
+        // Ticket als blocked markieren
+        const ticketIndex = tickets.findIndex(t => t.channelId === interaction.channel.id);
+        tickets[ticketIndex].blocked = true;
+        tickets[ticketIndex].blockedAt = Date.now();
+        tickets[ticketIndex].blockedBy = interaction.user.id;
+        saveTickets(guildId, tickets);
+
+        // Öffentliche Nachricht im Ticket
+        const blockEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🔒 Ticket gesperrt')
+          .setDescription('**Dieses Ticket wurde gesperrt.**\n\nNiemand kann mehr Nachrichten in diesem Ticket schreiben, bis es entsperrt wird.')
+          .addFields(
+            { name: '🎫 Ticket', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+            { name: '👤 Gesperrt von', value: `<@${interaction.user.id}>`, inline: true },
+            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Ticket gesperrt' })
+          .setTimestamp();
+
+        await interaction.channel.send({ embeds: [blockEmbed] });
+
+        // Log event
+        logEvent(interaction.guild, `🔒 **Ticket gesperrt:** <@${interaction.user.id}> hat Ticket #${ticket.id} gesperrt`);
+
+        await interaction.editReply({ content: '✅ Ticket wurde gesperrt!' });
+      } catch (err) {
+        console.error('Error blocking ticket:', err);
+        await interaction.editReply({ content: '❌ Fehler beim Sperren des Tickets.' });
+      }
+    }
+
+    // ===== SUBCOMMAND: UNBLOCK =====
+    if (subcommand === 'unblock') {
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket) {
+        const noTicketEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('❌ Kein Ticket gefunden')
+          .setDescription('**Dieser Channel ist kein Ticket.**')
+          .setFooter({ text: 'Quantix Tickets • Fehler' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
+      }
+
+      // Nur Team oder Claimer darf unblocken
+      const isClaimer = ticket.claimer === interaction.user.id;
+      if (!isTeam && !isClaimer) {
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xff4444)
+          .setTitle('🚫 Keine Berechtigung')
+          .setDescription('**Nur Team-Mitglieder oder der Claimer können das Ticket entsperren.**')
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+
+      // Check if not blocked
+      if (!ticket.blocked) {
+        const notBlockedEmbed = new EmbedBuilder()
+          .setColor(0xffa500)
+          .setTitle('🔓 Nicht gesperrt')
+          .setDescription('**Dieses Ticket ist nicht gesperrt.**')
+          .setFooter({ text: 'Quantix Tickets' })
+          .setTimestamp();
+
+        return interaction.reply({ embeds: [notBlockedEmbed], ephemeral: true });
+      }
+
+      // SOFORT antworten
+      await interaction.reply({ content: '🔓 Ticket wird entsperrt...', ephemeral: true });
+
+      try {
+        const cfg = readCfg(guildId);
+
+        // Berechtigungen wiederherstellen basierend auf Ticket-Status
+        const permissions = [
+          { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+          { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+        ];
+
+        // Added Users
+        if (ticket.addedUsers && Array.isArray(ticket.addedUsers)) {
+          ticket.addedUsers.forEach(uid => {
+            permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+          });
+        }
+
+        // Claimer
+        if (ticket.claimer) {
+          permissions.push({ id: ticket.claimer, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+        }
+
+        // Team-Rolle (nur wenn nicht geclaimed)
+        if (!ticket.claimer) {
+          const teamRoleId = cfg.teamRoleId;
+          const teamRoleIds = Array.isArray(teamRoleId) ? teamRoleId : [teamRoleId];
+          for (const roleId of teamRoleIds) {
+            if (roleId && roleId.trim()) {
+              permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+            }
+          }
+        }
+
+        await interaction.channel.permissionOverwrites.set(permissions);
+
+        // Ticket als unblocked markieren
+        const ticketIndex = tickets.findIndex(t => t.channelId === interaction.channel.id);
+        tickets[ticketIndex].blocked = false;
+        tickets[ticketIndex].unblockedAt = Date.now();
+        tickets[ticketIndex].unblockedBy = interaction.user.id;
+        saveTickets(guildId, tickets);
+
+        // Öffentliche Nachricht im Ticket
+        const unblockEmbed = new EmbedBuilder()
+          .setColor(0x00ff88)
+          .setTitle('🔓 Ticket entsperrt')
+          .setDescription('**Dieses Ticket wurde entsperrt.**\n\nNachrichten können wieder gesendet werden.')
+          .addFields(
+            { name: '🎫 Ticket', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+            { name: '👤 Entsperrt von', value: `<@${interaction.user.id}>`, inline: true },
+            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          )
+          .setFooter({ text: 'Quantix Tickets • Ticket entsperrt' })
+          .setTimestamp();
+
+        await interaction.channel.send({ embeds: [unblockEmbed] });
+
+        // Log event
+        logEvent(interaction.guild, `🔓 **Ticket entsperrt:** <@${interaction.user.id}> hat Ticket #${ticket.id} entsperrt`);
+
+        await interaction.editReply({ content: '✅ Ticket wurde entsperrt!' });
+      } catch (err) {
+        console.error('Error unblocking ticket:', err);
+        await interaction.editReply({ content: '❌ Fehler beim Entsperren des Tickets.' });
+      }
     }
   },
 };
