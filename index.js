@@ -4007,36 +4007,96 @@ client.on(Events.InteractionCreate, async i => {
           content: `✅ Bewerbung angenommen! <@${ticket.userId}> hat die Rolle <@&${targetRole.id}> erhalten.`
         });
 
-        // Archive to channel (if configured)
+        // Transcript erstellen BEVOR Channel gelöscht wird
+        const appChannel = await i.guild.channels.fetch(ticket.channelId).catch(() => null);
+        let appFiles = null;
+        let appMessageStats = null;
+        const appChannelName = appChannel?.name || `bewerbung-${ticket.id}`;
+
+        if (appChannel) {
+          try {
+            appMessageStats = await getTicketMessageStats(appChannel);
+            appFiles = await createTranscript(appChannel, ticket, { resolveMentions: true });
+            console.log(`✅ Bewerbungs-Transcript erstellt für #${ticket.id}`);
+          } catch (transcriptErr) {
+            console.error('Bewerbungs-Transcript Fehler:', transcriptErr);
+          }
+        }
+
+        // Baue User-Statistiken-String
+        let appUserStats = 'Keine Nachrichten';
+        if (appMessageStats && appMessageStats.userStats.length > 0) {
+          appUserStats = appMessageStats.userStats
+            .map(u => `**${u.count}** - <@${u.userId}>`)
+            .join('\n');
+        }
+
+        // Voting-Ergebnis
+        const votesUp = ticket.votes?.up?.length || 0;
+        const votesDown = ticket.votes?.down?.length || 0;
+        const votingResult = `👍 ${votesUp} | 👎 ${votesDown}`;
+
+        // Interview-Status
+        let interviewStatus = '❌ Kein Interview';
+        if (ticket.interview) {
+          if (ticket.interview.completed) {
+            interviewStatus = '✅ Abgeschlossen';
+          } else if (ticket.interview.scheduledAt) {
+            interviewStatus = `📅 Geplant: <t:${Math.floor(new Date(ticket.interview.scheduledAt).getTime() / 1000)}:f>`;
+          }
+        }
+
+        // Notizen-Anzahl
+        const notesCount = ticket.notes?.length || 0;
+
+        // Neues Bewerbungs-Transcript Embed
+        const appTranscriptEmbed = new EmbedBuilder()
+          .setColor(0x22c55e)
+          .setTitle('📧 » Bewerbung abgeschlossen «')
+          .setDescription('*Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.*')
+          .addFields(
+            { name: '» Nachrichten «', value: `${appMessageStats?.totalMessages || 0} Nachrichten`, inline: true },
+            { name: '» Bewerbung «', value: `| 📋 | ${appChannelName}`, inline: true },
+            { name: '» Bewerber «', value: `<@${ticket.userId}>`, inline: true },
+            { name: '» Kategorie «', value: ticket.applicationCategory || 'Unbekannt', inline: true },
+            { name: '» Status «', value: '✅ Angenommen', inline: true },
+            { name: '» Rolle «', value: `<@&${targetRole.id}>`, inline: true },
+            { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+            { name: '» Bearbeitet von «', value: `<@${i.user.id}>`, inline: true },
+            { name: '» Voting «', value: votingResult, inline: true },
+            { name: '» Interview «', value: interviewStatus, inline: true },
+            { name: '» Notizen «', value: `${notesCount} Notiz(en)`, inline: true },
+            { name: '» Bewerbungs-User «', value: appUserStats, inline: false }
+          )
+          .setFooter({ text: i.guild.name })
+          .setTimestamp();
+
+        // Sende Transcript an Bewerber per DM
+        if (appFiles) {
+          try {
+            const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
+            if (applicantUser) {
+              await applicantUser.send({
+                embeds: [appTranscriptEmbed],
+                files: [appFiles.txt, appFiles.html]
+              });
+              console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
+            }
+          } catch (dmErr) {
+            console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
+          }
+        }
+
+        // Archive to channel (if configured) - mit Transcript
         if (cfg.applicationSystem?.archiveChannelId) {
           try {
             const archiveChannel = await i.guild.channels.fetch(cfg.applicationSystem.archiveChannelId);
             if (archiveChannel) {
-              const archiveEmbed = new EmbedBuilder()
-                .setColor(0x22c55e)
-                .setTitle(`✅ Bewerbung #${ticket.id} - Angenommen`)
-                .setDescription(
-                  `**Bewerber:** <@${ticket.userId}> (${ticket.username})\n` +
-                  `**Kategorie:** ${ticket.applicationCategory || 'Unbekannt'}\n` +
-                  `**Rolle:** ${targetRole.name}\n` +
-                  `**Angenommen von:** <@${i.user.id}>\n` +
-                  `**Grund:** ${reason}\n\n` +
-                  `**Erstellt:** <t:${Math.floor(new Date(ticket.createdAt).getTime() / 1000)}:F>\n` +
-                  `**Abgeschlossen:** <t:${Math.floor(Date.now() / 1000)}:F>`
-                )
-                .setThumbnail(i.guild.iconURL({ size: 64 }))
-                .setFooter({ text: 'Bewerbungs-Archiv' })
-                .setTimestamp();
-
-              // Add votes if available
-              if (ticket.votes) {
-                archiveEmbed.addFields(
-                  { name: '👍 Dafür', value: `${ticket.votes.up?.length || 0}`, inline: true },
-                  { name: '👎 Dagegen', value: `${ticket.votes.down?.length || 0}`, inline: true }
-                );
-              }
-
-              await archiveChannel.send({ embeds: [archiveEmbed] });
+              const filesToSend = appFiles ? [appFiles.txt, appFiles.html] : [];
+              await archiveChannel.send({
+                embeds: [appTranscriptEmbed],
+                files: filesToSend
+              });
             }
           } catch (archiveErr) {
             console.error('Archive error:', archiveErr);
@@ -4147,35 +4207,96 @@ client.on(Events.InteractionCreate, async i => {
           content: `✅ Bewerbung abgelehnt. <@${ticket.userId}> wurde benachrichtigt.`
         });
 
-        // Archive to channel (if configured)
+        // Transcript erstellen BEVOR Channel gelöscht wird
+        const appChannel = await i.guild.channels.fetch(ticket.channelId).catch(() => null);
+        let appFiles = null;
+        let appMessageStats = null;
+        const appChannelName = appChannel?.name || `bewerbung-${ticket.id}`;
+
+        if (appChannel) {
+          try {
+            appMessageStats = await getTicketMessageStats(appChannel);
+            appFiles = await createTranscript(appChannel, ticket, { resolveMentions: true });
+            console.log(`✅ Bewerbungs-Transcript erstellt für #${ticket.id}`);
+          } catch (transcriptErr) {
+            console.error('Bewerbungs-Transcript Fehler:', transcriptErr);
+          }
+        }
+
+        // Baue User-Statistiken-String
+        let appUserStats = 'Keine Nachrichten';
+        if (appMessageStats && appMessageStats.userStats.length > 0) {
+          appUserStats = appMessageStats.userStats
+            .map(u => `**${u.count}** - <@${u.userId}>`)
+            .join('\n');
+        }
+
+        // Voting-Ergebnis
+        const votesUp = ticket.votes?.up?.length || 0;
+        const votesDown = ticket.votes?.down?.length || 0;
+        const votingResult = `👍 ${votesUp} | 👎 ${votesDown}`;
+
+        // Interview-Status
+        let interviewStatus = '❌ Kein Interview';
+        if (ticket.interview) {
+          if (ticket.interview.completed) {
+            interviewStatus = '✅ Abgeschlossen';
+          } else if (ticket.interview.scheduledAt) {
+            interviewStatus = `📅 Geplant: <t:${Math.floor(new Date(ticket.interview.scheduledAt).getTime() / 1000)}:f>`;
+          }
+        }
+
+        // Notizen-Anzahl
+        const notesCount = ticket.notes?.length || 0;
+
+        // Neues Bewerbungs-Transcript Embed
+        const appTranscriptEmbed = new EmbedBuilder()
+          .setColor(0xef4444)
+          .setTitle('📧 » Bewerbung abgeschlossen «')
+          .setDescription('*Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.*')
+          .addFields(
+            { name: '» Nachrichten «', value: `${appMessageStats?.totalMessages || 0} Nachrichten`, inline: true },
+            { name: '» Bewerbung «', value: `| 📋 | ${appChannelName}`, inline: true },
+            { name: '» Bewerber «', value: `<@${ticket.userId}>`, inline: true },
+            { name: '» Kategorie «', value: ticket.applicationCategory || 'Unbekannt', inline: true },
+            { name: '» Status «', value: '❌ Abgelehnt', inline: true },
+            { name: '» Grund «', value: reason.substring(0, 100) || 'Keine Angabe', inline: true },
+            { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+            { name: '» Bearbeitet von «', value: `<@${i.user.id}>`, inline: true },
+            { name: '» Voting «', value: votingResult, inline: true },
+            { name: '» Interview «', value: interviewStatus, inline: true },
+            { name: '» Notizen «', value: `${notesCount} Notiz(en)`, inline: true },
+            { name: '» Bewerbungs-User «', value: appUserStats, inline: false }
+          )
+          .setFooter({ text: i.guild.name })
+          .setTimestamp();
+
+        // Sende Transcript an Bewerber per DM
+        if (appFiles) {
+          try {
+            const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
+            if (applicantUser) {
+              await applicantUser.send({
+                embeds: [appTranscriptEmbed],
+                files: [appFiles.txt, appFiles.html]
+              });
+              console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
+            }
+          } catch (dmErr) {
+            console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
+          }
+        }
+
+        // Archive to channel (if configured) - mit Transcript
         if (cfg.applicationSystem?.archiveChannelId) {
           try {
             const archiveChannel = await i.guild.channels.fetch(cfg.applicationSystem.archiveChannelId);
             if (archiveChannel) {
-              const archiveEmbed = new EmbedBuilder()
-                .setColor(0xef4444)
-                .setTitle(`❌ Bewerbung #${ticket.id} - Abgelehnt`)
-                .setDescription(
-                  `**Bewerber:** <@${ticket.userId}> (${ticket.username})\n` +
-                  `**Kategorie:** ${ticket.applicationCategory || 'Unbekannt'}\n` +
-                  `**Abgelehnt von:** <@${i.user.id}>\n` +
-                  `**Grund:** ${reason}\n\n` +
-                  `**Erstellt:** <t:${Math.floor(new Date(ticket.createdAt).getTime() / 1000)}:F>\n` +
-                  `**Abgeschlossen:** <t:${Math.floor(Date.now() / 1000)}:F>`
-                )
-                .setThumbnail(i.guild.iconURL({ size: 64 }))
-                .setFooter({ text: 'Bewerbungs-Archiv' })
-                .setTimestamp();
-
-              // Add votes if available
-              if (ticket.votes) {
-                archiveEmbed.addFields(
-                  { name: '👍 Dafür', value: `${ticket.votes.up?.length || 0}`, inline: true },
-                  { name: '👎 Dagegen', value: `${ticket.votes.down?.length || 0}`, inline: true }
-                );
-              }
-
-              await archiveChannel.send({ embeds: [archiveEmbed] });
+              const filesToSend = appFiles ? [appFiles.txt, appFiles.html] : [];
+              await archiveChannel.send({
+                embeds: [appTranscriptEmbed],
+                files: filesToSend
+              });
             }
           } catch (archiveErr) {
             console.error('Archive error:', archiveErr);
