@@ -45,9 +45,6 @@ Ein professioneller Multi-Server Discord-Ticket-Bot mit Web-Dashboard, Multi-Lan
 - 🔔 **Commit Logs** - Automatische Commit-Benachrichtigungen in Discord
 - 🎨 **Rich Embeds** - Schöne Embed-Darstellung für Commits
 - ⚙️ **Toggle Command** - `/github-commits` zum Aktivieren/Deaktivieren
-- 🔄 **Auto-Update** - Automatisches `git pull` und Neustart bei Push
-- 🔐 **Webhook Security** - HMAC SHA-256 Signatur-Verifizierung
-- 📊 **Update Log Viewer** - Live-Update-Logs im Browser ansehen
 
 ### 💬 Slash Commands
 - `/dashboard` - Link zum Web-Dashboard anzeigen
@@ -116,64 +113,30 @@ pm2 startup           # Generiert Start-Script
 pm2 save              # Speichert aktuelle Prozessliste
 ```
 
-### 🔄 Auto-Update System (GitHub Webhook)
+### 🔄 Manuelles Update
 
-Der Bot unterstützt **automatische Updates** über GitHub Webhooks:
+Der Bot unterstützt **manuelle Updates** (Auto-Pull über GitHub Webhooks wurde entfernt):
 
-#### Setup-Anleitung:
-
-1. **Webhook Secret generieren:**
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-2. **.env Datei konfigurieren:**
-```env
-GITHUB_WEBHOOK_SECRET=dein_generierter_secret_hier
-PUBLIC_BASE_URL=https://yourdomain.com
-```
-
-3. **GitHub Webhook erstellen:**
-   - Gehe zu deinem Repository → Settings → Webhooks → Add webhook
-   - **Payload URL:** `https://yourdomain.com/webhook/auto-update`
-   - **Content type:** `application/json`
-   - **Secret:** Der generierte Secret aus Schritt 1
-   - **Events:** Wähle `Just the push event`
-   - **Active:** ✅ Aktiviert
-
-4. **Webhook testen:**
-   - Mache einen Push auf `main` oder `master` Branch
-   - Der Bot führt automatisch aus:
-     - ✅ `git pull` - Code aktualisieren
-     - ✅ `npm install` - Dependencies installieren (wenn package.json geändert)
-     - ✅ Bot-Neustart über PM2 oder process.exit()
-
-#### Auto-Update Features:
-
-- 🔐 **Sicher:** Webhook-Signatur-Verifizierung mit HMAC SHA-256
-- 🌿 **Branch-Filter:** Nur `main` und `master` werden auto-updated
-- 📦 **Smart Install:** Dependencies werden nur bei package.json-Änderungen installiert
-- 📝 **Logging:** Alle Updates werden in `update.log` protokolliert
-- 🔄 **PM2 Support:** Automatische Erkennung und Neustart über PM2
-- 📊 **Update Log Viewer:** Live-Log unter `https://yourdomain.com/update-log`
-
-#### Manuelle Update-Alternative:
+#### Manuelles Update:
 
 ```bash
-# Mit PM2
+# Änderungen holen
+git pull
+
+# Dependencies aktualisieren (falls nötig)
+npm install
+
+# Bot neu starten (PM2 Beispiel)
 pm2 restart trs-tickets-bot
 
 # Oder über Discord Command (erfordert Admin)
 /update
 ```
 
-#### Sicherheitshinweise:
+#### Hinweise:
 
-⚠️ **Wichtig für Production:**
-- Verwende **immer** einen starken `GITHUB_WEBHOOK_SECRET`
-- Teste Updates zuerst in einem Dev-Branch
-- Aktiviere Webhooks nur auf vertrauenswürdigen Repositories
-- Überprüfe `update.log` regelmäßig auf Fehler
+- Führe Updates nur aus vertrauenswürdigen Quellen aus.
+- Teste Änderungen idealerweise zunächst in einer Staging-/Dev-Umgebung.
 
 ## ⚙️ Konfiguration
 
@@ -344,8 +307,8 @@ Team-Mitglieder benötigen Admin oder "Manage Guild" Berechtigung für das Web-D
 ```
 TRS-Tickets-Bot-1/
 ├── index.js                    # Hauptdatei (Bot-Logic + Security)
-├── panel.js                    # Web-Dashboard (Express + OAuth + Webhook)
-├── auto-update.js              # 🔄 Auto-Update System (Git Pull + Restart)
+├── panel.js                    # Web-Dashboard (Express + OAuth)
+├── auto-update.js              # (Legacy) früheres Auto-Update per Webhook
 ├── translations.js             # Multi-Language System (de, en, he, ja, ru, pt)
 ├── version.config.js           # Zentrale VERSION Variable & Konfiguration
 ├── ecosystem.config.js         # PM2 Konfiguration für Production
@@ -354,7 +317,7 @@ TRS-Tickets-Bot-1/
 ├── tickets.json                # Legacy Tickets (optional)
 ├── ticketCounter.json          # Legacy Counter (optional)
 ├── changelog.json              # Version Changelog
-├── update.log                  # 📝 Auto-Update Activity Log
+├── update.log                  # 📝 (Legacy) Auto-Update Activity Log
 ├── configs/                    # Multi-Server Konfigurationen
 │   ├── {guildId}.json          # Server-Konfiguration
 │   ├── {guildId}_tickets.json  # Server-Tickets
