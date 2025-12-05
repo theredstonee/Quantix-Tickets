@@ -14,7 +14,6 @@ const { marked } = require('marked');
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 const { VERSION, COPYRIGHT } = require('./version.config');
-const { handleAutoUpdate, showUpdateLog } = require('./auto-update');
 const { isPremium, hasFeature, getPremiumTier, getPremiumInfo, activatePremium, deactivatePremium, renewPremium, downgradePremium, cancelPremium, PREMIUM_TIERS, listPartnerServers } = require('./premium');
 const { getComprehensiveInsights } = require('./insights-analytics');
 const { generateCSVExport, generateStatsCSVExport } = require('./export-utils');
@@ -4374,12 +4373,6 @@ module.exports = (client)=>{
       });
     }
   });
-
-  // Auto-Update Webhook
-  router.post('/webhook/auto-update', handleAutoUpdate);
-
-  // Auto-Update Log Viewer
-  router.get('/update-log', showUpdateLog);
 
   router.get('/status', (req, res) => {
     try {
