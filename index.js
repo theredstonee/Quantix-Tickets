@@ -7132,16 +7132,16 @@ client.on(Events.InteractionCreate, async i => {
 
       if(i.customId==='unclaim'){
         if(!isClaimer) {
-          const errorEmbed = new EmbedBuilder()
-            .setColor(0xff4444)
-            .setTitle('🚫 Keine Berechtigung')
-            .setDescription('**Du kannst dieses Ticket nicht freigeben.**\n\nNur der Team-Mitarbeiter, der das Ticket übernommen hat, kann es wieder freigeben.')
-            .addFields(
-              { name: '👤 Claimer', value: ticket.claimer ? `<@${ticket.claimer}>` : 'Nicht gesetzt', inline: true },
-              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
-            )
-            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-            .setTimestamp();
+          const errorEmbed = createStyledEmbed({
+            emoji: '🚫',
+            title: 'Keine Berechtigung',
+            description: 'Du kannst dieses Ticket nicht freigeben. Nur der Team-Mitarbeiter, der das Ticket übernommen hat, kann es wieder freigeben.',
+            fields: [
+              { name: 'Claimer', value: ticket.claimer ? `<@${ticket.claimer}>` : 'Nicht gesetzt', inline: true },
+              { name: 'Ticket', value: `#${ticket.id}`, inline: true }
+            ],
+            color: '#ED4245'
+          });
           return i.reply({ embeds: [errorEmbed], ephemeral: true });
         }
 
@@ -7448,11 +7448,12 @@ client.on(Events.InteractionCreate, async i => {
 
           const selectRow = new ActionRowBuilder().addComponents(selectMenu);
 
-          const mergeEmbed = new EmbedBuilder()
-            .setColor(0x5865F2)
-            .setTitle(t(guildId, 'merge.title') || '🔗 Tickets zusammenführen')
-            .setDescription(t(guildId, 'merge.description') || 'Wähle das Ticket, das in dieses Ticket zusammengeführt werden soll.\n\n**Hinweis:** Das ausgewählte Ticket wird archiviert und alle Benutzer, Notizen und ein Nachrichten-Log werden übernommen.')
-            .setFooter({ text: `Ziel-Ticket: #${ticket.id}` });
+          const mergeEmbed = createStyledEmbed({
+            emoji: '🔗',
+            title: t(guildId, 'merge.title') || 'Tickets zusammenführen',
+            description: t(guildId, 'merge.description') || 'Wähle das Ticket, das in dieses Ticket zusammengeführt werden soll. Das ausgewählte Ticket wird archiviert und alle Benutzer, Notizen und ein Nachrichten-Log werden übernommen.',
+            footer: `Ziel-Ticket: #${ticket.id}`
+          });
 
           return i.reply({ embeds: [mergeEmbed], components: [selectRow], ephemeral: true });
         }
