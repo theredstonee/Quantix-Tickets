@@ -2531,6 +2531,53 @@
               </div>
             </div>
 
+            <!-- Components V2 Toggle -->
+            <div class="card" style="margin-top: 2rem;">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #5865F2, #7289DA);">
+                      <i class="fas fa-wand-magic-sparkles"></i>
+                    </div>
+                    <span><%= lang === 'de' ? 'Nachrichten-Design' : 'Message Design' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Wähle zwischen dem klassischen Embed-Design oder dem neuen Discord Components V2 System für modernere Nachrichten.'
+                      : 'Choose between classic embed design or the new Discord Components V2 system for modern messages.'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="toggle-container">
+                  <label class="toggle-label">
+                    <input type="checkbox" name="useComponentsV2" value="true" <%= cfg.useComponentsV2 ? 'checked' : '' %>>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">
+                      <strong><%= lang === 'de' ? '✨ Components V2 aktivieren' : '✨ Enable Components V2' %></strong>
+                      <small style="display: block; opacity: 0.7; margin-top: 0.25rem;">
+                        <%= lang === 'de'
+                          ? 'Modernes Discord-Design mit Sections, Separators und mehr'
+                          : 'Modern Discord design with Sections, Separators and more'
+                        %>
+                      </small>
+                    </span>
+                  </label>
+                </div>
+                <div class="alert alert-warning" style="margin-top: 1rem;">
+                  <i class="fas fa-flask"></i>
+                  <div>
+                    <strong><%= lang === 'de' ? 'Beta-Feature' : 'Beta Feature' %></strong><br>
+                    <%= lang === 'de'
+                      ? 'Components V2 ist ein neues Discord-Feature (März 2025). Einige Funktionen könnten sich noch ändern.'
+                      : 'Components V2 is a new Discord feature (March 2025). Some features may still change.'
+                    %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="alert alert-info" style="margin-top: 2rem;">
               <i class="fas fa-lightbulb"></i>
               <div>

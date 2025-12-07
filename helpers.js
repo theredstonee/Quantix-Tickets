@@ -93,6 +93,126 @@ function saveTickets(guildId, tickets) {
   }
 }
 
+// ===== Components V2 Support Check =====
+let componentsV2Available = false;
+let ContainerBuilder, TextDisplayBuilder, SectionBuilder, SeparatorBuilder, MediaGalleryBuilder, ThumbnailBuilder;
+
+try {
+  const discordComponents = require('discord.js');
+  if (discordComponents.ContainerBuilder && discordComponents.TextDisplayBuilder) {
+    ContainerBuilder = discordComponents.ContainerBuilder;
+    TextDisplayBuilder = discordComponents.TextDisplayBuilder;
+    SectionBuilder = discordComponents.SectionBuilder;
+    SeparatorBuilder = discordComponents.SeparatorBuilder;
+    MediaGalleryBuilder = discordComponents.MediaGalleryBuilder;
+    ThumbnailBuilder = discordComponents.ThumbnailBuilder;
+    componentsV2Available = true;
+    console.log('[Helpers] Components V2 available');
+  }
+} catch (e) {
+  console.log('[Helpers] Components V2 not available, using classic embeds');
+}
+
+/**
+ * Creates a styled message in Components V2 format
+ * @param {Object} options - Message options
+ * @param {string} options.emoji - Emoji for the title
+ * @param {string} options.title - Title text
+ * @param {string} [options.description] - Description text
+ * @param {Array} [options.fields] - Array of { name, value, inline } objects
+ * @param {string} [options.color] - Hex color (default: #5865F2)
+ * @param {string} [options.footer] - Footer text
+ * @param {string} [options.thumbnail] - Thumbnail URL
+ * @param {string} [options.image] - Image URL
+ * @returns {Object} Components V2 message payload
+ */
+function createComponentsV2Message(options) {
+  const { MessageFlags } = require('discord.js');
+
+  if (!componentsV2Available) {
+    // Fallback to embed
+    return { embeds: [createStyledEmbed(options)] };
+  }
+
+  const now = new Date();
+  const berlinTime = now.toLocaleString('de-DE', {
+    timeZone: 'Europe/Berlin',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  // Convert hex color to integer
+  const colorHex = (options.color || '#5865F2').replace('#', '');
+  const colorInt = parseInt(colorHex, 16);
+
+  const components = [];
+
+  // Title with emoji
+  const titleText = `${options.emoji || ''} » **${options.title}** «`.trim();
+  components.push(new TextDisplayBuilder().setContent(titleText));
+
+  // Separator after title
+  components.push(new SeparatorBuilder().setSpacing(1));
+
+  // Description
+  if (options.description) {
+    components.push(new TextDisplayBuilder().setContent(`*${options.description}*`));
+  }
+
+  // Fields
+  if (options.fields && Array.isArray(options.fields)) {
+    components.push(new SeparatorBuilder().setSpacing(1));
+
+    for (const field of options.fields) {
+      if (field.name && field.value) {
+        const fieldText = `**» ${field.name} «**\n${field.value}`;
+        components.push(new TextDisplayBuilder().setContent(fieldText));
+      }
+    }
+  }
+
+  // Footer
+  components.push(new SeparatorBuilder().setSpacing(1));
+  components.push(new TextDisplayBuilder().setContent(`-# ${options.footer || 'Quantix Tickets'} • ${berlinTime}`));
+
+  // Build container
+  const container = new ContainerBuilder()
+    .setAccentColor(colorInt)
+    .addComponents(...components);
+
+  // Add thumbnail if provided
+  if (options.thumbnail) {
+    try {
+      const thumbnailComponent = new ThumbnailBuilder().setURL(options.thumbnail);
+      // Thumbnail would need to be added via Section, keeping simple for now
+    } catch (e) { /* ignore */ }
+  }
+
+  return {
+    components: [container],
+    flags: MessageFlags.IsComponentsV2
+  };
+}
+
+/**
+ * Creates a styled message - automatically chooses between Components V2 and classic embeds
+ * @param {string} guildId - Guild ID to check config
+ * @param {Object} options - Message options (same as createStyledEmbed)
+ * @returns {Object} Message payload with either components or embeds
+ */
+function createStyledMessage(guildId, options) {
+  const cfg = readCfg(guildId);
+
+  if (cfg.useComponentsV2 && componentsV2Available) {
+    return createComponentsV2Message(options);
+  }
+
+  return { embeds: [createStyledEmbed(options)] };
+}
+
 // ===== Styled Embed Function =====
 /**
  * Creates a styled embed with the unified format
@@ -212,5 +332,8 @@ module.exports = {
   getTicketsPath,
   logEvent,
   createStyledEmbed,
-  createQuickEmbed
+  createQuickEmbed,
+  createStyledMessage,
+  createComponentsV2Message,
+  componentsV2Available
 };

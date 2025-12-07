@@ -53,7 +53,7 @@ const { handleVoiceJoin, handleVoiceLeave } = require('./voice-waiting-room');
 const { handleTemplateUse } = require('./template-handler');
 const { handleDepartmentForward } = require('./department-handler');
 const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo, isTrialActive, activateAutoTrial, checkExpiredCancellations, activatePartner, deactivatePartner, listPartnerServers } = require('./premium');
-const { createStyledEmbed, createQuickEmbed } = require('./helpers');
+const { createStyledEmbed, createQuickEmbed, createStyledMessage, componentsV2Available } = require('./helpers');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [

@@ -2530,7 +2530,7 @@ module.exports = (client)=>{
         : (req.body.teamRoleId ? [sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim()] : []);
 
       // Ticket-Erstellungs-Berechtigung
-      cfg.ticketCreationRestricted = !!(req.body.ticketCreationRestricted);
+      cfg.ticketCreationRestricted = req.body.ticketCreationRestricted === 'true';
       if (req.body.allowedTicketRoles) {
         cfg.allowedTicketRoles = Array.isArray(req.body.allowedTicketRoles)
           ? req.body.allowedTicketRoles.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
@@ -2538,6 +2538,9 @@ module.exports = (client)=>{
       } else {
         cfg.allowedTicketRoles = [];
       }
+
+      // Components V2 Design
+      cfg.useComponentsV2 = req.body.useComponentsV2 === 'true';
 
       if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
 
