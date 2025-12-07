@@ -2599,28 +2599,16 @@ client.on(Events.InteractionCreate, async i => {
       const isMaintenanceCommand = i.isChatInputCommand() && i.commandName === 'maintenance';
 
       if (!isFounder || !isMaintenanceCommand) {
-        const maintenanceEmbed = new EmbedBuilder()
-          .setColor(0xff9500)
-          .setTitle('🔧 Wartungsmodus aktiv')
-          .setDescription(
-            '**Der Bot befindet sich derzeit im Wartungsmodus.**\n\n' +
-            'Alle Funktionen sind vorübergehend deaktiviert.\n' +
-            'Bitte versuche es später erneut.'
-          )
-          .addFields(
-            {
-              name: '📝 Grund',
-              value: maintenanceState.reason || 'Wartungsarbeiten',
-              inline: false
-            },
-            {
-              name: '⏰ Seit',
-              value: `<t:${Math.floor(maintenanceState.enabledAt / 1000)}:R>`,
-              inline: true
-            }
-          )
-          .setFooter({ text: 'Quantix Tickets • Maintenance Mode' })
-          .setTimestamp();
+        const maintenanceEmbed = createStyledEmbed({
+          emoji: '🔧',
+          title: 'Wartungsmodus aktiv',
+          description: 'Der Bot befindet sich derzeit im Wartungsmodus. Alle Funktionen sind vorübergehend deaktiviert.',
+          fields: [
+            { name: 'Grund', value: maintenanceState.reason || 'Wartungsarbeiten', inline: false },
+            { name: 'Seit', value: `<t:${Math.floor(maintenanceState.enabledAt / 1000)}:R>`, inline: true }
+          ],
+          color: '#FEE75C'
+        });
 
         if (i.isCommand() || i.isButton() || i.isStringSelectMenu() || i.isModalSubmit()) {
           if (i.deferred || i.replied) {
@@ -6262,19 +6250,16 @@ client.on(Events.InteractionCreate, async i => {
             };
             saveTickets(foundGuildId, guildTickets);
 
-            const thankYouEmbed = new EmbedBuilder()
-              .setColor(0x00ff88)
-              .setTitle('✅ Vielen Dank für deine Bewertung!')
-              .setDescription(
-                `Du hast **${stars} ${'⭐'.repeat(stars)}** vergeben.\n\n` +
-                `Dein Feedback hilft uns, unseren Service zu verbessern!`
-              )
-              .addFields(
-                { name: '🎫 Ticket', value: `#${ticketId}`, inline: true },
-                { name: '⭐ Bewertung', value: `${stars}/5 Sterne`, inline: true }
-              )
-              .setFooter({ text: 'Quantix Tickets • Danke für dein Feedback!' })
-              .setTimestamp();
+            const thankYouEmbed = createStyledEmbed({
+              emoji: '✅',
+              title: 'Vielen Dank für deine Bewertung!',
+              description: `Du hast **${stars} ${'⭐'.repeat(stars)}** vergeben. Dein Feedback hilft uns, unseren Service zu verbessern!`,
+              fields: [
+                { name: 'Ticket', value: `#${ticketId}`, inline: true },
+                { name: 'Bewertung', value: `${stars}/5 Sterne`, inline: true }
+              ],
+              color: '#57F287'
+            });
 
             await i.update({ embeds: [thankYouEmbed], components: [] });
 
@@ -6289,12 +6274,11 @@ client.on(Events.InteractionCreate, async i => {
               if (fs.existsSync(txtPath)) files.push(txtPath);
 
               if (files.length > 0) {
-                const transcriptEmbed = new EmbedBuilder()
-                  .setColor(0x3b82f6)
-                  .setTitle('📄 Dein Ticket-Verlauf')
-                  .setDescription(`Hier ist der Verlauf von Ticket #${ticketId} für deine Unterlagen.`)
-                  .setFooter({ text: 'Quantix Tickets' })
-                  .setTimestamp();
+                const transcriptEmbed = createStyledEmbed({
+                  emoji: '📄',
+                  title: 'Dein Ticket-Verlauf',
+                  description: `Hier ist der Verlauf von Ticket #${ticketId} für deine Unterlagen.`
+                });
 
                 await i.user.send({ embeds: [transcriptEmbed], files: files }).catch(() => {});
               }
