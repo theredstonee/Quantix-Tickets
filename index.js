@@ -5837,7 +5837,7 @@ client.on(Events.InteractionCreate, async i => {
           return i.reply({ephemeral:true,content:'❌ Fehler: ' + result.error});
         }
 
-        // Update die Warn-Nachricht (Button entfernen)
+        // Bestätigungs-Embed vorbereiten
         const embed = new EmbedBuilder()
           .setColor(0x00ff88)
           .setTitle('✅ ' + t(guildId, 'autoClose.cancelled_title'))
@@ -5855,7 +5855,21 @@ client.on(Events.InteractionCreate, async i => {
           .setFooter({ text: 'Quantix Tickets • Auto-Close' })
           .setTimestamp();
 
-        await i.update({ embeds: [embed], components: [] });
+        // Interaction bestätigen & alte Auto-Close Nachricht entfernen
+        await i.deferUpdate().catch(() => {});
+
+        if (i.message && i.message.deletable) {
+          await i.message.delete().catch(() => {});
+        }
+
+        // Auto-Close Warnungs-Message-ID zurücksetzen
+        const ticketIndex = tickets.findIndex(t => t.id === ticket.id || t.id === parseInt(ticketId));
+        if(ticketIndex !== -1){
+          tickets[ticketIndex].autoCloseWarningMessageId = null;
+          saveTickets(guildId, tickets);
+        }
+
+        await i.channel.send({ embeds: [embed] });
 
         // Log event
         await logEvent(i.guild, `⏰ Auto-Close abgebrochen für Ticket #${String(ticket.id).padStart(5, '0')} von <@${i.user.id}>`);
@@ -9103,8 +9117,16 @@ client.on(Events.MessageCreate, async (message) => {
           tickets[ticketIndex].lastMessageAt = Date.now();
           // Wenn Warnung gesendet wurde, setze sie zurück (Aktivität erkannt)
           if (tickets[ticketIndex].autoCloseWarningSent) {
+            const warningMessageId = tickets[ticketIndex].autoCloseWarningMessageId;
+            if (warningMessageId) {
+              try {
+                const warningMessage = await message.channel.messages.fetch(warningMessageId);
+                await warningMessage.delete().catch(() => {});
+              } catch {}
+            }
             tickets[ticketIndex].autoCloseWarningSent = false;
             tickets[ticketIndex].autoCloseWarningAt = null;
+            tickets[ticketIndex].autoCloseWarningMessageId = null;
           }
           safeWrite(ticketsPath, tickets);
         }
