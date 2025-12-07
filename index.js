@@ -2799,6 +2799,25 @@ client.on(Events.InteractionCreate, async i => {
       const topic = cfg.topics?.find(t=>t.value===i.values[0]);
       if(!topic) return i.reply({content:'Unbekanntes Thema',ephemeral:true});
 
+      // Rollen-Berechtigung prüfen
+      if (cfg.ticketCreationRestricted && cfg.allowedTicketRoles && cfg.allowedTicketRoles.length > 0) {
+        const member = i.member;
+        const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
+        if (!hasAllowedRole) {
+          const roleNames = cfg.allowedTicketRoles
+            .map(roleId => i.guild.roles.cache.get(roleId)?.name || roleId)
+            .join(', ');
+          const noPermEmbed = createStyledEmbed({
+            emoji: '🔒',
+            title: t(guildId, 'ticket.no_permission') || 'Keine Berechtigung',
+            description: t(guildId, 'ticket.role_required') || `Du benötigst eine der folgenden Rollen um Tickets zu erstellen:\n${roleNames}`,
+            color: '#ED4245',
+            footer: 'Quantix Tickets • Zugriff verweigert'
+          });
+          return i.reply({ embeds: [noPermEmbed], ephemeral: true });
+        }
+      }
+
       // Check for FAQ/Auto-Responses (Free Feature)
       if(cfg.autoResponses && cfg.autoResponses.enabled && cfg.autoResponses.responses && cfg.autoResponses.responses.length > 0) {
         const relevantFAQs = cfg.autoResponses.responses.filter(faq => {
@@ -3401,6 +3420,25 @@ client.on(Events.InteractionCreate, async i => {
         return i.reply({ embeds: [errorEmbed], ephemeral: true });
       }
 
+      // Rollen-Berechtigung prüfen
+      if (cfg.ticketCreationRestricted && cfg.allowedTicketRoles && cfg.allowedTicketRoles.length > 0) {
+        const member = i.member;
+        const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
+        if (!hasAllowedRole) {
+          const roleNames = cfg.allowedTicketRoles
+            .map(roleId => i.guild.roles.cache.get(roleId)?.name || roleId)
+            .join(', ');
+          const noPermEmbed = createStyledEmbed({
+            emoji: '🔒',
+            title: t(guildId, 'ticket.no_permission') || 'Keine Berechtigung',
+            description: t(guildId, 'ticket.role_required') || `Du benötigst eine der folgenden Rollen um Tickets zu erstellen:\n${roleNames}`,
+            color: '#ED4245',
+            footer: 'Quantix Tickets • Zugriff verweigert'
+          });
+          return i.reply({ embeds: [noPermEmbed], ephemeral: true });
+        }
+      }
+
       // Blacklist-Check
       if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
         const now = new Date();
@@ -3486,6 +3524,25 @@ client.on(Events.InteractionCreate, async i => {
             ephemeral:true,
             content:'❌ Ungültiges Ticket-Thema.'
           });
+        }
+
+        // Rollen-Berechtigung prüfen
+        if (cfg.ticketCreationRestricted && cfg.allowedTicketRoles && cfg.allowedTicketRoles.length > 0) {
+          const member = i.member;
+          const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
+          if (!hasAllowedRole) {
+            const roleNames = cfg.allowedTicketRoles
+              .map(roleId => i.guild.roles.cache.get(roleId)?.name || roleId)
+              .join(', ');
+            const noPermEmbed = createStyledEmbed({
+              emoji: '🔒',
+              title: t(guildId, 'ticket.no_permission') || 'Keine Berechtigung',
+              description: t(guildId, 'ticket.role_required') || `Du benötigst eine der folgenden Rollen um Tickets zu erstellen:\n${roleNames}`,
+              color: '#ED4245',
+              footer: 'Quantix Tickets • Zugriff verweigert'
+            });
+            return i.reply({ embeds: [noPermEmbed], ephemeral: true });
+          }
         }
 
         // Blacklist-Check
@@ -5333,6 +5390,25 @@ client.on(Events.InteractionCreate, async i => {
               ephemeral:true,
               content:'❌ Ungültiges Ticket-Thema.'
             });
+          }
+
+          // Rollen-Berechtigung prüfen
+          if (cfg.ticketCreationRestricted && cfg.allowedTicketRoles && cfg.allowedTicketRoles.length > 0) {
+            const member = i.member;
+            const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
+            if (!hasAllowedRole) {
+              const roleNames = cfg.allowedTicketRoles
+                .map(roleId => i.guild.roles.cache.get(roleId)?.name || roleId)
+                .join(', ');
+              const noPermEmbed = createStyledEmbed({
+                emoji: '🔒',
+                title: t(guildId, 'ticket.no_permission') || 'Keine Berechtigung',
+                description: t(guildId, 'ticket.role_required') || `Du benötigst eine der folgenden Rollen um Tickets zu erstellen:\n${roleNames}`,
+                color: '#ED4245',
+                footer: 'Quantix Tickets • Zugriff verweigert'
+              });
+              return i.reply({ embeds: [noPermEmbed], ephemeral: true });
+            }
           }
 
           // Check blacklist

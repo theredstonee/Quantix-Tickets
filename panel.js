@@ -2491,6 +2491,12 @@ module.exports = (client)=>{
         ? req.body.teamRoleId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
         : (req.body.teamRoleId ? [sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim()] : []);
 
+      // Ticket-Erstellungs-Berechtigung
+      cfg.ticketCreationRestricted = req.body.ticketCreationRestricted === 'on' || req.body.ticketCreationRestricted === 'true' || req.body.ticketCreationRestricted === true;
+      cfg.allowedTicketRoles = Array.isArray(req.body.allowedTicketRoles)
+        ? req.body.allowedTicketRoles.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
+        : (req.body.allowedTicketRoles ? [sanitizeDiscordId(req.body.allowedTicketRoles) || req.body.allowedTicketRoles.trim()] : []);
+
       if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
 
       cfg.priorityRoles['0'] = Array.isArray(req.body.priorityRoles_0)

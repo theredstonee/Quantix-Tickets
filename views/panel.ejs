@@ -2614,6 +2614,59 @@
                   </div>
                 </div>
 
+                <!-- Ticket-Erstellungs-Berechtigung -->
+                <div style="margin-bottom: 2rem;">
+                  <h3 style="color: var(--accent-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-user-lock"></i>
+                    <%= lang === 'de' ? '🔒 Ticket-Erstellungs-Berechtigung' : '🔒 Ticket Creation Permission' %>
+                  </h3>
+                  <p style="margin-bottom: 1rem; opacity: 0.8;">
+                    <%= lang === 'de'
+                      ? 'Beschränke wer Tickets erstellen kann. Wenn aktiviert, können nur Mitglieder mit einer der ausgewählten Rollen Tickets öffnen.'
+                      : 'Restrict who can create tickets. When enabled, only members with one of the selected roles can open tickets.'
+                    %>
+                  </p>
+
+                  <div class="toggle-container" style="margin-bottom: 1rem;">
+                    <label class="toggle-label">
+                      <input type="checkbox" name="ticketCreationRestricted" value="true" <%= cfg.ticketCreationRestricted ? 'checked' : '' %>>
+                      <span class="toggle-slider"></span>
+                      <span class="toggle-text">
+                        <strong><%= lang === 'de' ? 'Nur bestimmte Rollen' : 'Specific roles only' %></strong>
+                        <small style="display: block; opacity: 0.7;">
+                          <%= lang === 'de' ? 'Wenn deaktiviert, kann jeder Tickets erstellen' : 'If disabled, everyone can create tickets' %>
+                        </small>
+                      </span>
+                    </label>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="form-label">
+                      <i class="fas fa-users"></i>
+                      <span><%= lang === 'de' ? 'Erlaubte Rollen' : 'Allowed Roles' %></span>
+                      <span class="form-label-optional">(<%= lang === 'de' ? 'Mehrfachauswahl mit Strg/Cmd' : 'Multi-select with Ctrl/Cmd' %>)</span>
+                    </div>
+                    <select name="allowedTicketRoles" multiple size="6" style="width: 100%;">
+                      <%
+                      const selectedAllowedRoles = Array.isArray(cfg.allowedTicketRoles) ? cfg.allowedTicketRoles : (cfg.allowedTicketRoles ? [cfg.allowedTicketRoles] : []);
+                      roles.forEach(role => { %>
+                        <option value="<%= role.id %>" <%= selectedAllowedRoles.includes(role.id) ? 'selected' : '' %>>
+                          🎭 @<%= role.name %>
+                        </option>
+                      <% }) %>
+                    </select>
+                    <div class="help-text">
+                      <i class="fas fa-lightbulb"></i>
+                      <span>
+                        <%= lang === 'de'
+                          ? 'Nur Mitglieder mit mindestens einer dieser Rollen können Tickets erstellen (wenn aktiviert)'
+                          : 'Only members with at least one of these roles can create tickets (when enabled)'
+                        %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 <hr style="border-color: var(--border-color); margin: 2rem 0;">
 
                 <!-- Archiv-Kategorie -->
