@@ -133,7 +133,7 @@ passport.use(new Strategy({
 module.exports = (client)=>{
   const router = express.Router();
 
-  async function logEvent(guildId, text, user){
+  async function logEvent(guildId, text, user, options = {}){
     try {
       const cfg = readCfg(guildId);
 
@@ -146,14 +146,40 @@ module.exports = (client)=>{
 
       const guild = await client.guilds.fetch(guildId);
 
+      // Berlin Zeit für Footer
+      const now = new Date();
+      const berlinTime = now.toLocaleString('de-DE', {
+        timeZone: 'Europe/Berlin',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
       const embed = new EmbedBuilder()
-        .setDescription(text)
-        .setColor(0x00ff00)
+        .setTitle(`${options.emoji || '📋'} » ${options.title || 'Log'} «`)
+        .setDescription(`*${text}*`)
+        .setColor(parseInt((options.color || '#5865F2').replace('#', ''), 16))
         .setTimestamp()
-        .setFooter({ text: COPYRIGHT });
+        .setFooter({ text: `Quantix Tickets • ${berlinTime}` });
 
       if(user){
-        embed.setAuthor({ name: sanitizeUsername(user.username || user.tag || user.id), iconURL: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : undefined });
+        embed.addFields({
+          name: '» Ausgeführt von «',
+          value: `<@${user.id}> (${sanitizeUsername(user.username || user.tag || user.id)})`,
+          inline: true
+        });
+      }
+
+      if(options.fields){
+        for(const field of options.fields){
+          embed.addFields({
+            name: `» ${field.name} «`,
+            value: field.value,
+            inline: field.inline !== undefined ? field.inline : false
+          });
+        }
       }
 
       // Send to all configured log channels
@@ -2075,7 +2101,11 @@ module.exports = (client)=>{
       writeCfg(guildId, cfg);
 
       const langName = getLanguageName(lang);
-      await logEvent(guildId, t(guildId, 'logs.language_changed', { language: langName }), req.user);
+      await logEvent(guildId, t(guildId, 'logs.language_changed', { language: langName }) || `Sprache auf ${langName} geändert`, req.user, {
+        emoji: '🌐',
+        title: 'Sprache geändert',
+        color: '#5865F2'
+      });
     }
 
     res.redirect(req.get('referer') || '/panel');
@@ -2245,7 +2275,11 @@ module.exports = (client)=>{
       cfg.customAvatarUrl = avatarUrl;
       writeCfg(guildId, cfg);
 
-      await logEvent(guildId, `✅ Custom Avatar hochgeladen von <@${req.user.id}>`, req.user);
+      await logEvent(guildId, 'Custom Avatar wurde hochgeladen.', req.user, {
+        emoji: '🖼️',
+        title: 'Avatar hochgeladen',
+        color: '#57F287'
+      });
 
       res.json({ success: true, avatarUrl });
     } catch (error) {
@@ -2276,7 +2310,11 @@ module.exports = (client)=>{
       cfg.customAvatarUrl = null;
       writeCfg(guildId, cfg);
 
-      await logEvent(guildId, `🗑️ Custom Avatar gelöscht von <@${req.user.id}>`, req.user);
+      await logEvent(guildId, 'Custom Avatar wurde gelöscht.', req.user, {
+        emoji: '🗑️',
+        title: 'Avatar gelöscht',
+        color: '#ED4245'
+      });
 
       res.json({ success: true });
     } catch (error) {
@@ -3283,7 +3321,11 @@ module.exports = (client)=>{
         console.error('Error updating positions embed:', updateErr);
       }
 
-      await logEvent(guildId, t(guildId, 'logs.config_updated'), req.user);
+      await logEvent(guildId, t(guildId, 'logs.config_updated') || 'Die Server-Konfiguration wurde über das Web-Panel aktualisiert.', req.user, {
+        emoji: '⚙️',
+        title: 'Konfiguration aktualisiert',
+        color: '#57F287'
+      });
 
       res.redirect('/panel?msg=saved');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
@@ -3392,7 +3434,11 @@ module.exports = (client)=>{
       cfg.panelMessageId = sent.id;
       writeCfg(guildId, cfg);
 
-      await logEvent(guildId, t(guildId, 'logs.panel_sent', { channel: `<#${cfg.panelChannelId}>` }), req.user);
+      await logEvent(guildId, t(guildId, 'logs.panel_sent', { channel: `<#${cfg.panelChannelId}>` }) || `Ticket-Panel wurde in <#${cfg.panelChannelId}> gesendet.`, req.user, {
+        emoji: '📨',
+        title: 'Panel gesendet',
+        color: '#57F287'
+      });
 
       res.redirect('/panel?msg=sent');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
@@ -3486,7 +3532,11 @@ module.exports = (client)=>{
       const embed   = buildPanelEmbed(cfg, guild);
       await msg.edit({ embeds: embed? [embed]: undefined, components:[row] });
 
-      await logEvent(guildId, t(guildId, 'logs.panel_edited', { channel: `<#${cfg.panelChannelId}>` }), req.user);
+      await logEvent(guildId, t(guildId, 'logs.panel_edited', { channel: `<#${cfg.panelChannelId}>` }) || `Ticket-Panel in <#${cfg.panelChannelId}> wurde aktualisiert.`, req.user, {
+        emoji: '✏️',
+        title: 'Panel bearbeitet',
+        color: '#5865F2'
+      });
 
       res.redirect('/panel?msg=edited');
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
@@ -4584,7 +4634,11 @@ module.exports = (client)=>{
         // Entwicklungsmodus: Direkt aktivieren (NUR ZU TESTZWECKEN!)
         console.log(`⚠️ ENTWICKLUNGSMODUS: Premium ${tier} (${billingPeriod}) für Guild ${guildId} aktiviert ohne Payment`);
         activatePremium(guildId, tier, 'dev_subscription_' + Date.now(), 'dev_customer_' + guildId, null, billingPeriod);
-        await logEvent(guildId, `💎 Premium ${tier.toUpperCase()} (${billingPeriod === 'yearly' ? 'Jährlich' : 'Monatlich'}) wurde aktiviert (Entwicklungsmodus)`, req.user);
+        await logEvent(guildId, `Premium ${tier.toUpperCase()} (${billingPeriod === 'yearly' ? 'Jährlich' : 'Monatlich'}) wurde aktiviert (Entwicklungsmodus).`, req.user, {
+          emoji: '💎',
+          title: 'Premium aktiviert',
+          color: '#F59E0B'
+        });
         return res.redirect('/premium?msg=success');
       }
 
@@ -4674,7 +4728,11 @@ module.exports = (client)=>{
         const billingPeriod = session.metadata.billingPeriod || 'monthly';
 
         activatePremium(guildId, tier, session.subscription, session.customer, req.user.id, billingPeriod);
-        await logEvent(guildId, `💎 Premium ${tier.toUpperCase()} (${billingPeriod === 'yearly' ? 'Jährlich' : 'Monatlich'}) wurde aktiviert!`, req.user);
+        await logEvent(guildId, `Premium ${tier.toUpperCase()} (${billingPeriod === 'yearly' ? 'Jährlich' : 'Monatlich'}) wurde aktiviert!`, req.user, {
+          emoji: '💎',
+          title: 'Premium aktiviert',
+          color: '#57F287'
+        });
 
         res.send(`
           <html>
@@ -4737,7 +4795,11 @@ module.exports = (client)=>{
       }
 
       const expiresDate = result.expiresAt ? new Date(result.expiresAt).toLocaleDateString('de-DE') : 'unbekannt';
-      await logEvent(guildId, `🚫 Premium zur Kündigung markiert - läuft bis ${expiresDate}`, req.user);
+      await logEvent(guildId, `Premium zur Kündigung markiert - läuft bis ${expiresDate}.`, req.user, {
+        emoji: '🚫',
+        title: 'Premium gekündigt',
+        color: '#ED4245'
+      });
 
       res.redirect('/premium?msg=cancelled');
     } catch (err) {
@@ -4788,7 +4850,11 @@ module.exports = (client)=>{
         }
       }
 
-      await logEvent(guildId, '⬇️ Premium wurde von Pro zu Basic downgraded', req.user);
+      await logEvent(guildId, 'Premium wurde von Pro auf Basic herabgestuft.', req.user, {
+        emoji: '⬇️',
+        title: 'Premium Downgrade',
+        color: '#F59E0B'
+      });
 
       res.redirect('/premium?msg=downgraded');
     } catch (err) {
