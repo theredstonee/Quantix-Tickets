@@ -2492,14 +2492,14 @@ module.exports = (client)=>{
         : (req.body.teamRoleId ? [sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim()] : []);
 
       // Ticket-Erstellungs-Berechtigung
-      console.log('[Panel Debug] ticketCreationRestricted raw:', req.body.ticketCreationRestricted);
-      console.log('[Panel Debug] allowedTicketRoles raw:', req.body.allowedTicketRoles);
-      cfg.ticketCreationRestricted = req.body.ticketCreationRestricted === 'on' || req.body.ticketCreationRestricted === 'true' || req.body.ticketCreationRestricted === true;
-      cfg.allowedTicketRoles = Array.isArray(req.body.allowedTicketRoles)
-        ? req.body.allowedTicketRoles.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
-        : (req.body.allowedTicketRoles ? [sanitizeDiscordId(req.body.allowedTicketRoles) || req.body.allowedTicketRoles.trim()] : []);
-      console.log('[Panel Debug] ticketCreationRestricted saved:', cfg.ticketCreationRestricted);
-      console.log('[Panel Debug] allowedTicketRoles saved:', cfg.allowedTicketRoles);
+      cfg.ticketCreationRestricted = !!(req.body.ticketCreationRestricted);
+      if (req.body.allowedTicketRoles) {
+        cfg.allowedTicketRoles = Array.isArray(req.body.allowedTicketRoles)
+          ? req.body.allowedTicketRoles.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
+          : [sanitizeDiscordId(req.body.allowedTicketRoles) || req.body.allowedTicketRoles.trim()];
+      } else {
+        cfg.allowedTicketRoles = [];
+      }
 
       if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
 
