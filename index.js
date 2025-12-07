@@ -939,13 +939,13 @@ function startTrialExpiryWarningChecker() {
               `• **Basic** (€2.99/month): 7 categories, custom avatar, statistics\n` +
               `• **Pro** (€4.99/month): All features without limits!`;
 
-          const warningEmbed = new EmbedBuilder()
-            .setTitle(title)
-            .setDescription(description)
-            .setColor(0xff6b6b) // Red warning color
-            .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
-            .setFooter({ text: COPYRIGHT })
-            .setTimestamp();
+          const warningEmbed = createStyledEmbed({
+            emoji: '⚠️',
+            title: title.replace('⚠️ ', ''),
+            description: description.replace(/\*\*/g, ''),
+            color: '#ED4245',
+            thumbnail: client.user.displayAvatarURL({ size: 256 })
+          });
 
           const buttonRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -1027,16 +1027,16 @@ function startSLAChecker() {
               const hours = Math.floor(remaining / (60 * 60 * 1000));
               const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
 
-              const warningEmbed = new EmbedBuilder()
-                .setColor(0xff9900)
-                .setTitle('⚠️ SLA-Warnung')
-                .setDescription(
-                  `**Dieses Ticket nähert sich der SLA-Deadline!**\n\n` +
-                  `⏱️ **Verbleibende Zeit:** ${hours}h ${minutes}m\n` +
-                  `📊 **SLA-Fortschritt:** ${Math.round(progress)}%`
-                )
-                .setFooter({ text: 'Quantix Tickets • SLA System' })
-                .setTimestamp();
+              const warningEmbed = createStyledEmbed({
+                emoji: '⚠️',
+                title: 'SLA-Warnung',
+                description: `Dieses Ticket nähert sich der SLA-Deadline!`,
+                fields: [
+                  { name: 'Verbleibende Zeit', value: `${hours}h ${minutes}m`, inline: true },
+                  { name: 'SLA-Fortschritt', value: `${Math.round(progress)}%`, inline: true }
+                ],
+                color: '#FEE75C'
+              });
 
               await channel.send({ embeds: [warningEmbed] });
 
@@ -1063,16 +1063,15 @@ function startSLAChecker() {
               const hours = Math.floor(overdue / (60 * 60 * 1000));
               const minutes = Math.floor((overdue % (60 * 60 * 1000)) / (60 * 1000));
 
-              const escalationEmbed = new EmbedBuilder()
-                .setColor(0xff0000)
-                .setTitle('🚨 SLA ÜBERSCHRITTEN')
-                .setDescription(
-                  `**Dieses Ticket hat die SLA-Deadline überschritten!**\n\n` +
-                  `❌ **Überfällig seit:** ${hours}h ${minutes}m\n` +
-                  `⚡ **Sofortige Bearbeitung erforderlich!**`
-                )
-                .setFooter({ text: 'Quantix Tickets • SLA Eskalation' })
-                .setTimestamp();
+              const escalationEmbed = createStyledEmbed({
+                emoji: '🚨',
+                title: 'SLA ÜBERSCHRITTEN',
+                description: 'Dieses Ticket hat die SLA-Deadline überschritten! Sofortige Bearbeitung erforderlich!',
+                fields: [
+                  { name: 'Überfällig seit', value: `${hours}h ${minutes}m`, inline: true }
+                ],
+                color: '#ED4245'
+              });
 
               let mentionText = '';
               if (cfg.sla.escalateToRole && cfg.sla.escalateToRole.trim()) {
@@ -1386,15 +1385,16 @@ function startApplicationServices() {
                 const applicant = await activeClient.users.fetch(ticket.userId).catch(() => null);
                 const scheduler = await activeClient.users.fetch(ticket.interview.scheduledBy).catch(() => null);
 
-                const reminderEmbed = new EmbedBuilder()
-                  .setColor(0xfbbf24)
-                  .setTitle('⏰ Interview-Erinnerung!')
-                  .setDescription(
-                    `Dein Interview beginnt in **${reminderMinutes} Minuten**!\n\n` +
-                    `📅 **${interviewTime.toLocaleDateString('de-DE')}** um **${interviewTime.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr**` +
-                    (ticket.interview.note ? `\n\n📝 ${ticket.interview.note}` : '')
-                  )
-                  .setTimestamp();
+                const reminderEmbed = createStyledEmbed({
+                  emoji: '⏰',
+                  title: 'Interview-Erinnerung!',
+                  description: `Dein Interview beginnt in **${reminderMinutes} Minuten**!`,
+                  fields: [
+                    { name: 'Datum', value: `${interviewTime.toLocaleDateString('de-DE')} um ${interviewTime.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr`, inline: false },
+                    ...(ticket.interview.note ? [{ name: 'Notiz', value: ticket.interview.note, inline: false }] : [])
+                  ],
+                  color: '#FEE75C'
+                });
 
                 // DM an Bewerber
                 if (applicant) {
@@ -1442,14 +1442,13 @@ function startApplicationServices() {
                 if (guild) {
                   const channel = await guild.channels.fetch(ticket.channelId).catch(() => null);
                   if (channel) {
-                    await channel.send({
-                      embeds: [new EmbedBuilder()
-                        .setColor(0x6b7280)
-                        .setTitle('⏰ Bewerbung abgelaufen')
-                        .setDescription(`Diese Bewerbung wurde automatisch geschlossen (${autoExpireDays} Tage ohne Antwort).`)
-                        .setTimestamp()
-                      ]
+                    const expireEmbed = createStyledEmbed({
+                      emoji: '⏰',
+                      title: 'Bewerbung abgelaufen',
+                      description: `Diese Bewerbung wurde automatisch geschlossen (${autoExpireDays} Tage ohne Antwort).`,
+                      color: '#808080'
                     });
+                    await channel.send({ embeds: [expireEmbed] });
                     setTimeout(() => channel.delete('Auto-Expire').catch(() => {}), 10000);
                   }
                 }
@@ -4286,20 +4285,16 @@ client.on(Events.InteractionCreate, async i => {
         saveTickets(guildId, tickets);
 
         // Send rejection message in channel
-        const rejectEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Bewerbung abgelehnt')
-          .setDescription(
-            `**Bewerber:** <@${ticket.userId}>\n` +
-            `**Abgelehnt von:** <@${i.user.id}>\n\n` +
-            `**Grund:** ${reason}`
-          )
-          .addFields(
-            { name: '🎫 Bewerbung', value: `#${ticket.id}`, inline: true },
-            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
-          )
-          .setFooter({ text: 'Quantix Tickets • Bewerbungssystem' })
-          .setTimestamp();
+        const rejectEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Bewerbung abgelehnt',
+          description: `Bewerber: <@${ticket.userId}>\nAbgelehnt von: <@${i.user.id}>\n\nGrund: ${reason}`,
+          fields: [
+            { name: 'Bewerbung', value: `#${ticket.id}`, inline: true },
+            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
+          ],
+          color: '#ED4245'
+        });
 
         await i.channel.send({ embeds: [rejectEmbed] });
 
@@ -4355,22 +4350,23 @@ client.on(Events.InteractionCreate, async i => {
         const notesCount = ticket.notes?.length || 0;
 
         // Neues Bewerbungs-Transcript Embed
-        const appTranscriptEmbed = new EmbedBuilder()
-          .setColor(0xef4444)
-          .setTitle('📄 » Update zu deiner Bewerbung «')
-          .setDescription(`*Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.*\n\nLeider müssen wir dir mitteilen, dass deine Bewerbung abgelehnt wurde.\n\n**📝 Nachricht vom Team:**\n${reason}`)
-          .addFields(
-            { name: '» Server «', value: i.guild.name, inline: true },
-            { name: '» Bewerbung «', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
-            { name: '» Kategorie «', value: ticket.applicationCategory || 'Unbekannt', inline: true },
-            { name: '» Status «', value: '❌ Abgelehnt', inline: true },
-            { name: '» Bearbeitet von «', value: `<@${i.user.id}>`, inline: true },
-            { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
-            { name: '» Voting «', value: votingResult, inline: true },
-            { name: '» Nachrichten «', value: `${appMessageStats?.totalMessages || 0}`, inline: true }
-          )
-          .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
-          .setTimestamp();
+        const appTranscriptEmbed = createStyledEmbed({
+          emoji: '📄',
+          title: 'Update zu deiner Bewerbung',
+          description: `Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.\n\nLeider müssen wir dir mitteilen, dass deine Bewerbung abgelehnt wurde.\n\n📝 Nachricht vom Team:\n${reason}`,
+          fields: [
+            { name: 'Server', value: i.guild.name, inline: true },
+            { name: 'Bewerbung', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+            { name: 'Kategorie', value: ticket.applicationCategory || 'Unbekannt', inline: true },
+            { name: 'Status', value: '❌ Abgelehnt', inline: true },
+            { name: 'Bearbeitet von', value: `<@${i.user.id}>`, inline: true },
+            { name: 'Datum', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+            { name: 'Voting', value: votingResult, inline: true },
+            { name: 'Nachrichten', value: `${appMessageStats?.totalMessages || 0}`, inline: true }
+          ],
+          color: '#ED4245',
+          footer: i.guild.name
+        });
 
         // Sende Transcript an Bewerber per DM
         if (appFiles) {
@@ -4486,18 +4482,16 @@ client.on(Events.InteractionCreate, async i => {
         // Notify applicant via DM
         try {
           const applicant = await client.users.fetch(ticket.userId);
-          const dmEmbed = new EmbedBuilder()
-            .setColor(0x3b82f6)
-            .setTitle('📅 Interview geplant!')
-            .setDescription(
-              `**Server:** ${i.guild.name}\n` +
-              `**Bewerbung:** #${ticket.id}\n\n` +
-              `Dein Interview wurde geplant für:\n` +
-              `📅 **${interviewDate.toLocaleDateString('de-DE')}** um **${interviewDate.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr**\n\n` +
-              (note ? `📝 **Hinweis:** ${note}` : '')
-            )
-            .setFooter({ text: 'Du wirst vor dem Termin erinnert!' })
-            .setTimestamp();
+          const dmEmbed = createStyledEmbed({
+            emoji: '📅',
+            title: 'Interview geplant!',
+            description: `Dein Interview wurde geplant für:\n📅 ${interviewDate.toLocaleDateString('de-DE')} um ${interviewDate.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr`,
+            fields: [
+              { name: 'Server', value: i.guild.name, inline: true },
+              { name: 'Bewerbung', value: `#${ticket.id}`, inline: true },
+              ...(note ? [{ name: 'Hinweis', value: note, inline: false }] : [])
+            ]
+          });
 
           await applicant.send({ embeds: [dmEmbed] }).catch(() => {});
         } catch(dmErr) {
@@ -4505,17 +4499,16 @@ client.on(Events.InteractionCreate, async i => {
         }
 
         // Ping applicant in ticket channel
-        const interviewPingEmbed = new EmbedBuilder()
-          .setColor(0x3b82f6)
-          .setTitle('📅 Interview geplant!')
-          .setDescription(
-            `<@${ticket.userId}>, dein Interview wurde geplant!\n\n` +
-            `📅 **Datum:** ${interviewDate.toLocaleDateString('de-DE')}\n` +
-            `⏰ **Uhrzeit:** ${interviewDate.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr\n` +
-            (note ? `📝 **Hinweis:** ${note}` : '')
-          )
-          .setFooter({ text: 'Du wirst vor dem Termin erinnert!' })
-          .setTimestamp();
+        const interviewPingEmbed = createStyledEmbed({
+          emoji: '📅',
+          title: 'Interview geplant!',
+          description: `<@${ticket.userId}>, dein Interview wurde geplant!`,
+          fields: [
+            { name: 'Datum', value: interviewDate.toLocaleDateString('de-DE'), inline: true },
+            { name: 'Uhrzeit', value: `${interviewDate.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} Uhr`, inline: true },
+            ...(note ? [{ name: 'Hinweis', value: note, inline: false }] : [])
+          ]
+        });
 
         await i.channel.send({
           content: `<@${ticket.userId}>`,
@@ -4523,17 +4516,17 @@ client.on(Events.InteractionCreate, async i => {
         }).catch(() => {});
 
         // Send confirmation in channel
-        const confirmEmbed = new EmbedBuilder()
-          .setColor(0x3b82f6)
-          .setTitle('📅 Interview geplant')
-          .setDescription(
-            `**Bewerber:** <@${ticket.userId}>\n` +
-            `**Termin:** <t:${Math.floor(interviewDate.getTime() / 1000)}:F>\n` +
-            `**Geplant von:** <@${i.user.id}>\n` +
-            (note ? `**Hinweis:** ${note}` : '')
-          )
-          .setFooter({ text: 'Beide Parteien werden vor dem Termin erinnert' })
-          .setTimestamp();
+        const confirmEmbed = createStyledEmbed({
+          emoji: '📅',
+          title: 'Interview geplant',
+          description: `Interview wurde erfolgreich geplant.`,
+          fields: [
+            { name: 'Bewerber', value: `<@${ticket.userId}>`, inline: true },
+            { name: 'Termin', value: `<t:${Math.floor(interviewDate.getTime() / 1000)}:F>`, inline: true },
+            { name: 'Geplant von', value: `<@${i.user.id}>`, inline: true },
+            ...(note ? [{ name: 'Hinweis', value: note, inline: false }] : [])
+          ]
+        });
 
         await i.reply({ embeds: [confirmEmbed] });
 
@@ -4767,20 +4760,15 @@ client.on(Events.InteractionCreate, async i => {
           const buttonRateLimit = checkButtonRateLimit(i.user.id, i.customId);
 
           if (!buttonRateLimit.allowed) {
-            const spamEmbed = new EmbedBuilder()
-              .setColor(0xff4444)
-              .setTitle('🛑 Zu viele Klicks!')
-              .setDescription(
-                '**Langsam, langsam!**\n\n' +
-                'Du klickst zu schnell auf die Buttons. Bitte warte einen Moment.'
-              )
-              .addFields({
-                name: '⏱️ Warte noch',
-                value: `**${buttonRateLimit.waitSeconds} Sekunde(n)**`,
-                inline: true
-              })
-              .setFooter({ text: 'Quantix Tickets • AntiSpam System' })
-              .setTimestamp();
+            const spamEmbed = createStyledEmbed({
+              emoji: '🛑',
+              title: 'Zu viele Klicks!',
+              description: 'Du klickst zu schnell auf die Buttons. Bitte warte einen Moment.',
+              fields: [
+                { name: 'Warte noch', value: `${buttonRateLimit.waitSeconds} Sekunde(n)`, inline: true }
+              ],
+              color: '#ED4245'
+            });
 
             return i.reply({ embeds: [spamEmbed], ephemeral: true });
           }
@@ -4791,15 +4779,12 @@ client.on(Events.InteractionCreate, async i => {
 
       // FAQ Button Handlers
       if(i.customId.startsWith('faq_solved:')){
-        const successEmbed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('✅ Problem gelöst')
-          .setDescription(
-            'Großartig! Wir freuen uns, dass wir dir helfen konnten.\n\n' +
-            'Falls du später noch Hilfe benötigst, kannst du jederzeit ein Ticket erstellen.'
-          )
-          .setFooter({ text: 'Quantix Tickets • FAQ System' })
-          .setTimestamp();
+        const successEmbed = createStyledEmbed({
+          emoji: '✅',
+          title: 'Problem gelöst',
+          description: 'Großartig! Wir freuen uns, dass wir dir helfen konnten. Falls du später noch Hilfe benötigst, kannst du jederzeit ein Ticket erstellen.',
+          color: '#57F287'
+        });
 
         await i.update({ embeds: [successEmbed], components: [] });
         return;
