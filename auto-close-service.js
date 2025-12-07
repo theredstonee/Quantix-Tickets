@@ -343,6 +343,7 @@ async function cancelAutoClose(guildId, ticketId, userId) {
     // Reset Auto-Close Timer
     ticket.autoCloseWarningSent = false;
     ticket.autoCloseWarningAt = null;
+    ticket.autoCloseWarningMessageId = null;
     ticket.autoCloseResetAt = Date.now();
     ticket.autoCloseResetBy = userId;
 

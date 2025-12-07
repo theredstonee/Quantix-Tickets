@@ -61,6 +61,31 @@ const PRIORITY_STATES = [
   { dot: '🔴', embedColor: 0xd92b2b, label: 'Rot'    }
 ];
 
+function buildBlockquoteMessage(title, descriptionLines = [], infoLines = []) {
+  const lines = [];
+
+  const pushLine = (line) => {
+    if (line === '') {
+      lines.push('>');
+      return;
+    }
+
+    line.toString().split('\n').forEach(part => {
+      lines.push(`> ${part}`);
+    });
+  };
+
+  if (title) pushLine(`**${title}**`);
+  descriptionLines.forEach(pushLine);
+
+  if (infoLines.length > 0) {
+    if (lines.length > 0) lines.push('>');
+    infoLines.forEach(pushLine);
+  }
+
+  return lines.join('\n');
+}
+
 function getTeamRole(guildId){
   const cfg = readCfg(guildId);
   // Legacy support: Return first team role ID or null
@@ -5812,7 +5837,7 @@ client.on(Events.InteractionCreate, async i => {
           return i.reply({ephemeral:true,content:'❌ Fehler: ' + result.error});
         }
 
-        // Update die Warn-Nachricht (Button entfernen)
+        // Bestätigungs-Embed vorbereiten
         const embed = new EmbedBuilder()
           .setColor(0x00ff88)
           .setTitle('✅ ' + t(guildId, 'autoClose.cancelled_title'))
@@ -5830,7 +5855,21 @@ client.on(Events.InteractionCreate, async i => {
           .setFooter({ text: 'Quantix Tickets • Auto-Close' })
           .setTimestamp();
 
-        await i.update({ embeds: [embed], components: [] });
+        // Interaction bestätigen & alte Auto-Close Nachricht entfernen
+        await i.deferUpdate().catch(() => {});
+
+        if (i.message && i.message.deletable) {
+          await i.message.delete().catch(() => {});
+        }
+
+        // Auto-Close Warnungs-Message-ID zurücksetzen
+        const ticketIndex = tickets.findIndex(t => t.id === ticket.id || t.id === parseInt(ticketId));
+        if(ticketIndex !== -1){
+          tickets[ticketIndex].autoCloseWarningMessageId = null;
+          saveTickets(guildId, tickets);
+        }
+
+        await i.channel.send({ embeds: [embed] });
 
         // Log event
         await logEvent(i.guild, `⏰ Auto-Close abgebrochen für Ticket #${String(ticket.id).padStart(5, '0')} von <@${i.user.id}>`);
@@ -6522,13 +6561,24 @@ client.on(Events.InteractionCreate, async i => {
         const requesterType = isCreator || (ticket.addedUsers && ticket.addedUsers.includes(i.user.id)) ? 'user' : 'team';
 
         // SOFORT antworten um Timeout zu vermeiden
+        const confirmDescription = buildBlockquoteMessage(
+          'Schließungsanfrage gesendet',
+          [
+            requesterType === 'user'
+              ? '✅ Ein Team-Mitglied oder Claimer prüft deine Anfrage.'
+              : '✅ Der Ticket-Ersteller muss zustimmen.'
+          ],
+          [
+            `🎫 Ticket ▪ #${ticket.id}`,
+            `👤 Angefragt von ▪ <@${i.user.id}>`,
+            `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+          ]
+        );
+
         const confirmEmbed = new EmbedBuilder()
           .setColor(0x00ff88)
-          .setDescription(
-            requesterType === 'user'
-              ? '✅ **Schließungsanfrage erfolgreich gesendet!**\n\nEin Team-Mitglied wird deine Anfrage prüfen.'
-              : '✅ **Schließungsanfrage erfolgreich gesendet!**\n\nDer Ticket-Ersteller muss zustimmen.'
-          )
+          .setTitle('📩 Schließungsanfrage')
+          .setDescription(confirmDescription)
           .setFooter({ text: 'Quantix Tickets' })
           .setTimestamp();
 
@@ -6565,19 +6615,27 @@ client.on(Events.InteractionCreate, async i => {
           pingMentions = mentions.join(' ');
         }
 
+        const requestDescription = buildBlockquoteMessage(
+          'Schließungsanfrage',
+          [
+            requesterType === 'user'
+              ? `<@${i.user.id}> möchte dieses Ticket schließen lassen.`
+              : `<@${i.user.id}> (Team) möchte dieses Ticket schließen.`
+          ],
+          [
+            requesterType === 'user'
+              ? '✅ Ein Team-Mitglied oder Claimer muss bestätigen.'
+              : '✅ Der Ticket-Ersteller muss bestätigen.',
+            `🎫 Ticket ▪ #${ticket.id}`,
+            `👤 Angefordert von ▪ <@${i.user.id}>`,
+            `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+          ]
+        );
+
         const requestEmbed = new EmbedBuilder()
           .setColor(0xffa500)
           .setTitle('📩 Schließungsanfrage')
-          .setDescription(
-            requesterType === 'user'
-              ? `<@${i.user.id}> möchte dieses Ticket schließen lassen.\n\n**Ein Team-Mitglied oder Claimer muss bestätigen.**`
-              : `<@${i.user.id}> (Team) möchte dieses Ticket schließen.\n\n**Der Ticket-Ersteller muss bestätigen.**`
-          )
-          .addFields(
-            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-            { name: '👤 Angefordert von', value: `<@${i.user.id}>`, inline: true },
-            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          )
+          .setDescription(requestDescription)
           .setFooter({ text: 'Quantix Tickets • Schließungsanfrage' })
           .setTimestamp();
 
@@ -6854,19 +6912,24 @@ client.on(Events.InteractionCreate, async i => {
           }
         }
 
+        const closeDescription = buildBlockquoteMessage(
+          'Ticket geschlossen',
+          [
+            `Die Schließungsanfrage wurde von **${closerName}** genehmigt.`,
+            'Ticket wird geschlossen.'
+          ],
+          [
+            `🎫 Ticket ▪ #${ticket.id}`,
+            `🙋 Angefordert von ▪ <@${ticket.closeRequest.requestedBy}>`,
+            `✅ Genehmigt von ▪ <@${i.user.id}>`,
+            `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:F>`
+          ]
+        );
+
         const closeEmbed = new EmbedBuilder()
           .setColor(0x00ff88)
           .setTitle('✅ Schließungsanfrage genehmigt')
-          .setDescription(
-            `Die Schließungsanfrage wurde von **${closerName}** genehmigt.\n\n` +
-            `Ticket wird geschlossen.\n\n` +
-            `**Angefordert von:** <@${ticket.closeRequest.requestedBy}>\n` +
-            `**Genehmigt von:** <@${i.user.id}>`
-          )
-          .addFields(
-            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
-          )
+          .setDescription(closeDescription)
           .setFooter({ text: 'Quantix Tickets • Ticket geschlossen' })
           .setTimestamp();
 
@@ -6900,28 +6963,28 @@ client.on(Events.InteractionCreate, async i => {
               .setLabel('📄 Transcript ansehen')
           );
 
-          // Baue User-Statistiken-String
-          let userStatsString = '';
-          if (messageStats && messageStats.userStats.length > 0) {
-            userStatsString = messageStats.userStats
-              .map(u => `**${u.count}** - <@${u.userId}>`)
-              .join('\n');
-          } else {
-            userStatsString = 'Keine Nachrichten';
-          }
+          const transcriptInfoLines = [
+            `📨 Nachrichten ▪ ${messageStats?.totalMessages || 0} Nachrichten`,
+            `🏷️ Ticket Name ▪ ${ticketDisplayName}`,
+            `👤 Erstellt von ▪ <@${ticket.userId}>`,
+            `📅 Datum ▪ <t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`,
+            '🎫 Ticket User ▪',
+            ...(messageStats && messageStats.userStats.length > 0
+              ? messageStats.userStats.map((u, idx) => `${idx + 1}. ${u.count} - <@${u.userId}>`)
+              : ['Keine Nutzer'])
+          ];
+
+          const transcriptDescription = buildBlockquoteMessage(
+            'Ticket geschlossen',
+            ['Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.'],
+            transcriptInfoLines
+          );
 
           // Erstelle das Transcript-Embed mit Statistiken
           const transcriptEmbed = new EmbedBuilder()
             .setColor(0x3b82f6)
             .setTitle('📧 » Ticket geschlossen «')
-            .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
-            .addFields(
-              { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
-              { name: '» Ticket Name «', value: `| 📋 | ${ticketDisplayName}`, inline: true },
-              { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
-              { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
-              { name: '» Ticket User «', value: userStatsString || 'Keine Nutzer', inline: false }
-            )
+            .setDescription(transcriptDescription)
             .setFooter({ text: i.guild.name })
             .setTimestamp();
 
@@ -6949,26 +7012,27 @@ client.on(Events.InteractionCreate, async i => {
             const creator = await client.users.fetch(ticket.userId).catch(() => null);
             if (creator) {
               // Baue User-Statistiken-String für DM (mit Mentions)
-              let userStatsStringDM = '';
-              if (messageStats && messageStats.userStats.length > 0) {
-                userStatsStringDM = messageStats.userStats
-                  .map(u => `**${u.count}** - <@${u.userId}>`)
-                  .join('\n');
-              } else {
-                userStatsStringDM = 'Keine Nachrichten';
-              }
+              const transcriptInfoLinesDM = [
+                `📨 Nachrichten ▪ ${messageStats?.totalMessages || 0} Nachrichten`,
+                `🏷️ Ticket Name ▪ ${ticketDisplayName}`,
+                `👤 Erstellt von ▪ <@${ticket.userId}>`,
+                `📅 Datum ▪ <t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`,
+                '🎫 Ticket User ▪',
+                ...(messageStats && messageStats.userStats.length > 0
+                  ? messageStats.userStats.map((u, idx) => `${idx + 1}. ${u.count} - <@${u.userId}>`)
+                  : ['Keine Nutzer'])
+              ];
+
+              const transcriptDMDescription = buildBlockquoteMessage(
+                'Ticket geschlossen',
+                ['Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.'],
+                transcriptInfoLinesDM
+              );
 
               const transcriptDMEmbed = new EmbedBuilder()
                 .setColor(0x3b82f6)
                 .setTitle('📧 » Ticket geschlossen «')
-                .setDescription('*Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.*')
-                .addFields(
-                  { name: '» Nachrichten «', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
-                  { name: '» Ticket Name «', value: `| 📋 | ${ticketDisplayName}`, inline: true },
-                  { name: '» Erstellt von «', value: `<@${ticket.userId}>`, inline: true },
-                  { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
-                  { name: '» Ticket User «', value: userStatsStringDM || 'Keine Nutzer', inline: false }
-                )
+                .setDescription(transcriptDMDescription)
                 .setFooter({ text: i.guild.name })
                 .setTimestamp();
 
@@ -6994,17 +7058,22 @@ client.on(Events.InteractionCreate, async i => {
               console.log(`✅ Survey DM sent to ${user.tag} for ticket #${ticket.id}`);
             } else if (cfg.ticketRating && cfg.ticketRating.enabled === true) {
               // Use old Rating System
+              const ratingDescription = buildBlockquoteMessage(
+                'Wie war deine Support-Erfahrung?',
+                [
+                  `Dein Ticket wurde geschlossen. Bitte bewerte deinen Support, damit wir uns verbessern können!`
+                ],
+                [
+                  `🎫 Ticket ▪ #${ticket.id}`,
+                  `📋 Thema ▪ ${ticket.topic || 'Unbekannt'}`,
+                  `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+                ]
+              );
+
               const ratingEmbed = new EmbedBuilder()
                 .setColor(0x3b82f6)
                 .setTitle('⭐ Wie war deine Support-Erfahrung?')
-                .setDescription(
-                  `Dein Ticket **#${ticket.id}** wurde geschlossen.\n\n` +
-                  `Bitte bewerte deinen Support, damit wir uns verbessern können!`
-                )
-                .addFields(
-                  { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-                  { name: '📋 Thema', value: ticket.topic || 'Unbekannt', inline: true }
-                )
+                .setDescription(ratingDescription)
                 .setFooter({ text: 'Quantix Tickets • Deine Meinung zählt!' })
                 .setTimestamp();
 
@@ -7212,17 +7281,22 @@ client.on(Events.InteractionCreate, async i => {
 
           await i.channel.permissionOverwrites.set(permissions).catch(err => console.error('Permission error:', err));
 
-          const unclaimEmbed = new EmbedBuilder()
-            .setColor(0x9b59b6)
-            .setTitle('↩️ Ticket freigegeben')
-            .setDescription(`<@${i.user.id}> hat das Ticket freigegeben.\n\nDas Ticket ist jetzt wieder für alle Team-Mitglieder verfügbar.`)
-            .addFields(
-              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-              { name: '👤 Freigegeben von', value: `<@${i.user.id}>`, inline: true },
-              { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-            )
-            .setFooter({ text: 'Quantix Tickets • Ticket freigegeben' })
-            .setTimestamp();
+            const unclaimDescription = buildBlockquoteMessage(
+              'Ticket freigegeben',
+              [`<@${i.user.id}> hat das Ticket freigegeben.`, '', 'Das Ticket ist jetzt wieder für alle Team-Mitglieder verfügbar.'],
+              [
+                `🎫 Ticket ▪ #${ticket.id}`,
+                `👤 Freigegeben von ▪ <@${i.user.id}>`,
+                `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+              ]
+            );
+
+            const unclaimEmbed = new EmbedBuilder()
+              .setColor(0x9b59b6)
+              .setTitle('↩️ Ticket freigegeben')
+              .setDescription(unclaimDescription)
+              .setFooter({ text: 'Quantix Tickets • Ticket freigegeben' })
+              .setTimestamp();
 
           await i.channel.send({ embeds: [unclaimEmbed] }).catch(err => console.error('Unclaim message error:', err));
           renameChannelIfNeeded(i.channel, ticket);
@@ -7237,21 +7311,23 @@ client.on(Events.InteractionCreate, async i => {
       if(i.customId === 'claim') {
         // Nur Team kann Tickets claimen
         if(!isTeam) {
+          const noPermDescription = buildBlockquoteMessage(
+            'Zugriff verweigert',
+            [
+              'Nur Team-Mitglieder können Tickets übernehmen.',
+              'Bitte kontaktiere das Team, falls du Unterstützung benötigst.'
+            ],
+            [
+              '🏷️ Benötigte Berechtigung ▪ Team-Rolle',
+              `🎫 Ticket ▪ #${ticket.id}`,
+              `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+            ]
+          );
+
           const noPermEmbed = new EmbedBuilder()
             .setColor(0xff4444)
             .setTitle('🚫 Zugriff verweigert')
-            .setDescription(
-              '**Das hier darf nur das Team machen!**\n\n' +
-              'Nur Team-Mitglieder können Tickets übernehmen.'
-            )
-            .addFields(
-              {
-                name: '🏷️ Benötigte Berechtigung',
-                value: 'Team-Rolle',
-                inline: true
-              },
-              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
-            )
+            .setDescription(noPermDescription)
             .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
             .setTimestamp();
           return i.reply({ embeds: [noPermEmbed], ephemeral: true });
@@ -7259,14 +7335,20 @@ client.on(Events.InteractionCreate, async i => {
 
         // Prüfe ob Ticket bereits geclaimed ist
         if(ticket.claimer) {
+          const alreadyClaimedDescription = buildBlockquoteMessage(
+            'Bereits übernommen',
+            [`Dieses Ticket wurde bereits von <@${ticket.claimer}> übernommen.`],
+            [
+              `🎫 Ticket ▪ #${ticket.id}`,
+              `👤 Aktueller Claimer ▪ <@${ticket.claimer}>`,
+              `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+            ]
+          );
+
           const alreadyClaimedEmbed = new EmbedBuilder()
             .setColor(0xffa500)
             .setTitle('⚠️ Bereits übernommen')
-            .setDescription(`**Dieses Ticket wurde bereits von <@${ticket.claimer}> übernommen.**`)
-            .addFields(
-              { name: '👤 Aktueller Claimer', value: `<@${ticket.claimer}>`, inline: true },
-              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
-            )
+            .setDescription(alreadyClaimedDescription)
             .setFooter({ text: 'Quantix Tickets' })
             .setTimestamp();
           return i.reply({ embeds: [alreadyClaimedEmbed], ephemeral: true });
@@ -7309,15 +7391,20 @@ client.on(Events.InteractionCreate, async i => {
           await i.channel.permissionOverwrites.set(permissions).catch(err => console.error('Permission error:', err));
 
           // Send claim notification WITH PING outside embed
+          const claimDescription = buildBlockquoteMessage(
+            'Ticket übernommen',
+            [`<@${i.user.id}> hat dieses Ticket übernommen und kümmert sich um dein Anliegen.`],
+            [
+              `🎫 Ticket ▪ #${ticket.id}`,
+              `👤 Claimer ▪ <@${i.user.id}>`,
+              `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+            ]
+          );
+
           const claimEmbed = new EmbedBuilder()
             .setColor(0x00ff88)
             .setTitle('✨ Ticket übernommen')
-            .setDescription(`hat dieses Ticket übernommen und wird sich um dein Anliegen kümmern.`)
-            .addFields(
-              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-              { name: '👤 Übernommen von', value: `<@${i.user.id}>`, inline: true },
-              { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-            )
+            .setDescription(claimDescription)
             .setFooter({ text: 'Quantix Tickets • Claim' })
             .setTimestamp();
 
@@ -7347,21 +7434,23 @@ client.on(Events.InteractionCreate, async i => {
         const teamRoleId = getTeamRole(guildId);
         const teamRole = teamRoleId ? await i.guild.roles.fetch(teamRoleId).catch(() => null) : null;
 
+        const noPermDescription = buildBlockquoteMessage(
+          'Zugriff verweigert',
+          [
+            'Diese Aktion ist nur für Team-Mitglieder verfügbar.',
+            'Bitte kontaktiere das Team.'
+          ],
+          [
+            `🏷️ Benötigte Rolle ▪ ${teamRole ? `<@&${teamRoleId}>` : 'Nicht konfiguriert'}`,
+            `🎫 Ticket ▪ #${ticket.id}`,
+            `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+          ]
+        );
+
         const noPermEmbed = new EmbedBuilder()
           .setColor(0xff4444)
           .setTitle('🚫 Zugriff verweigert')
-          .setDescription(
-            '**Das hier darf nur das Team machen!**\n\n' +
-            'Diese Aktion ist nur für Team-Mitglieder verfügbar.'
-          )
-          .addFields(
-            {
-              name: '🏷️ Benötigte Rolle',
-              value: teamRole ? `<@&${teamRoleId}>` : 'Team-Rolle nicht konfiguriert',
-              inline: true
-            },
-            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
-          )
+          .setDescription(noPermDescription)
           .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
           .setTimestamp();
 
@@ -7411,17 +7500,22 @@ client.on(Events.InteractionCreate, async i => {
 
             await i.channel.permissionOverwrites.set(permissions);
 
-            const claimEmbed = new EmbedBuilder()
-              .setColor(0x00ff88)
-              .setTitle('✨ Ticket übernommen')
-              .setDescription(`<@${i.user.id}> hat das Ticket übernommen und wird sich um dein Anliegen kümmern.`)
-              .addFields(
-                { name: '🎫 Ticket', value: `#${updatedTicket.id}`, inline: true },
-                { name: '👤 Übernommen von', value: `<@${i.user.id}>`, inline: true },
-                { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-              )
-              .setFooter({ text: 'Quantix Tickets • Ticket übernommen' })
-              .setTimestamp();
+              const claimDescription = buildBlockquoteMessage(
+                'Ticket übernommen',
+                [`<@${i.user.id}> hat das Ticket übernommen und wird sich um dein Anliegen kümmern.`],
+                [
+                  `🎫 Ticket ▪ #${updatedTicket.id}`,
+                  `👤 Übernommen von ▪ <@${i.user.id}>`,
+                  `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+                ]
+              );
+
+              const claimEmbed = new EmbedBuilder()
+                .setColor(0x00ff88)
+                .setTitle('✨ Ticket übernommen')
+                .setDescription(claimDescription)
+                .setFooter({ text: 'Quantix Tickets • Ticket übernommen' })
+                .setTimestamp();
 
             await i.channel.send({ embeds: [claimEmbed] });
           } catch(err) {
@@ -7504,15 +7598,20 @@ client.on(Events.InteractionCreate, async i => {
           ticket.closedBy = i.user.id;
           saveTickets(guildId, log);
 
+          const closeDescription = buildBlockquoteMessage(
+            'Ticket wird geschlossen',
+            ['Dieses Ticket wird in wenigen Sekunden geschlossen und archiviert.'],
+            [
+              `🎫 Ticket ▪ #${ticket.id}`,
+              `👤 Geschlossen von ▪ <@${i.user.id}>`,
+              `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+            ]
+          );
+
           const closeEmbed = new EmbedBuilder()
             .setColor(0xff4444)
             .setTitle('🔐 Ticket wird geschlossen')
-            .setDescription(`Dieses Ticket wird in wenigen Sekunden geschlossen und archiviert.`)
-            .addFields(
-              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-              { name: '👤 Geschlossen von', value: `<@${i.user.id}>`, inline: true },
-              { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-            )
+            .setDescription(closeDescription)
             .setFooter({ text: 'Quantix Tickets • Ticket geschlossen' })
             .setTimestamp();
 
@@ -7821,28 +7920,44 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       // Send denial message
+      const denyDescription = buildBlockquoteMessage(
+        'Schließungsanfrage abgelehnt',
+        [
+          `<@${i.user.id}> hat die Schließungsanfrage abgelehnt.`,
+          `📝 Grund ▪ ${reason}`
+        ],
+        [
+          `🎫 Ticket ▪ #${ticket.id}`,
+          `⏰ Abgelehnt am ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+        ]
+      );
+
       const denyEmbed = new EmbedBuilder()
         .setColor(0xff4444)
         .setTitle('❌ Schließungsanfrage abgelehnt')
-        .setDescription(`<@${i.user.id}> hat die Schließungsanfrage abgelehnt.`)
-        .addFields(
-          { name: '📝 Grund', value: reason, inline: false },
-          { name: '⏰ Abgelehnt am', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-        )
+        .setDescription(denyDescription)
         .setFooter({ text: 'Quantix Tickets • Schließungsanfrage abgelehnt' })
         .setTimestamp();
 
       await i.channel.send({ embeds: [denyEmbed] });
 
       // Notify requester
+      const requesterDescription = buildBlockquoteMessage(
+        'Deine Schließungsanfrage wurde abgelehnt',
+        [
+          `Ticket #${ticket.id} wird nicht geschlossen.`,
+          `📝 Grund ▪ ${reason}`
+        ],
+        [
+          `🎫 Ticket ▪ <#${i.channel.id}>`,
+          `⏰ Abgelehnt am ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+        ]
+      );
+
       const requesterEmbed = new EmbedBuilder()
         .setColor(0xff4444)
         .setTitle('❌ Deine Schließungsanfrage wurde abgelehnt')
-        .setDescription(`Deine Anfrage, Ticket #${ticket.id} zu schließen, wurde von einem Team-Mitglied abgelehnt.`)
-        .addFields(
-          { name: '📝 Grund', value: reason, inline: false },
-          { name: '🎫 Ticket', value: `<#${i.channel.id}>`, inline: true }
-        )
+        .setDescription(requesterDescription)
         .setFooter({ text: 'Quantix Tickets' })
         .setTimestamp();
 
@@ -9002,8 +9117,16 @@ client.on(Events.MessageCreate, async (message) => {
           tickets[ticketIndex].lastMessageAt = Date.now();
           // Wenn Warnung gesendet wurde, setze sie zurück (Aktivität erkannt)
           if (tickets[ticketIndex].autoCloseWarningSent) {
+            const warningMessageId = tickets[ticketIndex].autoCloseWarningMessageId;
+            if (warningMessageId) {
+              try {
+                const warningMessage = await message.channel.messages.fetch(warningMessageId);
+                await warningMessage.delete().catch(() => {});
+              } catch {}
+            }
             tickets[ticketIndex].autoCloseWarningSent = false;
             tickets[ticketIndex].autoCloseWarningAt = null;
+            tickets[ticketIndex].autoCloseWarningMessageId = null;
           }
           safeWrite(ticketsPath, tickets);
         }
