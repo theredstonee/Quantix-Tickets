@@ -2795,6 +2795,7 @@ client.on(Events.InteractionCreate, async i => {
     }
 
     if(i.isStringSelectMenu() && i.customId==='topic'){
+      const guildId = i.guild.id;
       if(i.values[0] === 'none') return i.reply({content:'⚠️ Keine Topics konfiguriert. Bitte konfiguriere zuerst Topics im Panel.',ephemeral:true});
       const topic = cfg.topics?.find(t=>t.value===i.values[0]);
       if(!topic) return i.reply({content:'Unbekanntes Thema',ephemeral:true});
@@ -3407,6 +3408,7 @@ client.on(Events.InteractionCreate, async i => {
     }
 
     if(i.isModalSubmit() && i.customId.startsWith('modal_newticket:')){
+      const guildId = i.guild.id;
       const topicValue = i.customId.split(':')[1];
       const topic = cfg.topics?.find(t=>t.value===topicValue);
 
@@ -3503,6 +3505,7 @@ client.on(Events.InteractionCreate, async i => {
 
     // Multi-System Modal Submit Handler
     if(i.isModalSubmit() && i.customId.startsWith('modal_multisystem:')){
+      const guildId = i.guild.id;
       try {
         const parts = i.customId.split(':');
         const systemId = parts[1];
@@ -5369,6 +5372,7 @@ client.on(Events.InteractionCreate, async i => {
 
       // Multi-Ticket-System: Button Handler for ticket_create:systemId:topicValue
       if(i.customId.startsWith('ticket_create:')){
+        const guildId = i.guild.id;
         try {
           const parts = i.customId.split(':');
           const systemId = parts[1];
