@@ -57,10 +57,31 @@ function verifyGitHubSignature(payload, signature) {
 }
 
 /**
+ * Führe Git Stash aus um lokale Änderungen zu sichern
+ */
+function gitStash() {
+  return new Promise((resolve) => {
+    logUpdate('📦 Sichere lokale Änderungen mit git stash...');
+
+    exec('git stash --include-untracked', { cwd: __dirname }, (error, stdout, stderr) => {
+      if (error) {
+        logUpdate(`⚠️ Git Stash Warnung: ${error.message}`);
+      } else {
+        logUpdate(`✅ Git Stash: ${stdout.trim()}`);
+      }
+      resolve(); // Immer fortfahren, auch wenn stash fehlschlägt
+    });
+  });
+}
+
+/**
  * Führe Git Pull aus
  */
 function gitPull() {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    // Zuerst lokale Änderungen stashen um Konflikte zu vermeiden
+    await gitStash();
+
     logUpdate('📥 Führe git pull aus...');
 
     exec('git pull', { cwd: __dirname }, (error, stdout, stderr) => {
