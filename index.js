@@ -8092,17 +8092,15 @@ client.on(Events.InteractionCreate, async i => {
 
       if(!isTeam) {
         const teamRole = TEAM_ROLE ? await i.guild.roles.fetch(TEAM_ROLE).catch(() => null) : null;
-        const noPermEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🚫 Zugriff verweigert')
-          .setDescription('**Das hier darf nur das Team machen!**\n\nNur Team-Mitglieder können Benutzer zu Tickets hinzufügen.')
-          .addFields({
-            name: '🏷️ Benötigte Rolle',
-            value: teamRole ? `<@&${TEAM_ROLE}>` : 'Team-Rolle nicht konfiguriert',
-            inline: true
-          })
-          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-          .setTimestamp();
+        const noPermEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Zugriff verweigert',
+          description: 'Nur Team-Mitglieder können Benutzer zu Tickets hinzufügen.',
+          fields: [
+            { name: 'Benötigte Rolle', value: teamRole ? `<@&${TEAM_ROLE}>` : 'Nicht konfiguriert', inline: true }
+          ],
+          color: '#ED4245'
+        });
         return i.reply({ embeds: [noPermEmbed], ephemeral: true });
       }
 
@@ -8110,20 +8108,15 @@ client.on(Events.InteractionCreate, async i => {
       const id = (raw.replace(/<@!?|>/g,'').match(/\d{17,20}/)||[])[0];
 
       if(!id) {
-        const invalidEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Ungültige Eingabe')
-          .setDescription(
-            '**Die eingegebene User-ID oder Mention ist ungültig.**\n\n' +
-            'Bitte gib eine gültige Discord User-ID oder @Mention ein.'
-          )
-          .addFields({
-            name: '📝 Beispiele',
-            value: '`•` @Username\n`•` 123456789012345678',
-            inline: false
-          })
-          .setFooter({ text: 'Quantix Tickets • Ungültige Eingabe' })
-          .setTimestamp();
+        const invalidEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Ungültige Eingabe',
+          description: 'Die eingegebene User-ID oder Mention ist ungültig.',
+          fields: [
+            { name: 'Beispiele', value: '@Username oder 123456789012345678', inline: false }
+          ],
+          color: '#ED4245'
+        });
         return i.reply({ embeds: [invalidEmbed], ephemeral: true });
       }
 
@@ -8135,28 +8128,28 @@ client.on(Events.InteractionCreate, async i => {
         const ticket = log.find(t=>t.channelId===i.channel.id);
 
         if(!ticket) {
-          const noTicketEmbed = new EmbedBuilder()
-            .setColor(0xff4444)
-            .setTitle('❌ Kein Ticket gefunden')
-            .setDescription('**Für diesen Channel wurde kein Ticket-Datensatz gefunden.**')
-            .setFooter({ text: 'Quantix Tickets • Fehler' })
-            .setTimestamp();
+          const noTicketEmbed = createStyledEmbed({
+            emoji: '❌',
+            title: 'Kein Ticket gefunden',
+            description: 'Für diesen Channel wurde kein Ticket-Datensatz gefunden.',
+            color: '#ED4245'
+          });
           return i.reply({ embeds: [noTicketEmbed], ephemeral: true });
         }
 
         if(!ticket.addedUsers) ticket.addedUsers = [];
 
         if(ticket.addedUsers.includes(id) || ticket.userId === id || ticket.claimer === id) {
-          const alreadyAccessEmbed = new EmbedBuilder()
-            .setColor(0xffa500)
-            .setTitle('ℹ️ Bereits vorhanden')
-            .setDescription(`**<@${id}> hat bereits Zugriff auf dieses Ticket.**`)
-            .addFields(
-              { name: '👤 User', value: `<@${id}>`, inline: true },
-              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
-            )
-            .setFooter({ text: 'Quantix Tickets • Zugriff bereits vorhanden' })
-            .setTimestamp();
+          const alreadyAccessEmbed = createStyledEmbed({
+            emoji: 'ℹ️',
+            title: 'Bereits vorhanden',
+            description: `<@${id}> hat bereits Zugriff auf dieses Ticket.`,
+            fields: [
+              { name: 'User', value: `<@${id}>`, inline: true },
+              { name: 'Ticket', value: `#${ticket.id}`, inline: true }
+            ],
+            color: '#FEE75C'
+          });
           return i.reply({ embeds: [alreadyAccessEmbed], ephemeral: true });
         }
 
@@ -8165,52 +8158,44 @@ client.on(Events.InteractionCreate, async i => {
 
         await i.channel.permissionOverwrites.edit(id,{ ViewChannel:true, SendMessages:true });
 
-        const successEmbed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('✅ Benutzer hinzugefügt')
-          .setDescription(`**<@${id}> wurde erfolgreich zum Ticket hinzugefügt.**`)
-          .addFields(
-            { name: '👤 Hinzugefügt', value: `<@${id}>`, inline: true },
-            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-            { name: '👥 Von', value: `<@${i.user.id}>`, inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets • Benutzer hinzugefügt' })
-          .setTimestamp();
+        const successEmbed = createStyledEmbed({
+          emoji: '✅',
+          title: 'Benutzer hinzugefügt',
+          description: `<@${id}> wurde erfolgreich zum Ticket hinzugefügt.`,
+          fields: [
+            { name: 'Hinzugefügt', value: `<@${id}>`, inline: true },
+            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+            { name: 'Von', value: `<@${i.user.id}>`, inline: true }
+          ],
+          color: '#57F287'
+        });
         await i.reply({ embeds: [successEmbed], ephemeral: true });
 
-        const publicEmbed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('👥 Neuer Benutzer hinzugefügt')
-          .setDescription(`<@${id}> wurde von <@${i.user.id}> zum Ticket hinzugefügt und kann nun hier schreiben.`)
-          .addFields(
-            { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets' })
-          .setTimestamp();
+        const publicEmbed = createStyledEmbed({
+          emoji: '👥',
+          title: 'Neuer Benutzer hinzugefügt',
+          description: `<@${id}> wurde von <@${i.user.id}> zum Ticket hinzugefügt.`,
+          fields: [
+            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          ],
+          color: '#57F287'
+        });
         await i.channel.send({ embeds: [publicEmbed] });
 
         logEvent(i.guild, t(guildId, 'logs.user_added', { user: `<@${id}>`, id: ticket.id }));
       } catch(err) {
         console.error('Fehler beim Hinzufügen:', err);
 
-        const errorEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Fehler beim Hinzufügen')
-          .setDescription(
-            '**Der Benutzer konnte nicht hinzugefügt werden.**\n\n' +
-            'Mögliche Gründe:\n' +
-            '`•` Benutzer ist nicht auf diesem Server\n' +
-            '`•` Ungültige User-ID\n' +
-            '`•` Bot hat keine Berechtigung'
-          )
-          .addFields({
-            name: '🐛 Fehlermeldung',
-            value: `\`\`\`${err.message || 'Unbekannter Fehler'}\`\`\``,
-            inline: false
-          })
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const errorEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Fehler beim Hinzufügen',
+          description: 'Der Benutzer konnte nicht hinzugefügt werden.',
+          fields: [
+            { name: 'Fehlermeldung', value: `\`\`\`${err.message || 'Unbekannter Fehler'}\`\`\``, inline: false }
+          ],
+          color: '#ED4245'
+        });
         return i.reply({ embeds: [errorEmbed], ephemeral: true });
       }
     }
@@ -8218,20 +8203,15 @@ client.on(Events.InteractionCreate, async i => {
     console.error(err);
 
     if(!i.replied && !i.deferred) {
-      const generalErrorEmbed = new EmbedBuilder()
-        .setColor(0xff4444)
-        .setTitle('❌ Ein Fehler ist aufgetreten')
-        .setDescription(
-          '**Bei der Verarbeitung deiner Anfrage ist ein unerwarteter Fehler aufgetreten.**\n\n' +
-          'Bitte versuche es erneut oder kontaktiere den Support.'
-        )
-        .addFields({
-          name: '💬 Support',
-          value: '[Support Server](https://discord.com/invite/mnYbnpyyBS)',
-          inline: false
-        })
-        .setFooter({ text: 'Quantix Tickets • Fehler' })
-        .setTimestamp();
+      const generalErrorEmbed = createStyledEmbed({
+        emoji: '❌',
+        title: 'Ein Fehler ist aufgetreten',
+        description: 'Bei der Verarbeitung deiner Anfrage ist ein Fehler aufgetreten.',
+        fields: [
+          { name: 'Support', value: '[Support Server](https://discord.com/invite/mnYbnpyyBS)', inline: false }
+        ],
+        color: '#ED4245'
+      });
 
       i.reply({ embeds: [generalErrorEmbed], ephemeral: true }).catch(() => {});
     }
