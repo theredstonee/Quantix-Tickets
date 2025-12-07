@@ -2840,8 +2840,8 @@ client.on(Events.InteractionCreate, async i => {
               title: t(guildId, 'ticketBlacklist.user_blacklisted') || 'Auf der Blacklist',
               description: t(guildId, 'ticketBlacklist.blocked_error', {
                 reason: blacklist.reason,
-                expires: expiryText
-              }) || `Du bist auf der Ticket-Blacklist.\n\nGrund: ${blacklist.reason}\nLäuft ab: ${expiryText}`,
+                duration: expiryText
+              }) || `Du bist auf der Ticket-Blacklist.\n\nGrund: ${blacklist.reason}\nDauer: ${expiryText}`,
               color: '#ED4245',
               footer: 'Quantix Tickets • Zugriff verweigert'
             });
@@ -3495,7 +3495,7 @@ client.on(Events.InteractionCreate, async i => {
               title: t(guildId, 'ticketBlacklist.user_blacklisted'),
               description: t(guildId, 'ticketBlacklist.blocked_error', {
                 reason: blacklist.reason,
-                expires: expiryText
+                duration: expiryText
               }),
               color: '#ED4245'
             });
@@ -3599,7 +3599,7 @@ client.on(Events.InteractionCreate, async i => {
                 title: t(guildId, 'ticketBlacklist.user_blacklisted'),
                 description: t(guildId, 'ticketBlacklist.blocked_error', {
                   reason: blacklist.reason,
-                  expires: expiryText
+                  duration: expiryText
                 }),
                 color: '#ED4245',
                 footer: 'Quantix Tickets • Zugriff verweigert'
@@ -5466,7 +5466,7 @@ client.on(Events.InteractionCreate, async i => {
                   title: t(guildId, 'ticketBlacklist.user_blacklisted'),
                   description: t(guildId, 'ticketBlacklist.blocked_error', {
                     reason: blacklist.reason,
-                    expires: expiryText
+                    duration: expiryText
                   }),
                   color: '#ED4245',
                   footer: 'Quantix Tickets • Zugriff verweigert'
@@ -5630,7 +5630,7 @@ client.on(Events.InteractionCreate, async i => {
                 title: t(guildId, 'ticketBlacklist.user_blacklisted'),
                 description: t(guildId, 'ticketBlacklist.blocked_error', {
                   reason: blacklist.reason,
-                  expires: expiryText
+                  duration: expiryText
                 }),
                 color: '#ED4245',
                 footer: 'Quantix Tickets • Zugriff verweigert'
