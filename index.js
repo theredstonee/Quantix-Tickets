@@ -7799,39 +7799,19 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       // Send denial message
-      const denyDescription = buildBlockquoteMessage(
-        'Schließungsanfrage abgelehnt',
-        [
-          `<@${i.user.id}> hat die Schließungsanfrage abgelehnt.`,
-          `📝 Grund ▪ ${reason}`
+      const denyEmbed = createStyledEmbed({
+        emoji: '❌',
+        title: 'Schließungsanfrage abgelehnt',
+        description: `<@${i.user.id}> hat die Schließungsanfrage abgelehnt.`,
+        fields: [
+          { name: 'Grund', value: reason, inline: false },
+          { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+          { name: 'Abgelehnt am', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
         ],
-        [
-          `🎫 Ticket ▪ #${ticket.id}`,
-          `⏰ Abgelehnt am ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
-        ]
-      );
-
-      const denyEmbed = new EmbedBuilder()
-        .setColor(0xff4444)
-        .setTitle('❌ Schließungsanfrage abgelehnt')
-        .setDescription(denyDescription)
-        .setFooter({ text: 'Quantix Tickets • Schließungsanfrage abgelehnt' })
-        .setTimestamp();
+        color: '#ED4245'
+      });
 
       await i.channel.send({ embeds: [denyEmbed] });
-
-      // Notify requester
-      const requesterDescription = buildBlockquoteMessage(
-        'Deine Schließungsanfrage wurde abgelehnt',
-        [
-          `Ticket #${ticket.id} wird nicht geschlossen.`,
-          `📝 Grund ▪ ${reason}`
-        ],
-        [
-          `🎫 Ticket ▪ <#${i.channel.id}>`,
-          `⏰ Abgelehnt am ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
-        ]
-      );
 
       const requesterEmbed = createStyledEmbed({
         emoji: '❌',
