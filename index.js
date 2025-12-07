@@ -1721,24 +1721,60 @@ client.on(Events.GuildCreate, async (guild) => {
   await sendWelcomeMessage(guild);
 });
 
-function buildTicketEmbed(cfg, i, topic, nr){
-  const t = cfg.ticketEmbed || {};
+function buildTicketEmbed(cfg, i, topic, nr, priority = 0){
+  const guildId = i.guild?.id || i.guildId;
+  const ticketCfg = cfg.ticketEmbed || {};
+  const paddedNr = String(nr).padStart(5, '0');
+
   const rep = s => (s||'')
-    .replace(/\{ticketNumber\}/g, nr)
+    .replace(/\{ticketNumber\}/g, paddedNr)
     .replace(/\{topicLabel\}/g, topic.label)
     .replace(/\{topicValue\}/g, topic.value)
     .replace(/\{userMention\}/g, `<@${i.user.id}>`)
     .replace(/\{userId\}/g, i.user.id);
-  const e = new EmbedBuilder().setTitle(rep(t.title) || '🎫 Ticket').setDescription(rep(t.description) || `<@${i.user.id}>`);
-  if(t.color && /^#?[0-9a-fA-F]{6}$/.test(t.color)) e.setColor(parseInt(t.color.replace('#',''),16));
-  if(t.footer) e.setFooter({ text: rep(t.footer) });
 
-  // Add custom avatar if configured
+  // Berlin Zeit
+  const now = new Date();
+  const berlinTime = now.toLocaleString('de-DE', {
+    timeZone: 'Europe/Berlin',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  // Priority data
+  const priorityEmojis = ['🟢', '🟠', '🔴'];
+  const priorityNames = ['Niedrig', 'Mittel', 'Hoch'];
+  const priorityColors = ['#57F287', '#FEE75C', '#ED4245'];
+
+  const embedColor = ticketCfg.color && /^#?[0-9a-fA-F]{6}$/.test(ticketCfg.color)
+    ? ticketCfg.color
+    : priorityColors[priority] || '#5865F2';
+
+  // Build styled embed with new design
+  const e = new EmbedBuilder()
+    .setTitle(`🎫 » Ticket #${paddedNr} «`)
+    .setDescription(`*${rep(ticketCfg.description) || `Hallo <@${i.user.id}>`}*`)
+    .setColor(parseInt(embedColor.replace('#', ''), 16))
+    .addFields(
+      { name: '» Thema «', value: topic.label || topic.value, inline: true },
+      { name: '» Erstellt von «', value: `<@${i.user.id}>`, inline: true },
+      { name: '» Status «', value: '🟢 Offen', inline: true },
+      { name: '» Priorität «', value: `${priorityEmojis[priority]} ${priorityNames[priority]}`, inline: true }
+    )
+    .setFooter({ text: `${ticketCfg.footer || 'Quantix Tickets ©'} • ${berlinTime}` })
+    .setTimestamp();
+
+  // Add custom avatar/thumbnail if configured
   if(cfg.customAvatarUrl) {
     const avatarUrl = cfg.customAvatarUrl.startsWith('/')
       ? `${process.env.BASE_URL || 'https://tickets.quantix-bot.de'}${cfg.customAvatarUrl}`
       : cfg.customAvatarUrl;
-    e.setAuthor({ name: i.guild.name, iconURL: avatarUrl });
+    e.setThumbnail(avatarUrl);
+  } else if(i.user.displayAvatarURL) {
+    e.setThumbnail(i.user.displayAvatarURL({ size: 128 }));
   }
 
   return e;
@@ -8471,14 +8507,14 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     parent: parentId,
     permissionOverwrites: permOverwrites
   });
-  const embed = buildTicketEmbed(cfg, interaction, topic, nr);
+  const embed = buildTicketEmbed(cfg, interaction, topic, nr, ticketPriority);
   const formKeys = Object.keys(formData||{});
   if(formKeys.length){
     const formFields = getFormFieldsForTopic(cfg, topic.value).map(normalizeField);
     const fields = formKeys.slice(0,25).map(k=>{
       const field = formFields.find(f=>f.id===k);
       const label = field ? field.label : k;
-      return { name: label, value: formData[k] ? (formData[k].substring(0,1024) || '—') : '—', inline:false };
+      return { name: `» ${label} «`, value: formData[k] ? (formData[k].substring(0,1024) || '—') : '—', inline:false };
     });
     embed.addFields(fields);
   }
@@ -8486,10 +8522,9 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   // SLA Field hinzufügen (nur für Pro mit SLA enabled)
   const tempSlaDeadline = calculateSLADeadline(guildId, ticketPriority, Date.now());
   if(tempSlaDeadline && hasFeature(guildId, 'slaSystem')){
-    const slaDate = new Date(tempSlaDeadline);
     const slaText = `<t:${Math.floor(tempSlaDeadline / 1000)}:R>`;
     embed.addFields({
-      name: '⏱️ SLA-Deadline',
+      name: '» ⏱️ SLA-Deadline «',
       value: slaText,
       inline: true
     });
@@ -8500,7 +8535,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     const priorityEmojis = ['🟢', '🟠', '🔴'];
     const priorityNames = ['Niedrig', 'Mittel', 'Hoch'];
     embed.addFields({
-      name: '⚡ Auto-Priorität',
+      name: '» ⚡ Auto-Priorität «',
       value: `${priorityEmojis[ticketPriority]} ${priorityNames[ticketPriority]} (Rolle: ${autoPriorityRoleName})`,
       inline: true
     });
