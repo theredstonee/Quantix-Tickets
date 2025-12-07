@@ -8285,27 +8285,16 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   // Check AntiSpam Rate Limit
   const rateLimitCheck = checkTicketRateLimit(userId, guildId);
   if (!rateLimitCheck.allowed) {
-    const spamEmbed = new EmbedBuilder()
-      .setColor(0xff4444)
-      .setTitle('🚫 Rate-Limit erreicht')
-      .setDescription(
-        '**Du erstellst zu viele Tickets!**\n\n' +
-        `Du hast bereits **${rateLimitCheck.count} von ${rateLimitCheck.max}** Tickets in den letzten ${cfg.antiSpam.timeWindowMinutes} Minuten erstellt.`
-      )
-      .addFields(
-        {
-          name: '⏱️ Warte noch',
-          value: `**${rateLimitCheck.waitMinutes} Minute(n)**`,
-          inline: true
-        },
-        {
-          name: '📊 Limit',
-          value: `${rateLimitCheck.max} Tickets / ${cfg.antiSpam.timeWindowMinutes} Minuten`,
-          inline: true
-        }
-      )
-      .setFooter({ text: 'Quantix Tickets • AntiSpam System' })
-      .setTimestamp();
+    const spamEmbed = createStyledEmbed({
+      emoji: '🚫',
+      title: 'Rate-Limit erreicht',
+      description: `Du erstellst zu viele Tickets! Du hast bereits ${rateLimitCheck.count} von ${rateLimitCheck.max} Tickets in den letzten ${cfg.antiSpam.timeWindowMinutes} Minuten erstellt.`,
+      fields: [
+        { name: 'Warte noch', value: `${rateLimitCheck.waitMinutes} Minute(n)`, inline: true },
+        { name: 'Limit', value: `${rateLimitCheck.max} Tickets / ${cfg.antiSpam.timeWindowMinutes} Minuten`, inline: true }
+      ],
+      color: '#ED4245'
+    });
 
     // Use editReply if already deferred/replied, otherwise use reply
     if (interaction.deferred || interaction.replied) {
