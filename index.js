@@ -2819,6 +2819,38 @@ client.on(Events.InteractionCreate, async i => {
         }
       }
 
+      // Blacklist-Check
+      if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
+        const now = new Date();
+        const blacklist = cfg.ticketBlacklist.find(b => b.userId === i.user.id);
+
+        if (blacklist) {
+          if (!blacklist.isPermanent && new Date(blacklist.expiresAt) <= now) {
+            // Abgelaufen - entfernen
+            cfg.ticketBlacklist = cfg.ticketBlacklist.filter(b => b.userId !== i.user.id);
+            writeCfg(guildId, cfg);
+          } else {
+            // User ist auf Blacklist
+            const expiryText = blacklist.isPermanent
+              ? t(guildId, 'ticketBlacklist.permanent') || '♾️ Permanent'
+              : `<t:${Math.floor(new Date(blacklist.expiresAt).getTime() / 1000)}:R>`;
+
+            const blacklistEmbed = createStyledEmbed({
+              emoji: '🚫',
+              title: t(guildId, 'ticketBlacklist.user_blacklisted') || 'Auf der Blacklist',
+              description: t(guildId, 'ticketBlacklist.blocked_error', {
+                reason: blacklist.reason,
+                expires: expiryText
+              }) || `Du bist auf der Ticket-Blacklist.\n\nGrund: ${blacklist.reason}\nLäuft ab: ${expiryText}`,
+              color: '#ED4245',
+              footer: 'Quantix Tickets • Zugriff verweigert'
+            });
+
+            return i.reply({ embeds: [blacklistEmbed], ephemeral: true });
+          }
+        }
+      }
+
       // Check for FAQ/Auto-Responses (Free Feature)
       if(cfg.autoResponses && cfg.autoResponses.enabled && cfg.autoResponses.responses && cfg.autoResponses.responses.length > 0) {
         const relevantFAQs = cfg.autoResponses.responses.filter(faq => {
