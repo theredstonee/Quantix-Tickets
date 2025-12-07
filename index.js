@@ -6169,15 +6169,14 @@ client.on(Events.InteractionCreate, async i => {
           return i.reply({ ephemeral: true, content: '📋 Noch keine Notizen vorhanden.' });
         }
 
-        const notesEmbed = new EmbedBuilder()
-          .setColor(0x6366f1)
-          .setTitle(`📋 Notizen für Bewerbung #${ticketId}`)
-          .setDescription(notes.map((n, idx) =>
-            `**${idx + 1}.** ${n.text}\n` +
-            `└ *<@${n.userId}> • <t:${Math.floor(new Date(n.createdAt).getTime() / 1000)}:R>*`
-          ).join('\n\n'))
-          .setFooter({ text: `${notes.length} Notiz${notes.length !== 1 ? 'en' : ''} • Nur für Team sichtbar` })
-          .setTimestamp();
+        const notesEmbed = createStyledEmbed({
+          emoji: '📋',
+          title: `Notizen für Bewerbung #${ticketId}`,
+          description: notes.map((n, idx) =>
+            `**${idx + 1}.** ${n.text}\n└ <@${n.userId}> • <t:${Math.floor(new Date(n.createdAt).getTime() / 1000)}:R>`
+          ).join('\n\n'),
+          footer: `${notes.length} Notiz${notes.length !== 1 ? 'en' : ''} • Nur für Team sichtbar`
+        });
 
         return i.reply({ embeds: [notesEmbed], ephemeral: true });
       }
@@ -6497,15 +6496,12 @@ client.on(Events.InteractionCreate, async i => {
       const ticket = log.find(t=>t.channelId===i.channel.id);
 
       if(!ticket) {
-        const noTicketEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Kein Ticket gefunden')
-          .setDescription(
-            '**Für diesen Channel wurde kein Ticket-Datensatz gefunden.**\n\n' +
-            'Dieser Channel scheint kein gültiges Ticket zu sein.'
-          )
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const noTicketEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Kein Ticket gefunden',
+          description: 'Für diesen Channel wurde kein Ticket-Datensatz gefunden.',
+          color: '#ED4245'
+        });
         return i.reply({ embeds: [noTicketEmbed], ephemeral: true });
       }
 
