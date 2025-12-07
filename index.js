@@ -53,6 +53,7 @@ const { handleVoiceJoin, handleVoiceLeave } = require('./voice-waiting-room');
 const { handleTemplateUse } = require('./template-handler');
 const { handleDepartmentForward } = require('./department-handler');
 const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo, isTrialActive, activateAutoTrial, checkExpiredCancellations, activatePartner, deactivatePartner, listPartnerServers } = require('./premium');
+const { createStyledEmbed, createQuickEmbed } = require('./helpers');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -6615,29 +6616,19 @@ client.on(Events.InteractionCreate, async i => {
           pingMentions = mentions.join(' ');
         }
 
-        const requestDescription = buildBlockquoteMessage(
-          'Schließungsanfrage',
-          [
-            requesterType === 'user'
-              ? `<@${i.user.id}> möchte dieses Ticket schließen lassen.`
-              : `<@${i.user.id}> (Team) möchte dieses Ticket schließen.`
+        const requestEmbed = createStyledEmbed({
+          emoji: '📩',
+          title: 'Schließungsanfrage',
+          description: requesterType === 'user'
+            ? `<@${i.user.id}> möchte dieses Ticket schließen lassen.`
+            : `<@${i.user.id}> (Team) möchte dieses Ticket schließen.`,
+          fields: [
+            { name: 'Bestätigung', value: requesterType === 'user' ? 'Ein Team-Mitglied oder Claimer muss bestätigen.' : 'Der Ticket-Ersteller muss bestätigen.', inline: false },
+            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+            { name: 'Angefordert von', value: `<@${i.user.id}>`, inline: true }
           ],
-          [
-            requesterType === 'user'
-              ? '✅ Ein Team-Mitglied oder Claimer muss bestätigen.'
-              : '✅ Der Ticket-Ersteller muss bestätigen.',
-            `🎫 Ticket ▪ #${ticket.id}`,
-            `👤 Angefordert von ▪ <@${i.user.id}>`,
-            `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
-          ]
-        );
-
-        const requestEmbed = new EmbedBuilder()
-          .setColor(0xffa500)
-          .setTitle('📩 Schließungsanfrage')
-          .setDescription(requestDescription)
-          .setFooter({ text: 'Quantix Tickets • Schließungsanfrage' })
-          .setTimestamp();
+          color: '#FEE75C'
+        });
 
         const closeButtons = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -6671,54 +6662,50 @@ client.on(Events.InteractionCreate, async i => {
       // Voice-Support Button Handler
       if (i.customId === 'request_voice') {
         if (!hasFeature(guildId, 'voiceSupport')) {
-          const premiumEmbed = new EmbedBuilder()
-            .setColor(0xff9900)
-            .setTitle('⭐ Premium Feature')
-            .setDescription(t(guildId, 'voiceSupport.feature_locked'))
-            .setFooter({ text: 'Quantix Tickets • Premium' })
-            .setTimestamp();
+          const premiumEmbed = createStyledEmbed({
+            emoji: '⭐',
+            title: 'Premium Feature',
+            description: t(guildId, 'voiceSupport.feature_locked'),
+            color: '#FEE75C'
+          });
           return i.reply({ embeds: [premiumEmbed], ephemeral: true });
         }
 
         // Nur Team kann Voice-Channels erstellen
         if (!isTeam) {
-          const noPermEmbed = new EmbedBuilder()
-            .setColor(0xff4444)
-            .setTitle('🚫 Zugriff verweigert')
-            .setDescription(
-              '**Das hier darf nur das Team machen!**\n\n' +
-              'Nur Team-Mitglieder können Voice-Channels erstellen.'
-            )
-            .addFields(
-              {
-                name: '🏷️ Benötigte Berechtigung',
-                value: 'Team-Rolle',
-                inline: true
-              },
-              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
-            )
-            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-            .setTimestamp();
+          const noPermEmbed = createStyledEmbed({
+            emoji: '🚫',
+            title: 'Zugriff verweigert',
+            description: 'Nur Team-Mitglieder können Voice-Channels erstellen.',
+            fields: [
+              { name: 'Benötigte Berechtigung', value: 'Team-Rolle', inline: true },
+              { name: 'Ticket', value: `#${ticket.id}`, inline: true }
+            ],
+            color: '#ED4245'
+          });
           return i.reply({ embeds: [noPermEmbed], ephemeral: true });
         }
 
         if (hasVoiceChannel(ticket)) {
-          return i.reply({
-            content: t(guildId, 'voiceSupport.already_exists'),
-            ephemeral: true
+          const alreadyExistsEmbed = createStyledEmbed({
+            emoji: '⚠️',
+            title: 'Voice-Channel existiert bereits',
+            description: t(guildId, 'voiceSupport.already_exists'),
+            color: '#FEE75C'
           });
+          return i.reply({ embeds: [alreadyExistsEmbed], ephemeral: true });
         }
 
         try {
           await i.deferReply({ ephemeral: true });
           const voiceChannel = await createVoiceChannel(i, ticket, guildId);
 
-          const successEmbed = new EmbedBuilder()
-            .setColor(0x00ff88)
-            .setTitle('🎤 ' + t(guildId, 'voiceSupport.channel_created'))
-            .setDescription(t(guildId, 'voiceSupport.channel_description', { channel: `<#${voiceChannel.id}>` }))
-            .setFooter({ text: 'Quantix Tickets • Voice Support' })
-            .setTimestamp();
+          const successEmbed = createStyledEmbed({
+            emoji: '🎤',
+            title: t(guildId, 'voiceSupport.channel_created'),
+            description: t(guildId, 'voiceSupport.channel_description', { channel: `<#${voiceChannel.id}>` }),
+            color: '#57F287'
+          });
 
           await i.editReply({ embeds: [successEmbed] });
 
@@ -6741,14 +6728,15 @@ client.on(Events.InteractionCreate, async i => {
           }
 
           // Sende Log-Nachricht über Voice-Channel-Erstellung
-          const voiceLogEmbed = new EmbedBuilder()
-            .setColor(0x00ff88)
-            .setDescription(`🎤 **Voice-Support erstellt** von ${i.user}`)
-            .addFields(
-              { name: '🔊 Channel', value: `<#${voiceChannel.id}>`, inline: true }
-            )
-            .setFooter({ text: 'Quantix Tickets • Voice Support' })
-            .setTimestamp();
+          const voiceLogEmbed = createStyledEmbed({
+            emoji: '🎤',
+            title: 'Voice-Support erstellt',
+            description: `Voice-Channel wurde von ${i.user} erstellt.`,
+            fields: [
+              { name: 'Channel', value: `<#${voiceChannel.id}>`, inline: true }
+            ],
+            color: '#57F287'
+          });
 
           await i.channel.send({ embeds: [voiceLogEmbed] });
         } catch (err) {
@@ -6764,42 +6752,38 @@ client.on(Events.InteractionCreate, async i => {
       // Voice-Support beenden
       if (i.customId === 'end_voice') {
         if (!hasFeature(guildId, 'voiceSupport')) {
-          const premiumEmbed = new EmbedBuilder()
-            .setColor(0xff9900)
-            .setTitle('⭐ Premium Feature')
-            .setDescription(t(guildId, 'voiceSupport.feature_locked'))
-            .setFooter({ text: 'Quantix Tickets • Premium' })
-            .setTimestamp();
+          const premiumEmbed = createStyledEmbed({
+            emoji: '⭐',
+            title: 'Premium Feature',
+            description: t(guildId, 'voiceSupport.feature_locked'),
+            color: '#FEE75C'
+          });
           return i.reply({ embeds: [premiumEmbed], ephemeral: true });
         }
 
         // Nur Team kann Voice-Channels beenden
         if (!isTeam) {
-          const noPermEmbed = new EmbedBuilder()
-            .setColor(0xff4444)
-            .setTitle('🚫 Zugriff verweigert')
-            .setDescription(
-              '**Das hier darf nur das Team machen!**\n\n' +
-              'Nur Team-Mitglieder können Voice-Channels beenden.'
-            )
-            .addFields(
-              {
-                name: '🏷️ Benötigte Berechtigung',
-                value: 'Team-Rolle',
-                inline: true
-              },
-              { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true }
-            )
-            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-            .setTimestamp();
+          const noPermEmbed = createStyledEmbed({
+            emoji: '🚫',
+            title: 'Zugriff verweigert',
+            description: 'Nur Team-Mitglieder können Voice-Channels beenden.',
+            fields: [
+              { name: 'Benötigte Berechtigung', value: 'Team-Rolle', inline: true },
+              { name: 'Ticket', value: `#${ticket.id}`, inline: true }
+            ],
+            color: '#ED4245'
+          });
           return i.reply({ embeds: [noPermEmbed], ephemeral: true });
         }
 
         if (!ticket.voiceChannelId) {
-          return i.reply({
-            content: '❌ Kein Voice-Channel vorhanden!',
-            ephemeral: true
+          const noVoiceEmbed = createStyledEmbed({
+            emoji: '❌',
+            title: 'Kein Voice-Channel',
+            description: 'Es ist kein Voice-Channel für dieses Ticket vorhanden.',
+            color: '#ED4245'
           });
+          return i.reply({ embeds: [noVoiceEmbed], ephemeral: true });
         }
 
         try {
@@ -6808,12 +6792,12 @@ client.on(Events.InteractionCreate, async i => {
           // Lösche Voice-Channel
           await deleteVoiceChannel(i.guild, ticket.voiceChannelId, guildId);
 
-          const successEmbed = new EmbedBuilder()
-            .setColor(0xff4444)
-            .setTitle('🔇 ' + t(guildId, 'voiceSupport.ended'))
-            .setDescription(t(guildId, 'voiceSupport.ended_description'))
-            .setFooter({ text: 'Quantix Tickets • Voice Support' })
-            .setTimestamp();
+          const successEmbed = createStyledEmbed({
+            emoji: '🔇',
+            title: t(guildId, 'voiceSupport.ended'),
+            description: t(guildId, 'voiceSupport.ended_description'),
+            color: '#ED4245'
+          });
 
           await i.editReply({ embeds: [successEmbed] });
 
@@ -6829,19 +6813,23 @@ client.on(Events.InteractionCreate, async i => {
           });
 
           // Sende Log-Nachricht über Voice-Channel-Schließung
-          const voiceLogEmbed = new EmbedBuilder()
-            .setColor(0xff4444)
-            .setDescription(`🔇 **Voice-Support beendet** von ${i.user}`)
-            .setFooter({ text: 'Quantix Tickets • Voice Support' })
-            .setTimestamp();
+          const voiceLogEmbed = createStyledEmbed({
+            emoji: '🔇',
+            title: 'Voice-Support beendet',
+            description: `Voice-Channel wurde von ${i.user} beendet.`,
+            color: '#ED4245'
+          });
 
           await i.channel.send({ embeds: [voiceLogEmbed] });
         } catch (err) {
           console.error('Error ending voice channel:', err);
-          await i.editReply({
-            content: '❌ Voice-Channel konnte nicht gelöscht werden.',
-            ephemeral: true
-          }).catch(() => {});
+          const errorEmbed = createStyledEmbed({
+            emoji: '❌',
+            title: 'Fehler',
+            description: 'Voice-Channel konnte nicht gelöscht werden.',
+            color: '#ED4245'
+          });
+          await i.editReply({ embeds: [errorEmbed] }).catch(() => {});
         }
         return;
       }
@@ -6912,26 +6900,17 @@ client.on(Events.InteractionCreate, async i => {
           }
         }
 
-        const closeDescription = buildBlockquoteMessage(
-          'Ticket geschlossen',
-          [
-            `Die Schließungsanfrage wurde von **${closerName}** genehmigt.`,
-            'Ticket wird geschlossen.'
+        const closeEmbed = createStyledEmbed({
+          emoji: '✅',
+          title: 'Schließungsanfrage genehmigt',
+          description: `Die Schließungsanfrage wurde von **${closerName}** genehmigt.`,
+          fields: [
+            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+            { name: 'Angefordert von', value: `<@${ticket.closeRequest.requestedBy}>`, inline: true },
+            { name: 'Genehmigt von', value: `<@${i.user.id}>`, inline: true }
           ],
-          [
-            `🎫 Ticket ▪ #${ticket.id}`,
-            `🙋 Angefordert von ▪ <@${ticket.closeRequest.requestedBy}>`,
-            `✅ Genehmigt von ▪ <@${i.user.id}>`,
-            `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:F>`
-          ]
-        );
-
-        const closeEmbed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('✅ Schließungsanfrage genehmigt')
-          .setDescription(closeDescription)
-          .setFooter({ text: 'Quantix Tickets • Ticket geschlossen' })
-          .setTimestamp();
+          color: '#57F287'
+        });
 
         await i.channel.send({ embeds: [closeEmbed] });
 
@@ -6963,30 +6942,24 @@ client.on(Events.InteractionCreate, async i => {
               .setLabel('📄 Transcript ansehen')
           );
 
-          const transcriptInfoLines = [
-            `📨 Nachrichten ▪ ${messageStats?.totalMessages || 0} Nachrichten`,
-            `🏷️ Ticket Name ▪ ${ticketDisplayName}`,
-            `👤 Erstellt von ▪ <@${ticket.userId}>`,
-            `📅 Datum ▪ <t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`,
-            '🎫 Ticket User ▪',
-            ...(messageStats && messageStats.userStats.length > 0
-              ? messageStats.userStats.map((u, idx) => `${idx + 1}. ${u.count} - <@${u.userId}>`)
-              : ['Keine Nutzer'])
-          ];
-
-          const transcriptDescription = buildBlockquoteMessage(
-            'Ticket geschlossen',
-            ['Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.'],
-            transcriptInfoLines
-          );
+          const userStatsText = messageStats && messageStats.userStats.length > 0
+            ? messageStats.userStats.map((u, idx) => `${idx + 1} - <@${u.userId}>`).join('\n')
+            : 'Keine Nutzer';
 
           // Erstelle das Transcript-Embed mit Statistiken
-          const transcriptEmbed = new EmbedBuilder()
-            .setColor(0x3b82f6)
-            .setTitle('📧 » Ticket geschlossen «')
-            .setDescription(transcriptDescription)
-            .setFooter({ text: i.guild.name })
-            .setTimestamp();
+          const transcriptEmbed = createStyledEmbed({
+            emoji: '📧',
+            title: 'Ticket geschlossen',
+            description: 'Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.',
+            fields: [
+              { name: 'Nachrichten', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
+              { name: 'Ticket Name', value: `| 📁 | 💎 |${ticketDisplayName}`, inline: true },
+              { name: 'Erstellt von', value: `<@${ticket.userId}>`, inline: true },
+              { name: 'Datum', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+              { name: 'Ticket User', value: userStatsText, inline: false }
+            ],
+            footer: i.guild.name
+          });
 
           for (const channelId of transcriptChannelIds) {
             try {
@@ -7011,30 +6984,23 @@ client.on(Events.InteractionCreate, async i => {
           try {
             const creator = await client.users.fetch(ticket.userId).catch(() => null);
             if (creator) {
-              // Baue User-Statistiken-String für DM (mit Mentions)
-              const transcriptInfoLinesDM = [
-                `📨 Nachrichten ▪ ${messageStats?.totalMessages || 0} Nachrichten`,
-                `🏷️ Ticket Name ▪ ${ticketDisplayName}`,
-                `👤 Erstellt von ▪ <@${ticket.userId}>`,
-                `📅 Datum ▪ <t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`,
-                '🎫 Ticket User ▪',
-                ...(messageStats && messageStats.userStats.length > 0
-                  ? messageStats.userStats.map((u, idx) => `${idx + 1}. ${u.count} - <@${u.userId}>`)
-                  : ['Keine Nutzer'])
-              ];
+              const userStatsDMText = messageStats && messageStats.userStats.length > 0
+                ? messageStats.userStats.map((u, idx) => `${idx + 1} - <@${u.userId}>`).join('\n')
+                : 'Keine Nutzer';
 
-              const transcriptDMDescription = buildBlockquoteMessage(
-                'Ticket geschlossen',
-                ['Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.'],
-                transcriptInfoLinesDM
-              );
-
-              const transcriptDMEmbed = new EmbedBuilder()
-                .setColor(0x3b82f6)
-                .setTitle('📧 » Ticket geschlossen «')
-                .setDescription(transcriptDMDescription)
-                .setFooter({ text: i.guild.name })
-                .setTimestamp();
+              const transcriptDMEmbed = createStyledEmbed({
+                emoji: '📧',
+                title: 'Ticket geschlossen',
+                description: 'Das Transcript deines Tickets kannst du oberhalb dieser Nachricht herunterladen.',
+                fields: [
+                  { name: 'Nachrichten', value: `${messageStats?.totalMessages || 0} Nachrichten`, inline: true },
+                  { name: 'Ticket Name', value: `| 📁 | 💎 |${ticketDisplayName}`, inline: true },
+                  { name: 'Erstellt von', value: `<@${ticket.userId}>`, inline: true },
+                  { name: 'Datum', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+                  { name: 'Ticket User', value: userStatsDMText, inline: false }
+                ],
+                footer: i.guild.name
+              });
 
               await creator.send({
                 embeds: [transcriptDMEmbed],
@@ -7058,24 +7024,15 @@ client.on(Events.InteractionCreate, async i => {
               console.log(`✅ Survey DM sent to ${user.tag} for ticket #${ticket.id}`);
             } else if (cfg.ticketRating && cfg.ticketRating.enabled === true) {
               // Use old Rating System
-              const ratingDescription = buildBlockquoteMessage(
-                'Wie war deine Support-Erfahrung?',
-                [
-                  `Dein Ticket wurde geschlossen. Bitte bewerte deinen Support, damit wir uns verbessern können!`
-                ],
-                [
-                  `🎫 Ticket ▪ #${ticket.id}`,
-                  `📋 Thema ▪ ${ticket.topic || 'Unbekannt'}`,
-                  `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+              const ratingEmbed = createStyledEmbed({
+                emoji: '⭐',
+                title: 'Wie war deine Support-Erfahrung?',
+                description: 'Dein Ticket wurde geschlossen. Bitte bewerte deinen Support, damit wir uns verbessern können!',
+                fields: [
+                  { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+                  { name: 'Thema', value: ticket.topic || 'Unbekannt', inline: true }
                 ]
-              );
-
-              const ratingEmbed = new EmbedBuilder()
-                .setColor(0x3b82f6)
-                .setTitle('⭐ Wie war deine Support-Erfahrung?')
-                .setDescription(ratingDescription)
-                .setFooter({ text: 'Quantix Tickets • Deine Meinung zählt!' })
-                .setTimestamp();
+              });
 
               const ratingButtons = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
@@ -7281,22 +7238,16 @@ client.on(Events.InteractionCreate, async i => {
 
           await i.channel.permissionOverwrites.set(permissions).catch(err => console.error('Permission error:', err));
 
-            const unclaimDescription = buildBlockquoteMessage(
-              'Ticket freigegeben',
-              [`<@${i.user.id}> hat das Ticket freigegeben.`, '', 'Das Ticket ist jetzt wieder für alle Team-Mitglieder verfügbar.'],
-              [
-                `🎫 Ticket ▪ #${ticket.id}`,
-                `👤 Freigegeben von ▪ <@${i.user.id}>`,
-                `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
+            const unclaimEmbed = createStyledEmbed({
+              emoji: '↩️',
+              title: 'Ticket freigegeben',
+              description: 'Das Ticket ist jetzt wieder für alle Team-Mitglieder verfügbar.',
+              fields: [
+                { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+                { name: 'Freigegeben von', value: `<@${i.user.id}>`, inline: true },
+                { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
               ]
-            );
-
-            const unclaimEmbed = new EmbedBuilder()
-              .setColor(0x9b59b6)
-              .setTitle('↩️ Ticket freigegeben')
-              .setDescription(unclaimDescription)
-              .setFooter({ text: 'Quantix Tickets • Ticket freigegeben' })
-              .setTimestamp();
+            });
 
           await i.channel.send({ embeds: [unclaimEmbed] }).catch(err => console.error('Unclaim message error:', err));
           renameChannelIfNeeded(i.channel, ticket);
@@ -7311,46 +7262,31 @@ client.on(Events.InteractionCreate, async i => {
       if(i.customId === 'claim') {
         // Nur Team kann Tickets claimen
         if(!isTeam) {
-          const noPermDescription = buildBlockquoteMessage(
-            'Zugriff verweigert',
-            [
-              'Nur Team-Mitglieder können Tickets übernehmen.',
-              'Bitte kontaktiere das Team, falls du Unterstützung benötigst.'
+          const noPermEmbed = createStyledEmbed({
+            emoji: '🚫',
+            title: 'Zugriff verweigert',
+            description: 'Nur Team-Mitglieder können Tickets übernehmen.',
+            fields: [
+              { name: 'Benötigte Rolle', value: 'Team-Rolle', inline: true },
+              { name: 'Ticket', value: `#${ticket.id}`, inline: true }
             ],
-            [
-              '🏷️ Benötigte Berechtigung ▪ Team-Rolle',
-              `🎫 Ticket ▪ #${ticket.id}`,
-              `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
-            ]
-          );
-
-          const noPermEmbed = new EmbedBuilder()
-            .setColor(0xff4444)
-            .setTitle('🚫 Zugriff verweigert')
-            .setDescription(noPermDescription)
-            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-            .setTimestamp();
+            color: '#ED4245'
+          });
           return i.reply({ embeds: [noPermEmbed], ephemeral: true });
         }
 
         // Prüfe ob Ticket bereits geclaimed ist
         if(ticket.claimer) {
-          const alreadyClaimedDescription = buildBlockquoteMessage(
-            'Bereits übernommen',
-            [`Dieses Ticket wurde bereits von <@${ticket.claimer}> übernommen.`],
-            [
-              `🎫 Ticket ▪ #${ticket.id}`,
-              `👤 Aktueller Claimer ▪ <@${ticket.claimer}>`,
-              `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
-            ]
-          );
-
-          const alreadyClaimedEmbed = new EmbedBuilder()
-            .setColor(0xffa500)
-            .setTitle('⚠️ Bereits übernommen')
-            .setDescription(alreadyClaimedDescription)
-            .setFooter({ text: 'Quantix Tickets' })
-            .setTimestamp();
+          const alreadyClaimedEmbed = createStyledEmbed({
+            emoji: '⚠️',
+            title: 'Bereits übernommen',
+            description: `Dieses Ticket wurde bereits von <@${ticket.claimer}> übernommen.`,
+            fields: [
+              { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+              { name: 'Aktueller Claimer', value: `<@${ticket.claimer}>`, inline: true }
+            ],
+            color: '#FEE75C'
+          });
           return i.reply({ embeds: [alreadyClaimedEmbed], ephemeral: true });
         }
 
@@ -7391,22 +7327,17 @@ client.on(Events.InteractionCreate, async i => {
           await i.channel.permissionOverwrites.set(permissions).catch(err => console.error('Permission error:', err));
 
           // Send claim notification WITH PING outside embed
-          const claimDescription = buildBlockquoteMessage(
-            'Ticket übernommen',
-            [`<@${i.user.id}> hat dieses Ticket übernommen und kümmert sich um dein Anliegen.`],
-            [
-              `🎫 Ticket ▪ #${ticket.id}`,
-              `👤 Claimer ▪ <@${i.user.id}>`,
-              `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
-            ]
-          );
-
-          const claimEmbed = new EmbedBuilder()
-            .setColor(0x00ff88)
-            .setTitle('✨ Ticket übernommen')
-            .setDescription(claimDescription)
-            .setFooter({ text: 'Quantix Tickets • Claim' })
-            .setTimestamp();
+          const claimEmbed = createStyledEmbed({
+            emoji: '✨',
+            title: 'Ticket übernommen',
+            description: `<@${i.user.id}> hat dieses Ticket übernommen und kümmert sich um dein Anliegen.`,
+            fields: [
+              { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+              { name: 'Claimer', value: `<@${i.user.id}>`, inline: true },
+              { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+            ],
+            color: '#57F287'
+          });
 
           await i.channel.send({
             content: `<@${i.user.id}>`,
@@ -7434,25 +7365,16 @@ client.on(Events.InteractionCreate, async i => {
         const teamRoleId = getTeamRole(guildId);
         const teamRole = teamRoleId ? await i.guild.roles.fetch(teamRoleId).catch(() => null) : null;
 
-        const noPermDescription = buildBlockquoteMessage(
-          'Zugriff verweigert',
-          [
-            'Diese Aktion ist nur für Team-Mitglieder verfügbar.',
-            'Bitte kontaktiere das Team.'
+        const noPermEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Zugriff verweigert',
+          description: 'Diese Aktion ist nur für Team-Mitglieder verfügbar.',
+          fields: [
+            { name: 'Benötigte Rolle', value: teamRole ? `<@&${teamRoleId}>` : 'Nicht konfiguriert', inline: true },
+            { name: 'Ticket', value: `#${ticket.id}`, inline: true }
           ],
-          [
-            `🏷️ Benötigte Rolle ▪ ${teamRole ? `<@&${teamRoleId}>` : 'Nicht konfiguriert'}`,
-            `🎫 Ticket ▪ #${ticket.id}`,
-            `⏰ Zeitpunkt ▪ <t:${Math.floor(Date.now() / 1000)}:R>`
-          ]
-        );
-
-        const noPermEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🚫 Zugriff verweigert')
-          .setDescription(noPermDescription)
-          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-          .setTimestamp();
+          color: '#ED4245'
+        });
 
         return i.reply({ embeds: [noPermEmbed], ephemeral: true });
       }

@@ -74,6 +74,89 @@ function saveTickets(guildId, tickets) {
   fs.writeFileSync(ticketsPath, JSON.stringify(tickets, null, 2), 'utf8');
 }
 
+// ===== Styled Embed Function =====
+/**
+ * Creates a styled embed with the unified format
+ * @param {Object} options - Embed options
+ * @param {string} options.emoji - Emoji for the title (e.g., '📧', '✅', '❌')
+ * @param {string} options.title - Title text (will be wrapped in » «)
+ * @param {string} [options.description] - Description text (will be italicized)
+ * @param {Array} [options.fields] - Array of { name, value, inline } objects (names will be wrapped in » «)
+ * @param {string} [options.color] - Hex color (default: #5865F2)
+ * @param {string} [options.footer] - Custom footer text (default: Quantix Tickets)
+ * @param {string} [options.thumbnail] - Thumbnail URL
+ * @param {string} [options.image] - Image URL
+ * @returns {EmbedBuilder}
+ */
+function createStyledEmbed(options) {
+  const { EmbedBuilder } = require('discord.js');
+
+  const now = new Date();
+  const berlinTime = now.toLocaleString('de-DE', {
+    timeZone: 'Europe/Berlin',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const embed = new EmbedBuilder()
+    .setColor(options.color || '#5865F2')
+    .setTimestamp()
+    .setFooter({ text: `${options.footer || 'Quantix Tickets'} • ${berlinTime}` });
+
+  // Set title with emoji and » « wrapper
+  if (options.title) {
+    const emoji = options.emoji || '';
+    embed.setTitle(`${emoji} » ${options.title} «`.trim());
+  }
+
+  // Set description in italics
+  if (options.description) {
+    embed.setDescription(`*${options.description}*`);
+  }
+
+  // Set fields with » « wrapper for names
+  if (options.fields && Array.isArray(options.fields)) {
+    for (const field of options.fields) {
+      if (field.name && field.value) {
+        embed.addFields({
+          name: `» ${field.name} «`,
+          value: field.value,
+          inline: field.inline !== undefined ? field.inline : false
+        });
+      }
+    }
+  }
+
+  if (options.thumbnail) {
+    embed.setThumbnail(options.thumbnail);
+  }
+
+  if (options.image) {
+    embed.setImage(options.image);
+  }
+
+  return embed;
+}
+
+/**
+ * Creates a simple styled reply embed for quick responses
+ * @param {string} emoji - Emoji (✅, ❌, ⚠️, ℹ️)
+ * @param {string} title - Title text
+ * @param {string} [description] - Optional description
+ * @returns {EmbedBuilder}
+ */
+function createQuickEmbed(emoji, title, description = null) {
+  return createStyledEmbed({
+    emoji,
+    title,
+    description,
+    color: emoji === '✅' ? '#57F287' : emoji === '❌' ? '#ED4245' : emoji === '⚠️' ? '#FEE75C' : '#5865F2'
+  });
+}
+
 // ===== Log Event Function =====
 async function logEvent(guild, text) {
   const { EmbedBuilder } = require('discord.js');
@@ -81,18 +164,12 @@ async function logEvent(guild, text) {
   const logChannelIds = Array.isArray(cfg.logChannelId) ? cfg.logChannelId : (cfg.logChannelId ? [cfg.logChannelId] : []);
   if (logChannelIds.length === 0) return;
 
-  const now = new Date();
-  const berlinTime = now.toLocaleString('de-DE', {
-    timeZone: 'Europe/Berlin',
-    dateStyle: 'short',
-    timeStyle: 'medium'
+  const embed = createStyledEmbed({
+    emoji: '📋',
+    title: 'Log Event',
+    description: text,
+    color: '#57F287'
   });
-
-  const embed = new EmbedBuilder()
-    .setDescription(text)
-    .setColor(0x00ff00)
-    .setTimestamp()
-    .setFooter({ text: `Quantix Tickets • ${berlinTime}` });
 
   for (const channelId of logChannelIds) {
     try {
@@ -114,5 +191,7 @@ module.exports = {
   loadTickets,
   saveTickets,
   getTicketsPath,
-  logEvent
+  logEvent,
+  createStyledEmbed,
+  createQuickEmbed
 };
