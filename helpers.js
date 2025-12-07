@@ -71,7 +71,26 @@ function loadTickets(guildId) {
 function saveTickets(guildId, tickets) {
   if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR, { recursive: true });
   const ticketsPath = getTicketsPath(guildId);
-  fs.writeFileSync(ticketsPath, JSON.stringify(tickets, null, 2), 'utf8');
+  const tempFile = ticketsPath + '.tmp';
+  const backupFile = ticketsPath + '.bak';
+  try {
+    const jsonData = JSON.stringify(tickets, null, 2);
+    // Validiere JSON vor dem Schreiben
+    JSON.parse(jsonData);
+    // Schreibe in temporäre Datei
+    fs.writeFileSync(tempFile, jsonData, 'utf8');
+    // Backup der alten Datei erstellen (falls vorhanden)
+    if (fs.existsSync(ticketsPath)) {
+      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* Backup optional */ }
+    }
+    // Atomares Umbenennen (ersetzt Zieldatei)
+    fs.renameSync(tempFile, ticketsPath);
+  } catch (err) {
+    console.error(`[saveTickets] Error writing ${ticketsPath}:`, err.message);
+    // Aufräumen bei Fehler
+    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
+    throw err;
+  }
 }
 
 // ===== Styled Embed Function =====

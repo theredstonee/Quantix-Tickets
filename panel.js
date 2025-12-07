@@ -6915,7 +6915,20 @@ function loadTickets(guildId) {
 
 function saveTickets(guildId, tickets) {
   const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-  fs.writeFileSync(ticketsPath, JSON.stringify(tickets, null, 2));
+  const tempFile = ticketsPath + '.tmp';
+  const backupFile = ticketsPath + '.bak';
+  try {
+    const jsonData = JSON.stringify(tickets, null, 2);
+    JSON.parse(jsonData);
+    fs.writeFileSync(tempFile, jsonData, 'utf8');
+    if (fs.existsSync(ticketsPath)) {
+      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* optional */ }
+    }
+    fs.renameSync(tempFile, ticketsPath);
+  } catch (err) {
+    console.error('[panel] Error saving tickets:', err.message);
+    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
+  }
 }
 
 // Export helper functions for API routes

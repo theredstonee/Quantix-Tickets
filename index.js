@@ -243,7 +243,34 @@ function getCounterPath(guildId){
 function safeRead(file, fallback){
   try { const raw = fs.readFileSync(file,'utf8'); return raw?JSON.parse(raw):fallback; } catch { return fallback; }
 }
-function safeWrite(file, data){ fs.writeFileSync(file, JSON.stringify(data,null,2)); }
+
+// Atomare Schreiboperation - schreibt erst in temp-Datei, dann umbenennen
+function safeWrite(file, data){
+  const tempFile = file + '.tmp';
+  const backupFile = file + '.bak';
+  try {
+    const jsonData = JSON.stringify(data, null, 2);
+    // Validiere JSON vor dem Schreiben
+    JSON.parse(jsonData);
+    // Schreibe in temporäre Datei
+    fs.writeFileSync(tempFile, jsonData, 'utf8');
+    // Backup der alten Datei erstellen (falls vorhanden)
+    if (fs.existsSync(file)) {
+      try { fs.copyFileSync(file, backupFile); } catch (e) { /* Backup optional */ }
+    }
+    // Atomares Umbenennen (ersetzt Zieldatei)
+    fs.renameSync(tempFile, file);
+  } catch (err) {
+    console.error(`[safeWrite] Error writing ${file}:`, err.message);
+    // Aufräumen bei Fehler
+    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
+    // Versuche Backup wiederherzustellen
+    if (fs.existsSync(backupFile) && !fs.existsSync(file)) {
+      try { fs.copyFileSync(backupFile, file); } catch (e) { /* ignore */ }
+    }
+    throw err;
+  }
+}
 
 // SLA System Helper Functions
 function calculateSLADeadline(guildId, priority, createdAt = Date.now()){

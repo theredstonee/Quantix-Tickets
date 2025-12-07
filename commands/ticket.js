@@ -22,7 +22,21 @@ function saveTickets(guildId, tickets) {
     fs.mkdirSync(CONFIG_DIR, { recursive: true });
   }
   const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-  fs.writeFileSync(ticketsPath, JSON.stringify(tickets, null, 2), 'utf8');
+  const tempFile = ticketsPath + '.tmp';
+  const backupFile = ticketsPath + '.bak';
+  try {
+    const jsonData = JSON.stringify(tickets, null, 2);
+    JSON.parse(jsonData); // Validiere JSON
+    fs.writeFileSync(tempFile, jsonData, 'utf8');
+    if (fs.existsSync(ticketsPath)) {
+      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* optional */ }
+    }
+    fs.renameSync(tempFile, ticketsPath);
+  } catch (err) {
+    console.error('[ticket.js] Error saving tickets:', err.message);
+    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
+    throw err;
+  }
 }
 
 function readCfg(guildId) {

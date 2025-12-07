@@ -53,7 +53,21 @@ function loadTickets(guildId) {
 }
 
 function saveTickets(guildId, tickets) {
-  fs.writeFileSync(getTicketsPath(guildId), JSON.stringify(tickets, null, 2));
+  const ticketsPath = getTicketsPath(guildId);
+  const tempFile = ticketsPath + '.tmp';
+  const backupFile = ticketsPath + '.bak';
+  try {
+    const jsonData = JSON.stringify(tickets, null, 2);
+    JSON.parse(jsonData);
+    fs.writeFileSync(tempFile, jsonData, 'utf8');
+    if (fs.existsSync(ticketsPath)) {
+      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* optional */ }
+    }
+    fs.renameSync(tempFile, ticketsPath);
+  } catch (err) {
+    console.error('[interaction-handlers] Error saving tickets:', err.message);
+    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
+  }
 }
 
 function loadCounter(guildId) {
