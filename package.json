@@ -5,9 +5,8 @@
   "description": "Quantix Tickets Discord Bot",
   "main": "index.js",
   "scripts": {
-    "start": "node start.js",
-    "dev": "node index.js",
-    "direct": "node index.js"
+    "start": "node index.js",
+    "dev": "node index.js"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
