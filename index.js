@@ -6378,17 +6378,15 @@ client.on(Events.InteractionCreate, async i => {
         if (nextQuestionIndex < questions.length) {
           // Send next question
           const nextQuestion = questions[nextQuestionIndex];
-          const nextEmbed = new EmbedBuilder()
-            .setColor(0x3b82f6)
-            .setTitle(t(foundGuildId, 'surveys.dm_title'))
-            .setDescription(t(foundGuildId, 'surveys.dm_description', { ticketId: String(foundTicket.id).padStart(5, '0') }))
-            .addFields({
-              name: `📋 ${nextQuestion.text[lang] || nextQuestion.text.de}`,
-              value: getQuestionScaleText(nextQuestion.type, lang, foundGuildId),
-              inline: false
-            })
-            .setFooter({ text: `Quantix Tickets • Frage ${nextQuestionIndex + 1} von ${questions.length}` })
-            .setTimestamp();
+          const nextEmbed = createStyledEmbed({
+            emoji: '📋',
+            title: t(foundGuildId, 'surveys.dm_title'),
+            description: t(foundGuildId, 'surveys.dm_description', { ticketId: String(foundTicket.id).padStart(5, '0') }),
+            fields: [
+              { name: nextQuestion.text[lang] || nextQuestion.text.de, value: getQuestionScaleText(nextQuestion.type, lang, foundGuildId), inline: false }
+            ],
+            footer: `Frage ${nextQuestionIndex + 1} von ${questions.length}`
+          });
 
           const nextComponents = createQuestionComponents(nextQuestion, ticketId, nextQuestionIndex, foundGuildId);
 
@@ -6405,16 +6403,16 @@ client.on(Events.InteractionCreate, async i => {
             saveTickets(foundGuildId, updatedTickets);
           }
 
-          const thankYouEmbed = new EmbedBuilder()
-            .setColor(0x00ff88)
-            .setTitle(t(foundGuildId, 'surveys.thank_you'))
-            .setDescription(t(foundGuildId, 'surveys.thank_you_description'))
-            .addFields(
-              { name: '🎫 Ticket', value: `#${String(ticketId).padStart(5, '0')}`, inline: true },
-              { name: '📊 Antworten', value: `${foundTicket.survey.responses.length}`, inline: true }
-            )
-            .setFooter({ text: 'Quantix Tickets • Danke für dein Feedback!' })
-            .setTimestamp();
+          const thankYouEmbed = createStyledEmbed({
+            emoji: '✅',
+            title: t(foundGuildId, 'surveys.thank_you'),
+            description: t(foundGuildId, 'surveys.thank_you_description'),
+            fields: [
+              { name: 'Ticket', value: `#${String(ticketId).padStart(5, '0')}`, inline: true },
+              { name: 'Antworten', value: `${foundTicket.survey.responses.length}`, inline: true }
+            ],
+            color: '#57F287'
+          });
 
           await i.update({ embeds: [thankYouEmbed], components: [] });
 
@@ -7835,12 +7833,17 @@ client.on(Events.InteractionCreate, async i => {
         ]
       );
 
-      const requesterEmbed = new EmbedBuilder()
-        .setColor(0xff4444)
-        .setTitle('❌ Deine Schließungsanfrage wurde abgelehnt')
-        .setDescription(requesterDescription)
-        .setFooter({ text: 'Quantix Tickets' })
-        .setTimestamp();
+      const requesterEmbed = createStyledEmbed({
+        emoji: '❌',
+        title: 'Deine Schließungsanfrage wurde abgelehnt',
+        description: `Ticket #${ticket.id} wird nicht geschlossen.`,
+        fields: [
+          { name: 'Grund', value: reason, inline: false },
+          { name: 'Ticket', value: `<#${i.channel.id}>`, inline: true },
+          { name: 'Abgelehnt am', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+        ],
+        color: '#ED4245'
+      });
 
       try {
         const requester = await i.guild.members.fetch(ticket.closeRequest.requestedBy);
@@ -7872,10 +7875,13 @@ client.on(Events.InteractionCreate, async i => {
       }
 
       if (!foundTicket) {
-        return i.reply({
-          content: '❌ Ticket nicht gefunden.',
-          ephemeral: true
+        const notFoundEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Ticket nicht gefunden',
+          description: 'Das Ticket konnte nicht gefunden werden.',
+          color: '#ED4245'
         });
+        return i.reply({ embeds: [notFoundEmbed], ephemeral: true });
       }
 
       // Save rating with feedback
@@ -7891,20 +7897,17 @@ client.on(Events.InteractionCreate, async i => {
         };
         saveTickets(foundGuildId, guildTickets);
 
-        const thankYouEmbed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('✅ Vielen Dank für deine Bewertung!')
-          .setDescription(
-            `Du hast **${stars} ${'⭐'.repeat(parseInt(stars))}** vergeben.\n\n` +
-            `Dein Feedback hilft uns, unseren Service zu verbessern!`
-          )
-          .addFields(
-            { name: '🎫 Ticket', value: `#${ticketId}`, inline: true },
-            { name: '⭐ Bewertung', value: `${stars}/5 Sterne`, inline: true },
-            { name: '💬 Feedback', value: feedback.substring(0, 200) + (feedback.length > 200 ? '...' : ''), inline: false }
-          )
-          .setFooter({ text: 'Quantix Tickets • Danke für dein Feedback!' })
-          .setTimestamp();
+        const thankYouEmbed = createStyledEmbed({
+          emoji: '✅',
+          title: 'Vielen Dank für deine Bewertung!',
+          description: `Du hast **${stars} ${'⭐'.repeat(parseInt(stars))}** vergeben. Dein Feedback hilft uns, unseren Service zu verbessern!`,
+          fields: [
+            { name: 'Ticket', value: `#${ticketId}`, inline: true },
+            { name: 'Bewertung', value: `${stars}/5 Sterne`, inline: true },
+            { name: 'Feedback', value: feedback.substring(0, 200) + (feedback.length > 200 ? '...' : ''), inline: false }
+          ],
+          color: '#57F287'
+        });
 
         await i.reply({ embeds: [thankYouEmbed], ephemeral: true });
 
