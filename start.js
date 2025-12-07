@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 /**
  * Quantix Tickets Bot - Startup Script
- * Automatically installs dependencies before starting the bot
+ * Automatically installs dependencies before every start
  */
 
-const { spawn, execSync } = require('child_process');
+const { spawn } = require('child_process');
 const path = require('path');
-const fs = require('fs');
 
 const ROOT_DIR = __dirname;
 
@@ -15,36 +14,7 @@ console.log('║           Quantix Tickets Bot - Startup                    ║'
 console.log('╚════════════════════════════════════════════════════════════╝');
 console.log('');
 
-// Check if node_modules exists or package-lock.json changed
-function needsInstall() {
-  const nodeModulesPath = path.join(ROOT_DIR, 'node_modules');
-  const packageLockPath = path.join(ROOT_DIR, 'package-lock.json');
-  const installMarkerPath = path.join(ROOT_DIR, 'node_modules', '.install_marker');
-
-  // No node_modules folder
-  if (!fs.existsSync(nodeModulesPath)) {
-    console.log('[Startup] node_modules not found - install required');
-    return true;
-  }
-
-  // Check if package-lock.json changed since last install
-  if (fs.existsSync(packageLockPath) && fs.existsSync(installMarkerPath)) {
-    const lockStat = fs.statSync(packageLockPath);
-    const markerStat = fs.statSync(installMarkerPath);
-
-    if (lockStat.mtime > markerStat.mtime) {
-      console.log('[Startup] package-lock.json changed - install required');
-      return true;
-    }
-  } else if (!fs.existsSync(installMarkerPath)) {
-    console.log('[Startup] Install marker not found - install required');
-    return true;
-  }
-
-  return false;
-}
-
-// Run npm install
+// Run npm install (always)
 function runNpmInstall() {
   return new Promise((resolve, reject) => {
     console.log('[Startup] Installing dependencies...');
@@ -61,9 +31,6 @@ function runNpmInstall() {
 
     install.on('close', (code) => {
       if (code === 0) {
-        // Create install marker
-        const markerPath = path.join(ROOT_DIR, 'node_modules', '.install_marker');
-        fs.writeFileSync(markerPath, new Date().toISOString());
         console.log('');
         console.log('[Startup] Dependencies installed successfully!');
         resolve();
@@ -116,12 +83,8 @@ function startBot() {
 // Main
 async function main() {
   try {
-    // Check and install dependencies if needed
-    if (needsInstall()) {
-      await runNpmInstall();
-    } else {
-      console.log('[Startup] Dependencies up to date');
-    }
+    // Always install dependencies on every start
+    await runNpmInstall();
 
     // Start the bot
     startBot();
