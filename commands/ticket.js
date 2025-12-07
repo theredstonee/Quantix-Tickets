@@ -611,17 +611,13 @@ module.exports = {
       } catch (err) {
         console.error('Fehler beim Einblenden:', err);
 
-        const errorEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Fehler beim Einblenden')
-          .setDescription('**Das Ticket konnte nicht eingeblendet werden.**')
-          .addFields({
-            name: '❗ Fehlerdetails',
-            value: `\`\`\`${err.message}\`\`\``,
-            inline: false
-          })
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const errorEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Fehler beim Einblenden',
+          description: 'Das Ticket konnte nicht eingeblendet werden.',
+          fields: [{ name: 'Fehlerdetails', value: `\`\`\`${err.message}\`\`\``, inline: false }],
+          color: '#ED4245'
+        });
 
         return interaction.editReply({ embeds: [errorEmbed] });
       }
@@ -635,12 +631,12 @@ module.exports = {
       const isTeam = hasAnyTeamRole(interaction.member, guildId);
 
       if (!isTeam) {
-        const noPermEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🚫 Zugriff verweigert')
-          .setDescription('**Nur Team-Mitglieder können Tickets splitten!**')
-          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-          .setTimestamp();
+        const noPermEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Zugriff verweigert',
+          description: 'Nur Team-Mitglieder können Tickets splitten!',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
       }
@@ -650,12 +646,12 @@ module.exports = {
       const ticket = log.find(t => t.channelId === interaction.channel.id);
 
       if (!ticket) {
-        const noTicketEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Kein Ticket gefunden')
-          .setDescription('**Für diesen Channel wurde kein Ticket-Datensatz gefunden.**')
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const noTicketEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Kein Ticket gefunden',
+          description: 'Für diesen Channel wurde kein Ticket-Datensatz gefunden.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
       }
@@ -731,38 +727,31 @@ module.exports = {
         saveTickets(guildId, log);
 
         // Send embed in new channel
-        const newTicketEmbed = new EmbedBuilder()
-          .setColor(0x5865f2)
-          .setTitle(`🔀 Ticket #${newTicketNumber} (Split)`)
-          .setDescription(
-            `Dieses Ticket wurde aus **Ticket #${ticket.id}** abgespalten.\n\n` +
-            `**Grund:** ${reason}\n\n` +
-            `**Ursprüngliches Ticket:** <#${ticket.channelId}>\n` +
-            `**Ersteller:** <@${ticket.userId}>`
-          )
-          .addFields(
-            { name: '👤 Split von', value: `<@${interaction.user.id}>`, inline: true },
-            { name: '⏰ Erstellt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets • Ticket Split' })
-          .setTimestamp();
+        const newTicketEmbed = createStyledEmbed({
+          emoji: '🔀',
+          title: `Ticket #${newTicketNumber} (Split)`,
+          description: `Dieses Ticket wurde aus Ticket #${ticket.id} abgespalten.\n\nGrund: ${reason}\n\nUrsprüngliches Ticket: <#${ticket.channelId}>\nErsteller: <@${ticket.userId}>`,
+          fields: [
+            { name: 'Split von', value: `<@${interaction.user.id}>`, inline: true },
+            { name: 'Erstellt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          ],
+          color: '#5865F2',
+          footer: 'Quantix Tickets • Ticket Split'
+        });
 
         await newChannel.send({ content: `<@${ticket.userId}>`, embeds: [newTicketEmbed] });
 
         // Notify in original ticket
-        const splitNotifyEmbed = new EmbedBuilder()
-          .setColor(0x5865f2)
-          .setTitle('🔀 Ticket wurde gesplittet')
-          .setDescription(
-            `Ein neues Ticket wurde aus diesem Ticket erstellt.\n\n` +
-            `**Neues Ticket:** <#${newChannel.id}> (#${newTicketNumber})\n` +
-            `**Grund:** ${reason}`
-          )
-          .addFields(
-            { name: '👤 Gesplittet von', value: `<@${interaction.user.id}>`, inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets • Ticket Split' })
-          .setTimestamp();
+        const splitNotifyEmbed = createStyledEmbed({
+          emoji: '🔀',
+          title: 'Ticket wurde gesplittet',
+          description: `Ein neues Ticket wurde aus diesem Ticket erstellt.\n\nNeues Ticket: <#${newChannel.id}> (#${newTicketNumber})\nGrund: ${reason}`,
+          fields: [
+            { name: 'Gesplittet von', value: `<@${interaction.user.id}>`, inline: true }
+          ],
+          color: '#5865F2',
+          footer: 'Quantix Tickets • Ticket Split'
+        });
 
         await interaction.editReply({ embeds: [splitNotifyEmbed] });
 
@@ -772,17 +761,13 @@ module.exports = {
       } catch (err) {
         console.error('Fehler beim Splitten:', err);
 
-        const errorEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Fehler beim Splitten')
-          .setDescription('**Das Ticket konnte nicht gesplittet werden.**')
-          .addFields({
-            name: '❗ Fehlerdetails',
-            value: `\`\`\`${err.message}\`\`\``,
-            inline: false
-          })
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const errorEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Fehler beim Splitten',
+          description: 'Das Ticket konnte nicht gesplittet werden.',
+          fields: [{ name: 'Fehlerdetails', value: `\`\`\`${err.message}\`\`\``, inline: false }],
+          color: '#ED4245'
+        });
 
         return interaction.editReply({ embeds: [errorEmbed] });
       }
@@ -794,12 +779,12 @@ module.exports = {
       const isTeam = hasAnyTeamRole(interaction.member, guildId);
 
       if (!isTeam) {
-        const noPermEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🚫 Zugriff verweigert')
-          .setDescription('**Nur Team-Mitglieder können Tickets für andere Nutzer erstellen!**')
-          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-          .setTimestamp();
+        const noPermEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Zugriff verweigert',
+          description: 'Nur Team-Mitglieder können Tickets für andere Nutzer erstellen!',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
       }
@@ -977,16 +962,13 @@ module.exports = {
         saveTickets(guildId, tickets);
 
         // Reply to command executor
-        const successEmbed = new EmbedBuilder()
-          .setColor(0x10b981)
-          .setTitle('✅ Ticket erstellt')
-          .setDescription(
-            `**Ticket #${ticketNumber}** wurde erfolgreich für <@${targetUser.id}> erstellt.\n\n` +
-            `**Channel:** ${newChannel}\n` +
-            `**Thema:** ${topicString}`
-          )
-          .setFooter({ text: 'Quantix Tickets • Erfolgreich erstellt' })
-          .setTimestamp();
+        const successEmbed = createStyledEmbed({
+          emoji: '✅',
+          title: 'Ticket erstellt',
+          description: `Ticket #${ticketNumber} wurde erfolgreich für <@${targetUser.id}> erstellt.\n\nChannel: ${newChannel}\nThema: ${topicString}`,
+          color: '#57F287',
+          footer: 'Quantix Tickets • Erfolgreich erstellt'
+        });
 
         await interaction.editReply({ embeds: [successEmbed] });
 
@@ -999,17 +981,13 @@ module.exports = {
       } catch (err) {
         console.error('Fehler beim Erstellen des Tickets:', err);
 
-        const errorEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Fehler beim Erstellen')
-          .setDescription('**Das Ticket konnte nicht erstellt werden.**')
-          .addFields({
-            name: '❗ Fehlerdetails',
-            value: `\`\`\`${err.message}\`\`\``,
-            inline: false
-          })
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const errorEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Fehler beim Erstellen',
+          description: 'Das Ticket konnte nicht erstellt werden.',
+          fields: [{ name: 'Fehlerdetails', value: `\`\`\`${err.message}\`\`\``, inline: false }],
+          color: '#ED4245'
+        });
 
         return interaction.editReply({ embeds: [errorEmbed] });
       }
@@ -1050,39 +1028,33 @@ module.exports = {
       const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
       fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
 
-      const embed = new EmbedBuilder()
-        .setColor(0xff4444)
-        .setTitle('🚫 User zur Blacklist hinzugefügt')
-        .setDescription(`${user} wurde zur Ticket-Blacklist hinzugefügt.`)
-        .addFields(
-          { name: '👤 User', value: `${user} (${user.id})`, inline: true },
-          { name: '📝 Grund', value: reason, inline: true },
-          {
-            name: '⏰ Dauer',
-            value: isPermanent ? '♾️ Permanent' : `${days} Tage`,
-            inline: true
-          },
-          { name: '👮 Von', value: `<@${interaction.user.id}>`, inline: true }
-        )
-        .setTimestamp();
+      const embed = createStyledEmbed({
+        emoji: '🚫',
+        title: 'User zur Blacklist hinzugefügt',
+        description: `${user} wurde zur Ticket-Blacklist hinzugefügt.`,
+        fields: [
+          { name: 'User', value: `${user} (${user.id})`, inline: true },
+          { name: 'Grund', value: reason, inline: true },
+          { name: 'Dauer', value: isPermanent ? '♾️ Permanent' : `${days} Tage`, inline: true },
+          { name: 'Von', value: `<@${interaction.user.id}>`, inline: true }
+        ],
+        color: '#ED4245'
+      });
 
       await interaction.reply({ embeds: [embed] });
 
       // Try to send DM
       try {
-        const dmEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🚫 Ticket-Blacklist')
-          .setDescription(`Du wurdest auf **${interaction.guild.name}** zur Ticket-Blacklist hinzugefügt.`)
-          .addFields(
-            { name: '📝 Grund', value: reason, inline: false },
-            {
-              name: '⏰ Dauer',
-              value: isPermanent ? '♾️ Permanent' : `${days} Tage`,
-              inline: false
-            }
-          )
-          .setTimestamp();
+        const dmEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Ticket-Blacklist',
+          description: `Du wurdest auf ${interaction.guild.name} zur Ticket-Blacklist hinzugefügt.`,
+          fields: [
+            { name: 'Grund', value: reason, inline: false },
+            { name: 'Dauer', value: isPermanent ? '♾️ Permanent' : `${days} Tage`, inline: false }
+          ],
+          color: '#ED4245'
+        });
 
         await user.send({ embeds: [dmEmbed] }).catch(() => {});
       } catch (err) {}
@@ -1111,25 +1083,27 @@ module.exports = {
       const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
       fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
 
-      const embed = new EmbedBuilder()
-        .setColor(0x00ff88)
-        .setTitle('✅ User von Blacklist entfernt')
-        .setDescription(`${user} wurde von der Ticket-Blacklist entfernt.`)
-        .addFields(
-          { name: '👤 User', value: `${user} (${user.id})`, inline: true },
-          { name: '👮 Von', value: `<@${interaction.user.id}>`, inline: true }
-        )
-        .setTimestamp();
+      const embed = createStyledEmbed({
+        emoji: '✅',
+        title: 'User von Blacklist entfernt',
+        description: `${user} wurde von der Ticket-Blacklist entfernt.`,
+        fields: [
+          { name: 'User', value: `${user} (${user.id})`, inline: true },
+          { name: 'Von', value: `<@${interaction.user.id}>`, inline: true }
+        ],
+        color: '#57F287'
+      });
 
       await interaction.reply({ embeds: [embed] });
 
       // Try to send DM
       try {
-        const dmEmbed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('✅ Blacklist aufgehoben')
-          .setDescription(`Du wurdest auf **${interaction.guild.name}** von der Ticket-Blacklist entfernt.`)
-          .setTimestamp();
+        const dmEmbed = createStyledEmbed({
+          emoji: '✅',
+          title: 'Blacklist aufgehoben',
+          description: `Du wurdest auf ${interaction.guild.name} von der Ticket-Blacklist entfernt.`,
+          color: '#57F287'
+        });
 
         await user.send({ embeds: [dmEmbed] }).catch(() => {});
       } catch (err) {}
@@ -1162,12 +1136,6 @@ module.exports = {
         });
       }
 
-      const embed = new EmbedBuilder()
-        .setColor(0xff4444)
-        .setTitle('🚫 Ticket-Blacklist')
-        .setDescription(`**${activeBlacklists.length}** User auf der Blacklist:`)
-        .setTimestamp();
-
       const fields = activeBlacklists.slice(0, 25).map((bl, index) => {
         const expiryText = bl.isPermanent
           ? '♾️ Permanent'
@@ -1175,16 +1143,19 @@ module.exports = {
 
         return {
           name: `${index + 1}. ${bl.username}`,
-          value: `**ID:** ${bl.userId}\n**Grund:** ${bl.reason}\n**Läuft ab:** ${expiryText}`,
+          value: `ID: ${bl.userId}\nGrund: ${bl.reason}\nLäuft ab: ${expiryText}`,
           inline: false
         };
       });
 
-      embed.addFields(fields);
-
-      if (activeBlacklists.length > 25) {
-        embed.setFooter({ text: `Zeige erste 25 von ${activeBlacklists.length} Einträgen` });
-      }
+      const embed = createStyledEmbed({
+        emoji: '🚫',
+        title: 'Ticket-Blacklist',
+        description: `${activeBlacklists.length} User auf der Blacklist:`,
+        fields: fields,
+        color: '#ED4245',
+        footer: activeBlacklists.length > 25 ? `Zeige erste 25 von ${activeBlacklists.length} Einträgen` : undefined
+      });
 
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
@@ -1220,24 +1191,19 @@ module.exports = {
         });
       }
 
-      const embed = new EmbedBuilder()
-        .setColor(0xff4444)
-        .setTitle('🚫 User ist auf der Blacklist')
-        .setDescription(`${user} ist auf der Ticket-Blacklist.`)
-        .addFields(
-          { name: '👤 User', value: `${user} (${user.id})`, inline: true },
-          { name: '📝 Grund', value: blacklist.reason, inline: true },
-          {
-            name: '⏰ Dauer',
-            value: blacklist.isPermanent
-              ? '♾️ Permanent'
-              : `<t:${Math.floor(new Date(blacklist.expiresAt).getTime() / 1000)}:R>`,
-            inline: true
-          },
-          { name: '👮 Hinzugefügt von', value: `<@${blacklist.blacklistedBy}>`, inline: true },
-          { name: '📅 Hinzugefügt am', value: `<t:${Math.floor(new Date(blacklist.blacklistedAt).getTime() / 1000)}:F>`, inline: true }
-        )
-        .setTimestamp();
+      const embed = createStyledEmbed({
+        emoji: '🚫',
+        title: 'User ist auf der Blacklist',
+        description: `${user} ist auf der Ticket-Blacklist.`,
+        fields: [
+          { name: 'User', value: `${user} (${user.id})`, inline: true },
+          { name: 'Grund', value: blacklist.reason, inline: true },
+          { name: 'Dauer', value: blacklist.isPermanent ? '♾️ Permanent' : `<t:${Math.floor(new Date(blacklist.expiresAt).getTime() / 1000)}:R>`, inline: true },
+          { name: 'Hinzugefügt von', value: `<@${blacklist.blacklistedBy}>`, inline: true },
+          { name: 'Hinzugefügt am', value: `<t:${Math.floor(new Date(blacklist.blacklistedAt).getTime() / 1000)}:F>`, inline: true }
+        ],
+        color: '#ED4245'
+      });
 
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
@@ -1343,12 +1309,12 @@ module.exports = {
       const member = interaction.member;
 
       if (!hasAnyTeamRole(member, guildId)) {
-        const embed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Keine Berechtigung')
-          .setDescription('Nur Team-Mitglieder können interne Notizen hinzufügen.')
-          .setFooter({ text: 'Quantix Tickets • Fehlende Berechtigung' })
-          .setTimestamp();
+        const embed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Keine Berechtigung',
+          description: 'Nur Team-Mitglieder können interne Notizen hinzufügen.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
@@ -1357,12 +1323,12 @@ module.exports = {
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
 
       if (!ticket) {
-        const embed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Kein Ticket-Channel')
-          .setDescription('Dieser Befehl kann nur in einem Ticket-Channel verwendet werden.')
-          .setFooter({ text: 'Quantix Tickets • Ungültiger Channel' })
-          .setTimestamp();
+        const embed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Kein Ticket-Channel',
+          description: 'Dieser Befehl kann nur in einem Ticket-Channel verwendet werden.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
@@ -1383,32 +1349,18 @@ module.exports = {
       ticket.notes.push(note);
       saveTickets(guildId, tickets);
 
-      const embed = new EmbedBuilder()
-        .setColor(0x00ff88)
-        .setTitle('📝 Interne Notiz hinzugefügt')
-        .setDescription(`**Notiz:**\n${noteContent}`)
-        .addFields(
-          {
-            name: '👤 Autor',
-            value: `<@${interaction.user.id}>`,
-            inline: true
-          },
-          {
-            name: '🎫 Ticket',
-            value: `#${String(ticket.id).padStart(5, '0')}`,
-            inline: true
-          },
-          {
-            name: '📊 Notizen gesamt',
-            value: `${ticket.notes.length}`,
-            inline: true
-          }
-        )
-        .setFooter({
-          text: `Quantix Tickets • Nur für Team sichtbar`,
-          iconURL: interaction.guild.iconURL({ size: 64 })
-        })
-        .setTimestamp();
+      const embed = createStyledEmbed({
+        emoji: '📝',
+        title: 'Interne Notiz hinzugefügt',
+        description: `Notiz:\n${noteContent}`,
+        fields: [
+          { name: 'Autor', value: `<@${interaction.user.id}>`, inline: true },
+          { name: 'Ticket', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+          { name: 'Notizen gesamt', value: `${ticket.notes.length}`, inline: true }
+        ],
+        color: '#57F287',
+        footer: 'Quantix Tickets • Nur für Team sichtbar'
+      });
 
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
@@ -1418,12 +1370,12 @@ module.exports = {
       const member = interaction.member;
 
       if (!hasAnyTeamRole(member, guildId)) {
-        const embed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Keine Berechtigung')
-          .setDescription('Nur Team-Mitglieder können interne Notizen einsehen.')
-          .setFooter({ text: 'Quantix Tickets • Fehlende Berechtigung' })
-          .setTimestamp();
+        const embed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Keine Berechtigung',
+          description: 'Nur Team-Mitglieder können interne Notizen einsehen.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
@@ -1432,26 +1384,24 @@ module.exports = {
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
 
       if (!ticket) {
-        const embed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Kein Ticket-Channel')
-          .setDescription('Dieser Befehl kann nur in einem Ticket-Channel verwendet werden.')
-          .setFooter({ text: 'Quantix Tickets • Ungültiger Channel' })
-          .setTimestamp();
+        const embed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Kein Ticket-Channel',
+          description: 'Dieser Befehl kann nur in einem Ticket-Channel verwendet werden.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
 
       if (!ticket.notes || ticket.notes.length === 0) {
-        const embed = new EmbedBuilder()
-          .setColor(0xff9900)
-          .setTitle('📝 Interne Notizen')
-          .setDescription(`**Ticket #${String(ticket.id).padStart(5, '0')}**\n\nKeine internen Notizen vorhanden.`)
-          .setFooter({
-            text: `Quantix Tickets • Nur für Team sichtbar`,
-            iconURL: interaction.guild.iconURL({ size: 64 })
-          })
-          .setTimestamp();
+        const embed = createStyledEmbed({
+          emoji: '📝',
+          title: 'Interne Notizen',
+          description: `Ticket #${String(ticket.id).padStart(5, '0')}\n\nKeine internen Notizen vorhanden.`,
+          color: '#F59E0B',
+          footer: 'Quantix Tickets • Nur für Team sichtbar'
+        });
 
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
@@ -1461,30 +1411,18 @@ module.exports = {
           const timestamp = `<t:${Math.floor(note.timestamp / 1000)}:R>`;
           const author = `<@${note.authorId}>`;
           const content = note.content.length > 200 ? note.content.substring(0, 200) + '...' : note.content;
-          return `**${index + 1}.** ${author} • ${timestamp}\n> ${content}\n`;
+          return `${index + 1}. ${author} • ${timestamp}\n> ${content}\n`;
         })
         .join('\n');
 
-      const embed = new EmbedBuilder()
-        .setColor(0x00ff88)
-        .setTitle('📝 Interne Notizen')
-        .setDescription(
-          `**Ticket #${String(ticket.id).padStart(5, '0')}**\n` +
-          `**Topic:** ${ticket.topic}\n` +
-          `**Ersteller:** <@${ticket.userId}>\n\n` +
-          `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-          notesText
-        )
-        .addFields({
-          name: '📊 Statistik',
-          value: `Gesamt: **${ticket.notes.length}** Notizen`,
-          inline: false
-        })
-        .setFooter({
-          text: `Quantix Tickets • Nur für Team sichtbar`,
-          iconURL: interaction.guild.iconURL({ size: 64 })
-        })
-        .setTimestamp();
+      const embed = createStyledEmbed({
+        emoji: '📝',
+        title: 'Interne Notizen',
+        description: `Ticket #${String(ticket.id).padStart(5, '0')}\nTopic: ${ticket.topic}\nErsteller: <@${ticket.userId}>\n\n${notesText}`,
+        fields: [{ name: 'Statistik', value: `Gesamt: ${ticket.notes.length} Notizen`, inline: false }],
+        color: '#57F287',
+        footer: 'Quantix Tickets • Nur für Team sichtbar'
+      });
 
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
@@ -1519,14 +1457,13 @@ module.exports = {
       }
 
       if (subcommand === 'tag-list') {
-        const embed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('📋 Available Tags')
-          .setDescription(customTags.map(tag =>
-            `${tag.emoji || '🏷️'} **${tag.label}**`
-          ).join('\n') || 'Keine Tags verfügbar')
-          .setFooter({ text: 'Verwende /ticket tag-add um einen Tag hinzuzufügen' })
-          .setTimestamp();
+        const embed = createStyledEmbed({
+          emoji: '📋',
+          title: 'Available Tags',
+          description: customTags.map(tag => `${tag.emoji || '🏷️'} ${tag.label}`).join('\n') || 'Keine Tags verfügbar',
+          color: '#57F287',
+          footer: 'Verwende /ticket tag-add um einen Tag hinzuzufügen'
+        });
 
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
@@ -1623,13 +1560,14 @@ module.exports = {
       }
 
       if (subcommand === 'department-list') {
-        const embed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('🏢 Abteilungen')
-          .setDescription(departments.map((dept, index) =>
-            `**${index + 1}.** ${dept.emoji || '📁'} **${dept.name}**\n${dept.description || '_Keine Beschreibung_'}\n${dept.teamRole ? `👥 Team: <@&${dept.teamRole}>` : '❌ Kein Team'}`
-          ).join('\n\n') || 'Keine Abteilungen verfügbar')
-          .setTimestamp();
+        const embed = createStyledEmbed({
+          emoji: '🏢',
+          title: 'Abteilungen',
+          description: departments.map((dept, index) =>
+            `${index + 1}. ${dept.emoji || '📁'} ${dept.name}\n${dept.description || 'Keine Beschreibung'}\n${dept.teamRole ? `Team: <@&${dept.teamRole}>` : '❌ Kein Team'}`
+          ).join('\n\n') || 'Keine Abteilungen verfügbar',
+          color: '#57F287'
+        });
 
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
@@ -1687,40 +1625,40 @@ module.exports = {
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
 
       if (!ticket) {
-        const noTicketEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Kein Ticket gefunden')
-          .setDescription('**Für diesen Channel wurde kein Ticket/Bewerbung gefunden.**')
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const noTicketEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Kein Ticket gefunden',
+          description: 'Für diesen Channel wurde kein Ticket/Bewerbung gefunden.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
       }
 
       // Only team or ticket creator can pause
       if (!isTeam && ticket.userId !== interaction.user.id) {
-        const noPermEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🚫 Zugriff verweigert')
-          .setDescription('**Nur Team-Mitglieder oder der Ticket-Ersteller können den Auto-Close Timer pausieren!**')
-          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-          .setTimestamp();
+        const noPermEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Zugriff verweigert',
+          description: 'Nur Team-Mitglieder oder der Ticket-Ersteller können den Auto-Close Timer pausieren!',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
       }
 
       // Check if already paused
       if (ticket.autoClosePaused) {
-        const alreadyPausedEmbed = new EmbedBuilder()
-          .setColor(0xffa500)
-          .setTitle('⏸️ Bereits pausiert')
-          .setDescription('**Der Auto-Close Timer ist bereits pausiert.**')
-          .addFields(
-            { name: '⏰ Pausiert seit', value: ticket.autoClosePausedAt ? `<t:${Math.floor(ticket.autoClosePausedAt / 1000)}:R>` : 'Unbekannt', inline: true },
-            { name: '👤 Pausiert von', value: ticket.autoClosePausedBy ? `<@${ticket.autoClosePausedBy}>` : 'Unbekannt', inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets • Bereits pausiert' })
-          .setTimestamp();
+        const alreadyPausedEmbed = createStyledEmbed({
+          emoji: '⏸️',
+          title: 'Bereits pausiert',
+          description: 'Der Auto-Close Timer ist bereits pausiert.',
+          fields: [
+            { name: 'Pausiert seit', value: ticket.autoClosePausedAt ? `<t:${Math.floor(ticket.autoClosePausedAt / 1000)}:R>` : 'Unbekannt', inline: true },
+            { name: 'Pausiert von', value: ticket.autoClosePausedBy ? `<@${ticket.autoClosePausedBy}>` : 'Unbekannt', inline: true }
+          ],
+          color: '#F59E0B'
+        });
 
         return interaction.reply({ embeds: [alreadyPausedEmbed], ephemeral: true });
       }
@@ -1743,17 +1681,18 @@ module.exports = {
       saveTickets(guildId, tickets);
 
       const ticketType = ticket.isApplication ? 'Bewerbung' : 'Ticket';
-      const successEmbed = new EmbedBuilder()
-        .setColor(0x00ff88)
-        .setTitle('⏸️ Auto-Close pausiert')
-        .setDescription(`**Der Auto-Close Timer für dieses ${ticketType} wurde pausiert.**\n\nDas ${ticketType} wird nicht mehr automatisch geschlossen, bis der Timer wieder fortgesetzt wird.`)
-        .addFields(
-          { name: '🎫 ' + ticketType, value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
-          { name: '👤 Pausiert von', value: `<@${interaction.user.id}>`, inline: true },
-          { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-        )
-        .setFooter({ text: 'Quantix Tickets • Auto-Close pausiert' })
-        .setTimestamp();
+      const successEmbed = createStyledEmbed({
+        emoji: '⏸️',
+        title: 'Auto-Close pausiert',
+        description: `Der Auto-Close Timer für dieses ${ticketType} wurde pausiert.\n\nDas ${ticketType} wird nicht mehr automatisch geschlossen, bis der Timer wieder fortgesetzt wird.`,
+        fields: [
+          { name: ticketType, value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+          { name: 'Pausiert von', value: `<@${interaction.user.id}>`, inline: true },
+          { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+        ],
+        color: '#57F287',
+        footer: 'Quantix Tickets • Auto-Close pausiert'
+      });
 
       await interaction.reply({ embeds: [successEmbed] });
 
@@ -1769,36 +1708,36 @@ module.exports = {
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
 
       if (!ticket) {
-        const noTicketEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Kein Ticket gefunden')
-          .setDescription('**Für diesen Channel wurde kein Ticket/Bewerbung gefunden.**')
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const noTicketEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Kein Ticket gefunden',
+          description: 'Für diesen Channel wurde kein Ticket/Bewerbung gefunden.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
       }
 
       // Only team or ticket creator can resume
       if (!isTeam && ticket.userId !== interaction.user.id) {
-        const noPermEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🚫 Zugriff verweigert')
-          .setDescription('**Nur Team-Mitglieder oder der Ticket-Ersteller können den Auto-Close Timer fortsetzen!**')
-          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-          .setTimestamp();
+        const noPermEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Zugriff verweigert',
+          description: 'Nur Team-Mitglieder oder der Ticket-Ersteller können den Auto-Close Timer fortsetzen!',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
       }
 
       // Check if actually paused
       if (!ticket.autoClosePaused) {
-        const notPausedEmbed = new EmbedBuilder()
-          .setColor(0xffa500)
-          .setTitle('▶️ Nicht pausiert')
-          .setDescription('**Der Auto-Close Timer ist nicht pausiert.**')
-          .setFooter({ text: 'Quantix Tickets • Nicht pausiert' })
-          .setTimestamp();
+        const notPausedEmbed = createStyledEmbed({
+          emoji: '▶️',
+          title: 'Nicht pausiert',
+          description: 'Der Auto-Close Timer ist nicht pausiert.',
+          color: '#F59E0B'
+        });
 
         return interaction.reply({ embeds: [notPausedEmbed], ephemeral: true });
       }
@@ -1821,18 +1760,19 @@ module.exports = {
       const inactiveHours = cfg.autoClose?.inactiveHours || 72;
 
       const ticketType = ticket.isApplication ? 'Bewerbung' : 'Ticket';
-      const successEmbed = new EmbedBuilder()
-        .setColor(0x00ff88)
-        .setTitle('▶️ Auto-Close fortgesetzt')
-        .setDescription(`**Der Auto-Close Timer für dieses ${ticketType} wurde fortgesetzt.**\n\nDer Timer wurde zurückgesetzt. Das ${ticketType} wird in **${inactiveHours} Stunden** automatisch geschlossen, wenn keine Aktivität stattfindet.`)
-        .addFields(
-          { name: '🎫 ' + ticketType, value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
-          { name: '👤 Fortgesetzt von', value: `<@${interaction.user.id}>`, inline: true },
-          { name: '⏱️ Pause-Dauer', value: `${Math.round(pauseDuration / 1000 / 60)} Minuten`, inline: true },
-          { name: '🔄 Nächste Schließung', value: `<t:${Math.floor((Date.now() + inactiveHours * 60 * 60 * 1000) / 1000)}:R>`, inline: true }
-        )
-        .setFooter({ text: 'Quantix Tickets • Auto-Close fortgesetzt' })
-        .setTimestamp();
+      const successEmbed = createStyledEmbed({
+        emoji: '▶️',
+        title: 'Auto-Close fortgesetzt',
+        description: `Der Auto-Close Timer für dieses ${ticketType} wurde fortgesetzt.\n\nDer Timer wurde zurückgesetzt. Das ${ticketType} wird in ${inactiveHours} Stunden automatisch geschlossen, wenn keine Aktivität stattfindet.`,
+        fields: [
+          { name: ticketType, value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+          { name: 'Fortgesetzt von', value: `<@${interaction.user.id}>`, inline: true },
+          { name: 'Pause-Dauer', value: `${Math.round(pauseDuration / 1000 / 60)} Minuten`, inline: true },
+          { name: 'Nächste Schließung', value: `<t:${Math.floor((Date.now() + inactiveHours * 60 * 60 * 1000) / 1000)}:R>`, inline: true }
+        ],
+        color: '#57F287',
+        footer: 'Quantix Tickets • Auto-Close fortgesetzt'
+      });
 
       await interaction.reply({ embeds: [successEmbed] });
 
@@ -1847,12 +1787,12 @@ module.exports = {
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
 
       if (!ticket) {
-        const noTicketEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Kein Ticket gefunden')
-          .setDescription('**Dieser Channel ist kein Ticket.**')
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const noTicketEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Kein Ticket gefunden',
+          description: 'Dieser Channel ist kein Ticket.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
       }
@@ -1860,28 +1800,28 @@ module.exports = {
       // Nur Team oder Claimer darf blocken
       const isClaimer = ticket.claimer === interaction.user.id;
       if (!isTeam && !isClaimer) {
-        const noPermEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🚫 Keine Berechtigung')
-          .setDescription('**Nur Team-Mitglieder oder der Claimer können das Ticket sperren.**')
-          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-          .setTimestamp();
+        const noPermEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Keine Berechtigung',
+          description: 'Nur Team-Mitglieder oder der Claimer können das Ticket sperren.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
       }
 
       // Check if already blocked
       if (ticket.blocked) {
-        const alreadyBlockedEmbed = new EmbedBuilder()
-          .setColor(0xffa500)
-          .setTitle('🔒 Bereits gesperrt')
-          .setDescription('**Dieses Ticket ist bereits gesperrt.**')
-          .addFields(
-            { name: '👤 Gesperrt von', value: ticket.blockedBy ? `<@${ticket.blockedBy}>` : 'Unbekannt', inline: true },
-            { name: '⏰ Gesperrt seit', value: ticket.blockedAt ? `<t:${Math.floor(ticket.blockedAt / 1000)}:R>` : 'Unbekannt', inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets' })
-          .setTimestamp();
+        const alreadyBlockedEmbed = createStyledEmbed({
+          emoji: '🔒',
+          title: 'Bereits gesperrt',
+          description: 'Dieses Ticket ist bereits gesperrt.',
+          fields: [
+            { name: 'Gesperrt von', value: ticket.blockedBy ? `<@${ticket.blockedBy}>` : 'Unbekannt', inline: true },
+            { name: 'Gesperrt seit', value: ticket.blockedAt ? `<t:${Math.floor(ticket.blockedAt / 1000)}:R>` : 'Unbekannt', inline: true }
+          ],
+          color: '#F59E0B'
+        });
 
         return interaction.reply({ embeds: [alreadyBlockedEmbed], ephemeral: true });
       }
@@ -1908,17 +1848,18 @@ module.exports = {
         saveTickets(guildId, tickets);
 
         // Öffentliche Nachricht im Ticket
-        const blockEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🔒 Ticket gesperrt')
-          .setDescription('**Dieses Ticket wurde gesperrt.**\n\nNiemand kann mehr Nachrichten in diesem Ticket schreiben, bis es entsperrt wird.')
-          .addFields(
-            { name: '🎫 Ticket', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
-            { name: '👤 Gesperrt von', value: `<@${interaction.user.id}>`, inline: true },
-            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets • Ticket gesperrt' })
-          .setTimestamp();
+        const blockEmbed = createStyledEmbed({
+          emoji: '🔒',
+          title: 'Ticket gesperrt',
+          description: 'Dieses Ticket wurde gesperrt.\n\nNiemand kann mehr Nachrichten in diesem Ticket schreiben, bis es entsperrt wird.',
+          fields: [
+            { name: 'Ticket', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+            { name: 'Gesperrt von', value: `<@${interaction.user.id}>`, inline: true },
+            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          ],
+          color: '#ED4245',
+          footer: 'Quantix Tickets • Ticket gesperrt'
+        });
 
         await interaction.channel.send({ embeds: [blockEmbed] });
 
@@ -1939,12 +1880,12 @@ module.exports = {
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
 
       if (!ticket) {
-        const noTicketEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Kein Ticket gefunden')
-          .setDescription('**Dieser Channel ist kein Ticket.**')
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const noTicketEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Kein Ticket gefunden',
+          description: 'Dieser Channel ist kein Ticket.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
       }
@@ -1952,24 +1893,24 @@ module.exports = {
       // Nur Team oder Claimer darf unblocken
       const isClaimer = ticket.claimer === interaction.user.id;
       if (!isTeam && !isClaimer) {
-        const noPermEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('🚫 Keine Berechtigung')
-          .setDescription('**Nur Team-Mitglieder oder der Claimer können das Ticket entsperren.**')
-          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-          .setTimestamp();
+        const noPermEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Keine Berechtigung',
+          description: 'Nur Team-Mitglieder oder der Claimer können das Ticket entsperren.',
+          color: '#ED4245'
+        });
 
         return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
       }
 
       // Check if not blocked
       if (!ticket.blocked) {
-        const notBlockedEmbed = new EmbedBuilder()
-          .setColor(0xffa500)
-          .setTitle('🔓 Nicht gesperrt')
-          .setDescription('**Dieses Ticket ist nicht gesperrt.**')
-          .setFooter({ text: 'Quantix Tickets' })
-          .setTimestamp();
+        const notBlockedEmbed = createStyledEmbed({
+          emoji: '🔓',
+          title: 'Nicht gesperrt',
+          description: 'Dieses Ticket ist nicht gesperrt.',
+          color: '#F59E0B'
+        });
 
         return interaction.reply({ embeds: [notBlockedEmbed], ephemeral: true });
       }
@@ -2019,17 +1960,18 @@ module.exports = {
         saveTickets(guildId, tickets);
 
         // Öffentliche Nachricht im Ticket
-        const unblockEmbed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('🔓 Ticket entsperrt')
-          .setDescription('**Dieses Ticket wurde entsperrt.**\n\nNachrichten können wieder gesendet werden.')
-          .addFields(
-            { name: '🎫 Ticket', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
-            { name: '👤 Entsperrt von', value: `<@${interaction.user.id}>`, inline: true },
-            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets • Ticket entsperrt' })
-          .setTimestamp();
+        const unblockEmbed = createStyledEmbed({
+          emoji: '🔓',
+          title: 'Ticket entsperrt',
+          description: 'Dieses Ticket wurde entsperrt.\n\nNachrichten können wieder gesendet werden.',
+          fields: [
+            { name: 'Ticket', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+            { name: 'Entsperrt von', value: `<@${interaction.user.id}>`, inline: true },
+            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+          ],
+          color: '#57F287',
+          footer: 'Quantix Tickets • Ticket entsperrt'
+        });
 
         await interaction.channel.send({ embeds: [unblockEmbed] });
 
