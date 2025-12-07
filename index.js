@@ -1620,13 +1620,13 @@ async function sendWelcomeMessage(guild) {
         `• 📝 **Transcripts:** HTML & TXT transcripts`;
 
     // Create welcome embed
-    const welcomeEmbed = new EmbedBuilder()
-      .setTitle(isGerman ? '🎫 Willkommen bei Quantix Tickets!' : '🎫 Welcome to Quantix Tickets!')
-      .setDescription(description)
-      .setColor(0x00ff88)
-      .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
-      .setFooter({ text: COPYRIGHT })
-      .setTimestamp();
+    const welcomeEmbed = createStyledEmbed({
+      emoji: '🎫',
+      title: isGerman ? 'Willkommen bei Quantix Tickets!' : 'Welcome to Quantix Tickets!',
+      description: description.replace(/\*/g, ''),
+      color: '#57F287',
+      thumbnail: client.user.displayAvatarURL({ size: 256 })
+    });
 
     // Create button row with dashboard and support server links
     const buttonRow = new ActionRowBuilder().addComponents(
@@ -3017,20 +3017,19 @@ client.on(Events.InteractionCreate, async i => {
         saveTickets(guildId, tickets);
 
         // 6. Sende Merge-Embed ins Ziel-Ticket
-        const mergeCompleteEmbed = new EmbedBuilder()
-          .setColor(0x5865F2)
-          .setTitle(t(guildId, 'merge.complete_title') || '🔗 Ticket zusammengeführt')
-          .setDescription(t(guildId, 'merge.complete_description', {
+        const mergeCompleteEmbed = createStyledEmbed({
+          emoji: '🔗',
+          title: t(guildId, 'merge.complete_title') || 'Ticket zusammengeführt',
+          description: t(guildId, 'merge.complete_description', {
             sourceId: sourceTicketId,
             userId: sourceTicket.userId
-          }) || `Ticket **#${sourceTicketId}** von <@${sourceTicket.userId}> wurde in dieses Ticket zusammengeführt.`)
-          .addFields(
-            { name: '📋 Quell-Ticket', value: `#${sourceTicketId}`, inline: true },
-            { name: '👤 Ersteller', value: `<@${sourceTicket.userId}>`, inline: true },
-            { name: '🔗 Zusammengeführt von', value: `<@${i.user.id}>`, inline: true }
-          )
-          .setFooter({ text: 'Quantix Tickets • Ticket Merge' })
-          .setTimestamp();
+          }) || `Ticket **#${sourceTicketId}** von <@${sourceTicket.userId}> wurde in dieses Ticket zusammengeführt.`,
+          fields: [
+            { name: 'Quell-Ticket', value: `#${sourceTicketId}`, inline: true },
+            { name: 'Ersteller', value: `<@${sourceTicket.userId}>`, inline: true },
+            { name: 'Zusammengeführt von', value: `<@${i.user.id}>`, inline: true }
+          ]
+        });
 
         // Füge Nachrichten-Log hinzu wenn vorhanden
         if (messageLog && messageLog.length > 0) {
@@ -3057,16 +3056,16 @@ client.on(Events.InteractionCreate, async i => {
         try {
           const sourceChannel = await i.guild.channels.fetch(sourceTicket.channelId).catch(() => null);
           if (sourceChannel) {
-            const archiveEmbed = new EmbedBuilder()
-              .setColor(0x808080)
-              .setTitle(t(guildId, 'merge.archived_title') || '📦 Ticket archiviert')
-              .setDescription(t(guildId, 'merge.archived_description', { targetId: targetTicketId }) || `Dieses Ticket wurde in **Ticket #${targetTicketId}** zusammengeführt.\n\nDer Channel ist jetzt gesperrt.`)
-              .addFields(
-                { name: '🎯 Ziel-Ticket', value: `<#${targetTicket.channelId}>`, inline: true },
-                { name: '🔗 Zusammengeführt von', value: `<@${i.user.id}>`, inline: true }
-              )
-              .setFooter({ text: 'Quantix Tickets • Archiviert' })
-              .setTimestamp();
+            const archiveEmbed = createStyledEmbed({
+              emoji: '📦',
+              title: t(guildId, 'merge.archived_title') || 'Ticket archiviert',
+              description: t(guildId, 'merge.archived_description', { targetId: targetTicketId }) || `Dieses Ticket wurde in **Ticket #${targetTicketId}** zusammengeführt. Der Channel ist jetzt gesperrt.`,
+              fields: [
+                { name: 'Ziel-Ticket', value: `<#${targetTicket.channelId}>`, inline: true },
+                { name: 'Zusammengeführt von', value: `<@${i.user.id}>`, inline: true }
+              ],
+              color: '#808080'
+            });
 
             await sourceChannel.send({ embeds: [archiveEmbed] });
 
@@ -3324,17 +3323,16 @@ client.on(Events.InteractionCreate, async i => {
           tickets[ticketIndex] = ticket;
           saveTickets(guildId, tickets);
 
-          const forwardEmbed = new EmbedBuilder()
-            .setColor(0x5865F2)
-            .setTitle('🔄 Ticket weitergeleitet')
-            .setDescription(`Dieses Ticket wurde an <@${targetId}> weitergeleitet.`)
-            .addFields(
-              { name: '👤 Von', value: `<@${oldClaimer}>`, inline: true },
-              { name: '👤 An', value: `<@${targetId}>`, inline: true },
-              { name: '📝 Grund', value: reason, inline: false }
-            )
-            .setFooter({ text: 'Quantix Tickets • Weiterleitung' })
-            .setTimestamp();
+          const forwardEmbed = createStyledEmbed({
+            emoji: '🔄',
+            title: 'Ticket weitergeleitet',
+            description: `Dieses Ticket wurde an <@${targetId}> weitergeleitet.`,
+            fields: [
+              { name: 'Von', value: `<@${oldClaimer}>`, inline: true },
+              { name: 'An', value: `<@${targetId}>`, inline: true },
+              { name: 'Grund', value: reason, inline: false }
+            ]
+          });
 
           await i.editReply({ embeds: [forwardEmbed] });
 
@@ -3369,17 +3367,16 @@ client.on(Events.InteractionCreate, async i => {
           tickets[ticketIndex] = ticket;
           saveTickets(guildId, tickets);
 
-          const forwardEmbed = new EmbedBuilder()
-            .setColor(0x5865F2)
-            .setTitle('🔄 Ticket weitergeleitet')
-            .setDescription(`Dieses Ticket wurde an <@&${targetId}> weitergeleitet.`)
-            .addFields(
-              { name: '👤 Von', value: `<@${oldClaimer}>`, inline: true },
-              { name: '👥 An Rolle', value: `<@&${targetId}>`, inline: true },
-              { name: '📝 Grund', value: reason, inline: false }
-            )
-            .setFooter({ text: 'Quantix Tickets • Weiterleitung' })
-            .setTimestamp();
+          const forwardEmbed = createStyledEmbed({
+            emoji: '🔄',
+            title: 'Ticket weitergeleitet',
+            description: `Dieses Ticket wurde an <@&${targetId}> weitergeleitet.`,
+            fields: [
+              { name: 'Von', value: `<@${oldClaimer}>`, inline: true },
+              { name: 'An Rolle', value: `<@&${targetId}>`, inline: true },
+              { name: 'Grund', value: reason, inline: false }
+            ]
+          });
 
           await i.editReply({ embeds: [forwardEmbed] });
 
@@ -3402,15 +3399,12 @@ client.on(Events.InteractionCreate, async i => {
       const topic = cfg.topics?.find(t=>t.value===topicValue);
 
       if(!topic) {
-        const errorEmbed = new EmbedBuilder()
-          .setColor(0xff4444)
-          .setTitle('❌ Ungültiges Thema')
-          .setDescription(
-            '**Das gewählte Ticket-Thema ist nicht mehr verfügbar.**\n\n' +
-            'Möglicherweise wurde es vom Administrator entfernt. Bitte wähle ein anderes Thema aus dem Ticket-Panel.'
-          )
-          .setFooter({ text: 'Quantix Tickets • Fehler' })
-          .setTimestamp();
+        const errorEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Ungültiges Thema',
+          description: 'Das gewählte Ticket-Thema ist nicht mehr verfügbar. Bitte wähle ein anderes Thema aus dem Ticket-Panel.',
+          color: '#ED4245'
+        });
         return i.reply({ embeds: [errorEmbed], ephemeral: true });
       }
 
@@ -3431,15 +3425,15 @@ client.on(Events.InteractionCreate, async i => {
               ? t(guildId, 'ticketBlacklist.permanent')
               : `<t:${Math.floor(new Date(blacklist.expiresAt).getTime() / 1000)}:R>`;
 
-            const blacklistEmbed = new EmbedBuilder()
-              .setColor(0xff4444)
-              .setTitle('🚫 ' + t(guildId, 'ticketBlacklist.user_blacklisted'))
-              .setDescription(t(guildId, 'ticketBlacklist.blocked_error', {
+            const blacklistEmbed = createStyledEmbed({
+              emoji: '🚫',
+              title: t(guildId, 'ticketBlacklist.user_blacklisted'),
+              description: t(guildId, 'ticketBlacklist.blocked_error', {
                 reason: blacklist.reason,
                 expires: expiryText
-              }))
-              .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
-              .setTimestamp();
+              }),
+              color: '#ED4245'
+            });
 
             return i.reply({ embeds: [blacklistEmbed], ephemeral: true });
           }
@@ -4116,21 +4110,16 @@ client.on(Events.InteractionCreate, async i => {
         saveTickets(guildId, tickets);
 
         // Send acceptance message in channel
-        const acceptEmbed = new EmbedBuilder()
-          .setColor(0x00ff88)
-          .setTitle('✅ Bewerbung angenommen')
-          .setDescription(
-            `**Bewerber:** <@${ticket.userId}>\n` +
-            `**Angenommen von:** <@${i.user.id}>\n` +
-            `**Zugewiesene Rolle:** <@&${targetRole.id}>\n\n` +
-            `**Grund:** ${reason}`
-          )
-          .addFields(
-            { name: '🎫 Bewerbung', value: `#${ticket.id}`, inline: true },
-            { name: '⏰ Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
-          )
-          .setFooter({ text: 'Quantix Tickets • Bewerbungssystem' })
-          .setTimestamp();
+        const acceptEmbed = createStyledEmbed({
+          emoji: '✅',
+          title: 'Bewerbung angenommen',
+          description: `Bewerber: <@${ticket.userId}>\nAngenommen von: <@${i.user.id}>\nZugewiesene Rolle: <@&${targetRole.id}>\n\nGrund: ${reason}`,
+          fields: [
+            { name: 'Bewerbung', value: `#${ticket.id}`, inline: true },
+            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
+          ],
+          color: '#57F287'
+        });
 
         await i.channel.send({ embeds: [acceptEmbed] });
 
@@ -4186,23 +4175,24 @@ client.on(Events.InteractionCreate, async i => {
         const notesCount = ticket.notes?.length || 0;
 
         // Neues Bewerbungs-Transcript Embed
-        const appTranscriptEmbed = new EmbedBuilder()
-          .setColor(0x22c55e)
-          .setTitle('🎉 » Glückwunsch! Bewerbung angenommen «')
-          .setDescription(`*Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.*\n\n**📝 Nachricht vom Team:**\n${reason}`)
-          .addFields(
-            { name: '» Server «', value: i.guild.name, inline: true },
-            { name: '» Bewerbung «', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
-            { name: '» Zugewiesene Rolle «', value: targetRole.name, inline: true },
-            { name: '» Kategorie «', value: ticket.applicationCategory || 'Unbekannt', inline: true },
-            { name: '» Status «', value: '✅ Angenommen', inline: true },
-            { name: '» Bearbeitet von «', value: `<@${i.user.id}>`, inline: true },
-            { name: '» Datum «', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
-            { name: '» Voting «', value: votingResult, inline: true },
-            { name: '» Nachrichten «', value: `${appMessageStats?.totalMessages || 0}`, inline: true }
-          )
-          .setFooter({ text: `Quantix Tickets • ${i.guild.name}` })
-          .setTimestamp();
+        const appTranscriptEmbed = createStyledEmbed({
+          emoji: '🎉',
+          title: 'Glückwunsch! Bewerbung angenommen',
+          description: `Das Transcript deiner Bewerbung kannst du oberhalb dieser Nachricht herunterladen.\n\n📝 Nachricht vom Team:\n${reason}`,
+          fields: [
+            { name: 'Server', value: i.guild.name, inline: true },
+            { name: 'Bewerbung', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
+            { name: 'Zugewiesene Rolle', value: targetRole.name, inline: true },
+            { name: 'Kategorie', value: ticket.applicationCategory || 'Unbekannt', inline: true },
+            { name: 'Status', value: '✅ Angenommen', inline: true },
+            { name: 'Bearbeitet von', value: `<@${i.user.id}>`, inline: true },
+            { name: 'Datum', value: `<t:${Math.floor((ticket.timestamp || Date.now()) / 1000)}:f>`, inline: true },
+            { name: 'Voting', value: votingResult, inline: true },
+            { name: 'Nachrichten', value: `${appMessageStats?.totalMessages || 0}`, inline: true }
+          ],
+          color: '#57F287',
+          footer: i.guild.name
+        });
 
         // Sende Transcript an Bewerber per DM
         if (appFiles) {
@@ -8982,17 +8972,17 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
   }
 
   // Public priority change notification
-  const priorityEmbed = new EmbedBuilder()
-    .setColor(state.embedColor)
-    .setTitle('🎯 Priorität geändert')
-    .setDescription(`Die Ticket-Priorität wurde auf **${state.label}** ${dir === 'hoch' ? '**erhöht**' : '**gesenkt**'}.`)
-    .addFields(
-      { name: '🔻 Neue Priorität', value: `${state.emoji} ${state.label}`, inline: true },
-      { name: '🎫 Ticket', value: `#${ticket.id}`, inline: true },
-      { name: '👤 Geändert von', value: `<@${interaction.user.id}>`, inline: true }
-    )
-    .setFooter({ text: 'Quantix Tickets • Priorität geändert' })
-    .setTimestamp();
+  const priorityEmbed = createStyledEmbed({
+    emoji: '🎯',
+    title: 'Priorität geändert',
+    description: `Die Ticket-Priorität wurde auf **${state.label}** ${dir === 'hoch' ? '**erhöht**' : '**gesenkt**'}.`,
+    fields: [
+      { name: 'Neue Priorität', value: `${state.dot} ${state.label}`, inline: true },
+      { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+      { name: 'Geändert von', value: `<@${interaction.user.id}>`, inline: true }
+    ],
+    color: state.embedColor
+  });
 
   if(mentions.length > 0){
     await interaction.channel.send({
