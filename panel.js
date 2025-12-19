@@ -2469,14 +2469,14 @@ module.exports = (client)=>{
         ? req.body.transcriptChannelId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
         : (req.body.transcriptChannelId ? [sanitizeDiscordId(req.body.transcriptChannelId) || req.body.transcriptChannelId.trim()] : []);
 
-      cfg.sendTranscriptToCreator = req.body.sendTranscriptToCreator === 'on' || req.body.sendTranscriptToCreator === true;
+      cfg.sendTranscriptToCreator = req.body.sendTranscriptToCreator === 'on' || req.body.sendTranscriptToCreator === 'true';
 
       cfg.teamRoleId = Array.isArray(req.body.teamRoleId)
         ? req.body.teamRoleId.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
         : (req.body.teamRoleId ? [sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim()] : []);
 
       // Ticket-Erstellungs-Berechtigung
-      cfg.ticketCreationRestricted = req.body.ticketCreationRestricted === 'true';
+      cfg.ticketCreationRestricted = req.body.ticketCreationRestricted === 'true' || req.body.ticketCreationRestricted === 'on';
       if (req.body.allowedTicketRoles) {
         cfg.allowedTicketRoles = Array.isArray(req.body.allowedTicketRoles)
           ? req.body.allowedTicketRoles.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
@@ -2486,7 +2486,7 @@ module.exports = (client)=>{
       }
 
       // Components V2 Design
-      cfg.useComponentsV2 = req.body.useComponentsV2 === 'true';
+      cfg.useComponentsV2 = req.body.useComponentsV2 === 'true' || req.body.useComponentsV2 === 'on';
 
       if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
 
@@ -2530,7 +2530,7 @@ module.exports = (client)=>{
       cfg.githubCommitsEnabled = req.body.githubCommitsEnabled === 'true' || req.body.githubCommitsEnabled === 'on';
 
       // Ticket Archive Settings
-      cfg.archiveEnabled = req.body.archiveEnabled === 'true';
+      cfg.archiveEnabled = req.body.archiveEnabled === 'true' || req.body.archiveEnabled === 'on';
       if(req.body.archiveCategoryId){
         const archiveCatId = sanitizeDiscordId(req.body.archiveCategoryId);
         cfg.archiveCategoryId = archiveCatId || req.body.archiveCategoryId.trim();
@@ -2547,7 +2547,7 @@ module.exports = (client)=>{
       }
 
       // Auto-Close System (Pro Feature)
-      cfg.autoCloseEnabled = req.body.autoCloseEnabled === 'on';
+      cfg.autoCloseEnabled = req.body.autoCloseEnabled === 'on' || req.body.autoCloseEnabled === 'true';
       if(req.body.autoCloseDays){
         cfg.autoCloseDays = sanitizeNumber(req.body.autoCloseDays, 1, 365);
       }
