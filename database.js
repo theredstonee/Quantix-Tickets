@@ -121,7 +121,9 @@ function readCfg(guildId) {
     try {
       const row = statements.getConfig.get(guildId);
       if (row && row.config) {
-        return JSON.parse(row.config);
+        const config = JSON.parse(row.config);
+        console.log(`[Database] Read config from SQLite for ${guildId}`);
+        return config;
       }
     } catch (err) {
       console.error('[Database] SQLite read error:', err.message);
@@ -131,28 +133,48 @@ function readCfg(guildId) {
   // JSON fallback
   const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
   const config = safeReadJSON(configPath, null);
-  if (config) return config;
+  if (config) {
+    console.log(`[Database] Read config from JSON for ${guildId}`);
+    return config;
+  }
 
+  console.log(`[Database] No config found for ${guildId}, using defaults`);
   return getDefaultConfig();
 }
 
 function writeCfg(guildId, data) {
-  if (!guildId) return false;
+  if (!guildId) {
+    console.error('[Database] writeCfg called with no guildId!');
+    return false;
+  }
 
   console.log(`[Database] Writing config for guild ${guildId}`);
+  console.log(`[Database] Data keys: ${Object.keys(data).join(', ')}`);
+
+  // Log specific settings for debugging
+  if (data.ticketCreationRestricted !== undefined) {
+    console.log(`[Database] ticketCreationRestricted = ${data.ticketCreationRestricted}`);
+  }
+  if (data.allowedTicketRoles !== undefined) {
+    console.log(`[Database] allowedTicketRoles = ${JSON.stringify(data.allowedTicketRoles)}`);
+  }
 
   if (usingSQLite) {
     try {
-      statements.setConfig.run(guildId, JSON.stringify(data));
+      const jsonData = JSON.stringify(data);
+      console.log(`[Database] JSON data length: ${jsonData.length} bytes`);
+      statements.setConfig.run(guildId, jsonData);
       console.log(`[Database] SQLite write successful for ${guildId}`);
       return true;
     } catch (err) {
       console.error('[Database] SQLite write error:', err.message);
+      console.error('[Database] SQLite error stack:', err.stack);
     }
   }
 
   // JSON fallback (always write to JSON as backup)
   const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+  console.log(`[Database] Writing to JSON fallback: ${configPath}`);
   const success = safeWriteJSON(configPath, data);
   console.log(`[Database] JSON write ${success ? 'successful' : 'failed'} for ${guildId}`);
   return success;

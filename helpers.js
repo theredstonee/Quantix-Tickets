@@ -261,8 +261,6 @@ module.exports = {
   loadTickets,
   saveTickets,
   getTicketsPath,
-  getTicketByChannel: db.getTicketByChannel,
-  updateTicket: db.updateTicket,
   // Counter functions
   getNextTicketNumber: db.getNextTicketNumber,
   getCurrentCounter: db.getCurrentCounter,
@@ -277,5 +275,6 @@ module.exports = {
   createComponentsV2Message,
   componentsV2Available,
   // Database reference
-  db: db.db
+  db: db.db,
+  usingSQLite: db.usingSQLite
 };
