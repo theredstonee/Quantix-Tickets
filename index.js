@@ -54,6 +54,7 @@ const { handleTemplateUse } = require('./template-handler');
 const { handleDepartmentForward } = require('./department-handler');
 const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent, markTrialWarningSent, getTrialInfo, isTrialActive, activateAutoTrial, checkExpiredCancellations, activatePartner, deactivatePartner, listPartnerServers } = require('./premium');
 const { createStyledEmbed, createQuickEmbed, createStyledMessage, componentsV2Available } = require('./helpers');
+const { readCfg, writeCfg, loadTickets, saveTickets, getNextTicketNumber } = require('./database');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -311,112 +312,7 @@ function getSLAProgress(createdAt, deadline){
 
 if(!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
 
-function readCfg(guildId){
-  try {
-    if(!guildId){
-      return safeRead(CFG_PATH, {}) || {};
-    }
-    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    try {
-      const data = JSON.parse(fs.readFileSync(configPath,'utf8'));
-      return data || {};
-    } catch {
-      const defaultCfg = {
-        guildId: guildId,
-        topics: [],
-        formFields: [],
-        teamRoleId: '1387525699908272218',
-        priorityRoles: {
-          '0': [],
-          '1': [],
-          '2': []
-        },
-        githubCommitsEnabled: true,
-        githubWebhookChannelId: null,
-        maxTicketsPerUser: 3,
-        antiSpam: {
-          enabled: true,
-          maxTickets: 3,
-          timeWindowMinutes: 10,
-          maxButtonClicks: 5,
-          buttonTimeWindowSeconds: 10
-        },
-        ticketRating: {
-          enabled: true,
-          requireFeedback: false,
-          showInAnalytics: true
-        },
-        sla: {
-          enabled: false,
-          priority0Hours: 24,
-          priority1Hours: 4,
-          priority2Hours: 1,
-          warnAtPercent: 80,
-          escalateToRole: null
-        },
-        fileUpload: {
-          enabled: true,
-          maxSizeMB: 10,
-          allowedFormats: ['png', 'jpg', 'jpeg', 'pdf', 'txt', 'log']
-        },
-        notifyUserOnStatusChange: true,
-        autoClose: {
-          enabled: false,
-          inactiveDays: 7,
-          warningDays: 2,
-          excludePriority: []
-        },
-        autoResponses: {
-          enabled: true,
-          responses: []
-        },
-        ticketEmbed: {
-          title: '🎫 Ticket #{ticketNumber}',
-          description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
-          color: '#2b90d9',
-          footer: COPYRIGHT
-        },
-        panelEmbed: {
-          title: '🎫 Ticket System',
-          description: 'Wähle dein Thema',
-          color: '#5865F2',
-          footer: COPYRIGHT
-        }
-      };
-      writeCfg(guildId, defaultCfg);
-      return defaultCfg;
-    }
-  } catch(err) {
-    console.error('readCfg error:', err);
-    return {};
-  }
-}
-
-function writeCfg(guildId, data){
-  try {
-    if(!guildId){
-      safeWrite(CFG_PATH, data);
-      return;
-    }
-    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
-  } catch(err) {
-    console.error('writeCfg error:', err);
-  }
-}
-
-if(!fs.existsSync(COUNTER_PATH)) safeWrite(COUNTER_PATH, { last: 0 });
-if(!fs.existsSync(TICKETS_PATH)) safeWrite(TICKETS_PATH, []);
-
-function loadTickets(guildId){
-  const ticketsPath = getTicketsPath(guildId);
-  if(!fs.existsSync(ticketsPath)) safeWrite(ticketsPath, []);
-  return safeRead(ticketsPath, []);
-}
-function saveTickets(guildId, tickets){
-  const ticketsPath = getTicketsPath(guildId);
-  safeWrite(ticketsPath, tickets);
-}
+// readCfg, writeCfg, loadTickets, saveTickets are now imported from database.js
 
 // AntiSpam System
 const ticketCreationLog = new Map(); // userId -> [{timestamp, guildId}]
@@ -570,13 +466,9 @@ if (!process.env.BOT_ONLY && app) {
 const TOKEN = process.env.DISCORD_TOKEN;
 const PANEL_FIXED_URL = 'https://tickets.quantix-bot.de/panel';
 
+// nextTicket now uses database.js
 function nextTicket(guildId){
-  const counterPath = getCounterPath(guildId);
-  if(!fs.existsSync(counterPath)) safeWrite(counterPath, {last:0});
-  const c = safeRead(counterPath,{last:0});
-  c.last++;
-  safeWrite(counterPath,c);
-  return c.last;
+  return getNextTicketNumber(guildId);
 }
 
 function buttonRows(claimed, guildId = null, ticket = null){

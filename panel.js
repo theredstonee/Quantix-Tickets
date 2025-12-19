@@ -34,6 +34,9 @@ const {
   xssRateLimitMiddleware
 } = require('./xss-protection');
 
+// Import database functions for reliable storage
+const { readCfg, writeCfg, loadTickets, saveTickets } = require('./database');
+
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
 
@@ -57,63 +60,6 @@ function renderMarkdown(text){
 
 const CONFIG_DIR = path.join(__dirname, 'configs');
 if(!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR);
-
-const LEGACY_CONFIG = path.join(__dirname, 'config.json');
-
-function readCfg(guildId){
-  try {
-    if(!guildId){
-      try {
-        const data = JSON.parse(fs.readFileSync(LEGACY_CONFIG,'utf8'));
-        return data || {};
-      } catch {
-        return {};
-      }
-    }
-    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    try {
-      const data = JSON.parse(fs.readFileSync(configPath,'utf8'));
-      return data || {};
-    } catch {
-      const defaultCfg = {
-        guildId: guildId,
-        topics: [],
-        formFields: [],
-        teamRoleId: '1387525699908272218',
-        ticketEmbed: {
-          title: '🎫 Ticket #{ticketNumber}',
-          description: 'Hallo {userMention}\n**Thema:** {topicLabel}',
-          color: '#2b90d9',
-          footer: 'Quantix Tickets ©️'
-        },
-        panelEmbed: {
-          title: '🎫 Ticket System',
-          description: 'Wähle dein Thema',
-          color: '#5865F2',
-          footer: 'Quantix Tickets ©️'
-        }
-      };
-      writeCfg(guildId, defaultCfg);
-      return defaultCfg;
-    }
-  } catch(err) {
-    console.error('readCfg error:', err);
-    return {};
-  }
-}
-
-function writeCfg(guildId, data){
-  try {
-    if(!guildId){
-      fs.writeFileSync(LEGACY_CONFIG, JSON.stringify(data, null, 2));
-      return;
-    }
-    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
-  } catch(err) {
-    console.error('writeCfg error:', err);
-  }
-}
 
 let cfg = readCfg();
 
@@ -3545,20 +3491,7 @@ module.exports = (client)=>{
     } catch(e){ console.error(e); res.redirect('/panel?msg=error'); }
   });
 
-  const TICKETS_PATH = path.join(__dirname,'tickets.json');
-  function getTicketsPath(guildId){
-    if(!guildId) return TICKETS_PATH;
-    return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-  }
-  function loadTickets(guildId){
-    const ticketsPath = getTicketsPath(guildId);
-    try {
-      if(!fs.existsSync(ticketsPath)) return [];
-      return JSON.parse(fs.readFileSync(ticketsPath,'utf8'));
-    } catch {
-      return [];
-    }
-  }
+  // loadTickets is now imported from database.js at the top
 
   async function buildMemberMap(guild, tickets){
     const map = {};
@@ -6981,36 +6914,9 @@ function buildPanelEmbed(cfg, guild = null){
 // ============================================================
 // UTILITY FUNCTIONS FOR API
 // ============================================================
+// Note: readCfg, writeCfg, loadTickets, saveTickets are now imported from database.js
 
-function loadTickets(guildId) {
-  const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-  try {
-    const data = fs.readFileSync(ticketsPath, 'utf8');
-    return JSON.parse(data) || [];
-  } catch (err) {
-    return [];
-  }
-}
-
-function saveTickets(guildId, tickets) {
-  const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-  const tempFile = ticketsPath + '.tmp';
-  const backupFile = ticketsPath + '.bak';
-  try {
-    const jsonData = JSON.stringify(tickets, null, 2);
-    JSON.parse(jsonData);
-    fs.writeFileSync(tempFile, jsonData, 'utf8');
-    if (fs.existsSync(ticketsPath)) {
-      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* optional */ }
-    }
-    fs.renameSync(tempFile, ticketsPath);
-  } catch (err) {
-    console.error('[panel] Error saving tickets:', err.message);
-    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
-  }
-}
-
-// Export helper functions for API routes
+// Export helper functions for API routes (re-export from database.js)
 module.exports.readCfg = readCfg;
 module.exports.writeCfg = writeCfg;
 module.exports.loadTickets = loadTickets;
