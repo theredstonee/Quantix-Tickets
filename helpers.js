@@ -1,96 +1,25 @@
 // helpers.js - Central export point for helper functions
+// Now uses SQLite database for reliable storage
 
-const fs = require('fs');
 const path = require('path');
 
-const CONFIG_DIR = path.join(__dirname, 'configs');
+// Import database functions
+const db = require('./database');
 
-// ===== Config Functions =====
-function readCfg(guildId) {
-  const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  try {
-    const raw = fs.readFileSync(cfgPath, 'utf8');
-    return raw ? JSON.parse(raw) : getDefaultConfig();
-  } catch {
-    const def = getDefaultConfig();
-    writeCfg(guildId, def);
-    return def;
-  }
-}
+// ===== Config Functions (delegated to database.js) =====
+const readCfg = db.readCfg;
+const writeCfg = db.writeCfg;
+const getDefaultConfig = db.getDefaultConfig;
 
-function writeCfg(guildId, data) {
-  if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  fs.writeFileSync(cfgPath, JSON.stringify(data, null, 2), 'utf8');
-}
+// ===== Ticket Functions (delegated to database.js) =====
+const loadTickets = db.loadTickets;
+const saveTickets = db.saveTickets;
 
-function getDefaultConfig() {
-  return {
-    teamRoleId: '',
-    logChannelId: [],
-    topics: [],
-    formFields: [],
-    priorityRoles: { 0: [], 1: [], 2: [] },
-    panelChannelId: '',
-    panelMessageId: '',
-    panelTitle: 'Ticket erstellen',
-    panelDescription: 'Klicke auf den Button um ein Ticket zu erstellen.',
-    panelColor: '0x00ff88',
-    panelFooter: 'Quantix Tickets',
-    categoryId: '',
-    transcriptChannelId: '',
-    closeMessageChannelIds: [],
-    closeConfirmation: true,
-    transcriptFormat: 'both',
-    notificationEmail: '',
-    dmNotificationUsers: [],
-    autoClose: 0,
-    githubCommitsEnabled: false,
-    githubWebhookChannelId: '',
-    startupNotificationsEnabled: false,
-    language: 'de'
-  };
-}
-
-// ===== Ticket Functions =====
 function getTicketsPath(guildId) {
+  // Legacy function for compatibility - returns dummy path
+  const CONFIG_DIR = path.join(__dirname, 'configs');
   if (!guildId) return path.join(__dirname, 'tickets.json');
   return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-}
-
-function loadTickets(guildId) {
-  const ticketsPath = getTicketsPath(guildId);
-  try {
-    const raw = fs.readFileSync(ticketsPath, 'utf8');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveTickets(guildId, tickets) {
-  if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  const ticketsPath = getTicketsPath(guildId);
-  const tempFile = ticketsPath + '.tmp';
-  const backupFile = ticketsPath + '.bak';
-  try {
-    const jsonData = JSON.stringify(tickets, null, 2);
-    // Validiere JSON vor dem Schreiben
-    JSON.parse(jsonData);
-    // Schreibe in temporäre Datei
-    fs.writeFileSync(tempFile, jsonData, 'utf8');
-    // Backup der alten Datei erstellen (falls vorhanden)
-    if (fs.existsSync(ticketsPath)) {
-      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* Backup optional */ }
-    }
-    // Atomares Umbenennen (ersetzt Zieldatei)
-    fs.renameSync(tempFile, ticketsPath);
-  } catch (err) {
-    console.error(`[saveTickets] Error writing ${ticketsPath}:`, err.message);
-    // Aufräumen bei Fehler
-    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
-    throw err;
-  }
 }
 
 // ===== Components V2 Support Check =====
@@ -324,16 +253,29 @@ async function logEvent(guild, text) {
 
 // ===== Exports =====
 module.exports = {
+  // Config functions
   readCfg,
   writeCfg,
   getDefaultConfig,
+  // Ticket functions
   loadTickets,
   saveTickets,
   getTicketsPath,
+  getTicketByChannel: db.getTicketByChannel,
+  updateTicket: db.updateTicket,
+  // Counter functions
+  getNextTicketNumber: db.getNextTicketNumber,
+  getCurrentCounter: db.getCurrentCounter,
+  // Language functions
+  getGuildLanguage: db.getGuildLanguage,
+  setGuildLanguage: db.setGuildLanguage,
+  // Embed functions
   logEvent,
   createStyledEmbed,
   createQuickEmbed,
   createStyledMessage,
   createComponentsV2Message,
-  componentsV2Available
+  componentsV2Available,
+  // Database reference
+  db: db.db
 };
