@@ -2508,7 +2508,14 @@ module.exports = (client)=>{
       // Auto-Priority System (per-role configuration)
       if (req.body.autoPriorityConfig) {
         try {
-          const config = JSON.parse(req.body.autoPriorityConfig);
+          let config = req.body.autoPriorityConfig;
+
+          // Handle both string and object inputs
+          if (typeof config === 'string') {
+            config = JSON.parse(config);
+          }
+
+          // Only process if it's an array with valid items
           cfg.autoPriorityConfig = Array.isArray(config)
             ? config
                 .filter(item => item && item.roleId && typeof item.roleId === 'string' && item.roleId.trim())
@@ -2518,7 +2525,8 @@ module.exports = (client)=>{
                 }))
             : [];
         } catch (e) {
-          console.error('Error parsing autoPriorityConfig:', e);
+          console.error('Error parsing autoPriorityConfig:', e.message);
+          // Keep existing config if parsing fails
           cfg.autoPriorityConfig = cfg.autoPriorityConfig || [];
         }
       }
