@@ -128,9 +128,42 @@ function readCfg(guildId) {
     } catch (err) {
       console.error('[Database] SQLite read error:', err.message);
     }
+
+    // No SQLite entry - check for JSON file to migrate
+    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
+    if (fs.existsSync(configPath)) {
+      const config = safeReadJSON(configPath, null);
+      if (config) {
+        console.log(`[Database] Migrating config from JSON to SQLite for ${guildId}`);
+        // Write to SQLite
+        try {
+          const jsonData = JSON.stringify(config);
+          statements.setConfig.run(guildId, jsonData);
+          console.log(`[Database] Migration successful for ${guildId}`);
+
+          // Rename JSON file to prevent re-migration
+          const migratedPath = configPath + '.migrated';
+          try {
+            fs.renameSync(configPath, migratedPath);
+            console.log(`[Database] Renamed ${configPath} to ${migratedPath}`);
+          } catch (renameErr) {
+            console.error(`[Database] Could not rename JSON file: ${renameErr.message}`);
+          }
+
+          return config;
+        } catch (writeErr) {
+          console.error('[Database] Migration write error:', writeErr.message);
+          // Fall through to return config anyway
+          return config;
+        }
+      }
+    }
+
+    console.log(`[Database] No config found for ${guildId}, using defaults`);
+    return getDefaultConfig();
   }
 
-  // JSON fallback
+  // JSON fallback (when SQLite not available)
   const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
   const config = safeReadJSON(configPath, null);
   if (config) {
