@@ -6998,9 +6998,18 @@ client.on(Events.InteractionCreate, async i => {
             const originalMsg = await i.channel.messages.fetch(ticket.messageId);
             if (originalMsg && originalMsg.embeds.length > 0) {
               const oldEmbed = originalMsg.embeds[0];
+
+              // Update Status field from "🟢 Offen" to "🔴 Geschlossen"
+              const updatedFields = (oldEmbed.fields || []).map(field => {
+                if (field.name === '» Status «' || field.name === 'Status') {
+                  return { name: field.name, value: '🔴 Geschlossen', inline: field.inline };
+                }
+                return field;
+              });
+
               const updatedEmbed = EmbedBuilder.from(oldEmbed)
                 .setColor(0xED4245) // Red for closed
-                .setFooter({ text: `🔴 Geschlossen • ${oldEmbed.footer?.text || 'Quantix Tickets'}` });
+                .setFields(updatedFields);
 
               // Disable all buttons
               const disabledRows = originalMsg.components.map(row => {
@@ -7692,9 +7701,18 @@ client.on(Events.InteractionCreate, async i => {
               const originalMsg = await i.channel.messages.fetch(ticket.messageId);
               if (originalMsg && originalMsg.embeds.length > 0) {
                 const oldEmbed = originalMsg.embeds[0];
+
+                // Update Status field from "🟢 Offen" to "🔴 Geschlossen"
+                const updatedFields = (oldEmbed.fields || []).map(field => {
+                  if (field.name === '» Status «' || field.name === 'Status') {
+                    return { name: field.name, value: '🔴 Geschlossen', inline: field.inline };
+                  }
+                  return field;
+                });
+
                 const updatedEmbed = EmbedBuilder.from(oldEmbed)
                   .setColor(0xED4245) // Red for closed
-                  .setFooter({ text: `🔴 Geschlossen • ${oldEmbed.footer?.text || 'Quantix Tickets'}` });
+                  .setFields(updatedFields);
 
                 // Disable all buttons
                 const disabledRows = originalMsg.components.map(row => {
