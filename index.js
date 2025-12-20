@@ -516,8 +516,8 @@ function buttonRows(claimed, guildId = null, ticket = null){
       .setStyle(ButtonStyle.Secondary)
   ];
 
-  // Voice-Support Button (Basic+ Feature)
-  if (guildId && hasFeature(guildId, 'voiceSupport')) {
+  // Voice-Support Button
+  if (guildId) {
     const cfg = readCfg(guildId);
     if (cfg.voiceSupport && cfg.voiceSupport.enabled && cfg.voiceSupport.showButton !== false) {
       // Prüfe ob Voice-Channel bereits existiert
@@ -918,8 +918,8 @@ function startSLAChecker() {
         const guildId = file.replace('.json', '');
         const cfg = readCfg(guildId);
 
-        // Skip if SLA not enabled or not Pro
-        if (!cfg.sla || !cfg.sla.enabled || !hasFeature(guildId, 'slaSystem')) continue;
+        // Skip if SLA not enabled
+        if (!cfg.sla || !cfg.sla.enabled) continue;
 
         const ticketsPath = getTicketsPath(guildId);
         if (!fs.existsSync(ticketsPath)) continue;
@@ -5537,19 +5537,6 @@ client.on(Events.InteractionCreate, async i => {
           });
         }
 
-        // Check if user has applicationSystem feature (Basic+)
-        if(!hasFeature(guildId, 'applicationSystem')){
-          const upgradeEmbed = createStyledEmbed({
-            emoji: '⭐',
-            title: 'Premium Basic+ erforderlich',
-            description: 'Das Bewerbungssystem ist ein Premium Basic+ Feature!\n\nUpgrade jetzt, um professionelle Bewerbungen zu verwalten:\n• Separates Bewerbungs-Panel\n• Anpassbare Formularfelder\n• Dedizierte Bewerbungs-Tickets\n• Team-spezifische Berechtigungen',
-            color: '#F59E0B',
-            footer: 'Quantix Tickets • Premium Feature'
-          });
-
-          return i.reply({embeds:[upgradeEmbed],ephemeral:true});
-        }
-
         // Check blacklist
         if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
           const now = new Date();
@@ -6787,16 +6774,6 @@ client.on(Events.InteractionCreate, async i => {
 
       // Voice-Support Button Handler
       if (i.customId === 'request_voice') {
-        if (!hasFeature(guildId, 'voiceSupport')) {
-          const premiumEmbed = createStyledEmbed({
-            emoji: '⭐',
-            title: 'Premium Feature',
-            description: t(guildId, 'voiceSupport.feature_locked'),
-            color: '#FEE75C'
-          });
-          return i.reply({ embeds: [premiumEmbed], ephemeral: true });
-        }
-
         // Nur Team kann Voice-Channels erstellen
         if (!isTeam) {
           const noPermEmbed = createStyledEmbed({
@@ -6877,16 +6854,6 @@ client.on(Events.InteractionCreate, async i => {
 
       // Voice-Support beenden
       if (i.customId === 'end_voice') {
-        if (!hasFeature(guildId, 'voiceSupport')) {
-          const premiumEmbed = createStyledEmbed({
-            emoji: '⭐',
-            title: 'Premium Feature',
-            description: t(guildId, 'voiceSupport.feature_locked'),
-            color: '#FEE75C'
-          });
-          return i.reply({ embeds: [premiumEmbed], ephemeral: true });
-        }
-
         // Nur Team kann Voice-Channels beenden
         if (!isTeam) {
           const noPermEmbed = createStyledEmbed({
@@ -8801,9 +8768,9 @@ async function createTicketChannel(interaction, topic, formData, cfg){
       .setFooter({ text: `${formKeys.length} Frage(n) beantwortet` });
   }
 
-  // SLA Field hinzufügen (nur für Pro mit SLA enabled)
+  // SLA Field hinzufügen (wenn SLA enabled)
   const tempSlaDeadline = calculateSLADeadline(guildId, ticketPriority, Date.now());
-  if(tempSlaDeadline && hasFeature(guildId, 'slaSystem')){
+  if(tempSlaDeadline){
     const slaText = `<t:${Math.floor(tempSlaDeadline / 1000)}:R>`;
     embed.addFields({
       name: '» ⏱️ SLA-Deadline «',
@@ -9179,7 +9146,7 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
 
   // SLA-Deadline neu berechnen bei Prioritätsänderung
   const cfg = readCfg(guildId);
-  if (cfg.sla && cfg.sla.enabled && hasFeature(guildId, 'slaSystem')) {
+  if (cfg.sla && cfg.sla.enabled) {
     const createdAt = ticket.timestamp || Date.now();
     const newDeadline = calculateSLADeadline(guildId, ticket.priority, createdAt);
     if (newDeadline) {
@@ -9196,7 +9163,7 @@ async function updatePriority(interaction, ticket, log, dir, guildId){
     e.setColor(state.embedColor);
 
     // SLA-Deadline im Embed aktualisieren
-    if (ticket.slaDeadline && hasFeature(guildId, 'slaSystem')) {
+    if (ticket.slaDeadline) {
       const fields = e.data.fields || [];
       const slaFieldIndex = fields.findIndex(f => f.name === '⏱️ SLA-Deadline');
       const slaText = `<t:${Math.floor(ticket.slaDeadline / 1000)}:R>`;
@@ -9461,28 +9428,9 @@ client.on(Events.MessageCreate, async (message) => {
       const guildId = message.guild.id;
       const cfg = readCfg(guildId);
 
-      // Check if file upload is enabled and user has Basic+ or higher
+      // Check if file upload is enabled
       if (!cfg.fileUpload || !cfg.fileUpload.enabled) {
         // File upload disabled
-        return;
-      }
-
-      if (!hasFeature(guildId, 'fileUpload')) {
-        // Not Basic+ or higher - delete attachments
-        try {
-          await message.delete();
-          const warningEmbed = createStyledEmbed({
-            emoji: '📎',
-            title: 'Datei-Upload nicht verfügbar',
-            description: 'Datei-Uploads sind nur mit Premium Basic+ oder höher verfügbar!\n\nUpgrade auf Basic+ für:\n✅ Datei-Uploads (bis 10MB)\n✅ 7 Ticket-Kategorien\n✅ Custom Avatar\n✅ Statistiken\n\n💎 Jetzt upgraden für nur €2.99/Monat!',
-            color: '#ED4245',
-            footer: 'Quantix Tickets • Premium Feature'
-          });
-
-          await message.channel.send({ embeds: [warningEmbed] });
-        } catch (err) {
-          console.error('Fehler beim Löschen der Nachricht mit Attachment:', err);
-        }
         return;
       }
 

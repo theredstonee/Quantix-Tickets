@@ -1,4 +1,3 @@
-const { hasFeature } = require('./premium');
 const { readCfg, writeCfg } = require('./database');
 
 /**
@@ -10,11 +9,6 @@ const { readCfg, writeCfg } = require('./database');
  */
 async function sendDMNotification(client, guildId, ticketInfo) {
   try {
-    // Prüfe ob Guild das DM-Feature hat (nur Pro)
-    if (!hasFeature(guildId, 'dmNotifications')) {
-      return { success: false, reason: 'not_pro' };
-    }
-
     // Lese Konfiguration
     const cfg = readCfg(guildId);
     const dmRecipients = cfg.dmNotificationUsers || [];

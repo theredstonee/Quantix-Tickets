@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, PermissionFlagsBits } = require('discord.js');
-const { hasFeature } = require('../premium');
 const { getAllTicketSystems, getTicketSystem } = require('../ticket-systems');
 
 module.exports = {
@@ -43,26 +42,6 @@ module.exports = {
   async execute(interaction) {
     try {
       const guildId = interaction.guild.id;
-
-      // Check if user has multiTicketSystems feature (Pro)
-      if (!hasFeature(guildId, 'multiTicketSystems')) {
-        const upgradeEmbed = new EmbedBuilder()
-          .setColor(0xf59e0b)
-          .setTitle('⭐ Premium Pro erforderlich')
-          .setDescription(
-            '**Multi-Ticket-Systeme sind ein Premium Pro Feature!**\n\n' +
-            'Mit Pro kannst du mehrere unabhängige Ticket-Systeme erstellen:\n' +
-            '• Separate Panels für Support, Sales, Bewerbungen, etc.\n' +
-            '• Eigene Teams pro System\n' +
-            '• Eigene Kategorien und Topics\n' +
-            '• Unabhängige Log-Channels\n\n' +
-            '**Für ein einzelnes Panel nutze `/send-panel`**'
-          )
-          .setFooter({ text: 'Quantix Tickets • Premium Feature' })
-          .setTimestamp();
-
-        return interaction.reply({ embeds: [upgradeEmbed], ephemeral: true });
-      }
 
       await interaction.deferReply({ ephemeral: true });
 

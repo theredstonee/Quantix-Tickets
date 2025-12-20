@@ -2192,15 +2192,6 @@ module.exports = (client)=>{
   router.post('/panel/upload-avatar', isAuth, upload.single('avatar'), async (req, res) => {
     const guildId = req.session.selectedGuild;
 
-    // Check Basic+ feature
-    if (!hasFeature(guildId, 'customAvatar')) {
-      if (req.file) {
-        // Delete uploaded file if no permission
-        fs.unlinkSync(req.file.path);
-      }
-      return res.json({ success: false, error: 'Basic+ Premium erforderlich' });
-    }
-
     try {
       if (!req.file) {
         return res.json({ success: false, error: 'Keine Datei hochgeladen' });
@@ -2276,11 +2267,6 @@ module.exports = (client)=>{
   router.post('/panel/system/create', isAuth, async (req, res) => {
     const guildId = req.session.selectedGuild;
 
-    // Check Pro feature
-    if (!hasFeature(guildId, 'multiTicketSystems')) {
-      return res.json({ success: false, error: 'Pro feature required' });
-    }
-
     const { name } = req.body;
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return res.json({ success: false, error: 'Invalid name' });
@@ -2301,11 +2287,6 @@ module.exports = (client)=>{
   router.post('/panel/system/:systemId/delete', isAuth, async (req, res) => {
     const guildId = req.session.selectedGuild;
     const { systemId } = req.params;
-
-    // Check Pro feature
-    if (!hasFeature(guildId, 'multiTicketSystems')) {
-      return res.json({ success: false, error: 'Pro feature required' });
-    }
 
     // Cannot delete default system
     if (systemId === 'default') {
@@ -2403,7 +2384,7 @@ module.exports = (client)=>{
 
     // Check if updating a specific ticket system (Multi-System)
     const selectedSystemId = req.body.systemId || req.query.system;
-    if (selectedSystemId && selectedSystemId !== 'default' && hasFeature(guildId, 'multiTicketSystems')) {
+    if (selectedSystemId && selectedSystemId !== 'default') {
       try {
         const { getTicketSystem, updateTicketSystem, migrateToTicketSystems } = require('./ticket-systems');
         migrateToTicketSystems(guildId);
@@ -2976,15 +2957,14 @@ module.exports = (client)=>{
         };
       }
 
-      if (hasFeature(guildId, 'slaSystem')) {
-        cfg.sla.enabled = req.body.slaEnabled === 'on' || req.body.slaEnabled === 'true';
-        cfg.sla.priority0Hours = sanitizeNumber(req.body.slaPriority0Hours, 1, 168) || 24;
-        cfg.sla.priority1Hours = sanitizeNumber(req.body.slaPriority1Hours, 1, 72) || 4;
-        cfg.sla.priority2Hours = sanitizeNumber(req.body.slaPriority2Hours, 1, 24) || 1;
-        cfg.sla.warnAtPercent = sanitizeNumber(req.body.slaWarnAtPercent, 50, 95) || 80;
-        cfg.sla.escalateToRole = sanitizeString(req.body.slaEscalateToRole, 30) || null;
-        if (cfg.sla.escalateToRole === '') cfg.sla.escalateToRole = null;
-      }
+      // SLA Configuration
+      cfg.sla.enabled = req.body.slaEnabled === 'on' || req.body.slaEnabled === 'true';
+      cfg.sla.priority0Hours = sanitizeNumber(req.body.slaPriority0Hours, 1, 168) || 24;
+      cfg.sla.priority1Hours = sanitizeNumber(req.body.slaPriority1Hours, 1, 72) || 4;
+      cfg.sla.priority2Hours = sanitizeNumber(req.body.slaPriority2Hours, 1, 24) || 1;
+      cfg.sla.warnAtPercent = sanitizeNumber(req.body.slaWarnAtPercent, 50, 95) || 80;
+      cfg.sla.escalateToRole = sanitizeString(req.body.slaEscalateToRole, 30) || null;
+      if (cfg.sla.escalateToRole === '') cfg.sla.escalateToRole = null;
 
       // Voice-Support Configuration (Basic+ Feature)
       if (!cfg.voiceSupport) {
@@ -2994,10 +2974,9 @@ module.exports = (client)=>{
         };
       }
 
-      if (hasFeature(guildId, 'voiceSupport')) {
-        cfg.voiceSupport.enabled = req.body.voiceSupportEnabled === 'on' || req.body.voiceSupportEnabled === 'true';
-        cfg.voiceSupport.showButton = req.body.voiceSupportShowButton !== 'off';
-      }
+      // Voice-Support Settings
+      cfg.voiceSupport.enabled = req.body.voiceSupportEnabled === 'on' || req.body.voiceSupportEnabled === 'true';
+      cfg.voiceSupport.showButton = req.body.voiceSupportShowButton !== 'off';
 
       // Auto-Assignment Configuration (Basic+ Feature)
       const { getDefaultAutoAssignmentConfig } = require('./auto-assignment');
@@ -3009,11 +2988,7 @@ module.exports = (client)=>{
       cfg.autoAssignment.assignOnCreate = req.body.autoAssignmentAssignOnCreate !== 'off';
       cfg.autoAssignment.notifyAssignee = req.body.autoAssignmentNotifyAssignee !== 'off';
       cfg.autoAssignment.strategy = req.body.autoAssignmentStrategy || 'workload';
-
-      // Pro features
-      if (hasFeature(guildId, 'autoAssignment')) {
-        cfg.autoAssignment.checkOnlineStatus = req.body.autoAssignmentCheckOnlineStatus === 'on' || req.body.autoAssignmentCheckOnlineStatus === 'true';
-      }
+      cfg.autoAssignment.checkOnlineStatus = req.body.autoAssignmentCheckOnlineStatus === 'on' || req.body.autoAssignmentCheckOnlineStatus === 'true';
 
       // Auto-Responses / FAQ Configuration (Free Feature)
       if (!cfg.autoResponses) cfg.autoResponses = { enabled: true, responses: [] };
@@ -3072,120 +3047,115 @@ module.exports = (client)=>{
         };
       }
 
-      const hasApplicationSystemFeature = hasFeature(guildId, 'applicationSystem');
+      // Application System Configuration
       console.log('=== Application System Debug ===');
       console.log('Guild ID:', guildId);
-      console.log('Has applicationSystem Feature:', hasApplicationSystemFeature);
       console.log('applicationSystemEnabled from form:', req.body.applicationSystemEnabled);
 
-      if (hasApplicationSystemFeature) {
-        cfg.applicationSystem.enabled = req.body.applicationSystemEnabled === 'on' || req.body.applicationSystemEnabled === 'true';
-        cfg.applicationSystem.panelChannelId = sanitizeDiscordId(req.body.applicationPanelChannelId) || null;
-        cfg.applicationSystem.categoryId = sanitizeDiscordId(req.body.applicationCategoryId) || null;
-        cfg.applicationSystem.teamRoleId = sanitizeDiscordId(req.body.applicationTeamRoleId) || null;
-        cfg.applicationSystem.panelTitle = sanitizeString(req.body.applicationPanelTitle, 256) || cfg.applicationSystem.panelTitle;
-        cfg.applicationSystem.panelDescription = sanitizeString(req.body.applicationPanelDescription, 2048) || cfg.applicationSystem.panelDescription;
-        cfg.applicationSystem.panelColor = sanitizeString(req.body.applicationPanelColor, 7) || '#3b82f6';
-        cfg.applicationSystem.buttonText = sanitizeString(req.body.applicationButtonText, 80) || cfg.applicationSystem.buttonText;
-        cfg.applicationSystem.ticketTitle = sanitizeString(req.body.applicationTicketTitle, 256) || cfg.applicationSystem.ticketTitle;
-        cfg.applicationSystem.ticketDescription = sanitizeString(req.body.applicationTicketDescription, 2048) || cfg.applicationSystem.ticketDescription;
-        cfg.applicationSystem.ticketColor = sanitizeString(req.body.applicationTicketColor, 7) || '#10b981';
+      cfg.applicationSystem.enabled = req.body.applicationSystemEnabled === 'on' || req.body.applicationSystemEnabled === 'true';
+      cfg.applicationSystem.panelChannelId = sanitizeDiscordId(req.body.applicationPanelChannelId) || null;
+      cfg.applicationSystem.categoryId = sanitizeDiscordId(req.body.applicationCategoryId) || null;
+      cfg.applicationSystem.teamRoleId = sanitizeDiscordId(req.body.applicationTeamRoleId) || null;
+      cfg.applicationSystem.panelTitle = sanitizeString(req.body.applicationPanelTitle, 256) || cfg.applicationSystem.panelTitle;
+      cfg.applicationSystem.panelDescription = sanitizeString(req.body.applicationPanelDescription, 2048) || cfg.applicationSystem.panelDescription;
+      cfg.applicationSystem.panelColor = sanitizeString(req.body.applicationPanelColor, 7) || '#3b82f6';
+      cfg.applicationSystem.buttonText = sanitizeString(req.body.applicationButtonText, 80) || cfg.applicationSystem.buttonText;
+      cfg.applicationSystem.ticketTitle = sanitizeString(req.body.applicationTicketTitle, 256) || cfg.applicationSystem.ticketTitle;
+      cfg.applicationSystem.ticketDescription = sanitizeString(req.body.applicationTicketDescription, 2048) || cfg.applicationSystem.ticketDescription;
+      cfg.applicationSystem.ticketColor = sanitizeString(req.body.applicationTicketColor, 7) || '#10b981';
 
-        // Cooldown & Requirements
-        cfg.applicationSystem.cooldownDays = sanitizeNumber(req.body.applicationCooldownDays, 0, 365) || 0;
-        cfg.applicationSystem.minAccountAgeDays = sanitizeNumber(req.body.applicationMinAccountAge, 0, 365) || 0;
-        cfg.applicationSystem.minServerJoinDays = sanitizeNumber(req.body.applicationMinServerJoin, 0, 365) || 0;
+      // Cooldown & Requirements
+      cfg.applicationSystem.cooldownDays = sanitizeNumber(req.body.applicationCooldownDays, 0, 365) || 0;
+      cfg.applicationSystem.minAccountAgeDays = sanitizeNumber(req.body.applicationMinAccountAge, 0, 365) || 0;
+      cfg.applicationSystem.minServerJoinDays = sanitizeNumber(req.body.applicationMinServerJoin, 0, 365) || 0;
 
-        // Voting System
-        cfg.applicationSystem.votingEnabled = req.body.applicationVotingEnabled === 'on' || req.body.applicationVotingEnabled === 'true';
-        cfg.applicationSystem.votingChannelId = sanitizeDiscordId(req.body.applicationVotingChannelId) || null;
+      // Voting System
+      cfg.applicationSystem.votingEnabled = req.body.applicationVotingEnabled === 'on' || req.body.applicationVotingEnabled === 'true';
+      cfg.applicationSystem.votingChannelId = sanitizeDiscordId(req.body.applicationVotingChannelId) || null;
 
-        // Auto-Expire & Archive
-        cfg.applicationSystem.autoExpireDays = sanitizeNumber(req.body.applicationAutoExpireDays, 0, 365) || 0;
-        cfg.applicationSystem.archiveChannelId = sanitizeDiscordId(req.body.applicationArchiveChannelId) || null;
+      // Auto-Expire & Archive
+      cfg.applicationSystem.autoExpireDays = sanitizeNumber(req.body.applicationAutoExpireDays, 0, 365) || 0;
+      cfg.applicationSystem.archiveChannelId = sanitizeDiscordId(req.body.applicationArchiveChannelId) || null;
 
-        // Interview System
-        cfg.applicationSystem.interviewEnabled = req.body.applicationInterviewEnabled === 'on' || req.body.applicationInterviewEnabled === 'true';
-        cfg.applicationSystem.interviewReminderMinutes = sanitizeNumber(req.body.applicationInterviewReminderMinutes, 5, 1440) || 30;
+      // Interview System
+      cfg.applicationSystem.interviewEnabled = req.body.applicationInterviewEnabled === 'on' || req.body.applicationInterviewEnabled === 'true';
+      cfg.applicationSystem.interviewReminderMinutes = sanitizeNumber(req.body.applicationInterviewReminderMinutes, 5, 1440) || 30;
 
-        // Blacklist
-        const blacklistText = req.body.applicationBlacklist || '';
-        cfg.applicationSystem.blacklist = blacklistText.split('\n')
-          .map(id => id.trim())
-          .filter(id => /^\d{17,20}$/.test(id));
+      // Blacklist
+      const blacklistText = req.body.applicationBlacklist || '';
+      cfg.applicationSystem.blacklist = blacklistText.split('\n')
+        .map(id => id.trim())
+        .filter(id => /^\d{17,20}$/.test(id));
 
-        // Process Application Form Fields (New format: applicationField_label_0, applicationField_id_0, etc.)
-        const appFormFields = [];
-        for (let i = 0; i < 5; i++) { // Max 5 fields (Discord Limit)
-          const label = req.body[`applicationField_label_${i}`];
-          const id = req.body[`applicationField_id_${i}`];
-          const style = req.body[`applicationField_style_${i}`];
-          const required = req.body[`applicationField_required_${i}`];
+      // Process Application Form Fields (New format: applicationField_label_0, applicationField_id_0, etc.)
+      const appFormFields = [];
+      for (let i = 0; i < 5; i++) { // Max 5 fields (Discord Limit)
+        const label = req.body[`applicationField_label_${i}`];
+        const id = req.body[`applicationField_id_${i}`];
+        const style = req.body[`applicationField_style_${i}`];
+        const required = req.body[`applicationField_required_${i}`];
 
-          if (label && id) {
-            appFormFields.push({
-              label: sanitizeString(label, 45), // Discord Modal label limit
-              id: sanitizeString(id, 100).replace(/[^a-z0-9_]/g, ''), // Only lowercase, numbers, underscores
-              style: ['short', 'paragraph', 'number'].includes(style) ? style : 'short', // short, paragraph or number
-              required: required === 'on' || required === true
+        if (label && id) {
+          appFormFields.push({
+            label: sanitizeString(label, 45), // Discord Modal label limit
+            id: sanitizeString(id, 100).replace(/[^a-z0-9_]/g, ''), // Only lowercase, numbers, underscores
+            style: ['short', 'paragraph', 'number'].includes(style) ? style : 'short', // short, paragraph or number
+            required: required === 'on' || required === true
+          });
+        }
+      }
+
+      // Always update fields (empty array if no fields provided) - Legacy support
+      cfg.applicationSystem.formFields = appFormFields;
+
+      // Process Positions Embed Settings
+      if (!cfg.applicationSystem.positionsEmbed) cfg.applicationSystem.positionsEmbed = {};
+      cfg.applicationSystem.positionsEmbed.enabled = req.body.positionsEmbedEnabled === 'on' || req.body.positionsEmbedEnabled === 'true';
+      cfg.applicationSystem.positionsEmbed.title = sanitizeString(req.body.positionsEmbedTitle, 256) || '';
+      cfg.applicationSystem.positionsEmbed.description = sanitizeString(req.body.positionsEmbedDescription, 2048) || '';
+      cfg.applicationSystem.positionsEmbed.color = sanitizeString(req.body.positionsEmbedColor, 7) || '#3b82f6';
+
+      // Process Application Categories (New system)
+      const appCategories = [];
+      for (let catIdx = 0; catIdx < 25; catIdx++) { // Max 25 categories (Discord Select Menu Limit)
+        const catName = req.body[`appCat_name_${catIdx}`];
+        if (!catName) continue; // Skip if no name
+
+        const category = {
+          id: `cat_${catIdx}_${Date.now()}`,
+          name: sanitizeString(catName, 100),
+          emoji: sanitizeString(req.body[`appCat_emoji_${catIdx}`], 10) || '',
+          description: sanitizeString(req.body[`appCat_description_${catIdx}`], 100) || '',
+          teamRoleId: sanitizeDiscordId(req.body[`appCat_teamRoleId_${catIdx}`]) || null,
+          status: req.body[`appCat_status_${catIdx}`] === 'closed' ? 'closed' : 'open',
+          positionInfo: sanitizeString(req.body[`appCat_positionInfo_${catIdx}`], 200) || '',
+          requirements: sanitizeString(req.body[`appCat_requirements_${catIdx}`], 2000) || '',
+          formFields: []
+        };
+
+        // Process fields for this category
+        for (let fieldIdx = 0; fieldIdx < 5; fieldIdx++) { // Max 5 fields per category
+          const fieldLabel = req.body[`appCat_${catIdx}_field_label_${fieldIdx}`];
+          const fieldId = req.body[`appCat_${catIdx}_field_id_${fieldIdx}`];
+          const fieldStyle = req.body[`appCat_${catIdx}_field_style_${fieldIdx}`];
+          const fieldRequired = req.body[`appCat_${catIdx}_field_required_${fieldIdx}`];
+
+          if (fieldLabel && fieldId) {
+            category.formFields.push({
+              label: sanitizeString(fieldLabel, 45),
+              id: sanitizeString(fieldId, 100).replace(/[^a-z0-9_]/g, ''),
+              style: ['short', 'paragraph', 'number'].includes(fieldStyle) ? fieldStyle : 'short',
+              required: fieldRequired === 'on' || fieldRequired === true
             });
           }
         }
 
-        // Always update fields (empty array if no fields provided) - Legacy support
-        cfg.applicationSystem.formFields = appFormFields;
-
-        // Process Positions Embed Settings
-        if (!cfg.applicationSystem.positionsEmbed) cfg.applicationSystem.positionsEmbed = {};
-        cfg.applicationSystem.positionsEmbed.enabled = req.body.positionsEmbedEnabled === 'on' || req.body.positionsEmbedEnabled === 'true';
-        cfg.applicationSystem.positionsEmbed.title = sanitizeString(req.body.positionsEmbedTitle, 256) || '';
-        cfg.applicationSystem.positionsEmbed.description = sanitizeString(req.body.positionsEmbedDescription, 2048) || '';
-        cfg.applicationSystem.positionsEmbed.color = sanitizeString(req.body.positionsEmbedColor, 7) || '#3b82f6';
-
-        // Process Application Categories (New system)
-        const appCategories = [];
-        for (let catIdx = 0; catIdx < 25; catIdx++) { // Max 25 categories (Discord Select Menu Limit)
-          const catName = req.body[`appCat_name_${catIdx}`];
-          if (!catName) continue; // Skip if no name
-
-          const category = {
-            id: `cat_${catIdx}_${Date.now()}`,
-            name: sanitizeString(catName, 100),
-            emoji: sanitizeString(req.body[`appCat_emoji_${catIdx}`], 10) || '',
-            description: sanitizeString(req.body[`appCat_description_${catIdx}`], 100) || '',
-            teamRoleId: sanitizeDiscordId(req.body[`appCat_teamRoleId_${catIdx}`]) || null,
-            status: req.body[`appCat_status_${catIdx}`] === 'closed' ? 'closed' : 'open',
-            positionInfo: sanitizeString(req.body[`appCat_positionInfo_${catIdx}`], 200) || '',
-            requirements: sanitizeString(req.body[`appCat_requirements_${catIdx}`], 2000) || '',
-            formFields: []
-          };
-
-          // Process fields for this category
-          for (let fieldIdx = 0; fieldIdx < 5; fieldIdx++) { // Max 5 fields per category
-            const fieldLabel = req.body[`appCat_${catIdx}_field_label_${fieldIdx}`];
-            const fieldId = req.body[`appCat_${catIdx}_field_id_${fieldIdx}`];
-            const fieldStyle = req.body[`appCat_${catIdx}_field_style_${fieldIdx}`];
-            const fieldRequired = req.body[`appCat_${catIdx}_field_required_${fieldIdx}`];
-
-            if (fieldLabel && fieldId) {
-              category.formFields.push({
-                label: sanitizeString(fieldLabel, 45),
-                id: sanitizeString(fieldId, 100).replace(/[^a-z0-9_]/g, ''),
-                style: ['short', 'paragraph', 'number'].includes(fieldStyle) ? fieldStyle : 'short',
-                required: fieldRequired === 'on' || fieldRequired === true
-              });
-            }
-          }
-
-          appCategories.push(category);
-        }
-
-        cfg.applicationSystem.categories = appCategories;
-
-        console.log(`✅ Application System: ${appCategories.length} Kategorien gespeichert:`, appCategories.map(c => c.name));
-      } else {
-        console.log('❌ Application System Feature ist nicht verfügbar für diese Guild!');
+        appCategories.push(category);
       }
+
+      cfg.applicationSystem.categories = appCategories;
+
+      console.log(`✅ Application System: ${appCategories.length} Kategorien gespeichert:`, appCategories.map(c => c.name));
 
       // Voice Support Configuration
       if(!cfg.voiceSupport) cfg.voiceSupport = {};
@@ -3975,14 +3945,8 @@ module.exports = (client)=>{
     try {
       const guildId = req.session.selectedGuild;
 
-      // Analytics requires at least Basic+ (Insights) - Pro unlocks advanced reports
-      if (!hasFeature(guildId, 'statistics')) {
-        return res.redirect('/premium?msg=analytics-requires-basic');
-      }
-
       const premiumInfo = getPremiumInfo(guildId);
-      // CSV Export ist für alle mit statistics Feature verfügbar (Basic+ und Pro)
-      const canExportCSV = hasFeature(guildId, 'statistics');
+      const canExportCSV = true;
 
       const tickets = loadTickets(guildId);
       const guild = await client.guilds.fetch(guildId);
@@ -4211,11 +4175,6 @@ module.exports = (client)=>{
     try {
       const guildId = req.session.selectedGuild;
 
-      // Check if statistics feature is available (Basic+ and Pro)
-      if (!hasFeature(guildId, 'statistics')) {
-        return res.status(403).send('CSV Export requires Premium Basic+ or higher');
-      }
-
       const options = {
         startDate: req.query.startDate,
         endDate: req.query.endDate,
@@ -4238,11 +4197,6 @@ module.exports = (client)=>{
   router.get('/export/stats/csv', isAuth, async (req, res) => {
     try {
       const guildId = req.session.selectedGuild;
-
-      // Check if statistics feature is available (Basic+ and Pro)
-      if (!hasFeature(guildId, 'statistics')) {
-        return res.status(403).send('CSV Export requires Premium Basic+ or higher');
-      }
 
       const csvContent = generateStatsCSVExport(guildId);
       const filename = `statistics_${guildId}_${Date.now()}.csv`;

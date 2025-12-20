@@ -225,15 +225,8 @@ router.get('/tickets/:id', isAuthenticated, isAdminOrTeam, (req, res) => {
 router.get('/analytics', isAuthenticated, isAdminOrTeam, async (req, res) => {
   const guildId = req.session.selectedGuild;
   const { loadTickets } = require('../panel.js');
-  const { getPremiumInfo, hasFeature } = require('../premium.js');
 
   try {
-    // Check premium
-    const premiumInfo = getPremiumInfo(guildId);
-    if (!hasFeature(guildId, 'analytics')) {
-      return res.status(403).json({ error: 'Analytics ist ein Pro-Feature' });
-    }
-
     const tickets = loadTickets(guildId);
     const now = Date.now();
     const oneDayAgo = now - 24 * 60 * 60 * 1000;

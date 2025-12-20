@@ -1,6 +1,4 @@
-const { hasFeature } = require('./premium');
-
-// Email-Benachrichtigungen (Pro Feature)
+// Email-Benachrichtigungen
 // Hinweis: nodemailer muss installiert werden: npm install nodemailer
 
 let emailEnabled = false;
@@ -66,11 +64,6 @@ function initEmailService() {
  * @param {string} emailAddress - Email-Adresse des Empfängers
  */
 async function sendTicketNotification(guildId, ticketInfo, emailAddress) {
-  // Prüfe ob Guild Pro hat
-  if (!hasFeature(guildId, 'emailNotifications')) {
-    return { success: false, reason: 'not_pro' };
-  }
-
   // Prüfe ob Email-Service aktiviert ist
   if (!emailEnabled || !transporter) {
     return { success: false, reason: 'email_not_configured' };

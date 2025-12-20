@@ -1,13 +1,12 @@
 const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, PermissionFlagsBits } = require('discord.js');
-const { hasFeature } = require('../premium');
 const { readCfg, loadTickets } = require('../database');
 
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('template')
-    .setDescription('Use predefined templates for quick responses (Premium Basic+)')
-    .setDescriptionLocalizations({ de: 'Verwende vordefinierte Vorlagen für schnelle Antworten (Premium Basic+)' })
+    .setDescription('Use predefined templates for quick responses')
+    .setDescriptionLocalizations({ de: 'Verwende vordefinierte Vorlagen für schnelle Antworten' })
     .setDMPermission(false)
     .addSubcommand(subcommand =>
       subcommand.setName('use')
@@ -23,14 +22,6 @@ module.exports = {
   async execute(interaction) {
     const { guild, channel, member } = interaction;
     const guildId = guild.id;
-
-    // Premium Check
-    if (!hasFeature(guildId, 'templates')) {
-      return interaction.reply({
-        content: '❌ **Premium Basic+** Feature! Templates are only available with Premium Basic+ or higher.\n🔗 Upgrade: https://your-domain.com/premium',
-        ephemeral: true
-      });
-    }
 
     const cfg = readCfg(guildId);
     const templates = cfg.templates || [];

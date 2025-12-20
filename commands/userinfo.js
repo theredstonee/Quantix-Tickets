@@ -145,7 +145,7 @@ module.exports = {
 
     // Check for blacklist
     const blacklist = cfg.ticketBlacklist || [];
-    const isBlacklisted = blacklist.some(b => b.oderId === targetUser.id);
+    const isBlacklisted = blacklist.some(b => b.userId === targetUser.id);
     if (isBlacklisted && (isTeam || isAdmin)) {
       const blacklistEntry = blacklist.find(b => b.userId === targetUser.id);
       embed.addFields({

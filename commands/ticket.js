@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const { t } = require('../translations');
-const { hasFeature, isPremium } = require('../premium');
 const { createStyledEmbed, createQuickEmbed } = require('../helpers');
 const { readCfg, writeCfg, loadTickets, saveTickets } = require('../database');
 
@@ -1198,14 +1197,6 @@ module.exports = {
         });
       }
 
-      const premiumInfo = isPremium(guildId, 'pro');
-      if (!premiumInfo) {
-        return interaction.reply({
-          content: '⚠️ **Premium Feature**\n\nDie Ticket-Weiterleitung ist ein Pro-Feature. Upgrade auf Pro, um diese Funktion zu nutzen!\n\nhttps://tickets.quantix-bot.de/premium',
-          ephemeral: true
-        });
-      }
-
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
 
@@ -1407,13 +1398,6 @@ module.exports = {
 
     // ===== SUBCOMMAND: TAG-ADD, TAG-REMOVE, TAG-LIST =====
     if (subcommand === 'tag-add' || subcommand === 'tag-remove' || subcommand === 'tag-list') {
-      if (!hasFeature(guildId, 'customTags')) {
-        return interaction.reply({
-          content: '❌ **Premium Basic+** Feature! Tags sind nur mit Premium Basic+ oder höher verfügbar.\n🔗 Upgrade: https://tickets.quantix-bot.de/premium',
-          ephemeral: true
-        });
-      }
-
       const cfg = readCfg(guildId);
       const customTags = cfg.customTags || [];
 
@@ -1520,13 +1504,6 @@ module.exports = {
 
     // ===== SUBCOMMAND: DEPARTMENT-FORWARD, DEPARTMENT-LIST =====
     if (subcommand === 'department-forward' || subcommand === 'department-list') {
-      if (!hasFeature(guildId, 'multiDepartment')) {
-        return interaction.reply({
-          content: '❌ **Premium Basic+** Feature! Multi-Department Support ist nur mit Premium Basic+ oder höher verfügbar.\n🔗 Upgrade: https://tickets.quantix-bot.de/premium',
-          ephemeral: true
-        });
-      }
-
       const cfg = readCfg(guildId);
       const departments = cfg.departments || [];
 
