@@ -1710,7 +1710,6 @@
         margin-left: 0;
         max-width: 100%;
         padding: 1.5rem;
-        padding-bottom: 100px; /* Space for fixed save button */
       }
 
       /* Mobile Toggle sichtbar */
@@ -1732,8 +1731,7 @@
         transition: all 0.3s;
       }
 
-      .mobile-toggle:hover,
-      .mobile-toggle:active {
+      .mobile-toggle:hover {
         transform: scale(1.05);
         box-shadow: var(--shadow-glow);
       }
@@ -1759,19 +1757,12 @@
         gap: 1.5rem;
       }
 
-      /* Save Button Fixed Bottom Bar */
+      /* Save Button Position */
       .save-button-fixed {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        padding: 1rem 1.5rem;
-        margin: 0;
-        border-radius: 0;
-        background: var(--accent-gradient);
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-        z-index: 100;
+        bottom: 1.5rem;
+        left: 1.5rem;
+        right: 1.5rem;
+        width: calc(100% - 3rem);
       }
     }
 
@@ -1780,23 +1771,16 @@
       /* Padding reduzieren */
       .main-content {
         padding: 1rem;
-        padding-bottom: 90px;
       }
 
-      /* Tabs als Horizontal Scroll */
+      /* Tabs Horizontal Scroll */
       .tabs-nav {
-        display: flex;
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         gap: 0.5rem;
-        padding: 0.5rem;
-        margin: -0.5rem;
-        margin-bottom: 1rem;
-        background: var(--glass-bg);
-        border-radius: var(--border-radius);
-        border: 1px solid var(--glass-border);
+        padding-bottom: 0.5rem;
       }
 
       .tabs-nav::-webkit-scrollbar {
@@ -1805,86 +1789,54 @@
 
       /* Tab Buttons Touch-Optimiert */
       .tab-btn {
-        font-size: 0.8rem;
-        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        padding: 1rem 1.5rem;
         white-space: nowrap;
-        min-height: 44px;
-        border-radius: 8px;
-        flex-shrink: 0;
-      }
-
-      .tab-btn i {
-        margin-right: 0.5rem;
+        min-height: 56px;
+        border-radius: var(--border-radius-sm);
       }
 
       /* Title Sizes */
       .content-title {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
       }
 
       /* Cards Touch-Optimiert */
       .card {
         border-radius: var(--border-radius-sm);
-        margin-bottom: 1rem;
       }
 
       .card-header {
-        padding: 1.25rem;
+        padding: 1.5rem;
       }
 
       .card-body {
-        padding: 1.25rem;
+        padding: 1.5rem;
       }
 
-      .card-title {
-        font-size: 1rem;
-      }
-
-      /* Stats Cards kompakter */
+      /* Stats Cards Größer */
       .stats-card {
-        padding: 1.25rem;
-        min-height: auto;
+        padding: 1.5rem;
+        min-height: 100px;
       }
 
       .stats-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 1.25rem;
-      }
-
-      .stats-value {
+        width: 56px;
+        height: 56px;
         font-size: 1.5rem;
       }
 
-      .stats-label {
-        font-size: 0.75rem;
-      }
-
       /* Form Elements Touch-Friendly */
-      input, select, textarea {
+      input, select, textarea, button {
         font-size: 16px !important; /* Verhindert Zoom auf iOS */
         min-height: 48px;
-        padding: 0.75rem 1rem;
-      }
-
-      textarea {
-        min-height: 100px;
       }
 
       /* Buttons größer */
       .btn {
         min-height: 48px;
-        padding: 0.75rem 1.25rem;
-        font-size: 0.9rem;
-        width: 100%;
-        justify-content: center;
-      }
-
-      /* Button Groups Stack */
-      .btn-group, .card-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
       }
 
       /* Language Dropdown */
@@ -1894,42 +1846,19 @@
 
       .theme-toggle {
         right: 1rem;
-        width: 44px;
-        height: 44px;
+        width: 48px;
+        height: 48px;
       }
 
-      /* Server Info Kompakter */
+      /* Server Info Größer */
       .server-info {
-        padding: 1.25rem;
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
+        padding: 1.5rem;
       }
 
       .server-icon {
-        width: 56px;
-        height: 56px;
-        font-size: 1.5rem;
-      }
-
-      .server-details {
-        text-align: center;
-      }
-
-      /* Form Labels */
-      label {
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-      }
-
-      /* Topic/Field Items */
-      .topic-item, .form-field-item {
-        padding: 1rem;
-      }
-
-      /* Hint Text */
-      small, .hint {
-        font-size: 0.75rem;
+        width: 64px;
+        height: 64px;
+        font-size: 1.75rem;
       }
     }
 
@@ -1938,45 +1867,32 @@
       /* Extra Padding für Thumb-Zone */
       .main-content {
         padding: 0.75rem;
-        padding-bottom: 80px;
+        padding-bottom: 2rem;
       }
 
       /* Content Header */
       .content-header {
-        margin-top: 4.5rem;
+        margin-top: 5.5rem;
       }
 
       /* Titel kleiner */
       .content-title {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
       }
 
       /* Cards kompakter */
-      .card {
-        border-radius: 12px;
-      }
-
       .card-header {
-        padding: 1rem;
+        padding: 1.25rem;
       }
 
       .card-body {
-        padding: 1rem;
-      }
-
-      .card-title {
-        font-size: 0.9rem;
+        padding: 1.25rem;
       }
 
       /* Tab Buttons kleiner */
       .tab-btn {
-        padding: 0.625rem 0.875rem;
-        font-size: 0.75rem;
-        min-height: 40px;
-      }
-
-      .tab-btn i {
-        font-size: 0.875rem;
+        padding: 0.875rem 1.25rem;
+        font-size: 0.8125rem;
       }
 
       /* Language Dropdown kompakt */
@@ -1992,70 +1908,33 @@
 
       /* Mobile Toggle Position */
       .mobile-toggle {
-        top: 0.5rem;
-        left: 0.5rem;
-        width: 44px;
-        height: 44px;
-      }
-
-      .mobile-toggle i {
-        font-size: 1.25rem;
-      }
-
-      /* Save Button Full Width Bar */
-      .save-button-fixed {
-        padding: 0.875rem 1rem;
-        font-size: 0.9rem;
-      }
-
-      /* Stats Cards Stack */
-      .stats-card {
-        flex-direction: row;
-        text-align: left;
-        gap: 0.75rem;
-        padding: 1rem;
-      }
-
-      .stats-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-      }
-
-      .stats-value {
-        font-size: 1.25rem;
-      }
-
-      .stats-label {
-        font-size: 0.7rem;
-      }
-
-      /* Form Elements */
-      input, select, textarea {
-        min-height: 44px;
-        font-size: 16px !important;
-      }
-
-      /* Server Info */
-      .server-info {
-        padding: 1rem;
-      }
-
-      .server-icon {
+        top: 0.75rem;
+        left: 0.75rem;
         width: 48px;
         height: 48px;
       }
 
-      .server-name {
+      /* Save Button */
+      .save-button-fixed {
+        bottom: 1rem;
+        left: 1rem;
+        right: 1rem;
+        width: calc(100% - 2rem);
+        padding: 1rem;
         font-size: 1rem;
       }
 
-      /* Theme Toggle */
-      .theme-toggle {
-        width: 40px;
-        height: 40px;
-        top: 0.5rem;
-        right: 0.5rem;
+      /* Stats Cards Stack */
+      .stats-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+      }
+
+      .stats-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
       }
     }
 
