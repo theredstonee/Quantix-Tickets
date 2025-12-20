@@ -1238,57 +1238,151 @@
       gap: 1rem;
     }
 
-    .topic-item {
-      background: var(--glass-bg);
-      padding: 1rem;
-      border-radius: 10px;
-      border: 1px solid var(--glass-border);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      transition: all 0.2s;
-    }
-
-    .topic-item:hover {
-      transform: translateX(4px);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .topic-emoji {
-      font-size: 2rem;
-      flex-shrink: 0;
-    }
-
-    .topic-details {
-      flex: 1;
-    }
-
-    .topic-label {
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-      color: var(--text-color);
-    }
-
-    .topic-value {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      font-family: monospace;
-    }
-
     /* Form Field Items & Topic Items */
     .form-field-item,
     .topic-item {
       background: var(--glass-bg);
-      padding: 1.5rem;
+      padding: 1.25rem;
       border-radius: 12px;
       border: 1px solid var(--glass-border);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
       transition: all 0.2s;
+      position: relative;
     }
 
     .form-field-item:hover,
     .topic-item:hover {
       box-shadow: var(--shadow-sm);
+      border-color: var(--accent-color);
+    }
+
+    /* Topic Header Bar */
+    .topic-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .topic-number {
+      background: var(--accent-color);
+      color: #000;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+
+    /* Topic Name Row - Inline Edit */
+    .topic-name-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .topic-emoji-input {
+      flex-shrink: 0;
+    }
+
+    .topic-emoji-input input {
+      width: 52px;
+      height: 52px;
+      font-size: 1.75rem;
+      text-align: center;
+      padding: 0;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.3);
+      border: 2px solid var(--glass-border);
+      transition: all 0.2s;
+    }
+
+    .topic-emoji-input input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .topic-name-input {
+      flex: 1;
+    }
+
+    .topic-name-input input {
+      font-size: 1.25rem;
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      background: rgba(0,0,0,0.3);
+      border: 2px solid var(--glass-border);
+      border-radius: 10px;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    .topic-name-input input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .topic-name-input input::placeholder {
+      font-weight: 400;
+      opacity: 0.5;
+    }
+
+    /* Topic Settings Row */
+    .topic-settings-row {
+      display: flex;
+      gap: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .topic-setting {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .topic-setting label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
+      font-weight: 600;
+    }
+
+    .topic-setting label i {
+      margin-right: 0.25rem;
+    }
+
+    .topic-setting input,
+    .topic-setting select {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      min-width: 120px;
+    }
+
+    .topic-setting-wide {
+      flex: 1;
+    }
+
+    .topic-setting-wide select {
+      width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .topic-settings-row {
+        flex-direction: column;
+      }
+      .topic-setting input,
+      .topic-setting select {
+        width: 100%;
+      }
     }
 
     .form-field-header {
@@ -4735,82 +4829,71 @@
                 <div id="topicsList">
                   <% (cfg.topics || []).forEach((topic, index) => { %>
                   <div class="topic-item" data-index="<%= index %>">
-                    <div class="form-field-header">
-                      <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span class="form-field-number"><%= index + 1 %></span>
-                        <span style="font-size: 1.5rem;"><%= topic.emoji || '❓' %></span>
-                        <span style="font-weight: 600; color: var(--text-color);"><%= topic.label || 'Neues Thema' %></span>
-                      </div>
+                    <!-- Topic Header mit Nummer und Delete -->
+                    <div class="topic-header-bar">
+                      <span class="topic-number"><%= index + 1 %></span>
                       <button type="button" class="btn-icon-danger" onclick="removeTopic(this)" title="<%= lang === 'de' ? 'Thema löschen' : 'Delete Topic' %>">
                         <i class="fas fa-trash"></i>
                       </button>
                     </div>
 
-                    <div class="grid grid-3">
-                      <div class="form-group">
-                        <div class="form-label">
-                          <i class="fas fa-tag"></i>
-                          <span><%= lang === 'de' ? 'Themen-Name' : 'Topic Name' %></span>
-                        </div>
-                        <input
-                          type="text"
-                          name="topic_label_<%= index %>"
-                          value="<%= topic.label || '' %>"
-                          placeholder="<%= lang === 'de' ? 'z. B. Support' : 'e.g. Support' %>"
-                          oninput="updateTopicPreview(this)"
-                          required>
-                      </div>
-
-                      <div class="form-group">
-                        <div class="form-label">
-                          <i class="fas fa-code"></i>
-                          <span><%= lang === 'de' ? 'Interner Wert' : 'Internal Value' %></span>
-                        </div>
-                        <input
-                          type="text"
-                          name="topic_value_<%= index %>"
-                          value="<%= topic.value || '' %>"
-                          placeholder="<%= lang === 'de' ? 'z. B. support' : 'e.g. support' %>"
-                          required>
-                        <div class="help-text">
-                          <i class="fas fa-info-circle"></i>
-                          <span><%= lang === 'de' ? 'Nur Kleinbuchstaben, keine Leerzeichen' : 'Lowercase only, no spaces' %></span>
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <div class="form-label">
-                          <i class="fas fa-smile"></i>
-                          <span><%= lang === 'de' ? 'Emoji' : 'Emoji' %></span>
-                        </div>
+                    <!-- Inline Name + Emoji Editor -->
+                    <div class="topic-name-row">
+                      <div class="topic-emoji-input">
                         <input
                           type="text"
                           name="topic_emoji_<%= index %>"
                           value="<%= topic.emoji || '' %>"
                           placeholder="❓"
                           maxlength="2"
-                          style="font-size: 1.5rem; text-align: center;"
+                          oninput="updateTopicPreview(this)"
+                          required>
+                      </div>
+                      <div class="topic-name-input">
+                        <input
+                          type="text"
+                          name="topic_label_<%= index %>"
+                          value="<%= topic.label || '' %>"
+                          placeholder="<%= lang === 'de' ? 'Themen-Name eingeben...' : 'Enter topic name...' %>"
                           oninput="updateTopicPreview(this)"
                           required>
                       </div>
                     </div>
 
-                    <div class="form-group" style="margin-top: 1rem;">
-                      <div class="form-label">
-                        <i class="fas fa-file-signature"></i>
-                        <span><%= lang === 'de' ? 'Ticket-Name im Transcript' : 'Ticket Name in Transcript' %></span>
+                    <!-- Kompakte Einstellungen -->
+                    <div class="topic-settings-row">
+                      <div class="topic-setting">
+                        <label><i class="fas fa-code"></i> <%= lang === 'de' ? 'ID' : 'ID' %></label>
+                        <input
+                          type="text"
+                          name="topic_value_<%= index %>"
+                          value="<%= topic.value || '' %>"
+                          placeholder="support"
+                          required>
                       </div>
-                      <select name="topic_ticketNameDisplay_<%= index %>" style="width: 100%;">
-                        <option value="channel" <%= topic.ticketNameDisplay === 'channel' || !topic.ticketNameDisplay ? 'selected' : '' %>>
-                          <%= lang === 'de' ? '📝 Channel-Name (z.B. ticket-1234)' : '📝 Channel Name (e.g. ticket-1234)' %>
-                        </option>
-                        <option value="topic" <%= topic.ticketNameDisplay === 'topic' ? 'selected' : '' %>>
-                          <%= lang === 'de' ? '🏷️ Themen-Name (z.B. Support)' : '🏷️ Topic Name (e.g. Support)' %>
-                        </option>
-                      </select>
-                      <div class="help-text">
-                        <i class="fas fa-info-circle"></i>
-                        <span><%= lang === 'de' ? 'Wie soll der Ticket-Name im Transcript-Embed angezeigt werden?' : 'How should the ticket name be displayed in the transcript embed?' %></span>
+                      <div class="topic-setting topic-setting-wide">
+                        <label><i class="fas fa-folder"></i> <%= lang === 'de' ? 'Kategorie' : 'Category' %></label>
+                        <select name="topic_categoryId_<%= index %>" class="category-select">
+                          <option value="" <%= !topic.categoryId ? 'selected' : '' %>>
+                            <%= lang === 'de' ? '📁 Standard-Kategorie' : '📁 Default Category' %>
+                          </option>
+                          <% (categories || []).forEach(cat => { %>
+                            <option value="<%= cat.id %>" <%= topic.categoryId === cat.id ? 'selected' : '' %>>
+                              📁 <%= cat.name %>
+                            </option>
+                          <% }); %>
+                        </select>
+                      </div>
+                      <div class="topic-setting">
+                        <label><i class="fas fa-file-signature"></i> <%= lang === 'de' ? 'Transcript' : 'Transcript' %></label>
+                        <select name="topic_ticketNameDisplay_<%= index %>">
+                          <option value="channel" <%= topic.ticketNameDisplay === 'channel' || !topic.ticketNameDisplay ? 'selected' : '' %>>
+                            Channel
+                          </option>
+                          <option value="topic" <%= topic.ticketNameDisplay === 'topic' ? 'selected' : '' %>>
+                            Thema
+                          </option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -6758,79 +6841,58 @@
 
       const topicHtml = `
         <div class="topic-item" data-index="${newIndex}">
-          <div class="form-field-header">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span class="form-field-number">${newIndex + 1}</span>
-              <span style="font-size: 1.5rem;">❓</span>
-              <span style="font-weight: 600; color: var(--text-color);">Neues Thema</span>
-            </div>
+          <!-- Topic Header mit Nummer und Delete -->
+          <div class="topic-header-bar">
+            <span class="topic-number">${newIndex + 1}</span>
             <button type="button" class="btn-icon-danger" onclick="removeTopic(this)" title="<%= lang === 'de' ? 'Thema löschen' : 'Delete Topic' %>">
               <i class="fas fa-trash"></i>
             </button>
           </div>
 
-          <div class="grid grid-3">
-            <div class="form-group">
-              <div class="form-label">
-                <i class="fas fa-tag"></i>
-                <span><%= lang === 'de' ? 'Themen-Name' : 'Topic Name' %></span>
-              </div>
-              <input
-                type="text"
-                name="topic_label_${newIndex}"
-                placeholder="<%= lang === 'de' ? 'z. B. Support' : 'e.g. Support' %>"
-                oninput="updateTopicPreview(this)"
-                required>
-            </div>
-
-            <div class="form-group">
-              <div class="form-label">
-                <i class="fas fa-code"></i>
-                <span><%= lang === 'de' ? 'Interner Wert' : 'Internal Value' %></span>
-              </div>
-              <input
-                type="text"
-                name="topic_value_${newIndex}"
-                placeholder="<%= lang === 'de' ? 'z. B. support' : 'e.g. support' %>"
-                required>
-              <div class="help-text">
-                <i class="fas fa-info-circle"></i>
-                <span><%= lang === 'de' ? 'Nur Kleinbuchstaben, keine Leerzeichen' : 'Lowercase only, no spaces' %></span>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <div class="form-label">
-                <i class="fas fa-smile"></i>
-                <span><%= lang === 'de' ? 'Emoji' : 'Emoji' %></span>
-              </div>
+          <!-- Inline Name + Emoji Editor -->
+          <div class="topic-name-row">
+            <div class="topic-emoji-input">
               <input
                 type="text"
                 name="topic_emoji_${newIndex}"
                 placeholder="❓"
                 maxlength="2"
-                style="font-size: 1.5rem; text-align: center;"
+                oninput="updateTopicPreview(this)"
+                required>
+            </div>
+            <div class="topic-name-input">
+              <input
+                type="text"
+                name="topic_label_${newIndex}"
+                placeholder="<%= lang === 'de' ? 'Themen-Name eingeben...' : 'Enter topic name...' %>"
                 oninput="updateTopicPreview(this)"
                 required>
             </div>
           </div>
 
-          <div class="form-group" style="margin-top: 1rem;">
-            <div class="form-label">
-              <i class="fas fa-file-signature"></i>
-              <span><%= lang === 'de' ? 'Ticket-Name im Transcript' : 'Ticket Name in Transcript' %></span>
+          <!-- Kompakte Einstellungen -->
+          <div class="topic-settings-row">
+            <div class="topic-setting">
+              <label><i class="fas fa-code"></i> <%= lang === 'de' ? 'ID' : 'ID' %></label>
+              <input
+                type="text"
+                name="topic_value_${newIndex}"
+                placeholder="support"
+                required>
             </div>
-            <select name="topic_ticketNameDisplay_${newIndex}" style="width: 100%;">
-              <option value="channel" selected>
-                <%= lang === 'de' ? '📝 Channel-Name (z.B. ticket-1234)' : '📝 Channel Name (e.g. ticket-1234)' %>
-              </option>
-              <option value="topic">
-                <%= lang === 'de' ? '🏷️ Themen-Name (z.B. Support)' : '🏷️ Topic Name (e.g. Support)' %>
-              </option>
-            </select>
-            <div class="help-text">
-              <i class="fas fa-info-circle"></i>
-              <span><%= lang === 'de' ? 'Wie soll der Ticket-Name im Transcript-Embed angezeigt werden?' : 'How should the ticket name be displayed in the transcript embed?' %></span>
+            <div class="topic-setting topic-setting-wide">
+              <label><i class="fas fa-folder"></i> <%= lang === 'de' ? 'Kategorie' : 'Category' %></label>
+              <select name="topic_categoryId_${newIndex}" class="category-select">
+                <option value="" selected><%= lang === 'de' ? '📁 Standard-Kategorie' : '📁 Default Category' %></option>
+                ${getCategoryOptionsHtml()}
+              </select>
+            </div>
+            <div class="topic-setting">
+              <label><i class="fas fa-file-signature"></i> <%= lang === 'de' ? 'Transcript' : 'Transcript' %></label>
+              <select name="topic_ticketNameDisplay_${newIndex}">
+                <option value="channel" selected>Channel</option>
+                <option value="topic">Thema</option>
+              </select>
             </div>
           </div>
         </div>
@@ -6840,6 +6902,12 @@
       updateTopicNumbers();
     }
 
+    // Helper to get category options HTML for dynamic topic creation
+    function getCategoryOptionsHtml() {
+      const categories = <%- JSON.stringify((categories || []).map(c => ({ id: c.id, name: c.name }))) %>;
+      return categories.map(cat => `<option value="${cat.id}">📁 ${cat.name}</option>`).join('');
+    }
+
     function removeTopic(button) {
       const topicItem = button.closest('.topic-item');
       topicItem.remove();
@@ -6847,42 +6915,28 @@
     }
 
     function updateTopicPreview(input) {
-      const topicItem = input.closest('.topic-item');
-      const header = topicItem.querySelector('.form-field-header > div');
-
-      // Get emoji and label inputs
-      const emojiInput = topicItem.querySelector('input[name^="topic_emoji_"]');
-      const labelInput = topicItem.querySelector('input[name^="topic_label_"]');
-
-      if (emojiInput && labelInput && header) {
-        const emoji = emojiInput.value || '❓';
-        const label = labelInput.value || 'Neues Thema';
-
-        // Find emoji and label spans in header
-        const emojiSpan = header.querySelectorAll('span')[1];
-        const labelSpan = header.querySelectorAll('span')[2];
-
-        if (emojiSpan) emojiSpan.textContent = emoji;
-        if (labelSpan) labelSpan.textContent = label;
-      }
+      // Preview is now inline - no separate preview needed
+      // This function kept for compatibility with oninput handlers
     }
 
     function updateTopicNumbers() {
       const topics = document.querySelectorAll('#topicsList .topic-item');
       topics.forEach((topic, index) => {
         topic.setAttribute('data-index', index);
-        const numberSpan = topic.querySelector('.form-field-number');
+
+        // Update number badge
+        const numberSpan = topic.querySelector('.topic-number');
         if (numberSpan) {
           numberSpan.textContent = index + 1;
         }
 
         // Update input names
-        topic.querySelectorAll('input').forEach(input => {
-          const name = input.getAttribute('name');
+        topic.querySelectorAll('input, select').forEach(el => {
+          const name = el.getAttribute('name');
           if (name && name.startsWith('topic_')) {
             const parts = name.split('_');
             parts[parts.length - 1] = index;
-            input.setAttribute('name', parts.join('_'));
+            el.setAttribute('name', parts.join('_'));
           }
         });
       });

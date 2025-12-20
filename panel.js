@@ -2479,9 +2479,7 @@ module.exports = (client)=>{
         : (req.body.teamRoleId ? [sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim()] : []);
 
       // Ticket-Erstellungs-Berechtigung
-      console.log('[DEBUG] req.body.ticketCreationRestricted =', JSON.stringify(req.body.ticketCreationRestricted), 'type:', typeof req.body.ticketCreationRestricted);
       cfg.ticketCreationRestricted = req.body.ticketCreationRestricted === 'true' || req.body.ticketCreationRestricted === 'on';
-      console.log('[DEBUG] After check: cfg.ticketCreationRestricted =', cfg.ticketCreationRestricted);
       if (req.body.allowedTicketRoles) {
         cfg.allowedTicketRoles = Array.isArray(req.body.allowedTicketRoles)
           ? req.body.allowedTicketRoles.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
@@ -2491,9 +2489,7 @@ module.exports = (client)=>{
       }
 
       // Components V2 Design
-      console.log('[DEBUG] req.body.useComponentsV2 =', JSON.stringify(req.body.useComponentsV2), 'type:', typeof req.body.useComponentsV2);
       cfg.useComponentsV2 = req.body.useComponentsV2 === 'true' || req.body.useComponentsV2 === 'on';
-      console.log('[DEBUG] After check: cfg.useComponentsV2 =', cfg.useComponentsV2);
 
       if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
 
@@ -2717,6 +2713,7 @@ module.exports = (client)=>{
         const valueKey = `topic_value_${topicIndex}`;
         const emojiKey = `topic_emoji_${topicIndex}`;
         const ticketNameDisplayKey = `topic_ticketNameDisplay_${topicIndex}`;
+        const categoryIdKey = `topic_categoryId_${topicIndex}`;
 
         // Check if topic exists
         if(!Object.prototype.hasOwnProperty.call(req.body, labelKey)) {
@@ -2727,6 +2724,7 @@ module.exports = (client)=>{
         let value = (req.body[valueKey] || '').trim();
         const emoji = (req.body[emojiKey] || '').trim();
         const ticketNameDisplay = (req.body[ticketNameDisplayKey] || 'channel').trim();
+        const categoryId = (req.body[categoryIdKey] || '').trim();
 
         // Auto-generate value if empty, "..", or invalid
         if (!value || value === '..' || value === '...' || value.length < 2) {
@@ -2741,12 +2739,17 @@ module.exports = (client)=>{
         }
 
         if(label) {
-          topics.push({
+          const topicData = {
             label: label,
             value: value,
             emoji: emoji || '📌',
             ticketNameDisplay: ticketNameDisplay === 'topic' ? 'topic' : 'channel'
-          });
+          };
+          // Only add categoryId if it's set (not empty = use default)
+          if (categoryId) {
+            topicData.categoryId = categoryId;
+          }
+          topics.push(topicData);
         }
 
         topicIndex++;
