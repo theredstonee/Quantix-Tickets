@@ -7660,6 +7660,9 @@ client.on(Events.InteractionCreate, async i => {
           ticket.closedBy = i.user.id;
           saveTickets(guildId, log);
 
+          // Config laden für Reopen-Button und Ticket-Display-Name
+          const cfg = readCfg(guildId);
+
           const closeEmbed = createStyledEmbed({
             emoji: '🔐',
             title: 'Ticket wird geschlossen',
@@ -7672,13 +7675,23 @@ client.on(Events.InteractionCreate, async i => {
             color: '#ED4245'
           });
 
-          await i.channel.send({ embeds: [closeEmbed] });
+          // Add reopen button if archive is enabled
+          const closeComponents = [];
+          if (cfg.archiveEnabled && cfg.archiveCategoryId) {
+            const reopenRow = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId(`reopen_ticket:${guildId}:${ticket.id}`)
+                .setStyle(ButtonStyle.Success)
+                .setLabel('Ticket wiedereröffnen')
+                .setEmoji('🔓')
+            );
+            closeComponents.push(reopenRow);
+          }
+
+          await i.channel.send({ embeds: [closeEmbed], components: closeComponents.length > 0 ? closeComponents : undefined });
 
           // Channel-Namen speichern BEVOR er gelöscht wird
           const channelName = i.channel.name;
-
-          // Config laden für Ticket-Display-Name
-          const cfg = readCfg(guildId);
           const ticketDisplayName = getTicketDisplayName(channelName, ticket, cfg);
 
           // Nachrichtenstatistiken berechnen BEVOR Transcript erstellt wird

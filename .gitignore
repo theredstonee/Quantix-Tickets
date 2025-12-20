@@ -7,6 +7,12 @@
 /CLAUDE.md
 /app.key
 /configs
+
+# SQLite Database
+/data/
+*.db
+*.db-wal
+*.db-shm
 transcript_*.html
 transcript_*.txt
 pnpm-lock.yaml
