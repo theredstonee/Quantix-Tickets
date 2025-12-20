@@ -114,8 +114,8 @@ function readCfg(guildId) {
   if (!guildId) return getDefaultConfig();
 
   if (usingSQLite) {
+    // Step 1: Try SQLite first
     try {
-      // Step 1: Try SQLite
       const row = statements.getConfig.get(guildId);
       if (row && row.config) {
         return JSON.parse(row.config);
@@ -158,7 +158,24 @@ function readCfg(guildId) {
       }
     }
 
-    // Step 4: No data - return defaults
+    // Step 4: No .migrated - check for .back to migrate
+    const backPath = path.join(CONFIG_DIR, `${guildId}.json.back`);
+    if (fs.existsSync(backPath)) {
+      const config = safeReadJSON(backPath, null);
+      if (config) {
+        console.log(`[Database] Migrating config from .back to SQLite for ${guildId}`);
+        try {
+          statements.setConfig.run(guildId, JSON.stringify(config));
+          fs.renameSync(backPath, path.join(CONFIG_DIR, `${guildId}.json.old`));
+          console.log(`[Database] Migration complete, renamed to .old`);
+        } catch (e) {
+          console.error('[Database] Migration error:', e.message);
+        }
+        return config;
+      }
+    }
+
+    // Step 5: No migration files - return defaults for new guilds
     return getDefaultConfig();
   }
 
@@ -217,7 +234,7 @@ function getNextTicketNumber(guildId) {
 
   if (usingSQLite) {
     try {
-      // Step 1: Try SQLite
+      // Step 1: Try SQLite first
       let currentCounter = 0;
       const existing = statements.getCounter.get(guildId);
 
@@ -243,11 +260,22 @@ function getNextTicketNumber(guildId) {
             try {
               fs.renameSync(migratedPath, counterPath + '.back');
             } catch (e) {}
+          } else {
+            // Step 4: No .migrated - check for .back to migrate
+            const backPath = counterPath + '.back';
+            if (fs.existsSync(backPath)) {
+              const jsonData = safeReadJSON(backPath, { last: 0 });
+              currentCounter = jsonData.last || 0;
+              console.log(`[Database] Migrating counter from .back for ${guildId}: ${currentCounter}`);
+              try {
+                fs.renameSync(backPath, counterPath + '.old');
+              } catch (e) {}
+            }
           }
         }
       }
 
-      // Step 4: Increment and save
+      // Step 5: Increment and save
       const newCounter = currentCounter + 1;
       statements.setCounter.run(guildId, newCounter);
       console.log(`[Database] Counter for ${guildId}: ${currentCounter} -> ${newCounter}`);
