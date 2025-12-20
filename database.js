@@ -234,12 +234,18 @@ function getCounterPath(guildId) {
 }
 
 function getNextTicketNumber(guildId) {
-  if (!guildId) return 1;
+  if (!guildId) {
+    console.error('[Database] getNextTicketNumber called without guildId!');
+    return 1;
+  }
+
+  console.log(`[Database] getNextTicketNumber called for guild ${guildId}`);
 
   if (usingSQLite) {
     try {
       // Check if counter exists in SQLite
       const existing = statements.getCounter.get(guildId);
+      console.log(`[Database] Current counter in SQLite for ${guildId}:`, existing ? existing.counter : 'none');
 
       // If no counter in SQLite, check JSON file for migration
       if (!existing) {
@@ -257,17 +263,21 @@ function getNextTicketNumber(guildId) {
 
       // Normal increment
       const result = statements.incrementCounter.get(guildId);
+      console.log(`[Database] New counter for ${guildId}: ${result.counter}`);
       return result.counter;
     } catch (err) {
       console.error('[Database] Counter error:', err.message);
+      console.error('[Database] Counter error stack:', err.stack);
     }
   }
 
   // JSON fallback
+  console.log(`[Database] Using JSON fallback for counter (usingSQLite: ${usingSQLite})`);
   const counterPath = getCounterPath(guildId);
   const data = safeReadJSON(counterPath, { last: 0 });
   data.last = (data.last || 0) + 1;
   safeWriteJSON(counterPath, data);
+  console.log(`[Database] JSON counter for ${guildId}: ${data.last}`);
   return data.last;
 }
 

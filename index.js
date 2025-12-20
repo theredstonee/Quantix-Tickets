@@ -8254,6 +8254,74 @@ async function createTicketChannel(interaction, topic, formData, cfg){
   const guildId = interaction.guild.id;
   const userId = interaction.user.id;
 
+  // Step 1: Show "Verifying" message
+  const verifyEmbed = createStyledEmbed({
+    emoji: '⏳',
+    title: 'Überprüfe...',
+    description: 'Berechtigung wird geprüft...',
+    color: '#5865F2'
+  });
+
+  if (interaction.deferred || interaction.replied) {
+    await interaction.editReply({ embeds: [verifyEmbed] });
+  }
+
+  // Delay for visual feedback
+  await new Promise(resolve => setTimeout(resolve, 600));
+
+  // Safety check: Role restriction (in case it wasn't checked before)
+  if (cfg.ticketCreationRestricted && cfg.allowedTicketRoles && cfg.allowedTicketRoles.length > 0) {
+    const member = interaction.member || await interaction.guild.members.fetch(userId);
+    const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
+    if (!hasAllowedRole) {
+      const roleNames = cfg.allowedTicketRoles
+        .map(roleId => interaction.guild.roles.cache.get(roleId)?.name || roleId)
+        .join(', ');
+      const noPermEmbed = createStyledEmbed({
+        emoji: '🔒',
+        title: 'Keine Berechtigung',
+        description: `Du benötigst eine der folgenden Rollen um Tickets zu erstellen:\n\n${roleNames}`,
+        color: '#ED4245',
+        footer: 'Quantix Tickets • Zugriff verweigert'
+      });
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply({ embeds: [noPermEmbed] });
+      } else {
+        await interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+      return;
+    }
+  }
+
+  // Safety check: Blacklist
+  if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
+    const now = new Date();
+    const blacklistEntry = cfg.ticketBlacklist.find(b => b.userId === userId);
+    if (blacklistEntry) {
+      if (!blacklistEntry.isPermanent && new Date(blacklistEntry.expiresAt) <= now) {
+        cfg.ticketBlacklist = cfg.ticketBlacklist.filter(b => b.userId !== userId);
+        writeCfg(guildId, cfg);
+      } else {
+        const expiryText = blacklistEntry.isPermanent
+          ? '♾️ Permanent'
+          : `<t:${Math.floor(new Date(blacklistEntry.expiresAt).getTime() / 1000)}:R>`;
+        const blacklistEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Auf der Blacklist',
+          description: `Du bist auf der Ticket-Blacklist.\n\n**Grund:** ${blacklistEntry.reason}\n**Dauer:** ${expiryText}`,
+          color: '#ED4245',
+          footer: 'Quantix Tickets • Zugriff verweigert'
+        });
+        if (interaction.deferred || interaction.replied) {
+          await interaction.editReply({ embeds: [blacklistEmbed] });
+        } else {
+          await interaction.reply({ embeds: [blacklistEmbed], ephemeral: true });
+        }
+        return;
+      }
+    }
+  }
+
   // Check VIP status (only for VIP Server 1403053662825222388)
   const VIP_SERVER_ID = '1403053662825222388';
   const isVIP = guildId === VIP_SERVER_ID && cfg.vipUsers && cfg.vipUsers.includes(userId);
@@ -8299,7 +8367,20 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     return;
   }
 
+  // Step 2: Show "Creating" message
+  const createEmbed = createStyledEmbed({
+    emoji: '🔄',
+    title: 'Erstelle Ticket...',
+    description: 'Dein Ticket wird erstellt...',
+    color: '#5865F2'
+  });
+
+  if (interaction.deferred || interaction.replied) {
+    await interaction.editReply({ embeds: [createEmbed] });
+  }
+
   const nr = nextTicket(guildId);
+  console.log(`[Ticket] Creating ticket #${nr} for guild ${guildId}`);
 
   // Auto-Priority System: Check if user has auto-priority role (per-role config)
   let ticketPriority = 0;
@@ -8746,6 +8827,22 @@ async function createTicketChannel(interaction, topic, formData, cfg){
       }
     }
   } catch(e){ }
+
+  // Step 3: Show success message
+  const successEmbed = createStyledEmbed({
+    emoji: '✅',
+    title: 'Ticket erstellt',
+    description: `Dein Ticket wurde erfolgreich erstellt!`,
+    fields: [
+      { name: 'Kanal', value: `<#${ch.id}>`, inline: true },
+      { name: 'Ticket-Nr.', value: `#${nr}`, inline: true }
+    ],
+    color: '#57F287'
+  });
+
+  if (interaction.deferred || interaction.replied) {
+    await interaction.editReply({ embeds: [successEmbed] }).catch(() => {});
+  }
 }
 
 async function updatePriority(interaction, ticket, log, dir, guildId){

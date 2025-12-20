@@ -557,6 +557,51 @@ async function handleSelectMenu(interaction, guildId) {
       return interaction.reply({ content: '❌ Thema nicht gefunden.', ephemeral: true });
     }
 
+    // Rollen-Berechtigung prüfen
+    if (cfg.ticketCreationRestricted && cfg.allowedTicketRoles && cfg.allowedTicketRoles.length > 0) {
+      const member = interaction.member;
+      const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
+      if (!hasAllowedRole) {
+        const roleNames = cfg.allowedTicketRoles
+          .map(roleId => interaction.guild.roles.cache.get(roleId)?.name || roleId)
+          .join(', ');
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xED4245)
+          .setTitle('🔒 » Keine Berechtigung «')
+          .setDescription(`*Du benötigst eine der folgenden Rollen um Tickets zu erstellen:*\n\n${roleNames}`)
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+    }
+
+    // Blacklist-Check
+    if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
+      const now = new Date();
+      const blacklistEntry = cfg.ticketBlacklist.find(b => b.userId === interaction.user.id);
+
+      if (blacklistEntry) {
+        if (!blacklistEntry.isPermanent && new Date(blacklistEntry.expiresAt) <= now) {
+          // Abgelaufen - entfernen
+          cfg.ticketBlacklist = cfg.ticketBlacklist.filter(b => b.userId !== interaction.user.id);
+          writeCfg(guildId, cfg);
+        } else {
+          // User ist auf Blacklist
+          const expiryText = blacklistEntry.isPermanent
+            ? '♾️ Permanent'
+            : `<t:${Math.floor(new Date(blacklistEntry.expiresAt).getTime() / 1000)}:R>`;
+
+          const blacklistEmbed = new EmbedBuilder()
+            .setColor(0xED4245)
+            .setTitle('🚫 » Auf der Blacklist «')
+            .setDescription(`*Du bist auf der Ticket-Blacklist.*\n\n**Grund:** ${blacklistEntry.reason}\n**Dauer:** ${expiryText}`)
+            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+            .setTimestamp();
+          return interaction.reply({ embeds: [blacklistEmbed], ephemeral: true });
+        }
+      }
+    }
+
     // Check if user has open ticket limit
     const tickets = loadTickets(guildId);
     const userTickets = tickets.filter(t => t.userId === interaction.user.id && !t.closedAt);
@@ -617,6 +662,48 @@ async function handleModal(interaction, guildId) {
 
     if (!topic) {
       return interaction.reply({ content: '❌ Thema nicht gefunden.', ephemeral: true });
+    }
+
+    // Rollen-Berechtigung prüfen
+    if (cfg.ticketCreationRestricted && cfg.allowedTicketRoles && cfg.allowedTicketRoles.length > 0) {
+      const member = interaction.member;
+      const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
+      if (!hasAllowedRole) {
+        const roleNames = cfg.allowedTicketRoles
+          .map(roleId => interaction.guild.roles.cache.get(roleId)?.name || roleId)
+          .join(', ');
+        const noPermEmbed = new EmbedBuilder()
+          .setColor(0xED4245)
+          .setTitle('🔒 » Keine Berechtigung «')
+          .setDescription(`*Du benötigst eine der folgenden Rollen um Tickets zu erstellen:*\n\n${roleNames}`)
+          .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+          .setTimestamp();
+        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+    }
+
+    // Blacklist-Check
+    if (cfg.ticketBlacklist && Array.isArray(cfg.ticketBlacklist)) {
+      const now = new Date();
+      const blacklistEntry = cfg.ticketBlacklist.find(b => b.userId === interaction.user.id);
+
+      if (blacklistEntry) {
+        if (!blacklistEntry.isPermanent && new Date(blacklistEntry.expiresAt) <= now) {
+          cfg.ticketBlacklist = cfg.ticketBlacklist.filter(b => b.userId !== interaction.user.id);
+          writeCfg(guildId, cfg);
+        } else {
+          const expiryText = blacklistEntry.isPermanent
+            ? '♾️ Permanent'
+            : `<t:${Math.floor(new Date(blacklistEntry.expiresAt).getTime() / 1000)}:R>`;
+          const blacklistEmbed = new EmbedBuilder()
+            .setColor(0xED4245)
+            .setTitle('🚫 » Auf der Blacklist «')
+            .setDescription(`*Du bist auf der Ticket-Blacklist.*\n\n**Grund:** ${blacklistEntry.reason}\n**Dauer:** ${expiryText}`)
+            .setFooter({ text: 'Quantix Tickets • Zugriff verweigert' })
+            .setTimestamp();
+          return interaction.reply({ embeds: [blacklistEmbed], ephemeral: true });
+        }
+      }
     }
 
     // Collect form data
@@ -705,7 +792,24 @@ async function handleModal(interaction, guildId) {
 async function createTicket(interaction, guildId, topic, formData) {
   const cfg = readCfg(guildId);
 
+  // Step 1: Show "Verifying" message
   await interaction.deferReply({ ephemeral: true });
+
+  const verifyEmbed = new EmbedBuilder()
+    .setColor(0x5865F2)
+    .setDescription('⏳ **Überprüfe Berechtigung...**')
+    .setTimestamp();
+  await interaction.editReply({ embeds: [verifyEmbed] });
+
+  // Small delay for visual feedback
+  await new Promise(resolve => setTimeout(resolve, 800));
+
+  // Step 2: Show "Creating" message
+  const createEmbed = new EmbedBuilder()
+    .setColor(0x5865F2)
+    .setDescription('🔄 **Erstelle Ticket...**')
+    .setTimestamp();
+  await interaction.editReply({ embeds: [createEmbed] });
 
   // Get next ticket number (uses centralized counter from database.js)
   const ticketNumber = getNextTicketNumber(guildId);
@@ -821,17 +925,29 @@ async function createTicket(interaction, guildId, topic, formData) {
       }
     }
 
-    // Reply to user
+    // Step 3: Show success message
+    const successEmbed = new EmbedBuilder()
+      .setColor(0x57F287)
+      .setTitle('✅ » Ticket erstellt «')
+      .setDescription(`*Dein Ticket wurde erfolgreich erstellt!*\n\n**Kanal:** ${channel}\n**Ticket-Nr.:** #${ticketNumber}`)
+      .setFooter({ text: 'Quantix Tickets' })
+      .setTimestamp();
+
     await interaction.editReply({
-      content: `✅ Dein Ticket wurde erstellt: ${channel}`,
-      ephemeral: true
+      embeds: [successEmbed]
     });
 
   } catch (err) {
     console.error('Create ticket error:', err);
+    const errorEmbed = new EmbedBuilder()
+      .setColor(0xED4245)
+      .setTitle('❌ » Fehler «')
+      .setDescription('*Ticket konnte nicht erstellt werden. Bitte versuche es erneut.*')
+      .setFooter({ text: 'Quantix Tickets' })
+      .setTimestamp();
+
     await interaction.editReply({
-      content: '❌ Ticket konnte nicht erstellt werden.',
-      ephemeral: true
+      embeds: [errorEmbed]
     });
   }
 }
