@@ -52,11 +52,7 @@ try {
       ON CONFLICT(guild_id) DO UPDATE SET config = excluded.config, updated_at = strftime('%s', 'now')
     `),
     getCounter: db.prepare('SELECT counter FROM ticket_counters WHERE guild_id = ?'),
-    incrementCounter: db.prepare(`
-      INSERT INTO ticket_counters (guild_id, counter) VALUES (?, 1)
-      ON CONFLICT(guild_id) DO UPDATE SET counter = counter + 1
-      RETURNING counter
-    `)
+    setCounter: db.prepare('INSERT OR REPLACE INTO ticket_counters (guild_id, counter) VALUES (?, ?)')
   };
 
   usingSQLite = true;
@@ -284,41 +280,43 @@ function getNextTicketNumber(guildId) {
 
   if (usingSQLite) {
     try {
-      // Check if counter exists in SQLite
+      // Step 1: Get current counter from SQLite
+      let currentCounter = 0;
       const existing = statements.getCounter.get(guildId);
 
-      // If no counter in SQLite, check JSON file for migration
-      if (!existing) {
+      if (existing) {
+        currentCounter = existing.counter || 0;
+      } else {
+        // No SQLite entry - check for JSON files to migrate
         const counterPath = getCounterPath(guildId);
-        let lastCounter = 0;
 
         // Check original JSON file
         if (fs.existsSync(counterPath)) {
           const jsonData = safeReadJSON(counterPath, { last: 0 });
-          lastCounter = jsonData.last || 0;
+          currentCounter = jsonData.last || 0;
+          console.log(`[Database] Migrating counter from JSON for ${guildId}: ${currentCounter}`);
         }
 
-        // Check .migrated backup if no original
-        if (lastCounter === 0) {
+        // Check .migrated backup if still 0
+        if (currentCounter === 0) {
           const migratedPath = counterPath + '.migrated';
           if (fs.existsSync(migratedPath)) {
             const jsonData = safeReadJSON(migratedPath, { last: 0 });
-            lastCounter = jsonData.last || 0;
-            console.log(`[Database] Recovered counter from backup for ${guildId}: ${lastCounter}`);
+            currentCounter = jsonData.last || 0;
+            console.log(`[Database] Recovered counter from backup for ${guildId}: ${currentCounter}`);
           }
-        }
-
-        if (lastCounter > 0) {
-          // Migrate: Set SQLite counter to JSON value, then increment
-          console.log(`[Database] Migrating counter for ${guildId}: ${lastCounter} -> ${lastCounter + 1}`);
-          db.prepare('INSERT OR REPLACE INTO ticket_counters (guild_id, counter) VALUES (?, ?)').run(guildId, lastCounter + 1);
-          return lastCounter + 1;
         }
       }
 
-      // Normal increment
-      const result = statements.incrementCounter.get(guildId);
-      return result.counter;
+      // Step 2: Increment
+      const newCounter = currentCounter + 1;
+
+      // Step 3: Save to SQLite
+      statements.setCounter.run(guildId, newCounter);
+
+      // Step 4: Return new counter
+      console.log(`[Database] Counter for ${guildId}: ${currentCounter} -> ${newCounter}`);
+      return newCounter;
     } catch (err) {
       console.error('[Database] Counter error:', err.message);
     }
@@ -335,9 +333,11 @@ function getNextTicketNumber(guildId) {
   }
 
   if (!data) data = { last: 0 };
-  data.last = (data.last || 0) + 1;
+  const newCounter = (data.last || 0) + 1;
+  data.last = newCounter;
   safeWriteJSON(counterPath, data);
-  return data.last;
+  console.log(`[Database] JSON counter for ${guildId}: ${newCounter}`);
+  return newCounter;
 }
 
 function getCurrentCounter(guildId) {
