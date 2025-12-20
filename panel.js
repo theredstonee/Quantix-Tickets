@@ -2712,7 +2712,7 @@ module.exports = (client)=>{
         const labelKey = `topic_label_${topicIndex}`;
         const valueKey = `topic_value_${topicIndex}`;
         const emojiKey = `topic_emoji_${topicIndex}`;
-        const ticketNameDisplayKey = `topic_ticketNameDisplay_${topicIndex}`;
+        const channelNameKey = `topic_channelName_${topicIndex}`;
         const categoryIdKey = `topic_categoryId_${topicIndex}`;
 
         // Check if topic exists
@@ -2723,7 +2723,7 @@ module.exports = (client)=>{
         const label = (req.body[labelKey] || '').trim();
         let value = (req.body[valueKey] || '').trim();
         const emoji = (req.body[emojiKey] || '').trim();
-        const ticketNameDisplay = (req.body[ticketNameDisplayKey] || 'channel').trim();
+        const channelName = (req.body[channelNameKey] || '').trim();
         const categoryId = (req.body[categoryIdKey] || '').trim();
 
         // Auto-generate value if empty, "..", or invalid
@@ -2742,9 +2742,12 @@ module.exports = (client)=>{
           const topicData = {
             label: label,
             value: value,
-            emoji: emoji || '📌',
-            ticketNameDisplay: ticketNameDisplay === 'topic' ? 'topic' : 'channel'
+            emoji: emoji || '📌'
           };
+          // Only add channelName if it's set
+          if (channelName) {
+            topicData.channelName = channelName.toLowerCase().replace(/[^a-z0-9\-]/gi, '-').substring(0, 20);
+          }
           // Only add categoryId if it's set (not empty = use default)
           if (categoryId) {
             topicData.categoryId = categoryId;

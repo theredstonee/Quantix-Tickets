@@ -1672,14 +1672,14 @@ function buildTicketEmbed(cfg, i, topic, nr, priority = 0){
   return e;
 }
 
-function buildChannelName(ticketNumber, priorityIndex, isVIP = false, isClaimed = false, topicLabel = null){
+function buildChannelName(ticketNumber, priorityIndex, isVIP = false, isClaimed = false, customChannelName = null){
   const num = ticketNumber.toString().padStart(5,'0');
   const st  = PRIORITY_STATES[priorityIndex] || PRIORITY_STATES[0];
   const vipPrefix = isVIP ? '✨vip-' : '';
   const claimedPrefix = isClaimed ? '🔒' : '';
-  // Wenn topicLabel gesetzt, verwende es statt 'ticket'
-  const baseName = topicLabel
-    ? topicLabel.toLowerCase().replace(/[^a-z0-9äöüß\-]/gi, '-').replace(/-+/g, '-').substring(0, 20)
+  // Wenn customChannelName gesetzt, verwende es statt 'ticket'
+  const baseName = customChannelName
+    ? customChannelName.toLowerCase().replace(/[^a-z0-9äöüß\-]/gi, '-').replace(/-+/g, '-').substring(0, 20)
     : 'ticket';
   return `${PREFIX}${vipPrefix}${claimedPrefix}${st.dot}${baseName}-${num}`;
 }
@@ -1704,7 +1704,9 @@ function scheduleChannelRename(channel, desired){
 }
 function renameChannelIfNeeded(channel, ticket){
   const isClaimed = ticket.claimedBy ? true : false;
-  const desired = buildChannelName(ticket.id, ticket.priority||0, ticket.isVIP||false, isClaimed, ticket.topicLabel || null);
+  // Verwende channelName wenn gesetzt, sonst topicLabel für Abwärtskompatibilität
+  const customName = ticket.channelName || ticket.topicLabel || null;
+  const desired = buildChannelName(ticket.id, ticket.priority||0, ticket.isVIP||false, isClaimed, customName);
   if(channel.name === desired) return;
   scheduleChannelRename(channel, desired);
 }
@@ -8475,11 +8477,16 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     }
   }
 
-  // Prüfe ob Topic-Name als Channel-Name verwendet werden soll
-  const useTopicLabel = topic.ticketNameDisplay === 'topic' ? topic.label : null;
+  // Channel-Name bestimmen: Priorität: 1. topic.channelName, 2. ticketNameDisplay=topic -> label, 3. "ticket"
+  let customChannelName = null;
+  if (topic.channelName && topic.channelName.trim()) {
+    customChannelName = topic.channelName.trim();
+  } else if (topic.ticketNameDisplay === 'topic') {
+    customChannelName = topic.label;
+  }
 
   const ch = await interaction.guild.channels.create({
-    name: buildChannelName(nr, ticketPriority, isVIP, false, useTopicLabel),
+    name: buildChannelName(nr, ticketPriority, isVIP, false, customChannelName),
     type: ChannelType.GuildText,
     parent: parentId,
     permissionOverwrites: permOverwrites
@@ -8558,7 +8565,8 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     messageId: ticketMessage.id,  // Store ticket message ID for later updates
     userId:interaction.user.id,
     topic:topic.value,
-    topicLabel: useTopicLabel || null,  // Speichere Topic-Label für Channel-Renames
+    topicLabel: topic.label,  // Speichere Topic-Label
+    channelName: customChannelName || null,  // Speichere benutzerdefinierten Channel-Namen für Renames
     status:'offen',
     priority: ticketPriority,
     timestamp:createdAt,
@@ -8641,7 +8649,7 @@ async function createTicketChannel(interaction, topic, formData, cfg){
             console.log(`✅ Set claim permissions for ticket #${nr} (removed team role, only claimer + creator + added)`);
 
             // Update channel name with 🔒 emoji
-            const newName = buildChannelName(nr, currentTicket.priority || 0, currentTicket.isVIP || false, true, useTopicLabel);
+            const newName = buildChannelName(nr, currentTicket.priority || 0, currentTicket.isVIP || false, true, customChannelName);
             await scheduleChannelRename(ch, newName);
           } catch (permErr) {
             console.error('Auto-Assignment permission error:', permErr);

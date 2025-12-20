@@ -4884,16 +4884,12 @@
                           <% }); %>
                         </select>
                       </div>
-                      <div class="topic-setting">
-                        <label><i class="fas fa-file-signature"></i> <%= lang === 'de' ? 'Transcript' : 'Transcript' %></label>
-                        <select name="topic_ticketNameDisplay_<%= index %>">
-                          <option value="channel" <%= topic.ticketNameDisplay === 'channel' || !topic.ticketNameDisplay ? 'selected' : '' %>>
-                            Channel
-                          </option>
-                          <option value="topic" <%= topic.ticketNameDisplay === 'topic' ? 'selected' : '' %>>
-                            Thema
-                          </option>
-                        </select>
+                      <div class="topic-setting" style="grid-column: 1 / -1;">
+                        <label><i class="fas fa-hashtag"></i> <%= lang === 'de' ? 'Channel-Name' : 'Channel Name' %></label>
+                        <input type="text" name="topic_channelName_<%= index %>" value="<%= topic.channelName || '' %>" placeholder="<%= lang === 'de' ? 'z.B. bug, support (leer = ticket)' : 'e.g. bug, support (empty = ticket)' %>" maxlength="20">
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">
+                          <%= lang === 'de' ? 'Ergebnis: 🟢{name}-00001' : 'Result: 🟢{name}-00001' %>
+                        </small>
                       </div>
                     </div>
                   </div>
@@ -6934,12 +6930,12 @@
                 ${getCategoryOptionsHtml()}
               </select>
             </div>
-            <div class="topic-setting">
-              <label><i class="fas fa-file-signature"></i> <%= lang === 'de' ? 'Transcript' : 'Transcript' %></label>
-              <select name="topic_ticketNameDisplay_${newIndex}">
-                <option value="channel" selected>Channel</option>
-                <option value="topic">Thema</option>
-              </select>
+            <div class="topic-setting" style="grid-column: 1 / -1;">
+              <label><i class="fas fa-hashtag"></i> <%= lang === 'de' ? 'Channel-Name' : 'Channel Name' %></label>
+              <input type="text" name="topic_channelName_${newIndex}" value="" placeholder="<%= lang === 'de' ? 'z.B. bug, support (leer = ticket)' : 'e.g. bug, support (empty = ticket)' %>" maxlength="20">
+              <small style="color: var(--text-muted); font-size: 0.75rem;">
+                <%= lang === 'de' ? 'Ergebnis: 🟢{name}-00001' : 'Result: 🟢{name}-00001' %>
+              </small>
             </div>
           </div>
         </div>
