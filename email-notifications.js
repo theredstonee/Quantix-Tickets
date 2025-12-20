@@ -240,7 +240,7 @@ function buildTicketEmail(ticketInfo) {
  */
 function getGuildEmail(guildId) {
   try {
-    const { readCfg } = require('./premium');
+    const { readCfg } = require('./database');
     const cfg = readCfg(guildId);
     return cfg.notificationEmail || null;
   } catch {

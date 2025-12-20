@@ -1,4 +1,5 @@
-const { hasFeature, readCfg } = require('./premium');
+const { hasFeature } = require('./premium');
+const { readCfg, writeCfg } = require('./database');
 
 /**
  * Sendet Discord DM-Benachrichtigungen an konfigurierte Team-Mitglieder
@@ -109,8 +110,7 @@ function getDMRecipients(guildId) {
 function setDMRecipients(guildId, userIds) {
   const cfg = readCfg(guildId);
   cfg.dmNotificationUsers = userIds;
-  const { saveCfg } = require('./premium');
-  saveCfg(guildId, cfg);
+  writeCfg(guildId, cfg);
 }
 
 /**
@@ -125,8 +125,7 @@ function addDMRecipient(guildId, userId) {
   }
   if (!cfg.dmNotificationUsers.includes(userId)) {
     cfg.dmNotificationUsers.push(userId);
-    const { saveCfg } = require('./premium');
-    saveCfg(guildId, cfg);
+    writeCfg(guildId, cfg);
     return true;
   }
   return false;
@@ -145,8 +144,7 @@ function removeDMRecipient(guildId, userId) {
   const index = cfg.dmNotificationUsers.indexOf(userId);
   if (index > -1) {
     cfg.dmNotificationUsers.splice(index, 1);
-    const { saveCfg } = require('./premium');
-    saveCfg(guildId, cfg);
+    writeCfg(guildId, cfg);
     return true;
   }
   return false;

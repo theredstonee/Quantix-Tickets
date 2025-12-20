@@ -1,4 +1,4 @@
-const { readCfg, saveCfg } = require('./premium');
+const { readCfg, writeCfg } = require('./database');
 
 /**
  * Migriert alte Config-Struktur zu Multi-Ticket-System-Struktur
@@ -59,7 +59,7 @@ function migrateToTicketSystems(guildId) {
   delete cfg.embedDescription;
   delete cfg.embedColor;
 
-  saveCfg(guildId, cfg);
+  writeCfg(guildId, cfg);
   console.log(`✅ Config migriert für Guild ${guildId}`);
 
   return cfg;
@@ -131,7 +131,7 @@ function createTicketSystem(guildId, systemData) {
   };
 
   cfg.ticketSystems.push(newSystem);
-  saveCfg(guildId, cfg);
+  writeCfg(guildId, cfg);
 
   console.log(`✅ Neues Ticket-System erstellt: ${newSystem.id} (${newSystem.name})`);
   return newSystem;
@@ -157,7 +157,7 @@ function updateTicketSystem(guildId, systemId, updates) {
     ...updates
   };
 
-  saveCfg(guildId, cfg);
+  writeCfg(guildId, cfg);
   console.log(`✅ Ticket-System aktualisiert: ${systemId}`);
   return true;
 }
@@ -180,7 +180,7 @@ function deleteTicketSystem(guildId, systemId) {
   cfg.ticketSystems = cfg.ticketSystems.filter(sys => sys.id !== systemId);
 
   if (cfg.ticketSystems.length < initialLength) {
-    saveCfg(guildId, cfg);
+    writeCfg(guildId, cfg);
     console.log(`✅ Ticket-System gelöscht: ${systemId}`);
     return true;
   }
