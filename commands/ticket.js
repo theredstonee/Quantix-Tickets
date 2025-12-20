@@ -283,7 +283,16 @@ module.exports = {
     .addSubcommand(subcommand =>
       subcommand
         .setName('unblock')
-        .setDescription('Unblock the ticket - restore write permissions')),
+        .setDescription('Unblock the ticket - restore write permissions'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('rename')
+        .setDescription('Rename this ticket channel')
+        .addStringOption(option =>
+          option.setName('name')
+            .setDescription('New channel name')
+            .setRequired(true)
+            .setMaxLength(100))),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -1996,6 +2005,96 @@ module.exports = {
       } catch (err) {
         console.error('Error unblocking ticket:', err);
         await interaction.editReply({ content: '❌ Fehler beim Entsperren des Tickets.' });
+      }
+    }
+
+    // ===== SUBCOMMAND: RENAME =====
+    if (subcommand === 'rename') {
+      const newName = interaction.options.getString('name');
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+
+      if (!ticket) {
+        const noTicketEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Kein Ticket gefunden',
+          description: 'Dieser Channel ist kein Ticket.',
+          color: '#ED4245'
+        });
+
+        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
+      }
+
+      // Nur Team, Claimer oder Ticket-Ersteller darf umbenennen
+      const isClaimer = ticket.claimer === interaction.user.id;
+      const isCreator = ticket.userId === interaction.user.id;
+      if (!isTeam && !isClaimer && !isCreator) {
+        const noPermEmbed = createStyledEmbed({
+          emoji: '🚫',
+          title: 'Keine Berechtigung',
+          description: 'Nur Team-Mitglieder, der Claimer oder der Ticket-Ersteller können das Ticket umbenennen.',
+          color: '#ED4245'
+        });
+
+        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+      }
+
+      // Channel-Namen validieren (Discord erlaubt nur bestimmte Zeichen)
+      const sanitizedName = newName
+        .toLowerCase()
+        .replace(/[^a-z0-9äöüß\-_]/gi, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 100);
+
+      if (!sanitizedName || sanitizedName.length < 1) {
+        const invalidNameEmbed = createStyledEmbed({
+          emoji: '❌',
+          title: 'Ungültiger Name',
+          description: 'Der Channel-Name enthält keine gültigen Zeichen.',
+          color: '#ED4245'
+        });
+
+        return interaction.reply({ embeds: [invalidNameEmbed], ephemeral: true });
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      try {
+        const oldName = interaction.channel.name;
+        await interaction.channel.setName(sanitizedName);
+
+        // Ticket-Daten aktualisieren
+        const ticketIndex = tickets.findIndex(t => t.channelId === interaction.channel.id);
+        tickets[ticketIndex].renamedAt = Date.now();
+        tickets[ticketIndex].renamedBy = interaction.user.id;
+        tickets[ticketIndex].previousName = oldName;
+        saveTickets(guildId, tickets);
+
+        // Öffentliche Nachricht im Ticket
+        const renameEmbed = createStyledEmbed({
+          emoji: '✏️',
+          title: 'Ticket umbenannt',
+          description: `Der Channel wurde umbenannt.`,
+          fields: [
+            { name: 'Alter Name', value: `\`${oldName}\``, inline: true },
+            { name: 'Neuer Name', value: `\`${sanitizedName}\``, inline: true },
+            { name: 'Umbenannt von', value: `<@${interaction.user.id}>`, inline: true }
+          ],
+          color: '#5865F2',
+          footer: 'Quantix Tickets'
+        });
+
+        await interaction.channel.send({ embeds: [renameEmbed] });
+
+        // Log event
+        logEvent(interaction.guild, `✏️ **Ticket umbenannt:** <@${interaction.user.id}> hat Ticket #${ticket.id} von \`${oldName}\` zu \`${sanitizedName}\` umbenannt`);
+
+        await interaction.editReply({ content: `✅ Channel wurde zu \`${sanitizedName}\` umbenannt!` });
+      } catch (err) {
+        console.error('Error renaming ticket:', err);
+        await interaction.editReply({ content: '❌ Fehler beim Umbenennen des Tickets. Möglicherweise Rate-Limit erreicht.' });
       }
     }
   },
