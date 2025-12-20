@@ -6208,6 +6208,149 @@ client.on(Events.InteractionCreate, async i => {
         return i.reply({ embeds: [notesEmbed], ephemeral: true });
       }
 
+      // Reopen archived ticket from log channel
+      if(i.customId.startsWith('reopen_ticket:')){
+        const parts = i.customId.split(':');
+        const reopenGuildId = parts[1];
+        const ticketId = parseInt(parts[2]);
+
+        // Check permissions
+        const cfg = readCfg(reopenGuildId);
+        const isTeamMember = hasAnyTeamRole(i.member, reopenGuildId);
+        if (!isTeamMember) {
+          return i.reply({
+            content: '❌ Nur Team-Mitglieder können Tickets wiedereröffnen.',
+            ephemeral: true
+          });
+        }
+
+        const allTickets = loadTickets(reopenGuildId);
+        const ticket = allTickets.find(t => t.id === ticketId);
+
+        if (!ticket) {
+          return i.reply({
+            content: '❌ Ticket nicht gefunden.',
+            ephemeral: true
+          });
+        }
+
+        if (!ticket.archived) {
+          return i.reply({
+            content: '⚠️ Dieses Ticket ist nicht archiviert.',
+            ephemeral: true
+          });
+        }
+
+        // Check if channel still exists
+        let archivedChannel = null;
+        try {
+          archivedChannel = await i.guild.channels.fetch(ticket.channelId);
+        } catch (err) {
+          return i.reply({
+            content: '❌ Der archivierte Kanal existiert nicht mehr.',
+            ephemeral: true
+          });
+        }
+
+        await i.deferReply({ ephemeral: true });
+
+        try {
+          // Get original category
+          const categoryIds = Array.isArray(cfg.ticketCategoryId) ? cfg.ticketCategoryId : (cfg.ticketCategoryId ? [cfg.ticketCategoryId] : []);
+          let targetCategoryId = categoryIds.length > 0 ? categoryIds[0] : null;
+
+          // Restore permissions
+          const reopenPermissions = [
+            { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+            { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
+          ];
+
+          // Team role
+          const TEAM_ROLE = getTeamRole(reopenGuildId);
+          if (TEAM_ROLE && TEAM_ROLE.trim()) {
+            reopenPermissions.push({
+              id: TEAM_ROLE,
+              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages]
+            });
+          }
+
+          // Added users
+          if (ticket.addedUsers && Array.isArray(ticket.addedUsers)) {
+            ticket.addedUsers.forEach(uid => {
+              reopenPermissions.push({
+                id: uid,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages]
+              });
+            });
+          }
+
+          await archivedChannel.permissionOverwrites.set(reopenPermissions);
+
+          // Move back to ticket category
+          if (targetCategoryId) {
+            await archivedChannel.setParent(targetCategoryId, { lockPermissions: false });
+          }
+
+          // Rename channel (remove "closed-" prefix)
+          let newName = archivedChannel.name.replace(/^closed-/, '');
+          await archivedChannel.setName(newName);
+
+          // Update ticket status
+          ticket.archived = false;
+          ticket.status = 'offen';
+          ticket.reopenedAt = Date.now();
+          ticket.reopenedBy = i.user.id;
+          delete ticket.archivedAt;
+          saveTickets(reopenGuildId, allTickets);
+
+          // Send message in channel
+          const reopenEmbed = createStyledEmbed({
+            emoji: '🔓',
+            title: 'Ticket wiedereröffnet',
+            description: `Dieses Ticket wurde von <@${i.user.id}> wiedereröffnet.`,
+            fields: [
+              { name: 'Ticket', value: `#${ticket.id}`, inline: true },
+              { name: 'Status', value: '🟢 Offen', inline: true }
+            ],
+            color: '#57F287'
+          });
+          await archivedChannel.send({ embeds: [reopenEmbed] });
+
+          // Disable the reopen button
+          try {
+            const originalMessage = i.message;
+            const updatedComponents = originalMessage.components.map(row => {
+              const newRow = new ActionRowBuilder();
+              row.components.forEach(comp => {
+                if (comp.customId && comp.customId.startsWith('reopen_ticket:')) {
+                  newRow.addComponents(
+                    ButtonBuilder.from(comp).setDisabled(true).setLabel('✅ Wiedereröffnet')
+                  );
+                } else {
+                  newRow.addComponents(ButtonBuilder.from(comp));
+                }
+              });
+              return newRow;
+            });
+            await i.message.edit({ components: updatedComponents });
+          } catch (err) {
+            console.error('Could not disable reopen button:', err.message);
+          }
+
+          await i.editReply({
+            content: `✅ Ticket #${ticket.id} wurde wiedereröffnet! ${archivedChannel}`
+          });
+
+          logEvent(i.guild, `🔓 Ticket **#${ticket.id}** wurde von <@${i.user.id}> wiedereröffnet`);
+        } catch (err) {
+          console.error('Reopen ticket error:', err);
+          await i.editReply({
+            content: '❌ Fehler beim Wiedereröffnen des Tickets.'
+          });
+        }
+        return;
+      }
+
       // Rating System: Handle star ratings
       if(i.customId.startsWith('rate_')){
         const [_, rating, ticketId] = i.customId.split(/[_:]/);
@@ -6538,6 +6681,17 @@ client.on(Events.InteractionCreate, async i => {
       const isClaimer = ticket.claimer === i.user.id;
 
       if(i.customId==='request_close'){
+        // Check if ticket is archived
+        if (ticket.archived) {
+          const archivedEmbed = createStyledEmbed({
+            emoji: '📦',
+            title: 'Ticket archiviert',
+            description: 'Dieses Ticket ist bereits archiviert und kann nicht mehr geschlossen werden.',
+            color: '#FFA500'
+          });
+          return i.reply({ embeds: [archivedEmbed], ephemeral: true });
+        }
+
         // Bestimme wer die Anfrage stellt
         const requesterType = isCreator || (ticket.addedUsers && ticket.addedUsers.includes(i.user.id)) ? 'user' : 'team';
 
@@ -6933,6 +7087,19 @@ client.on(Events.InteractionCreate, async i => {
             footer: i.guild.name
           });
 
+          // Add reopen button if archive is enabled
+          const transcriptComponents = [transcriptButton];
+          if (cfg.archiveEnabled && cfg.archiveCategoryId) {
+            const reopenButton = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId(`reopen_ticket:${guildId}:${ticket.id}`)
+                .setStyle(ButtonStyle.Success)
+                .setLabel('🔓 Ticket wiedereröffnen')
+                .setEmoji('🔄')
+            );
+            transcriptComponents.push(reopenButton);
+          }
+
           for (const channelId of transcriptChannelIds) {
             try {
               const tc = await i.guild.channels.fetch(channelId);
@@ -6940,7 +7107,7 @@ client.on(Events.InteractionCreate, async i => {
                 await tc.send({
                   embeds: [transcriptEmbed],
                   files: [files.txt, files.html],
-                  components: [transcriptButton]
+                  components: transcriptComponents
                 });
               }
             } catch (err) {
@@ -7101,6 +7268,11 @@ client.on(Events.InteractionCreate, async i => {
               // Benenne Channel um zu "closed-ticket-####"
               const newName = `closed-${i.channel.name}`;
               await i.channel.setName(newName);
+
+              // Mark ticket as archived
+              ticket.archived = true;
+              ticket.archivedAt = Date.now();
+              saveTickets(guildId, log);
 
               console.log(`✅ Ticket #${ticket.id} in Archiv verschoben (nur Team-Zugriff)`);
             } catch (err) {
@@ -7557,13 +7729,27 @@ client.on(Events.InteractionCreate, async i => {
               footer: i.guild.name
             });
 
+            // Add reopen button if archive is enabled
+            const confirmCloseComponents = [];
+            if (cfg.archiveEnabled && cfg.archiveCategoryId) {
+              const reopenButton = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                  .setCustomId(`reopen_ticket:${guildId}:${ticket.id}`)
+                  .setStyle(ButtonStyle.Success)
+                  .setLabel('🔓 Ticket wiedereröffnen')
+                  .setEmoji('🔄')
+              );
+              confirmCloseComponents.push(reopenButton);
+            }
+
             for (const channelId of transcriptChannelIds) {
               try {
                 const tc = await i.guild.channels.fetch(channelId);
                 if (tc) {
                   await tc.send({
                     embeds: [transcriptChannelEmbed],
-                    files: [files.txt, files.html]
+                    files: [files.txt, files.html],
+                    components: confirmCloseComponents.length > 0 ? confirmCloseComponents : undefined
                   });
                   console.log(`✅ Transcript an Channel ${channelId} gesendet`);
                 }
@@ -7729,6 +7915,16 @@ client.on(Events.InteractionCreate, async i => {
                 // Benenne Channel um zu "closed-ticket-####"
                 const newName = `closed-${i.channel.name}`;
                 await i.channel.setName(newName);
+
+                // Mark ticket as archived
+                ticket.archived = true;
+                ticket.archivedAt = Date.now();
+                const allTickets = loadTickets(guildId);
+                const ticketIndex = allTickets.findIndex(t => t.id === ticket.id);
+                if (ticketIndex !== -1) {
+                  allTickets[ticketIndex] = ticket;
+                  saveTickets(guildId, allTickets);
+                }
 
                 console.log(`✅ Ticket #${ticket.id} in Archiv verschoben (nur Team-Zugriff)`);
               } catch (err) {
