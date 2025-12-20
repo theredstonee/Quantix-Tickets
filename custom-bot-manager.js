@@ -219,9 +219,30 @@ class CustomBotManager {
 
       // Set custom avatar if configured
       if (whitelabel.botAvatar) {
-        await client.user.setAvatar(whitelabel.botAvatar).catch(err => {
+        try {
+          let avatarData = whitelabel.botAvatar;
+
+          // If it's a local file path, read and convert to base64
+          if (avatarData.startsWith('/avatars/')) {
+            const avatarPath = path.join(__dirname, 'public', avatarData);
+            if (fs.existsSync(avatarPath)) {
+              const fileBuffer = fs.readFileSync(avatarPath);
+              const ext = path.extname(avatarPath).toLowerCase();
+              const mimeType = ext === '.png' ? 'image/png' : ext === '.gif' ? 'image/gif' : 'image/jpeg';
+              avatarData = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+            } else {
+              console.log('[Custom Bot Manager] Avatar file not found:', avatarPath);
+              avatarData = null;
+            }
+          }
+
+          if (avatarData) {
+            await client.user.setAvatar(avatarData);
+            console.log('[Custom Bot Manager] Avatar set successfully');
+          }
+        } catch (err) {
           console.error('[Custom Bot Manager] Failed to set avatar:', err.message);
-        });
+        }
       }
 
       // Set custom status
