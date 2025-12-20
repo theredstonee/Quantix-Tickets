@@ -2506,28 +2506,36 @@ module.exports = (client)=>{
         : (req.body.priorityRoles_2 ? [req.body.priorityRoles_2.trim()] : []);
 
       // Auto-Priority System (per-role configuration)
-      if (req.body.autoPriorityConfig) {
+      // Skip if empty, not set, or not useful
+      const autoPriorityInput = req.body.autoPriorityConfig;
+      if (autoPriorityInput && autoPriorityInput !== '{}' && autoPriorityInput !== '[]') {
         try {
-          let config = req.body.autoPriorityConfig;
+          let config = autoPriorityInput;
 
-          // Handle both string and object inputs
+          // Handle string inputs
           if (typeof config === 'string') {
-            config = JSON.parse(config);
+            // Only parse if it looks like a valid JSON array
+            if (config.trim().startsWith('[')) {
+              config = JSON.parse(config);
+            } else {
+              // Not a valid array format, skip
+              config = [];
+            }
           }
 
           // Only process if it's an array with valid items
-          cfg.autoPriorityConfig = Array.isArray(config)
-            ? config
-                .filter(item => item && item.roleId && typeof item.roleId === 'string' && item.roleId.trim())
-                .map(item => ({
-                  roleId: String(item.roleId).trim(),
-                  level: parseInt(item.level, 10) || 0
-                }))
-            : [];
+          if (Array.isArray(config) && config.length > 0) {
+            cfg.autoPriorityConfig = config
+              .filter(item => item && item.roleId && typeof item.roleId === 'string' && item.roleId.trim())
+              .map(item => ({
+                roleId: String(item.roleId).trim(),
+                level: parseInt(item.level, 10) || 0
+              }));
+          }
+          // If empty array or invalid, keep existing config
         } catch (e) {
-          console.error('Error parsing autoPriorityConfig:', e.message);
-          // Keep existing config if parsing fails
-          cfg.autoPriorityConfig = cfg.autoPriorityConfig || [];
+          // Silently keep existing config if parsing fails
+          // cfg.autoPriorityConfig stays unchanged
         }
       }
 
