@@ -34,23 +34,23 @@
      * MODERN TAB-BASED PANEL DESIGN
      * ============================================================ */
 
-    /* CSS Variables - Modern & Creative Design */
+    /* CSS Variables - Modern Blue Theme */
     :root {
-      /* Backgrounds - Moderne Gradienten */
-      --bg-color: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-      --bg-secondary: #f8fafc;
+      /* Backgrounds - Light Blue Theme */
+      --bg-color: #f0f8ff;
+      --bg-secondary: #e0f2fe;
       --bg-card: rgba(255, 255, 255, 0.85);
 
       /* Text Colors */
-      --text-color: #0f172a;
+      --text-color: #1a1a2e;
       --text-secondary: #64748b;
       --text-muted: #94a3b8;
 
-      /* Accent Colors - Vibrant Gradients */
-      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
-      --accent-color: #6366f1;
-      --accent-hover: #8b5cf6;
-      --accent-light: #eef2ff;
+      /* Accent Colors - Blue Theme */
+      --accent-gradient: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+      --accent-color: #0ea5e9;
+      --accent-hover: #0284c7;
+      --accent-light: #e0f2fe;
 
       /* Status Colors */
       --success-color: #10b981;
@@ -63,17 +63,17 @@
       --info-light: #dbeafe;
 
       /* Glassmorphism */
-      --glass-bg: rgba(255, 255, 255, 0.75);
+      --glass-bg: rgba(255, 255, 255, 0.7);
       --glass-bg-solid: rgba(255, 255, 255, 0.95);
-      --glass-border: rgba(203, 213, 225, 0.3);
-      --glass-shadow: 0 8px 32px 0 rgba(100, 116, 139, 0.1);
+      --glass-border: rgba(14, 165, 233, 0.3);
+      --glass-shadow: 0 8px 32px 0 rgba(14, 165, 233, 0.15);
 
-      /* Shadows - Softer & More Depth */
+      /* Shadows */
       --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
       --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
       --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-      --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+      --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.3);
 
       /* Layout */
       --sidebar-width: 280px;
@@ -84,21 +84,21 @@
     }
 
     [data-theme="dark"] {
-      /* Backgrounds - Dark Mode mit Tiefe */
-      --bg-color: linear-gradient(135deg, #0a0a0f 0%, #13131a 100%);
-      --bg-secondary: #1a1a24;
-      --bg-card: rgba(20, 20, 30, 0.85);
+      /* Backgrounds - Dark Blue Theme */
+      --bg-color: #000000;
+      --bg-secondary: #0a0a14;
+      --bg-card: rgba(10, 10, 20, 0.85);
 
       /* Text Colors */
-      --text-color: #e2e8f0;
+      --text-color: #3b82f6;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
 
-      /* Accent Colors - Neon Glow */
-      --accent-gradient: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #e879f9 100%);
-      --accent-color: #818cf8;
-      --accent-hover: #a78bfa;
-      --accent-light: #312e81;
+      /* Accent Colors - Blue Glow */
+      --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      --accent-color: #3b82f6;
+      --accent-hover: #60a5fa;
+      --accent-light: #1e3a8a;
 
       /* Status Colors - Dark Mode */
       --success-color: #34d399;
@@ -111,17 +111,17 @@
       --info-light: #1e3a8a;
 
       /* Glassmorphism - Dark */
-      --glass-bg: rgba(20, 20, 30, 0.75);
-      --glass-bg-solid: rgba(20, 20, 30, 0.95);
-      --glass-border: rgba(148, 163, 184, 0.1);
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      --glass-bg: rgba(10, 10, 20, 0.7);
+      --glass-bg-solid: rgba(10, 10, 20, 0.95);
+      --glass-border: rgba(59, 130, 246, 0.3);
+      --glass-shadow: 0 8px 32px 0 rgba(59, 130, 246, 0.2);
 
-      /* Shadows - Dark Mode with Glow */
+      /* Shadows - Dark Mode with Blue Glow */
       --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
       --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
       --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
-      --shadow-glow: 0 0 30px rgba(129, 140, 248, 0.4);
+      --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.4);
     }
 
     * {
@@ -370,7 +370,7 @@
     }
 
     .server-info:hover .server-icon {
-      transform: rotate(-5deg) scale(1.1);
+      transform: scale(1.05);
       box-shadow: var(--shadow-glow);
     }
 
@@ -855,7 +855,7 @@
     }
 
     .card:hover .card-icon {
-      transform: rotate(-5deg) scale(1.1);
+      transform: scale(1.05);
       box-shadow: var(--shadow-glow);
     }
 
