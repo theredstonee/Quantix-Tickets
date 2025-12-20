@@ -118,34 +118,32 @@ function readCfg(guildId) {
   if (!guildId) return getDefaultConfig();
 
   if (usingSQLite) {
+    // Step 1: Try to read from SQLite
     try {
       const row = statements.getConfig.get(guildId);
       if (row && row.config) {
         const config = JSON.parse(row.config);
-        console.log(`[Database] Read config from SQLite for ${guildId}`);
         return config;
       }
     } catch (err) {
       console.error('[Database] SQLite read error:', err.message);
     }
 
-    // No SQLite entry - check for JSON file to migrate
+    // Step 2: No SQLite entry - check for JSON file to migrate
     const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
     if (fs.existsSync(configPath)) {
       const config = safeReadJSON(configPath, null);
       if (config) {
         console.log(`[Database] Migrating config from JSON to SQLite for ${guildId}`);
-        // Write to SQLite
         try {
           const jsonData = JSON.stringify(config);
           statements.setConfig.run(guildId, jsonData);
           console.log(`[Database] Migration successful for ${guildId}`);
 
-          // Rename JSON file to prevent re-migration
+          // Rename JSON file to backup
           const migratedPath = configPath + '.migrated';
           try {
             fs.renameSync(configPath, migratedPath);
-            console.log(`[Database] Renamed ${configPath} to ${migratedPath}`);
           } catch (renameErr) {
             console.error(`[Database] Could not rename JSON file: ${renameErr.message}`);
           }
@@ -153,21 +151,49 @@ function readCfg(guildId) {
           return config;
         } catch (writeErr) {
           console.error('[Database] Migration write error:', writeErr.message);
-          // Fall through to return config anyway
           return config;
         }
       }
     }
 
+    // Step 3: Check for .migrated backup file and recover
+    const migratedPath = path.join(CONFIG_DIR, `${guildId}.json.migrated`);
+    if (fs.existsSync(migratedPath)) {
+      const config = safeReadJSON(migratedPath, null);
+      if (config) {
+        console.log(`[Database] Recovering config from backup for ${guildId}`);
+        try {
+          const jsonData = JSON.stringify(config);
+          statements.setConfig.run(guildId, jsonData);
+          console.log(`[Database] Recovery to SQLite successful for ${guildId}`);
+        } catch (writeErr) {
+          console.error('[Database] Recovery write error:', writeErr.message);
+        }
+        return config;
+      }
+    }
+
+    // Step 4: No data found anywhere - only NOW return defaults
     console.log(`[Database] No config found for ${guildId}, using defaults`);
     return getDefaultConfig();
   }
 
   // JSON fallback (when SQLite not available)
   const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  const config = safeReadJSON(configPath, null);
+  let config = safeReadJSON(configPath, null);
   if (config) {
-    console.log(`[Database] Read config from JSON for ${guildId}`);
+    return config;
+  }
+
+  // Check .migrated backup
+  const migratedPath = configPath + '.migrated';
+  config = safeReadJSON(migratedPath, null);
+  if (config) {
+    console.log(`[Database] Recovering config from backup for ${guildId}`);
+    // Restore the original file
+    try {
+      fs.renameSync(migratedPath, configPath);
+    } catch (e) {}
     return config;
   }
 
@@ -220,7 +246,24 @@ function getTicketsPath(guildId) {
 
 function loadTickets(guildId) {
   if (!guildId) return [];
-  return safeReadJSON(getTicketsPath(guildId), []);
+
+  const ticketsPath = getTicketsPath(guildId);
+  let tickets = safeReadJSON(ticketsPath, null);
+
+  // Check .migrated backup if no original
+  if (!tickets || !Array.isArray(tickets)) {
+    const migratedPath = ticketsPath + '.migrated';
+    if (fs.existsSync(migratedPath)) {
+      tickets = safeReadJSON(migratedPath, []);
+      if (tickets && Array.isArray(tickets) && tickets.length > 0) {
+        console.log(`[Database] Recovered ${tickets.length} tickets from backup for ${guildId}`);
+        // Save to original path
+        safeWriteJSON(ticketsPath, tickets);
+      }
+    }
+  }
+
+  return tickets || [];
 }
 
 function saveTickets(guildId, tickets) {
@@ -239,19 +282,31 @@ function getNextTicketNumber(guildId) {
     return 1;
   }
 
-  console.log(`[Database] getNextTicketNumber called for guild ${guildId}`);
-
   if (usingSQLite) {
     try {
       // Check if counter exists in SQLite
       const existing = statements.getCounter.get(guildId);
-      console.log(`[Database] Current counter in SQLite for ${guildId}:`, existing ? existing.counter : 'none');
 
       // If no counter in SQLite, check JSON file for migration
       if (!existing) {
         const counterPath = getCounterPath(guildId);
-        const jsonData = safeReadJSON(counterPath, { last: 0 });
-        const lastCounter = jsonData.last || 0;
+        let lastCounter = 0;
+
+        // Check original JSON file
+        if (fs.existsSync(counterPath)) {
+          const jsonData = safeReadJSON(counterPath, { last: 0 });
+          lastCounter = jsonData.last || 0;
+        }
+
+        // Check .migrated backup if no original
+        if (lastCounter === 0) {
+          const migratedPath = counterPath + '.migrated';
+          if (fs.existsSync(migratedPath)) {
+            const jsonData = safeReadJSON(migratedPath, { last: 0 });
+            lastCounter = jsonData.last || 0;
+            console.log(`[Database] Recovered counter from backup for ${guildId}: ${lastCounter}`);
+          }
+        }
 
         if (lastCounter > 0) {
           // Migrate: Set SQLite counter to JSON value, then increment
@@ -263,21 +318,25 @@ function getNextTicketNumber(guildId) {
 
       // Normal increment
       const result = statements.incrementCounter.get(guildId);
-      console.log(`[Database] New counter for ${guildId}: ${result.counter}`);
       return result.counter;
     } catch (err) {
       console.error('[Database] Counter error:', err.message);
-      console.error('[Database] Counter error stack:', err.stack);
     }
   }
 
   // JSON fallback
-  console.log(`[Database] Using JSON fallback for counter (usingSQLite: ${usingSQLite})`);
   const counterPath = getCounterPath(guildId);
-  const data = safeReadJSON(counterPath, { last: 0 });
+  let data = safeReadJSON(counterPath, null);
+
+  // Check .migrated backup if no original
+  if (!data) {
+    const migratedPath = counterPath + '.migrated';
+    data = safeReadJSON(migratedPath, { last: 0 });
+  }
+
+  if (!data) data = { last: 0 };
   data.last = (data.last || 0) + 1;
   safeWriteJSON(counterPath, data);
-  console.log(`[Database] JSON counter for ${guildId}: ${data.last}`);
   return data.last;
 }
 
@@ -291,15 +350,31 @@ function getCurrentCounter(guildId) {
         return row.counter;
       }
       // Check JSON fallback for existing counter
-      const jsonData = safeReadJSON(getCounterPath(guildId), { last: 0 });
-      return jsonData.last || 0;
+      const counterPath = getCounterPath(guildId);
+      let jsonData = safeReadJSON(counterPath, null);
+
+      // Check .migrated backup
+      if (!jsonData) {
+        const migratedPath = counterPath + '.migrated';
+        jsonData = safeReadJSON(migratedPath, { last: 0 });
+      }
+
+      return jsonData?.last || 0;
     } catch (err) {
       console.error('[Database] Counter read error:', err.message);
     }
   }
 
-  const data = safeReadJSON(getCounterPath(guildId), { last: 0 });
-  return data.last || 0;
+  const counterPath = getCounterPath(guildId);
+  let data = safeReadJSON(counterPath, null);
+
+  // Check .migrated backup
+  if (!data) {
+    const migratedPath = counterPath + '.migrated';
+    data = safeReadJSON(migratedPath, { last: 0 });
+  }
+
+  return data?.last || 0;
 }
 
 // ===== Language Functions =====
