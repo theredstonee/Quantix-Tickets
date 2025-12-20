@@ -6992,6 +6992,32 @@ client.on(Events.InteractionCreate, async i => {
         });
         saveTickets(guildId, log);
 
+        // Update original ticket embed to show closed status
+        if (ticket.messageId) {
+          try {
+            const originalMsg = await i.channel.messages.fetch(ticket.messageId);
+            if (originalMsg && originalMsg.embeds.length > 0) {
+              const oldEmbed = originalMsg.embeds[0];
+              const updatedEmbed = EmbedBuilder.from(oldEmbed)
+                .setColor(0xED4245) // Red for closed
+                .setFooter({ text: `🔴 Geschlossen • ${oldEmbed.footer?.text || 'Quantix Tickets'}` });
+
+              // Disable all buttons
+              const disabledRows = originalMsg.components.map(row => {
+                const newRow = new ActionRowBuilder();
+                row.components.forEach(comp => {
+                  newRow.addComponents(ButtonBuilder.from(comp).setDisabled(true));
+                });
+                return newRow;
+              });
+
+              await originalMsg.edit({ embeds: [updatedEmbed], components: disabledRows });
+            }
+          } catch (err) {
+            console.error('Error updating original ticket embed:', err.message);
+          }
+        }
+
         // DM mit Transcript wird weiter unten gesendet (einheitliches Format mit Statistiken)
 
         const closer = await i.guild.members.fetch(i.user.id).catch(() => null);
@@ -7659,6 +7685,32 @@ client.on(Events.InteractionCreate, async i => {
           ticket.closedAt = Date.now();
           ticket.closedBy = i.user.id;
           saveTickets(guildId, log);
+
+          // Update original ticket embed to show closed status
+          if (ticket.messageId) {
+            try {
+              const originalMsg = await i.channel.messages.fetch(ticket.messageId);
+              if (originalMsg && originalMsg.embeds.length > 0) {
+                const oldEmbed = originalMsg.embeds[0];
+                const updatedEmbed = EmbedBuilder.from(oldEmbed)
+                  .setColor(0xED4245) // Red for closed
+                  .setFooter({ text: `🔴 Geschlossen • ${oldEmbed.footer?.text || 'Quantix Tickets'}` });
+
+                // Disable all buttons
+                const disabledRows = originalMsg.components.map(row => {
+                  const newRow = new ActionRowBuilder();
+                  row.components.forEach(comp => {
+                    newRow.addComponents(ButtonBuilder.from(comp).setDisabled(true));
+                  });
+                  return newRow;
+                });
+
+                await originalMsg.edit({ embeds: [updatedEmbed], components: disabledRows });
+              }
+            } catch (err) {
+              console.error('Error updating original ticket embed:', err.message);
+            }
+          }
 
           // Config laden für Reopen-Button und Ticket-Display-Name
           const cfg = readCfg(guildId);
