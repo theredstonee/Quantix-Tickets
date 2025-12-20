@@ -2720,11 +2720,23 @@ module.exports = (client)=>{
         }
 
         const label = (req.body[labelKey] || '').trim();
-        const value = (req.body[valueKey] || '').trim();
+        let value = (req.body[valueKey] || '').trim();
         const emoji = (req.body[emojiKey] || '').trim();
         const ticketNameDisplay = (req.body[ticketNameDisplayKey] || 'channel').trim();
 
-        if(label && value) {
+        // Auto-generate value if empty, "..", or invalid
+        if (!value || value === '..' || value === '...' || value.length < 2) {
+          // Generate value from label (lowercase, no spaces, no special chars)
+          value = label.toLowerCase()
+            .replace(/[^a-z0-9äöüß]/gi, '_')
+            .replace(/_+/g, '_')
+            .replace(/^_|_$/g, '')
+            .substring(0, 50);
+          // Add index to ensure uniqueness
+          if (!value) value = `topic_${topicIndex}`;
+        }
+
+        if(label) {
           topics.push({
             label: label,
             value: value,
