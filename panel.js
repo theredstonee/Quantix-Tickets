@@ -2479,7 +2479,9 @@ module.exports = (client)=>{
         : (req.body.teamRoleId ? [sanitizeDiscordId(req.body.teamRoleId) || req.body.teamRoleId.trim()] : []);
 
       // Ticket-Erstellungs-Berechtigung
+      console.log('[DEBUG] req.body.ticketCreationRestricted =', JSON.stringify(req.body.ticketCreationRestricted), 'type:', typeof req.body.ticketCreationRestricted);
       cfg.ticketCreationRestricted = req.body.ticketCreationRestricted === 'true' || req.body.ticketCreationRestricted === 'on';
+      console.log('[DEBUG] After check: cfg.ticketCreationRestricted =', cfg.ticketCreationRestricted);
       if (req.body.allowedTicketRoles) {
         cfg.allowedTicketRoles = Array.isArray(req.body.allowedTicketRoles)
           ? req.body.allowedTicketRoles.filter(id => id && id.trim()).map(id => sanitizeDiscordId(id) || id.trim())
@@ -2489,7 +2491,9 @@ module.exports = (client)=>{
       }
 
       // Components V2 Design
+      console.log('[DEBUG] req.body.useComponentsV2 =', JSON.stringify(req.body.useComponentsV2), 'type:', typeof req.body.useComponentsV2);
       cfg.useComponentsV2 = req.body.useComponentsV2 === 'true' || req.body.useComponentsV2 === 'on';
+      console.log('[DEBUG] After check: cfg.useComponentsV2 =', cfg.useComponentsV2);
 
       if(!cfg.priorityRoles) cfg.priorityRoles = {'0':[], '1':[], '2':[]};
 
