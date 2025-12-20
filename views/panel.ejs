@@ -3333,6 +3333,46 @@
               </div>
             </div>
 
+            <!-- Panel Theme -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                      <i class="fas fa-palette"></i>
+                    </div>
+                    <span><%= lang === 'de' ? '🎨 Panel-Theme' : '🎨 Panel Theme' %></span>
+                  </div>
+                  <p class="card-description">
+                    <%= lang === 'de'
+                      ? 'Wähle ein saisonales Theme für das Web-Panel'
+                      : 'Choose a seasonal theme for the web panel'
+                    %>
+                  </p>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-grid" style="grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                  <button type="button" class="btn theme-btn" onclick="setTheme('default')" style="padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 2rem;">🎫</span>
+                    <span><%= lang === 'de' ? 'Standard' : 'Default' %></span>
+                  </button>
+                  <button type="button" class="btn theme-btn" onclick="setTheme('halloween')" style="padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 2rem;">🎃</span>
+                    <span>Halloween</span>
+                  </button>
+                  <button type="button" class="btn theme-btn" onclick="setTheme('christmas')" style="padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 2rem;">🎄</span>
+                    <span><%= lang === 'de' ? 'Weihnachten' : 'Christmas' %></span>
+                  </button>
+                </div>
+                <p class="help-text" style="margin-top: 1rem; text-align: center;">
+                  <i class="fas fa-info-circle"></i>
+                  <%= lang === 'de' ? 'Das Theme wird lokal gespeichert und gilt nur für diesen Browser.' : 'The theme is saved locally and only applies to this browser.' %>
+                </p>
+              </div>
+            </div>
+
             <!-- Ticket Behavior Settings -->
             <div class="card">
               <div class="card-header">
