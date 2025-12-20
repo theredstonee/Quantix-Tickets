@@ -6034,6 +6034,13 @@
           sendPanelBtn.disabled = !this.value;
         });
       }
+
+      // Initialize embed previews with Discord markdown
+      if (typeof updateEmbedPreview === 'function') {
+        updateEmbedPreview('ticket');
+        updateEmbedPreview('panel');
+        updateEmbedPreview('application');
+      }
     }); // End of DOMContentLoaded
 
     // Theme is managed by /js/theme-manager.js (Cookie-based)
@@ -6093,19 +6100,59 @@
       }
     }
 
+    // Discord Markdown Parser for Preview
+    function parseDiscordMarkdown(text) {
+      if (!text) return '';
+
+      // First escape HTML to prevent XSS
+      let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Parse Discord markdown (order matters!)
+      // Bold italic: ***text***
+      html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+      // Bold: **text**
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // Italic: *text* or _text_
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+      // Underline: __text__
+      html = html.replace(/__(.+?)__/g, '<u>$1</u>');
+      // Strikethrough: ~~text~~
+      html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+      // Inline code: `text`
+      html = html.replace(/`([^`]+)`/g, '<code style="background: rgba(0,0,0,0.3); padding: 0.1em 0.3em; border-radius: 3px; font-family: monospace;">$1</code>');
+      // Mentions: <@123456> or {userMention}
+      html = html.replace(/&lt;@!?\d+&gt;/g, '<span style="background: rgba(88,101,242,0.3); color: #5865f2; padding: 0 2px; border-radius: 3px;">@User</span>');
+      html = html.replace(/\{userMention\}/g, '<span style="background: rgba(88,101,242,0.3); color: #5865f2; padding: 0 2px; border-radius: 3px;">@User</span>');
+      // Channel: <#123456>
+      html = html.replace(/&lt;#\d+&gt;/g, '<span style="background: rgba(88,101,242,0.3); color: #5865f2; padding: 0 2px; border-radius: 3px;">#channel</span>');
+      // Placeholders
+      html = html.replace(/\{ticketNumber\}/g, '<span style="color: var(--accent-color);">#00001</span>');
+      html = html.replace(/\{topicLabel\}/g, '<span style="color: var(--accent-color);">Support</span>');
+      html = html.replace(/\{topicValue\}/g, '<span style="color: var(--accent-color);">support</span>');
+      html = html.replace(/\{userId\}/g, '<span style="opacity: 0.7;">123456789</span>');
+      // Newlines
+      html = html.replace(/\n/g, '<br>');
+
+      return html;
+    }
+
     // Embed Preview Update
     function updateEmbedPreview(type) {
       if (type === 'ticket') {
         const title = document.getElementById('embedTitle').value || 'Ticket #1234';
-        const desc = (document.getElementById('embedDescription').value || '').replace('{user}', '@User').replace('{id}', '1234').replace('{topic}', 'Support');
+        const desc = document.getElementById('embedDescription').value || '';
         const color = document.getElementById('embedColor').value || '#0ea5e9';
         const footer = document.getElementById('embedFooter').value || 'Quantix Tickets System';
 
         const preview = document.getElementById('ticketEmbedPreview');
         if (preview) {
           preview.style.borderLeftColor = color;
-          preview.querySelector('.embed-preview-title').textContent = title;
-          preview.querySelector('.embed-preview-desc').textContent = desc;
+          preview.querySelector('.embed-preview-title').innerHTML = parseDiscordMarkdown(title);
+          preview.querySelector('.embed-preview-desc').innerHTML = parseDiscordMarkdown(desc);
           preview.querySelector('.embed-preview-footer').textContent = footer;
         }
       } else if (type === 'panel') {
@@ -6117,21 +6164,21 @@
         const preview = document.getElementById('panelEmbedPreview');
         if (preview) {
           preview.style.borderLeftColor = color;
-          preview.querySelector('.embed-preview-title').textContent = title;
-          preview.querySelector('.embed-preview-desc').textContent = desc;
+          preview.querySelector('.embed-preview-title').innerHTML = parseDiscordMarkdown(title);
+          preview.querySelector('.embed-preview-desc').innerHTML = parseDiscordMarkdown(desc);
           preview.querySelector('.embed-preview-footer').textContent = footer;
         }
       } else if (type === 'application') {
         const title = document.getElementById('applicationEmbedTitle').value || '<%= lang === "de" ? "Bewerbung #1234" : "Application #1234" %>';
-        const desc = (document.getElementById('applicationEmbedDescription').value || '').replace('{user}', '@User').replace('{id}', '1234');
+        const desc = document.getElementById('applicationEmbedDescription').value || '';
         const color = document.getElementById('applicationEmbedColor').value || '#10b981';
         const footer = document.getElementById('applicationEmbedFooter').value || '<%= lang === "de" ? "Bewerbungs-System" : "Application System" %>';
 
         const preview = document.getElementById('applicationEmbedPreview');
         if (preview) {
           preview.style.borderLeftColor = color;
-          preview.querySelector('.embed-preview-title').textContent = title;
-          preview.querySelector('.embed-preview-desc').textContent = desc;
+          preview.querySelector('.embed-preview-title').innerHTML = parseDiscordMarkdown(title);
+          preview.querySelector('.embed-preview-desc').innerHTML = parseDiscordMarkdown(desc);
           preview.querySelector('.embed-preview-footer').textContent = footer;
         }
       }
