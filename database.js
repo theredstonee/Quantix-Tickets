@@ -175,7 +175,24 @@ function readCfg(guildId) {
       }
     }
 
-    // Step 5: No migration files - return defaults for new guilds
+    // Step 5: No .back - check for .old to migrate
+    const oldPath = path.join(CONFIG_DIR, `${guildId}.json.old`);
+    if (fs.existsSync(oldPath)) {
+      const config = safeReadJSON(oldPath, null);
+      if (config) {
+        console.log(`[Database] Migrating config from .old to SQLite for ${guildId}`);
+        try {
+          statements.setConfig.run(guildId, JSON.stringify(config));
+          fs.renameSync(oldPath, path.join(CONFIG_DIR, `${guildId}.json.archived`));
+          console.log(`[Database] Migration complete, renamed to .archived`);
+        } catch (e) {
+          console.error('[Database] Migration error:', e.message);
+        }
+        return config;
+      }
+    }
+
+    // Step 6: No migration files - return defaults for new guilds
     return getDefaultConfig();
   }
 
@@ -270,12 +287,23 @@ function getNextTicketNumber(guildId) {
               try {
                 fs.renameSync(backPath, counterPath + '.old');
               } catch (e) {}
+            } else {
+              // Step 5: No .back - check for .old to migrate
+              const oldPath = counterPath + '.old';
+              if (fs.existsSync(oldPath)) {
+                const jsonData = safeReadJSON(oldPath, { last: 0 });
+                currentCounter = jsonData.last || 0;
+                console.log(`[Database] Migrating counter from .old for ${guildId}: ${currentCounter}`);
+                try {
+                  fs.renameSync(oldPath, counterPath + '.archived');
+                } catch (e) {}
+              }
             }
           }
         }
       }
 
-      // Step 5: Increment and save
+      // Step 6: Increment and save
       const newCounter = currentCounter + 1;
       statements.setCounter.run(guildId, newCounter);
       console.log(`[Database] Counter for ${guildId}: ${currentCounter} -> ${newCounter}`);
