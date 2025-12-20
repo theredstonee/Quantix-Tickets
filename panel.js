@@ -37,6 +37,9 @@ const {
 // Import database functions for reliable storage
 const { readCfg, writeCfg, loadTickets, saveTickets } = require('./database');
 
+// Import Discord logger for console output to Discord
+const { originalConsole } = require('./discord-logger');
+
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
 
@@ -2806,7 +2809,7 @@ module.exports = (client)=>{
 
       // Auto-Close Configuration (kostenlos für alle)
       if (!cfg.autoClose) cfg.autoClose = {};
-      cfg.autoClose.enabled = req.body.autoCloseEnabled === 'on';
+      cfg.autoClose.enabled = req.body.autoCloseEnabled === 'on' || req.body.autoCloseEnabled === 'true';
       // Zeit in Stunden (min: 25h damit Warnung 24h vorher funktioniert, max: 720h = 30 Tage)
       cfg.autoClose.inactiveHours = sanitizeNumber(req.body.autoCloseInactiveHours, 25, 720) || 72;
 
@@ -2850,9 +2853,9 @@ module.exports = (client)=>{
         };
       }
 
-      cfg.ticketRating.enabled = req.body.ticketRatingEnabled === 'on';
-      cfg.ticketRating.requireFeedback = req.body.ticketRatingRequireFeedback === 'on';
-      cfg.ticketRating.showInAnalytics = req.body.ticketRatingShowInAnalytics === 'on';
+      cfg.ticketRating.enabled = req.body.ticketRatingEnabled === 'on' || req.body.ticketRatingEnabled === 'true';
+      cfg.ticketRating.requireFeedback = req.body.ticketRatingRequireFeedback === 'on' || req.body.ticketRatingRequireFeedback === 'true';
+      cfg.ticketRating.showInAnalytics = req.body.ticketRatingShowInAnalytics === 'on' || req.body.ticketRatingShowInAnalytics === 'true';
 
       // Survey System Configuration (Basic+ Feature)
       if (!cfg.surveySystem) {
@@ -2884,7 +2887,7 @@ module.exports = (client)=>{
         };
       }
 
-      cfg.surveySystem.enabled = req.body.surveySystemEnabled === 'on';
+      cfg.surveySystem.enabled = req.body.surveySystemEnabled === 'on' || req.body.surveySystemEnabled === 'true';
       cfg.surveySystem.sendOnClose = req.body.surveySystemSendOnClose !== 'off';
       cfg.surveySystem.showInAnalytics = req.body.surveySystemShowInAnalytics !== 'off';
 
@@ -2926,7 +2929,7 @@ module.exports = (client)=>{
       }
 
       if (hasFeature(guildId, 'slaSystem')) {
-        cfg.sla.enabled = req.body.slaEnabled === 'on';
+        cfg.sla.enabled = req.body.slaEnabled === 'on' || req.body.slaEnabled === 'true';
         cfg.sla.priority0Hours = sanitizeNumber(req.body.slaPriority0Hours, 1, 168) || 24;
         cfg.sla.priority1Hours = sanitizeNumber(req.body.slaPriority1Hours, 1, 72) || 4;
         cfg.sla.priority2Hours = sanitizeNumber(req.body.slaPriority2Hours, 1, 24) || 1;
@@ -2944,7 +2947,7 @@ module.exports = (client)=>{
       }
 
       if (hasFeature(guildId, 'voiceSupport')) {
-        cfg.voiceSupport.enabled = req.body.voiceSupportEnabled === 'on';
+        cfg.voiceSupport.enabled = req.body.voiceSupportEnabled === 'on' || req.body.voiceSupportEnabled === 'true';
         cfg.voiceSupport.showButton = req.body.voiceSupportShowButton !== 'off';
       }
 
@@ -2954,14 +2957,14 @@ module.exports = (client)=>{
         cfg.autoAssignment = getDefaultAutoAssignmentConfig();
       }
 
-      cfg.autoAssignment.enabled = req.body.autoAssignmentEnabled === 'on';
+      cfg.autoAssignment.enabled = req.body.autoAssignmentEnabled === 'on' || req.body.autoAssignmentEnabled === 'true';
       cfg.autoAssignment.assignOnCreate = req.body.autoAssignmentAssignOnCreate !== 'off';
       cfg.autoAssignment.notifyAssignee = req.body.autoAssignmentNotifyAssignee !== 'off';
       cfg.autoAssignment.strategy = req.body.autoAssignmentStrategy || 'workload';
 
       // Pro features
       if (hasFeature(guildId, 'autoAssignment')) {
-        cfg.autoAssignment.checkOnlineStatus = req.body.autoAssignmentCheckOnlineStatus === 'on';
+        cfg.autoAssignment.checkOnlineStatus = req.body.autoAssignmentCheckOnlineStatus === 'on' || req.body.autoAssignmentCheckOnlineStatus === 'true';
       }
 
       // Auto-Responses / FAQ Configuration (Free Feature)
@@ -3028,7 +3031,7 @@ module.exports = (client)=>{
       console.log('applicationSystemEnabled from form:', req.body.applicationSystemEnabled);
 
       if (hasApplicationSystemFeature) {
-        cfg.applicationSystem.enabled = req.body.applicationSystemEnabled === 'on';
+        cfg.applicationSystem.enabled = req.body.applicationSystemEnabled === 'on' || req.body.applicationSystemEnabled === 'true';
         cfg.applicationSystem.panelChannelId = sanitizeDiscordId(req.body.applicationPanelChannelId) || null;
         cfg.applicationSystem.categoryId = sanitizeDiscordId(req.body.applicationCategoryId) || null;
         cfg.applicationSystem.teamRoleId = sanitizeDiscordId(req.body.applicationTeamRoleId) || null;
@@ -3046,7 +3049,7 @@ module.exports = (client)=>{
         cfg.applicationSystem.minServerJoinDays = sanitizeNumber(req.body.applicationMinServerJoin, 0, 365) || 0;
 
         // Voting System
-        cfg.applicationSystem.votingEnabled = req.body.applicationVotingEnabled === 'on';
+        cfg.applicationSystem.votingEnabled = req.body.applicationVotingEnabled === 'on' || req.body.applicationVotingEnabled === 'true';
         cfg.applicationSystem.votingChannelId = sanitizeDiscordId(req.body.applicationVotingChannelId) || null;
 
         // Auto-Expire & Archive
@@ -3054,7 +3057,7 @@ module.exports = (client)=>{
         cfg.applicationSystem.archiveChannelId = sanitizeDiscordId(req.body.applicationArchiveChannelId) || null;
 
         // Interview System
-        cfg.applicationSystem.interviewEnabled = req.body.applicationInterviewEnabled === 'on';
+        cfg.applicationSystem.interviewEnabled = req.body.applicationInterviewEnabled === 'on' || req.body.applicationInterviewEnabled === 'true';
         cfg.applicationSystem.interviewReminderMinutes = sanitizeNumber(req.body.applicationInterviewReminderMinutes, 5, 1440) || 30;
 
         // Blacklist
@@ -3086,7 +3089,7 @@ module.exports = (client)=>{
 
         // Process Positions Embed Settings
         if (!cfg.applicationSystem.positionsEmbed) cfg.applicationSystem.positionsEmbed = {};
-        cfg.applicationSystem.positionsEmbed.enabled = req.body.positionsEmbedEnabled === 'on';
+        cfg.applicationSystem.positionsEmbed.enabled = req.body.positionsEmbedEnabled === 'on' || req.body.positionsEmbedEnabled === 'true';
         cfg.applicationSystem.positionsEmbed.title = sanitizeString(req.body.positionsEmbedTitle, 256) || '';
         cfg.applicationSystem.positionsEmbed.description = sanitizeString(req.body.positionsEmbedDescription, 2048) || '';
         cfg.applicationSystem.positionsEmbed.color = sanitizeString(req.body.positionsEmbedColor, 7) || '#3b82f6';
@@ -3157,7 +3160,7 @@ module.exports = (client)=>{
 
       const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       days.forEach(day => {
-        const enabled = req.body[`voiceHours_${day}_enabled`] === 'on';
+        const enabled = req.body[`voiceHours_${day}_enabled`] === 'on' || req.body[`voiceHours_${day}_enabled`] === 'true';
         const start = sanitizeString(req.body[`voiceHours_${day}_start`], 5) || '13:00';
         const end = sanitizeString(req.body[`voiceHours_${day}_end`], 5) || '22:00';
 
