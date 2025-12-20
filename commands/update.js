@@ -43,19 +43,33 @@ module.exports = {
       response += '\n🔄 Bot und Website werden neu gestartet...';
       await interaction.editReply(response);
 
-      // Restart both bot and panel via PM2
+      // Restart services via systemctl or PM2
       setTimeout(async () => {
-        console.log('🔄 Restarting bot and panel after update...');
+        console.log('🔄 Restarting bot and web after update...');
+
+        // Try systemctl first (for systemd services)
         try {
-          // Try to restart panel if it exists
-          await execPromise('pm2 restart quantix-panel').catch(() => {
-            console.log('Panel nicht als PM2 Prozess gefunden, überspringe...');
+          console.log('🌐 Restarting quantix-web via systemctl...');
+          await execPromise('sudo systemctl restart quantix-web').catch(async (e) => {
+            console.log('systemctl quantix-web failed, trying PM2...');
+            await execPromise('pm2 restart quantix-panel').catch(() => {});
           });
         } catch (e) {
-          // Panel might not be running as separate PM2 process
+          console.log('Web restart error:', e.message);
         }
-        // Exit to restart bot (PM2 will restart it)
-        process.exit(0);
+
+        // Restart bot via systemctl (this will also restart this process)
+        try {
+          console.log('🤖 Restarting quantix-bot via systemctl...');
+          await execPromise('sudo systemctl restart quantix-bot').catch(async (e) => {
+            console.log('systemctl quantix-bot failed, using process.exit...');
+            // Fallback: Exit process (PM2/systemd will restart it)
+            process.exit(0);
+          });
+        } catch (e) {
+          // Fallback: Exit to let service manager restart
+          process.exit(0);
+        }
       }, 2000);
 
     } catch (err) {
