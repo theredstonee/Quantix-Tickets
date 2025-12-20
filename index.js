@@ -3453,6 +3453,9 @@ client.on(Events.InteractionCreate, async i => {
         }
       }
 
+      // Defer reply to show progress messages
+      await i.deferReply({ ephemeral: true });
+
       try {
         await createTicketChannel(i, topic, answers, cfg);
       } catch (createErr) {
@@ -3559,6 +3562,9 @@ client.on(Events.InteractionCreate, async i => {
             }
           }
         }
+
+        // Defer reply to show progress messages
+        await i.deferReply({ ephemeral: true });
 
         await createTicketChannelMultiSystem(i, system, topic, answers, cfg);
       } catch (createErr) {
