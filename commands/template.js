@@ -1,33 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, PermissionFlagsBits } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
 const { hasFeature } = require('../premium');
+const { readCfg, loadTickets } = require('../database');
 
-const CONFIG_DIR = path.join(__dirname, '..', 'configs');
-
-function readCfg(guildId) {
-  try {
-    const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {
-    return {};
-  }
-}
-
-function getTicketsPath(guildId) {
-  return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-}
-
-function loadTickets(guildId) {
-  try {
-    const ticketsPath = getTicketsPath(guildId);
-    if (!fs.existsSync(ticketsPath)) return [];
-    const data = fs.readFileSync(ticketsPath, 'utf8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
 
 module.exports = {
   data: new SlashCommandBuilder()

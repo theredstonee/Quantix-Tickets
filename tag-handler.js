@@ -1,49 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
-
-const CONFIG_DIR = path.join(__dirname, 'configs');
-
-function getTicketsPath(guildId) {
-  return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-}
-
-function loadTickets(guildId) {
-  try {
-    const ticketsPath = getTicketsPath(guildId);
-    if (!fs.existsSync(ticketsPath)) return [];
-    return JSON.parse(fs.readFileSync(ticketsPath, 'utf8'));
-  } catch {
-    return [];
-  }
-}
-
-function saveTickets(guildId, tickets) {
-  const ticketsPath = getTicketsPath(guildId);
-  const tempFile = ticketsPath + '.tmp';
-  const backupFile = ticketsPath + '.bak';
-  try {
-    const jsonData = JSON.stringify(tickets, null, 2);
-    JSON.parse(jsonData);
-    fs.writeFileSync(tempFile, jsonData, 'utf8');
-    if (fs.existsSync(ticketsPath)) {
-      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* optional */ }
-    }
-    fs.renameSync(tempFile, ticketsPath);
-  } catch (err) {
-    console.error('[tag-handler] Error saving tickets:', err.message);
-    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
-  }
-}
-
-function readCfg(guildId) {
-  try {
-    const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {
-    return {};
-  }
-}
+const { readCfg, loadTickets, saveTickets } = require('./database');
 
 async function handleTagAdd(interaction) {
   const { guild, channel } = interaction;

@@ -1,52 +1,7 @@
-const fs = require('fs');
-const path = require('path');
 const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const { getGuildLanguage, t } = require('./translations');
+const { readCfg, loadTickets, saveTickets } = require('./database');
 
-const CONFIG_DIR = path.join(__dirname, 'configs');
-
-function readCfg(guildId) {
-  try {
-    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    const data = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    return data || {};
-  } catch {
-    return {};
-  }
-}
-
-function getTicketsPath(guildId) {
-  return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-}
-
-function loadTickets(guildId) {
-  try {
-    const ticketsPath = getTicketsPath(guildId);
-    if (!fs.existsSync(ticketsPath)) return [];
-    const data = fs.readFileSync(ticketsPath, 'utf8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-function saveTickets(guildId, tickets) {
-  const ticketsPath = getTicketsPath(guildId);
-  const tempFile = ticketsPath + '.tmp';
-  const backupFile = ticketsPath + '.bak';
-  try {
-    const jsonData = JSON.stringify(tickets, null, 2);
-    JSON.parse(jsonData); // Validiere JSON
-    fs.writeFileSync(tempFile, jsonData, 'utf8');
-    if (fs.existsSync(ticketsPath)) {
-      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* optional */ }
-    }
-    fs.renameSync(tempFile, ticketsPath);
-  } catch (err) {
-    console.error('[auto-close] Error saving tickets:', err.message);
-    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
-  }
-}
 
 function getLastActivity(ticket) {
   // Prüfe ob Auto-Close Timer manuell zurückgesetzt wurde

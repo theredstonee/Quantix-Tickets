@@ -1,53 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
 const { t } = require('../translations');
 const { hasFeature, isPremium } = require('../premium');
 const { createStyledEmbed, createQuickEmbed } = require('../helpers');
-
-const CONFIG_DIR = path.join(__dirname, '..', 'configs');
-
-function loadTickets(guildId) {
-  const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-  if (!fs.existsSync(ticketsPath)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(ticketsPath, 'utf8'));
-  } catch {
-    return [];
-  }
-}
-
-function saveTickets(guildId, tickets) {
-  if (!fs.existsSync(CONFIG_DIR)) {
-    fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  }
-  const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-  const tempFile = ticketsPath + '.tmp';
-  const backupFile = ticketsPath + '.bak';
-  try {
-    const jsonData = JSON.stringify(tickets, null, 2);
-    JSON.parse(jsonData); // Validiere JSON
-    fs.writeFileSync(tempFile, jsonData, 'utf8');
-    if (fs.existsSync(ticketsPath)) {
-      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* optional */ }
-    }
-    fs.renameSync(tempFile, ticketsPath);
-  } catch (err) {
-    console.error('[ticket.js] Error saving tickets:', err.message);
-    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
-    throw err;
-  }
-}
-
-function readCfg(guildId) {
-  const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  if (!fs.existsSync(cfgPath)) return {};
-  try {
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {
-    return {};
-  }
-}
+const { readCfg, writeCfg, loadTickets, saveTickets } = require('../database');
 
 function getTeamRole(guildId) {
   const cfg = readCfg(guildId);

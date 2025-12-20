@@ -1,45 +1,5 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
-
-const CONFIG_DIR = path.join(__dirname, 'configs');
-
-function readCfg(guildId) {
-  try {
-    const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {
-    return {};
-  }
-}
-
-function loadTickets(guildId) {
-  try {
-    const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-    if (!fs.existsSync(ticketsPath)) return [];
-    return JSON.parse(fs.readFileSync(ticketsPath, 'utf8'));
-  } catch {
-    return [];
-  }
-}
-
-function saveTickets(guildId, tickets) {
-  const ticketsPath = path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-  const tempFile = ticketsPath + '.tmp';
-  const backupFile = ticketsPath + '.bak';
-  try {
-    const jsonData = JSON.stringify(tickets, null, 2);
-    JSON.parse(jsonData);
-    fs.writeFileSync(tempFile, jsonData, 'utf8');
-    if (fs.existsSync(ticketsPath)) {
-      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* optional */ }
-    }
-    fs.renameSync(tempFile, ticketsPath);
-  } catch (err) {
-    console.error('[department-handler] Error saving tickets:', err.message);
-    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
-  }
-}
+const { readCfg, loadTickets, saveTickets } = require('./database');
 
 /**
  * Handles department forwarding

@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ActivityType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const { readCfg } = require('../database');
 
 // Founder IDs
 const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
@@ -9,24 +10,6 @@ const FOUNDER_IDS = ['1048900200497954868', '1159182333316968530'];
 const WHITELISTED_SERVER_ID = '1403053662825222388';
 
 const maintenanceFile = path.join(__dirname, '..', 'maintenance.json');
-
-// Read guild config
-function readCfg(guildId) {
-  try {
-    const CONFIG_DIR = path.join(__dirname, '..', 'configs');
-    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-
-    if (!fs.existsSync(configPath)) {
-      return {};
-    }
-
-    const data = fs.readFileSync(configPath, 'utf8');
-    return JSON.parse(data);
-  } catch (err) {
-    console.error(`Error reading config for guild ${guildId}:`, err);
-    return {};
-  }
-}
 
 function readMaintenanceState() {
   if (!fs.existsSync(maintenanceFile)) {

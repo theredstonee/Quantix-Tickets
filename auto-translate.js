@@ -1,17 +1,5 @@
 const { Translate } = require('@google-cloud/translate').v2;
-const fs = require('fs');
-const path = require('path');
-
-const CONFIG_DIR = path.join(__dirname, 'configs');
-
-function readCfg(guildId) {
-  try {
-    const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {
-    return {};
-  }
-}
+const { readCfg } = require('./database');
 
 const languageMapping = {
   de: 'de',

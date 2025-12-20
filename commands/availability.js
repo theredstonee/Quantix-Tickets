@@ -1,20 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
-
-function readCfg(guildId) {
-  try {
-    const cfgPath = path.join(__dirname, '..', 'configs', `${guildId}.json`);
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {
-    return {};
-  }
-}
-
-function writeCfg(guildId, cfg) {
-  const cfgPath = path.join(__dirname, '..', 'configs', `${guildId}.json`);
-  fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
-}
+const { readCfg, writeCfg } = require('../database');
 
 module.exports = {
   data: new SlashCommandBuilder()

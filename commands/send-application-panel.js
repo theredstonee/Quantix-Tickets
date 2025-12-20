@@ -1,28 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, PermissionFlagsBits } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
-
-function readCfg(guildId) {
-  const configDir = path.join(__dirname, '..', 'configs');
-  const cfgPath = path.join(configDir, `${guildId}.json`);
-  if (!fs.existsSync(cfgPath)) {
-    return null;
-  }
-  try {
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {
-    return null;
-  }
-}
-
-function writeCfg(guildId, data) {
-  const configDir = path.join(__dirname, '..', 'configs');
-  if (!fs.existsSync(configDir)) {
-    fs.mkdirSync(configDir, { recursive: true });
-  }
-  const cfgPath = path.join(configDir, `${guildId}.json`);
-  fs.writeFileSync(cfgPath, JSON.stringify(data, null, 2), 'utf8');
-}
+const { readCfg, writeCfg } = require('../database');
 
 module.exports = {
   data: new SlashCommandBuilder()

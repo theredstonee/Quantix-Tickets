@@ -3,6 +3,7 @@ const { EmbedBuilder, PermissionFlagsBits, ChannelType, ButtonBuilder, ButtonSty
 const fs = require('fs');
 const path = require('path');
 const { t } = require('./translations');
+const { readCfg, writeCfg } = require('./database');
 
 const CONFIG_DIR = path.join(__dirname, 'configs');
 const AUDIO_DIR = path.join(__dirname, 'audio');
@@ -50,24 +51,6 @@ function getNextCaseId(guildId) {
   } catch (err) {
     console.error('Error getting next case ID:', err);
     return Math.floor(Math.random() * 10000);
-  }
-}
-
-function readCfg(guildId) {
-  try {
-    const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {
-    return {};
-  }
-}
-
-function writeCfg(guildId, cfg) {
-  try {
-    const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
-  } catch (err) {
-    console.error('Error writing config:', err);
   }
 }
 

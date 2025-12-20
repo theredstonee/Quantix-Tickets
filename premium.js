@@ -1,27 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+const { readCfg, writeCfg } = require('./database');
 
-const CONFIG_DIR = path.join(__dirname, 'configs');
-
-function readCfg(guildId) {
-  const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  if (!fs.existsSync(cfgPath)) {
-    return getDefaultConfig();
-  }
-  try {
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  } catch {
-    return getDefaultConfig();
-  }
-}
-
-function saveCfg(guildId, cfg) {
-  if (!fs.existsSync(CONFIG_DIR)) {
-    fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  }
-  const cfgPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), 'utf8');
-}
+// Alias for backwards compatibility
+const saveCfg = writeCfg;
 
 function getDefaultConfig() {
   return {
