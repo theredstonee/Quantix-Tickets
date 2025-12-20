@@ -888,17 +888,6 @@ async function createTicket(interaction, guildId, topic, formData) {
       .replace(/{topicLabel}/g, topic.label)
       .replace(/{topicValue}/g, topic.value);
 
-    // Add form fields to description
-    if (Object.keys(formData).length > 0) {
-      description += '\n\n**Angaben:**';
-      const formFields = cfg.formFields || [];
-      for (const [fieldId, value] of Object.entries(formData)) {
-        const field = formFields.find(f => f.id === fieldId);
-        const label = field?.label || fieldId;
-        description += `\n**${label}:** ${sanitizeString(value)}`;
-      }
-    }
-
     const embed = new EmbedBuilder()
       .setTitle((ticketEmbed.title || '🎫 Ticket #{ticketNumber}').replace(/{ticketNumber}/g, ticketNumber))
       .setDescription(description)
@@ -909,10 +898,35 @@ async function createTicket(interaction, guildId, topic, formData) {
       embed.setFooter({ text: ticketEmbed.footer });
     }
 
-    // Send ticket message
+    // Create second embed for form questions/answers if there are any
+    let questionsEmbed = null;
+    if (Object.keys(formData).length > 0) {
+      const formFields = cfg.formFields || [];
+      const paddedNr = String(ticketNumber).padStart(5, '0');
+
+      // Build description with questions and answers
+      let questionsDescription = '';
+      let index = 1;
+      for (const [fieldId, value] of Object.entries(formData)) {
+        const field = formFields.find(f => f.id === fieldId);
+        const label = field?.label || fieldId;
+        const answer = value ? sanitizeString(value).substring(0, 500) : '—';
+        questionsDescription += `**${index}. ${label}**\n${answer}\n\n`;
+        index++;
+      }
+
+      questionsEmbed = new EmbedBuilder()
+        .setTitle(`📋 Ticket Fragen #${paddedNr}`)
+        .setDescription(questionsDescription.trim())
+        .setColor(0x5865F2)
+        .setFooter({ text: `${Object.keys(formData).length} Frage(n) beantwortet` });
+    }
+
+    // Send ticket message with both embeds
+    const embeds = questionsEmbed ? [embed, questionsEmbed] : [embed];
     await channel.send({
       content: `<@${interaction.user.id}>`,
-      embeds: [embed],
+      embeds,
       components: buttonRows(false, guildId, ticket)
     });
 

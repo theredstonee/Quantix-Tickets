@@ -8492,15 +8492,28 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     permissionOverwrites: permOverwrites
   });
   const embed = buildTicketEmbed(cfg, interaction, topic, nr, ticketPriority);
+
+  // Create second embed for form answers if there are any
+  let questionsEmbed = null;
   const formKeys = Object.keys(formData||{});
   if(formKeys.length){
     const formFields = getFormFieldsForTopic(cfg, topic.value).map(normalizeField);
-    const fields = formKeys.slice(0,25).map(k=>{
-      const field = formFields.find(f=>f.id===k);
+    const paddedNr = String(nr).padStart(5, '0');
+
+    // Build description with questions and answers
+    let questionsDescription = '';
+    formKeys.slice(0, 25).forEach((k, index) => {
+      const field = formFields.find(f => f.id === k);
       const label = field ? field.label : k;
-      return { name: `» ${label} «`, value: formData[k] ? (formData[k].substring(0,1024) || '—') : '—', inline:false };
+      const answer = formData[k] ? formData[k].substring(0, 500) : '—';
+      questionsDescription += `**${index + 1}. ${label}**\n${answer}\n\n`;
     });
-    embed.addFields(fields);
+
+    questionsEmbed = new EmbedBuilder()
+      .setTitle(`📋 Ticket Fragen #${paddedNr}`)
+      .setDescription(questionsDescription.trim())
+      .setColor(0x5865F2)
+      .setFooter({ text: `${formKeys.length} Frage(n) beantwortet` });
   }
 
   // SLA Field hinzufügen (nur für Pro mit SLA enabled)
@@ -8527,7 +8540,9 @@ async function createTicketChannel(interaction, topic, formData, cfg){
 
   let ticketMessage;
   try {
-    ticketMessage = await ch.send({ embeds:[embed], components: buttonRows(false, interaction.guild?.id, null) });
+    // Build embeds array - include questions embed if form data exists
+    const embeds = questionsEmbed ? [embed, questionsEmbed] : [embed];
+    ticketMessage = await ch.send({ embeds, components: buttonRows(false, interaction.guild?.id, null) });
   } catch (err) {
     console.error('❌ Fehler beim Senden der Willkommens-Nachricht:', err.message || err);
     if (err.stack) console.error(err.stack);
