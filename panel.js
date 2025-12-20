@@ -2755,6 +2755,16 @@ module.exports = (client)=>{
         topicIndex++;
       }
 
+      // Ensure unique topic values (Discord requires unique option values)
+      const usedValues = new Set();
+      topics.forEach((topic, idx) => {
+        if (usedValues.has(topic.value)) {
+          // Make value unique by appending index
+          topic.value = `${topic.value}_${idx}`;
+        }
+        usedValues.add(topic.value);
+      });
+
       cfg.topics = topics;
 
       // Process form fields from individual inputs
@@ -6917,11 +6927,24 @@ function buildPanelSelect(cfg){
   if(topics.length === 0){
     topics.push({ label: 'Keine Topics konfiguriert', value: 'none', emoji: '⚠️' });
   }
+
+  // Ensure unique values (Discord requires unique option values)
+  const usedValues = new Set();
+  const uniqueTopics = topics.map((t, index) => {
+    let value = t.value;
+    // If value already used, append index to make it unique
+    if (usedValues.has(value)) {
+      value = `${value}_${index}`;
+    }
+    usedValues.add(value);
+    return { ...t, value };
+  });
+
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('topic')
       .setPlaceholder('Thema wählen …')
-      .addOptions(topics.map(t => {
+      .addOptions(uniqueTopics.map(t => {
         const parsedEmoji = parseEmoji(t.emoji);
         return {
           label: t.label,
