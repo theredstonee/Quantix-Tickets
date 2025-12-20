@@ -205,6 +205,24 @@ function getNextTicketNumber(guildId) {
 
   if (usingSQLite) {
     try {
+      // Check if counter exists in SQLite
+      const existing = statements.getCounter.get(guildId);
+
+      // If no counter in SQLite, check JSON file for migration
+      if (!existing) {
+        const counterPath = getCounterPath(guildId);
+        const jsonData = safeReadJSON(counterPath, { last: 0 });
+        const lastCounter = jsonData.last || 0;
+
+        if (lastCounter > 0) {
+          // Migrate: Set SQLite counter to JSON value, then increment
+          console.log(`[Database] Migrating counter for ${guildId}: ${lastCounter} -> ${lastCounter + 1}`);
+          db.prepare('INSERT OR REPLACE INTO ticket_counters (guild_id, counter) VALUES (?, ?)').run(guildId, lastCounter + 1);
+          return lastCounter + 1;
+        }
+      }
+
+      // Normal increment
       const result = statements.incrementCounter.get(guildId);
       return result.counter;
     } catch (err) {
@@ -226,7 +244,12 @@ function getCurrentCounter(guildId) {
   if (usingSQLite) {
     try {
       const row = statements.getCounter.get(guildId);
-      return row ? row.counter : 0;
+      if (row) {
+        return row.counter;
+      }
+      // Check JSON fallback for existing counter
+      const jsonData = safeReadJSON(getCounterPath(guildId), { last: 0 });
+      return jsonData.last || 0;
     } catch (err) {
       console.error('[Database] Counter read error:', err.message);
     }

@@ -13,75 +13,8 @@ const path = require('path');
 const { t, getGuildLanguage } = require('./translations');
 const { sanitizeUsername, validateDiscordId, sanitizeString } = require('./xss-protection');
 
-const CONFIG_DIR = path.join(__dirname, 'configs');
-
-// Utility functions
-function readCfg(guildId) {
-  try {
-    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    const data = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    return data || {};
-  } catch {
-    return {};
-  }
-}
-
-function writeCfg(guildId, data) {
-  try {
-    const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-    fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error('writeCfg error:', err);
-  }
-}
-
-function getTicketsPath(guildId) {
-  return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
-}
-
-function getCounterPath(guildId) {
-  return path.join(CONFIG_DIR, `${guildId}_counter.json`);
-}
-
-function loadTickets(guildId) {
-  try {
-    const data = fs.readFileSync(getTicketsPath(guildId), 'utf8');
-    return JSON.parse(data) || [];
-  } catch {
-    return [];
-  }
-}
-
-function saveTickets(guildId, tickets) {
-  const ticketsPath = getTicketsPath(guildId);
-  const tempFile = ticketsPath + '.tmp';
-  const backupFile = ticketsPath + '.bak';
-  try {
-    const jsonData = JSON.stringify(tickets, null, 2);
-    JSON.parse(jsonData);
-    fs.writeFileSync(tempFile, jsonData, 'utf8');
-    if (fs.existsSync(ticketsPath)) {
-      try { fs.copyFileSync(ticketsPath, backupFile); } catch (e) { /* optional */ }
-    }
-    fs.renameSync(tempFile, ticketsPath);
-  } catch (err) {
-    console.error('[interaction-handlers] Error saving tickets:', err.message);
-    try { if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile); } catch (e) { /* ignore */ }
-  }
-}
-
-function loadCounter(guildId) {
-  try {
-    const data = fs.readFileSync(getCounterPath(guildId), 'utf8');
-    return JSON.parse(data).count || 0;
-  } catch {
-    return 0;
-  }
-}
-
-function saveCounter(guildId, count) {
-  fs.writeFileSync(getCounterPath(guildId), JSON.stringify({ count }));
-}
+// Use centralized database module for consistency
+const { readCfg, writeCfg, loadTickets, saveTickets, getNextTicketNumber, getCurrentCounter } = require('./database');
 
 function hasTeamRole(member, cfg) {
   if (!member || !cfg.teamRoleId) return false;
@@ -774,9 +707,8 @@ async function createTicket(interaction, guildId, topic, formData) {
 
   await interaction.deferReply({ ephemeral: true });
 
-  // Get next ticket number
-  let ticketNumber = loadCounter(guildId) + 1;
-  saveCounter(guildId, ticketNumber);
+  // Get next ticket number (uses centralized counter from database.js)
+  const ticketNumber = getNextTicketNumber(guildId);
 
   // Get category
   const categoryId = topic.categoryId || cfg.ticketCategory || null;
