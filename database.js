@@ -1,6 +1,6 @@
 /**
  * Database Module for Quantix Tickets Bot
- * Uses SQLite if available, otherwise falls back to JSON files
+ * Uses SQLite - migrates from JSON once then never reads JSON again
  */
 
 const path = require('path');
@@ -17,7 +17,7 @@ if (!fs.existsSync(CONFIG_DIR)) {
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
 }
 
-// Try to load SQLite
+// Load SQLite
 let db = null;
 let statements = null;
 let usingSQLite = false;
@@ -58,7 +58,7 @@ try {
   usingSQLite = true;
   console.log('[Database] SQLite initialized');
 } catch (err) {
-  console.log('[Database] SQLite not available, using JSON:', err.message);
+  console.error('[Database] SQLite failed to load:', err.message);
 }
 
 // ===== Helper Functions for JSON =====
@@ -114,86 +114,39 @@ function readCfg(guildId) {
   if (!guildId) return getDefaultConfig();
 
   if (usingSQLite) {
-    // Step 1: Try to read from SQLite
     try {
+      // Step 1: Try SQLite
       const row = statements.getConfig.get(guildId);
       if (row && row.config) {
-        const config = JSON.parse(row.config);
-        return config;
+        return JSON.parse(row.config);
       }
     } catch (err) {
       console.error('[Database] SQLite read error:', err.message);
     }
 
-    // Step 2: No SQLite entry - check for JSON file to migrate
+    // Step 2: No SQLite data - check for JSON to migrate
     const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
     if (fs.existsSync(configPath)) {
       const config = safeReadJSON(configPath, null);
       if (config) {
         console.log(`[Database] Migrating config from JSON to SQLite for ${guildId}`);
         try {
-          const jsonData = JSON.stringify(config);
-          statements.setConfig.run(guildId, jsonData);
-          console.log(`[Database] Migration successful for ${guildId}`);
-
-          // Rename JSON file to backup
-          const migratedPath = configPath + '.migrated';
-          try {
-            fs.renameSync(configPath, migratedPath);
-          } catch (renameErr) {
-            console.error(`[Database] Could not rename JSON file: ${renameErr.message}`);
-          }
-
-          return config;
-        } catch (writeErr) {
-          console.error('[Database] Migration write error:', writeErr.message);
-          return config;
-        }
-      }
-    }
-
-    // Step 3: Check for .migrated backup file and recover
-    const migratedPath = path.join(CONFIG_DIR, `${guildId}.json.migrated`);
-    if (fs.existsSync(migratedPath)) {
-      const config = safeReadJSON(migratedPath, null);
-      if (config) {
-        console.log(`[Database] Recovering config from backup for ${guildId}`);
-        try {
-          const jsonData = JSON.stringify(config);
-          statements.setConfig.run(guildId, jsonData);
-          console.log(`[Database] Recovery to SQLite successful for ${guildId}`);
-        } catch (writeErr) {
-          console.error('[Database] Recovery write error:', writeErr.message);
+          statements.setConfig.run(guildId, JSON.stringify(config));
+          // Rename to .migrated
+          fs.renameSync(configPath, configPath + '.migrated');
+          console.log(`[Database] Migration complete for ${guildId}`);
+        } catch (e) {
+          console.error('[Database] Migration error:', e.message);
         }
         return config;
       }
     }
 
-    // Step 4: No data found anywhere - only NOW return defaults
-    console.log(`[Database] No config found for ${guildId}, using defaults`);
+    // Step 3: No data - return defaults
     return getDefaultConfig();
   }
 
-  // JSON fallback (when SQLite not available)
-  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  let config = safeReadJSON(configPath, null);
-  if (config) {
-    return config;
-  }
-
-  // Check .migrated backup
-  const migratedPath = configPath + '.migrated';
-  config = safeReadJSON(migratedPath, null);
-  if (config) {
-    console.log(`[Database] Recovering config from backup for ${guildId}`);
-    // Restore the original file
-    try {
-      fs.renameSync(migratedPath, configPath);
-    } catch (e) {}
-    return config;
-  }
-
-  console.log(`[Database] No config found for ${guildId}, using defaults`);
+  // No SQLite available - return defaults
   return getDefaultConfig();
 }
 
@@ -203,63 +156,31 @@ function writeCfg(guildId, data) {
     return false;
   }
 
-  console.log(`[Database] Writing config for guild ${guildId}`);
-  console.log(`[Database] Data keys: ${Object.keys(data).join(', ')}`);
-
-  // Log specific settings for debugging
-  if (data.ticketCreationRestricted !== undefined) {
-    console.log(`[Database] ticketCreationRestricted = ${data.ticketCreationRestricted}`);
-  }
-  if (data.allowedTicketRoles !== undefined) {
-    console.log(`[Database] allowedTicketRoles = ${JSON.stringify(data.allowedTicketRoles)}`);
-  }
-
   if (usingSQLite) {
     try {
-      const jsonData = JSON.stringify(data);
-      console.log(`[Database] JSON data length: ${jsonData.length} bytes`);
-      statements.setConfig.run(guildId, jsonData);
-      console.log(`[Database] SQLite write successful for ${guildId}`);
+      statements.setConfig.run(guildId, JSON.stringify(data));
+      console.log(`[Database] Config saved for ${guildId}`);
       return true;
     } catch (err) {
       console.error('[Database] SQLite write error:', err.message);
-      console.error('[Database] SQLite error stack:', err.stack);
+      return false;
     }
   }
 
-  // JSON fallback (always write to JSON as backup)
-  const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
-  console.log(`[Database] Writing to JSON fallback: ${configPath}`);
-  const success = safeWriteJSON(configPath, data);
-  console.log(`[Database] JSON write ${success ? 'successful' : 'failed'} for ${guildId}`);
-  return success;
+  console.error('[Database] No SQLite available');
+  return false;
 }
 
-// ===== Ticket Functions =====
+// ===== Ticket Functions (JSON files) =====
 function getTicketsPath(guildId) {
   return path.join(CONFIG_DIR, `${guildId}_tickets.json`);
 }
 
 function loadTickets(guildId) {
   if (!guildId) return [];
-
   const ticketsPath = getTicketsPath(guildId);
-  let tickets = safeReadJSON(ticketsPath, null);
-
-  // Check .migrated backup if no original
-  if (!tickets || !Array.isArray(tickets)) {
-    const migratedPath = ticketsPath + '.migrated';
-    if (fs.existsSync(migratedPath)) {
-      tickets = safeReadJSON(migratedPath, []);
-      if (tickets && Array.isArray(tickets) && tickets.length > 0) {
-        console.log(`[Database] Recovered ${tickets.length} tickets from backup for ${guildId}`);
-        // Save to original path
-        safeWriteJSON(ticketsPath, tickets);
-      }
-    }
-  }
-
-  return tickets || [];
+  const tickets = safeReadJSON(ticketsPath, []);
+  return Array.isArray(tickets) ? tickets : [];
 }
 
 function saveTickets(guildId, tickets) {
@@ -280,64 +201,38 @@ function getNextTicketNumber(guildId) {
 
   if (usingSQLite) {
     try {
-      // Step 1: Get current counter from SQLite
+      // Step 1: Try SQLite
       let currentCounter = 0;
       const existing = statements.getCounter.get(guildId);
 
       if (existing) {
         currentCounter = existing.counter || 0;
       } else {
-        // No SQLite entry - check for JSON files to migrate
+        // Step 2: No SQLite data - check for JSON to migrate
         const counterPath = getCounterPath(guildId);
-
-        // Check original JSON file
         if (fs.existsSync(counterPath)) {
           const jsonData = safeReadJSON(counterPath, { last: 0 });
           currentCounter = jsonData.last || 0;
           console.log(`[Database] Migrating counter from JSON for ${guildId}: ${currentCounter}`);
-        }
-
-        // Check .migrated backup if still 0
-        if (currentCounter === 0) {
-          const migratedPath = counterPath + '.migrated';
-          if (fs.existsSync(migratedPath)) {
-            const jsonData = safeReadJSON(migratedPath, { last: 0 });
-            currentCounter = jsonData.last || 0;
-            console.log(`[Database] Recovered counter from backup for ${guildId}: ${currentCounter}`);
-          }
+          // Rename to .migrated
+          try {
+            fs.renameSync(counterPath, counterPath + '.migrated');
+          } catch (e) {}
         }
       }
 
-      // Step 2: Increment
+      // Step 3: Increment and save
       const newCounter = currentCounter + 1;
-
-      // Step 3: Save to SQLite
       statements.setCounter.run(guildId, newCounter);
-
-      // Step 4: Return new counter
       console.log(`[Database] Counter for ${guildId}: ${currentCounter} -> ${newCounter}`);
       return newCounter;
     } catch (err) {
       console.error('[Database] Counter error:', err.message);
+      return 1;
     }
   }
 
-  // JSON fallback
-  const counterPath = getCounterPath(guildId);
-  let data = safeReadJSON(counterPath, null);
-
-  // Check .migrated backup if no original
-  if (!data) {
-    const migratedPath = counterPath + '.migrated';
-    data = safeReadJSON(migratedPath, { last: 0 });
-  }
-
-  if (!data) data = { last: 0 };
-  const newCounter = (data.last || 0) + 1;
-  data.last = newCounter;
-  safeWriteJSON(counterPath, data);
-  console.log(`[Database] JSON counter for ${guildId}: ${newCounter}`);
-  return newCounter;
+  return 1;
 }
 
 function getCurrentCounter(guildId) {
@@ -346,35 +241,13 @@ function getCurrentCounter(guildId) {
   if (usingSQLite) {
     try {
       const row = statements.getCounter.get(guildId);
-      if (row) {
-        return row.counter;
-      }
-      // Check JSON fallback for existing counter
-      const counterPath = getCounterPath(guildId);
-      let jsonData = safeReadJSON(counterPath, null);
-
-      // Check .migrated backup
-      if (!jsonData) {
-        const migratedPath = counterPath + '.migrated';
-        jsonData = safeReadJSON(migratedPath, { last: 0 });
-      }
-
-      return jsonData?.last || 0;
+      return row?.counter || 0;
     } catch (err) {
       console.error('[Database] Counter read error:', err.message);
     }
   }
 
-  const counterPath = getCounterPath(guildId);
-  let data = safeReadJSON(counterPath, null);
-
-  // Check .migrated backup
-  if (!data) {
-    const migratedPath = counterPath + '.migrated';
-    data = safeReadJSON(migratedPath, { last: 0 });
-  }
-
-  return data?.last || 0;
+  return 0;
 }
 
 // ===== Language Functions =====
