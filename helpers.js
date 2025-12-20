@@ -174,10 +174,10 @@ function createStyledEmbed(options) {
     .setTimestamp()
     .setFooter({ text: `${options.footer || 'Quantix Tickets'} • ${berlinTime}` });
 
-  // Set title with emoji and –» « wrapper
+  // Set title with emoji and » « wrapper
   if (options.title) {
     const emoji = options.emoji || '';
-    embed.setTitle(`${emoji} –» ${options.title} «`.trim());
+    embed.setTitle(`${emoji} » ${options.title} «`.trim());
   }
 
   // Set description in italics
@@ -185,12 +185,12 @@ function createStyledEmbed(options) {
     embed.setDescription(`*${options.description}*`);
   }
 
-  // Set fields with –» « wrapper for names
+  // Set fields with » « wrapper for names
   if (options.fields && Array.isArray(options.fields)) {
     for (const field of options.fields) {
       if (field.name && field.value) {
         embed.addFields({
-          name: `–» ${field.name} «`,
+          name: `» ${field.name} «`,
           value: field.value,
           inline: field.inline !== undefined ? field.inline : false
         });
