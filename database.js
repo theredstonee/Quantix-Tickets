@@ -124,17 +124,16 @@ function readCfg(guildId) {
       console.error('[Database] SQLite read error:', err.message);
     }
 
-    // Step 2: No SQLite data - check for JSON to migrate
+    // Step 2: No SQLite data - check for .json to migrate
     const configPath = path.join(CONFIG_DIR, `${guildId}.json`);
     if (fs.existsSync(configPath)) {
       const config = safeReadJSON(configPath, null);
       if (config) {
-        console.log(`[Database] Migrating config from JSON to SQLite for ${guildId}`);
+        console.log(`[Database] Migrating config from .json to SQLite for ${guildId}`);
         try {
           statements.setConfig.run(guildId, JSON.stringify(config));
-          // Rename to .migrated
           fs.renameSync(configPath, configPath + '.migrated');
-          console.log(`[Database] Migration complete for ${guildId}`);
+          console.log(`[Database] Migration complete, renamed to .migrated`);
         } catch (e) {
           console.error('[Database] Migration error:', e.message);
         }
@@ -142,7 +141,24 @@ function readCfg(guildId) {
       }
     }
 
-    // Step 3: No data - return defaults
+    // Step 3: No .json - check for .migrated to migrate
+    const migratedPath = path.join(CONFIG_DIR, `${guildId}.json.migrated`);
+    if (fs.existsSync(migratedPath)) {
+      const config = safeReadJSON(migratedPath, null);
+      if (config) {
+        console.log(`[Database] Migrating config from .migrated to SQLite for ${guildId}`);
+        try {
+          statements.setConfig.run(guildId, JSON.stringify(config));
+          fs.renameSync(migratedPath, path.join(CONFIG_DIR, `${guildId}.json.back`));
+          console.log(`[Database] Migration complete, renamed to .back`);
+        } catch (e) {
+          console.error('[Database] Migration error:', e.message);
+        }
+        return config;
+      }
+    }
+
+    // Step 4: No data - return defaults
     return getDefaultConfig();
   }
 
@@ -208,20 +224,30 @@ function getNextTicketNumber(guildId) {
       if (existing) {
         currentCounter = existing.counter || 0;
       } else {
-        // Step 2: No SQLite data - check for JSON to migrate
+        // Step 2: No SQLite data - check for .json to migrate
         const counterPath = getCounterPath(guildId);
         if (fs.existsSync(counterPath)) {
           const jsonData = safeReadJSON(counterPath, { last: 0 });
           currentCounter = jsonData.last || 0;
-          console.log(`[Database] Migrating counter from JSON for ${guildId}: ${currentCounter}`);
-          // Rename to .migrated
+          console.log(`[Database] Migrating counter from .json for ${guildId}: ${currentCounter}`);
           try {
             fs.renameSync(counterPath, counterPath + '.migrated');
           } catch (e) {}
+        } else {
+          // Step 3: No .json - check for .migrated to migrate
+          const migratedPath = counterPath + '.migrated';
+          if (fs.existsSync(migratedPath)) {
+            const jsonData = safeReadJSON(migratedPath, { last: 0 });
+            currentCounter = jsonData.last || 0;
+            console.log(`[Database] Migrating counter from .migrated for ${guildId}: ${currentCounter}`);
+            try {
+              fs.renameSync(migratedPath, counterPath + '.back');
+            } catch (e) {}
+          }
         }
       }
 
-      // Step 3: Increment and save
+      // Step 4: Increment and save
       const newCounter = currentCounter + 1;
       statements.setCounter.run(guildId, newCounter);
       console.log(`[Database] Counter for ${guildId}: ${currentCounter} -> ${newCounter}`);
