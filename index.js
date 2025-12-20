@@ -2733,13 +2733,14 @@ client.on(Events.InteractionCreate, async i => {
         const member = i.member;
         const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
         if (!hasAllowedRole) {
-          const roleNames = cfg.allowedTicketRoles
-            .map(roleId => i.guild.roles.cache.get(roleId)?.name || roleId)
-            .join(', ');
+          const roleMentions = cfg.allowedTicketRoles.map(roleId => `<@&${roleId}>`).join('\n');
           const noPermEmbed = createStyledEmbed({
             emoji: '🔒',
-            title: t(guildId, 'ticket.no_permission') || 'Keine Berechtigung',
-            description: t(guildId, 'ticket.role_required') || `Du benötigst eine der folgenden Rollen um Tickets zu erstellen:\n${roleNames}`,
+            title: 'Keine Berechtigung',
+            description: 'Du hast nicht die erforderliche Rolle, um ein Ticket zu erstellen.',
+            fields: [
+              { name: 'Erforderliche Rollen', value: roleMentions || 'Keine konfiguriert', inline: false }
+            ],
             color: '#ED4245',
             footer: 'Quantix Tickets • Zugriff verweigert'
           });
@@ -3387,13 +3388,14 @@ client.on(Events.InteractionCreate, async i => {
         const member = i.member;
         const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
         if (!hasAllowedRole) {
-          const roleNames = cfg.allowedTicketRoles
-            .map(roleId => i.guild.roles.cache.get(roleId)?.name || roleId)
-            .join(', ');
+          const roleMentions = cfg.allowedTicketRoles.map(roleId => `<@&${roleId}>`).join('\n');
           const noPermEmbed = createStyledEmbed({
             emoji: '🔒',
-            title: t(guildId, 'ticket.no_permission') || 'Keine Berechtigung',
-            description: t(guildId, 'ticket.role_required') || `Du benötigst eine der folgenden Rollen um Tickets zu erstellen:\n${roleNames}`,
+            title: 'Keine Berechtigung',
+            description: 'Du hast nicht die erforderliche Rolle, um ein Ticket zu erstellen.',
+            fields: [
+              { name: 'Erforderliche Rollen', value: roleMentions || 'Keine konfiguriert', inline: false }
+            ],
             color: '#ED4245',
             footer: 'Quantix Tickets • Zugriff verweigert'
           });
@@ -3494,13 +3496,14 @@ client.on(Events.InteractionCreate, async i => {
           const member = i.member;
           const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
           if (!hasAllowedRole) {
-            const roleNames = cfg.allowedTicketRoles
-              .map(roleId => i.guild.roles.cache.get(roleId)?.name || roleId)
-              .join(', ');
+            const roleMentions = cfg.allowedTicketRoles.map(roleId => `<@&${roleId}>`).join('\n');
             const noPermEmbed = createStyledEmbed({
               emoji: '🔒',
-              title: t(guildId, 'ticket.no_permission') || 'Keine Berechtigung',
-              description: t(guildId, 'ticket.role_required') || `Du benötigst eine der folgenden Rollen um Tickets zu erstellen:\n${roleNames}`,
+              title: 'Keine Berechtigung',
+              description: 'Du hast nicht die erforderliche Rolle, um ein Ticket zu erstellen.',
+              fields: [
+                { name: 'Erforderliche Rollen', value: roleMentions || 'Keine konfiguriert', inline: false }
+              ],
               color: '#ED4245',
               footer: 'Quantix Tickets • Zugriff verweigert'
             });
@@ -8274,13 +8277,14 @@ async function createTicketChannel(interaction, topic, formData, cfg){
     const member = interaction.member || await interaction.guild.members.fetch(userId);
     const hasAllowedRole = cfg.allowedTicketRoles.some(roleId => member.roles.cache.has(roleId));
     if (!hasAllowedRole) {
-      const roleNames = cfg.allowedTicketRoles
-        .map(roleId => interaction.guild.roles.cache.get(roleId)?.name || roleId)
-        .join(', ');
+      const roleMentions = cfg.allowedTicketRoles.map(roleId => `<@&${roleId}>`).join('\n');
       const noPermEmbed = createStyledEmbed({
         emoji: '🔒',
         title: 'Keine Berechtigung',
-        description: `Du benötigst eine der folgenden Rollen um Tickets zu erstellen:\n\n${roleNames}`,
+        description: 'Du hast nicht die erforderliche Rolle, um ein Ticket zu erstellen.',
+        fields: [
+          { name: 'Erforderliche Rollen', value: roleMentions || 'Keine konfiguriert', inline: false }
+        ],
         color: '#ED4245',
         footer: 'Quantix Tickets • Zugriff verweigert'
       });
