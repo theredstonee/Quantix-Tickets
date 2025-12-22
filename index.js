@@ -3269,6 +3269,8 @@ client.on(Events.InteractionCreate, async i => {
         const ticket = tickets[ticketIndex];
         const oldClaimer = ticket.claimer;
 
+        const isApplication = !!ticket.isApplication;
+
         if(targetType === 'user'){
           // Forward to specific user
           ticket.claimer = targetId;
@@ -3301,11 +3303,11 @@ client.on(Events.InteractionCreate, async i => {
 
           const forwardEmbed = createStyledEmbed({
             emoji: '🔄',
-            title: 'Ticket weitergeleitet',
-            description: `Dieses Ticket wurde an <@${targetId}> weitergeleitet.`,
+            title: isApplication ? 'Bewerbung weitergeleitet' : 'Ticket weitergeleitet',
+            description: `${isApplication ? 'Diese Bewerbung' : 'Dieses Ticket'} wurde an <@${targetId}> weitergeleitet.`,
             fields: [
               { name: 'Von', value: `<@${oldClaimer}>`, inline: true },
-              { name: 'An', value: `<@${targetId}>`, inline: true },
+              { name: isApplication ? 'An Reviewer' : 'An', value: `<@${targetId}>`, inline: true },
               { name: 'Grund', value: reason, inline: false }
             ]
           });
@@ -3313,7 +3315,10 @@ client.on(Events.InteractionCreate, async i => {
           await i.editReply({ embeds: [forwardEmbed] });
 
           // Ping new claimer
-          await i.channel.send({ content: `<@${targetId}> Du hast ein weitergeleitetes Ticket erhalten!` });
+          const forwardNotice = isApplication
+            ? `<@${targetId}> Du hast eine weitergeleitete Bewerbung erhalten!`
+            : `<@${targetId}> Du hast ein weitergeleitetes Ticket erhalten!`;
+          await i.channel.send({ content: forwardNotice });
 
         } else if(targetType === 'role'){
           // Forward to role - unclaim and notify role
@@ -3345,11 +3350,11 @@ client.on(Events.InteractionCreate, async i => {
 
           const forwardEmbed = createStyledEmbed({
             emoji: '🔄',
-            title: 'Ticket weitergeleitet',
-            description: `Dieses Ticket wurde an <@&${targetId}> weitergeleitet.`,
+            title: isApplication ? 'Bewerbung weitergeleitet' : 'Ticket weitergeleitet',
+            description: `${isApplication ? 'Diese Bewerbung' : 'Dieses Ticket'} wurde an <@&${targetId}> weitergeleitet.`,
             fields: [
               { name: 'Von', value: `<@${oldClaimer}>`, inline: true },
-              { name: 'An Rolle', value: `<@&${targetId}>`, inline: true },
+              { name: isApplication ? 'An Rollen-Team' : 'An Rolle', value: `<@&${targetId}>`, inline: true },
               { name: 'Grund', value: reason, inline: false }
             ]
           });
@@ -3357,11 +3362,15 @@ client.on(Events.InteractionCreate, async i => {
           await i.editReply({ embeds: [forwardEmbed] });
 
           // Ping role
-          await i.channel.send({ content: `<@&${targetId}> Dieses Ticket wartet auf Übernahme!` });
+          const roleNotice = isApplication
+            ? `<@&${targetId}> Diese Bewerbung wartet auf Übernahme!`
+            : `<@&${targetId}> Dieses Ticket wartet auf Übernahme!`;
+          await i.channel.send({ content: roleNotice });
         }
 
         // Log event
-        await logEvent(i.guild, `🔄 **Ticket weitergeleitet:** <@${oldClaimer}> hat Ticket #${ticket.id} an ${targetType === 'user' ? `<@${targetId}>` : `<@&${targetId}>`} weitergeleitet. Grund: ${reason}`);
+        const forwardLabel = isApplication ? 'Bewerbung' : 'Ticket';
+        await logEvent(i.guild, `🔄 **${forwardLabel} weitergeleitet:** <@${oldClaimer}> hat ${forwardLabel} #${ticket.id} an ${targetType === 'user' ? `<@${targetId}>` : `<@&${targetId}>`} weitergeleitet. Grund: ${reason}`);
 
       } catch(err){
         console.error('Forward modal error:', err);
