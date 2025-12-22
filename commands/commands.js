@@ -65,6 +65,13 @@ function getCommandsList(userId, member, guildId) {
           permission: 'Team',
           canUse: isTeam,
           premium: null
+        },
+        {
+          name: '/apply',
+          description: 'Bewerbungstickets verwalten (claim, hide, forward)',
+          permission: 'Team/Claimer',
+          canUse: isTeam,
+          premium: null
         }
       ]
     },
