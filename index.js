@@ -1851,10 +1851,18 @@ async function createTranscript(channel, ticket, opts = {}) {
       });
   };
 
+  const createdAtValue = ticket.timestamp || ticket.createdAt || channel.createdTimestamp || Date.now();
+  let createdAtIso;
+  try {
+    createdAtIso = new Date(createdAtValue).toISOString();
+  } catch {
+    createdAtIso = new Date().toISOString();
+  }
+
   const lines = [
     `# Transcript Ticket ${ticket.id}`,
     `Channel: ${channel.name}`,
-    `Erstellt: ${new Date(ticket.timestamp).toISOString()}`,
+    `Erstellt: ${createdAtIso}`,
     ''
   ];
 
@@ -3269,6 +3277,8 @@ client.on(Events.InteractionCreate, async i => {
         const ticket = tickets[ticketIndex];
         const oldClaimer = ticket.claimer;
 
+        const isApplication = !!ticket.isApplication;
+
         if(targetType === 'user'){
           // Forward to specific user
           ticket.claimer = targetId;
@@ -3301,11 +3311,11 @@ client.on(Events.InteractionCreate, async i => {
 
           const forwardEmbed = createStyledEmbed({
             emoji: '🔄',
-            title: 'Ticket weitergeleitet',
-            description: `Dieses Ticket wurde an <@${targetId}> weitergeleitet.`,
+            title: isApplication ? 'Bewerbung weitergeleitet' : 'Ticket weitergeleitet',
+            description: `${isApplication ? 'Diese Bewerbung' : 'Dieses Ticket'} wurde an <@${targetId}> weitergeleitet.`,
             fields: [
               { name: 'Von', value: `<@${oldClaimer}>`, inline: true },
-              { name: 'An', value: `<@${targetId}>`, inline: true },
+              { name: isApplication ? 'An Reviewer' : 'An', value: `<@${targetId}>`, inline: true },
               { name: 'Grund', value: reason, inline: false }
             ]
           });
@@ -3313,7 +3323,10 @@ client.on(Events.InteractionCreate, async i => {
           await i.editReply({ embeds: [forwardEmbed] });
 
           // Ping new claimer
-          await i.channel.send({ content: `<@${targetId}> Du hast ein weitergeleitetes Ticket erhalten!` });
+          const forwardNotice = isApplication
+            ? `<@${targetId}> Du hast eine weitergeleitete Bewerbung erhalten!`
+            : `<@${targetId}> Du hast ein weitergeleitetes Ticket erhalten!`;
+          await i.channel.send({ content: forwardNotice });
 
         } else if(targetType === 'role'){
           // Forward to role - unclaim and notify role
@@ -3345,11 +3358,11 @@ client.on(Events.InteractionCreate, async i => {
 
           const forwardEmbed = createStyledEmbed({
             emoji: '🔄',
-            title: 'Ticket weitergeleitet',
-            description: `Dieses Ticket wurde an <@&${targetId}> weitergeleitet.`,
+            title: isApplication ? 'Bewerbung weitergeleitet' : 'Ticket weitergeleitet',
+            description: `${isApplication ? 'Diese Bewerbung' : 'Dieses Ticket'} wurde an <@&${targetId}> weitergeleitet.`,
             fields: [
               { name: 'Von', value: `<@${oldClaimer}>`, inline: true },
-              { name: 'An Rolle', value: `<@&${targetId}>`, inline: true },
+              { name: isApplication ? 'An Rollen-Team' : 'An Rolle', value: `<@&${targetId}>`, inline: true },
               { name: 'Grund', value: reason, inline: false }
             ]
           });
@@ -3357,11 +3370,15 @@ client.on(Events.InteractionCreate, async i => {
           await i.editReply({ embeds: [forwardEmbed] });
 
           // Ping role
-          await i.channel.send({ content: `<@&${targetId}> Dieses Ticket wartet auf Übernahme!` });
+          const roleNotice = isApplication
+            ? `<@&${targetId}> Diese Bewerbung wartet auf Übernahme!`
+            : `<@&${targetId}> Dieses Ticket wartet auf Übernahme!`;
+          await i.channel.send({ content: roleNotice });
         }
 
         // Log event
-        await logEvent(i.guild, `🔄 **Ticket weitergeleitet:** <@${oldClaimer}> hat Ticket #${ticket.id} an ${targetType === 'user' ? `<@${targetId}>` : `<@&${targetId}>`} weitergeleitet. Grund: ${reason}`);
+        const forwardLabel = isApplication ? 'Bewerbung' : 'Ticket';
+        await logEvent(i.guild, `🔄 **${forwardLabel} weitergeleitet:** <@${oldClaimer}> hat ${forwardLabel} #${ticket.id} an ${targetType === 'user' ? `<@${targetId}>` : `<@&${targetId}>`} weitergeleitet. Grund: ${reason}`);
 
       } catch(err){
         console.error('Forward modal error:', err);
@@ -4212,20 +4229,25 @@ client.on(Events.InteractionCreate, async i => {
           footer: i.guild.name
         });
 
-        // Sende Transcript an Bewerber per DM
-        if (appFiles) {
-          try {
-            const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
-            if (applicantUser) {
-              await applicantUser.send({
-                embeds: [appTranscriptEmbed],
-                files: [appFiles.txt, appFiles.html]
-              });
-              console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
+        // Sende Transcript an Bewerber per DM (immer versuchen, auch ohne Dateien)
+        try {
+          const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
+          if (applicantUser) {
+            const dmPayload = {
+              embeds: [appTranscriptEmbed],
+              files: []
+            };
+
+            if (appFiles) {
+              if (appFiles.txt) dmPayload.files.push(appFiles.txt);
+              if (appFiles.html) dmPayload.files.push(appFiles.html);
             }
-          } catch (dmErr) {
-            console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
+
+            await applicantUser.send(dmPayload);
+            console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
           }
+        } catch (dmErr) {
+          console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
         }
 
         // Archive to channel (if configured) - mit Transcript
@@ -4387,20 +4409,25 @@ client.on(Events.InteractionCreate, async i => {
           footer: i.guild.name
         });
 
-        // Sende Transcript an Bewerber per DM
-        if (appFiles) {
-          try {
-            const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
-            if (applicantUser) {
-              await applicantUser.send({
-                embeds: [appTranscriptEmbed],
-                files: [appFiles.txt, appFiles.html]
-              });
-              console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
+        // Sende Transcript an Bewerber per DM (immer versuchen, auch ohne Dateien)
+        try {
+          const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
+          if (applicantUser) {
+            const dmPayload = {
+              embeds: [appTranscriptEmbed],
+              files: []
+            };
+
+            if (appFiles) {
+              if (appFiles.txt) dmPayload.files.push(appFiles.txt);
+              if (appFiles.html) dmPayload.files.push(appFiles.html);
             }
-          } catch (dmErr) {
-            console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
+
+            await applicantUser.send(dmPayload);
+            console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
           }
+        } catch (dmErr) {
+          console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
         }
 
         // Archive to channel (if configured) - mit Transcript
