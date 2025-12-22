@@ -1851,10 +1851,18 @@ async function createTranscript(channel, ticket, opts = {}) {
       });
   };
 
+  const createdAtValue = ticket.timestamp || ticket.createdAt || channel.createdTimestamp || Date.now();
+  let createdAtIso;
+  try {
+    createdAtIso = new Date(createdAtValue).toISOString();
+  } catch {
+    createdAtIso = new Date().toISOString();
+  }
+
   const lines = [
     `# Transcript Ticket ${ticket.id}`,
     `Channel: ${channel.name}`,
-    `Erstellt: ${new Date(ticket.timestamp).toISOString()}`,
+    `Erstellt: ${createdAtIso}`,
     ''
   ];
 
