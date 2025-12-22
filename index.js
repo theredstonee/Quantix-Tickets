@@ -4221,20 +4221,25 @@ client.on(Events.InteractionCreate, async i => {
           footer: i.guild.name
         });
 
-        // Sende Transcript an Bewerber per DM
-        if (appFiles) {
-          try {
-            const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
-            if (applicantUser) {
-              await applicantUser.send({
-                embeds: [appTranscriptEmbed],
-                files: [appFiles.txt, appFiles.html]
-              });
-              console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
+        // Sende Transcript an Bewerber per DM (immer versuchen, auch ohne Dateien)
+        try {
+          const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
+          if (applicantUser) {
+            const dmPayload = {
+              embeds: [appTranscriptEmbed],
+              files: []
+            };
+
+            if (appFiles) {
+              if (appFiles.txt) dmPayload.files.push(appFiles.txt);
+              if (appFiles.html) dmPayload.files.push(appFiles.html);
             }
-          } catch (dmErr) {
-            console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
+
+            await applicantUser.send(dmPayload);
+            console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
           }
+        } catch (dmErr) {
+          console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
         }
 
         // Archive to channel (if configured) - mit Transcript
@@ -4396,20 +4401,25 @@ client.on(Events.InteractionCreate, async i => {
           footer: i.guild.name
         });
 
-        // Sende Transcript an Bewerber per DM
-        if (appFiles) {
-          try {
-            const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
-            if (applicantUser) {
-              await applicantUser.send({
-                embeds: [appTranscriptEmbed],
-                files: [appFiles.txt, appFiles.html]
-              });
-              console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
+        // Sende Transcript an Bewerber per DM (immer versuchen, auch ohne Dateien)
+        try {
+          const applicantUser = await client.users.fetch(ticket.userId).catch(() => null);
+          if (applicantUser) {
+            const dmPayload = {
+              embeds: [appTranscriptEmbed],
+              files: []
+            };
+
+            if (appFiles) {
+              if (appFiles.txt) dmPayload.files.push(appFiles.txt);
+              if (appFiles.html) dmPayload.files.push(appFiles.html);
             }
-          } catch (dmErr) {
-            console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
+
+            await applicantUser.send(dmPayload);
+            console.log(`✅ Bewerbungs-Transcript DM gesendet an ${applicantUser.tag}`);
           }
+        } catch (dmErr) {
+          console.log('Konnte Bewerbungs-Transcript DM nicht senden:', dmErr.message);
         }
 
         // Archive to channel (if configured) - mit Transcript
