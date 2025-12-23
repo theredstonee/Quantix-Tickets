@@ -42,6 +42,7 @@
       --glass-bg: rgba(240, 248, 255, 0.7);
       --glass-border: rgba(14, 165, 233, 0.3);
       --shadow-color: rgba(14, 165, 233, 0.15);
+      --focus-ring: rgba(14, 165, 233, 0.35);
     }
 
     [data-theme="dark"] {
@@ -57,6 +58,7 @@
       --glass-bg: rgba(10, 10, 20, 0.7);
       --glass-border: rgba(59, 130, 246, 0.3);
       --shadow-color: rgba(59, 130, 246, 0.2);
+      --focus-ring: rgba(59, 130, 246, 0.35);
     }
 
     [data-theme="dark"] body {
@@ -125,6 +127,14 @@
       min-height: 100vh;
       width: 100%;
       max-width: 100%;
+      background-color: #0b121f;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(59,130,246,0.08), transparent 35%),
+        radial-gradient(circle at 80% 0%, rgba(0,255,136,0.06), transparent 30%),
+        linear-gradient(180deg, #05060d 0%, #0b141f 65%, #0d1929 100%);
+      background-repeat: no-repeat;
+      background-size: 120% 120%, 120% 120%, 100% 100%;
+      background-attachment: fixed;
       padding: 0 2rem;
       line-height: 1.8;
       margin: 0;
@@ -237,11 +247,16 @@
       transition: all 0.3s ease;
       position: relative;
       box-shadow: 0 8px 32px var(--shadow-color);
+      outline: none;
     }
     .server-card:hover {
       border-color: var(--accent-color);
       box-shadow: 0 12px 40px var(--shadow-color);
       transform: translateY(-4px);
+    }
+    .server-card:focus-within {
+      border-color: var(--accent-color);
+      box-shadow: 0 12px 40px var(--shadow-color), 0 0 0 3px var(--focus-ring);
     }
     .server-card.selected {
       border-color: var(--accent-color);
@@ -259,6 +274,7 @@
       transform: translateY(-2px);
     }
     .server-card input[type="radio"] { position: absolute; opacity: 0; }
+    .server-card input[type="radio"]:focus { outline: none; box-shadow: none; }
     .server-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; overflow: visible; width: 100%; }
     .server-header > div:last-child { flex: 1; min-width: 0; overflow: hidden; }
     .server-icon { width: 48px; height: 48px; min-width: 48px; min-height: 48px; border-radius: 50%; background: #e5e8ec; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; overflow: hidden; }

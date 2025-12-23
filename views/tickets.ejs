@@ -42,6 +42,7 @@
       --glass-border: rgba(14, 165, 233, 0.3);
       --shadow-color: rgba(14, 165, 233, 0.15);
       --card-bg: rgba(255, 255, 255, 0.9);
+      --focus-ring: rgba(14, 165, 233, 0.35);
     }
 
     [data-theme="dark"] {
@@ -59,6 +60,7 @@
       --glass-border: rgba(59, 130, 246, 0.3);
       --shadow-color: rgba(59, 130, 246, 0.2);
       --card-bg: rgba(10, 10, 20, 0.9);
+      --focus-ring: rgba(59, 130, 246, 0.35);
     }
 
     [data-theme="dark"] body {
@@ -151,6 +153,14 @@
       min-height: 100vh;
       width: 100%;
       max-width: 100%;
+      background-color: #0b121f;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(59,130,246,0.08), transparent 35%),
+        radial-gradient(circle at 80% 0%, rgba(0,255,136,0.06), transparent 30%),
+        linear-gradient(180deg, #05060d 0%, #0b141f 65%, #0d1929 100%);
+      background-repeat: no-repeat;
+      background-size: 120% 120%, 120% 120%, 100% 100%;
+      background-attachment: fixed;
       padding: 0 2rem;
       line-height: 1.8;
       margin: 0;
@@ -172,6 +182,11 @@
       font-size: 0.9rem;
       transition: all 0.2s;
       color: var(--text-color);
+    }
+    .view-btn:focus { outline: none; }
+    .view-btn:focus-visible {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px var(--focus-ring);
     }
 
     .view-btn.active {
@@ -1017,7 +1032,16 @@
     if(!m) return id;
     return m.display || m.nickname || m.username || m.tag || id;
   }
-  function fmt(ts){ const d=new Date(ts); return d.toLocaleDateString('de-DE',{day:'numeric',month:'numeric',year:'numeric'})+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+  function fmt(ts){
+    if(ts === undefined || ts === null || ts === '') return '–';
+    const numericLike = (typeof ts === 'string' && /^\d+$/.test(ts)) ? Number(ts) : ts;
+    const normalisedTs = typeof numericLike === 'number' && Number.isFinite(numericLike)
+      ? (numericLike < 1e12 ? numericLike * 1000 : numericLike)
+      : numericLike;
+    const d = new Date(normalisedTs);
+    if(isNaN(d.getTime())) return '–';
+    return d.toLocaleDateString('de-DE',{day:'numeric',month:'numeric',year:'numeric'})+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
 
   function renderTags(ticketTags){
     if(!ticketTags || ticketTags.length === 0) return '';
