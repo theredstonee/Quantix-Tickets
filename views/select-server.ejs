@@ -125,6 +125,11 @@
       min-height: 100vh;
       width: 100%;
       max-width: 100%;
+      background: #2b2f36;
+      line-height: 1.8;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
       background: #0b121f;
       line-height: 1.8;
       margin: 0;
@@ -132,6 +137,10 @@
 
     .page-shell {
       position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 0 2rem 3rem;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -165,6 +174,13 @@
       width: 100%;
       max-width: 1200px;
       margin: 0 auto;
+    }
+
+    .footer-wrapper {
+      background: #2b2f36;
+      padding: 3rem 2rem 2.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25);
     }
 
     /* Mobile Responsive */
@@ -255,6 +271,8 @@
       flex-direction: column;
       gap: 1.5rem;
       width: 100%;
+      position: relative;
+      z-index: 1;
     }
     h1 { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; margin-top: 2rem; }
     .sub { font-size: 0.9rem; opacity: 0.7; margin: 0 0 3rem; }
@@ -499,12 +517,7 @@
       }
     }
     .submit-btn { margin-top: 1rem; }
-    footer { margin-top: 3rem; margin-bottom: 3rem; padding-bottom: 2rem; text-align: center; font-size: 0.75rem; opacity: 0.6; }
-
-    [data-theme="dark"] footer {
-      margin-bottom: 4rem;
-      padding-bottom: 3rem;
-    }
+    footer { text-align: center; font-size: 0.75rem; opacity: 0.7; margin: 0; }
 
     /* Loading Overlay */
     .loading-overlay {
@@ -983,10 +996,13 @@
     </div>
   <% } %>
       </main>
-      <footer>
-        <p>Quantix Tickets © 2025 Quantix Development • Alle Rechte vorbehalten • Version <%= version %></p>
-      </footer>
     </div>
+  </div>
+
+  <div class="footer-wrapper">
+    <footer>
+      <p>Quantix Tickets © 2025 Quantix Development • Alle Rechte vorbehalten • Version <%= version %></p>
+    </footer>
   </div>
 
   <!-- Loading Overlay -->
