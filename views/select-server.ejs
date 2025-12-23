@@ -116,46 +116,68 @@
     }
 
     html, body {
-      height: 100%;
+      min-height: 100%;
       margin: 0;
       padding: 0;
     }
 
     body {
-      display: flex;
-      flex-direction: column;
       min-height: 100vh;
       width: 100%;
       max-width: 100%;
-      background-color: #0b121f;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(59,130,246,0.08), transparent 35%),
-        radial-gradient(circle at 80% 0%, rgba(0,255,136,0.06), transparent 30%),
-        linear-gradient(180deg, #05060d 0%, #0b141f 65%, #0d1929 100%);
-      background-repeat: no-repeat;
-      background-size: 120% 120%, 120% 120%, 100% 100%;
-      background-attachment: fixed;
+      background: #2b2f36;
+      line-height: 1.8;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-shell {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 0 2rem 3rem;
       background:
         radial-gradient(circle at 20% 20%, rgba(59,130,246,0.08), transparent 35%),
         radial-gradient(circle at 80% 0%, rgba(0,255,136,0.06), transparent 30%),
-        linear-gradient(180deg, #05060d 0%, #0a1221 55%, #0d1726 78%, #0f1f33 100%);
-      background-attachment: fixed;
-      background: radial-gradient(circle at 20% 20%, rgba(59,130,246,0.08), transparent 35%),
-                  radial-gradient(circle at 80% 0%, rgba(0,255,136,0.06), transparent 30%),
-                  linear-gradient(180deg, #05060d 0%, #0c1525 50%, #0b121f 100%);
-      padding: 0 2rem;
-      line-height: 1.8;
-      margin: 0;
+        linear-gradient(180deg, #05060d 0%, #0c1525 50%, #0b121f 100%);
+      overflow: visible;
     }
 
-    main {
+    .page-shell::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(59,130,246,0.12), transparent 45%),
+                  radial-gradient(circle at 30% 60%, rgba(0,255,136,0.08), transparent 50%),
+                  radial-gradient(circle at 80% 40%, rgba(59,130,246,0.06), transparent 55%);
+      opacity: 0.8;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .page-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
       width: 100%;
-      margin: 0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-wrapper {
+      background: #2b2f36;
+      padding: 3rem 2rem 2.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25);
     }
 
     /* Mobile Responsive */
     @media (max-width: 768px) {
-      body {
+      .page-shell {
         padding: 0 1rem;
       }
 
@@ -226,7 +248,7 @@
 
     /* Tablet Responsive */
     @media (min-width: 769px) and (max-width: 1024px) {
-      body {
+      .page-shell {
         padding: 0 2rem;
       }
 
@@ -239,7 +261,10 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      gap: 1.5rem;
+      width: 100%;
+      position: relative;
+      z-index: 1;
     }
     h1 { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; margin-top: 2rem; }
     .sub { font-size: 0.9rem; opacity: 0.7; margin: 0 0 3rem; }
@@ -484,12 +509,7 @@
       }
     }
     .submit-btn { margin-top: 1rem; }
-    footer { margin-top: 3rem; margin-bottom: 3rem; padding-bottom: 2rem; text-align: center; font-size: 0.75rem; opacity: 0.6; }
-
-    [data-theme="dark"] footer {
-      margin-bottom: 4rem;
-      padding-bottom: 3rem;
-    }
+    footer { text-align: center; font-size: 0.75rem; opacity: 0.7; margin: 0; }
 
     /* Loading Overlay */
     .loading-overlay {
@@ -725,72 +745,75 @@
   </style>
 </head>
 <body>
-  <button class="theme-toggle" id="themeToggle" title="Dark/Light Mode umschalten">
-    <i class="fas fa-moon"></i>
-  </button>
-  <h1><i class="fas fa-server"></i> <%= t.web.server_selection %></h1>
-  <p class="sub"><%= t.web.select_server %></p>
+  <div class="page-shell">
+    <div class="page-content">
+      <button class="theme-toggle" id="themeToggle" title="Dark/Light Mode umschalten">
+        <i class="fas fa-moon"></i>
+      </button>
+      <main>
+        <h1><i class="fas fa-server"></i> <%= t.web.server_selection %></h1>
+        <p class="sub"><%= t.web.select_server %></p>
 
-  <div class="nav-buttons">
-    <a href="/">
-      <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : lang === 'zh' ? '返回首页' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Zur Startseite' %>
-    </a>
-    <a href="/my-tickets" id="myTicketsBtn" style="background: linear-gradient(135deg, #00ff88 0%, #00dd77 100%); color: #000; box-shadow: 0 4px 12px rgba(0,255,136,0.3);">
-      <i class="fas fa-ticket-alt"></i> <%= lang === 'de' ? 'Meine Tickets' : lang === 'en' ? 'My Tickets' : lang === 'he' ? 'הכרטיסים שלי' : lang === 'ja' ? 'マイチケット' : lang === 'ru' ? 'Мои тикеты' : lang === 'pt' ? 'Meus Tickets' : lang === 'es' ? 'Mis Tickets' : lang === 'id' ? 'Tiket Saya' : lang === 'zh' ? '我的工单' : lang === 'ar' ? 'تذاكري' : 'Meine Tickets' %>
-    </a>
-    <a href="https://discord.com/invite/mnYbnpyyBS" target="_blank" style="background: #5865F2; color: white;">
-      <i class="fab fa-discord"></i> <%= lang === 'de' ? 'Support Server' : lang === 'en' ? 'Support Server' : lang === 'he' ? 'שרת תמיכה' : lang === 'ja' ? 'サポートサーバー' : lang === 'ru' ? 'Сервер поддержки' : lang === 'pt' ? 'Servidor de Suporte' : lang === 'es' ? 'Servidor de Soporte' : lang === 'id' ? 'Server Dukungan' : lang === 'zh' ? '支持服务器' : lang === 'ar' ? 'خادم الدعم' : 'Support Server' %>
-    </a>
-    <% if (user && (user.id === '928901974106202113' || user.id === '1159182333316968530' || user.id === '1415387837359984740' || user.id === '1048900200497954868')) { %>
-      <a href="/owner" id="ownerDashboardBtn" class="owner-dashboard-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
-        <i class="fas fa-crown"></i> <%= lang === 'de' ? 'Owner Dashboard' : lang === 'en' ? 'Owner Dashboard' : lang === 'he' ? 'לוח בקרת הבעלים' : lang === 'ja' ? 'オーナーダッシュボード' : lang === 'ru' ? 'Панель владельца' : lang === 'pt' ? 'Painel do Proprietário' : lang === 'es' ? 'Panel del Propietario' : lang === 'id' ? 'Panel Pemilik' : lang === 'zh' ? '所有者仪表板' : lang === 'ar' ? 'لوحة المالك' : 'Owner Dashboard' %>
-      </a>
-    <% } %>
-    <% if (user && (user.id === '1048900200497954868' || user.id === '1159182333316968530')) { %>
-      <a href="/founder" id="founderDashboardBtn" class="founder-dashboard-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 4px 12px rgba(240,147,251,0.4);">
-        <i class="fas fa-user-shield"></i> <%= lang === 'de' ? 'Founder Panel' : lang === 'en' ? 'Founder Panel' : lang === 'he' ? 'לוח מייסדים' : lang === 'ja' ? '創設者パネル' : lang === 'ru' ? 'Панель основателя' : lang === 'pt' ? 'Painel de Fundador' : lang === 'es' ? 'Panel de Fundador' : lang === 'id' ? 'Panel Pendiri' : lang === 'zh' ? '创始人面板' : lang === 'ar' ? 'لوحة المؤسس' : 'Founder Panel' %>
-      </a>
-    <% } %>
-  </div>
+        <div class="nav-buttons">
+          <a href="/">
+            <i class="fas fa-home"></i> <%= lang === 'de' ? 'Zur Startseite' : lang === 'en' ? 'Back to Home' : lang === 'he' ? 'חזרה לדף הבית' : lang === 'ja' ? 'ホームに戻る' : lang === 'ru' ? 'На главную' : lang === 'pt' ? 'Voltar ao Início' : lang === 'es' ? 'Volver al Inicio' : lang === 'id' ? 'Kembali ke Beranda' : lang === 'zh' ? '返回首页' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Zur Startseite' %>
+          </a>
+          <a href="/my-tickets" id="myTicketsBtn" style="background: linear-gradient(135deg, #00ff88 0%, #00dd77 100%); color: #000; box-shadow: 0 4px 12px rgba(0,255,136,0.3);">
+            <i class="fas fa-ticket-alt"></i> <%= lang === 'de' ? 'Meine Tickets' : lang === 'en' ? 'My Tickets' : lang === 'he' ? 'הכרטיסים שלי' : lang === 'ja' ? 'マイチケット' : lang === 'ru' ? 'Мои тикеты' : lang === 'pt' ? 'Meus Tickets' : lang === 'es' ? 'Mis Tickets' : lang === 'id' ? 'Tiket Saya' : lang === 'zh' ? '我的工单' : lang === 'ar' ? 'تذاكري' : 'Meine Tickets' %>
+          </a>
+          <a href="https://discord.com/invite/mnYbnpyyBS" target="_blank" style="background: #5865F2; color: white;">
+            <i class="fab fa-discord"></i> <%= lang === 'de' ? 'Support Server' : lang === 'en' ? 'Support Server' : lang === 'he' ? 'שרת תמיכה' : lang === 'ja' ? 'サポートサーバー' : lang === 'ru' ? 'Сервер поддержки' : lang === 'pt' ? 'Servidor de Suporte' : lang === 'es' ? 'Servidor de Soporte' : lang === 'id' ? 'Server Dukungan' : lang === 'zh' ? '支持服务器' : lang === 'ar' ? 'خادم الدعم' : 'Support Server' %>
+          </a>
+          <% if (user && (user.id === '928901974106202113' || user.id === '1159182333316968530' || user.id === '1415387837359984740' || user.id === '1048900200497954868')) { %>
+            <a href="/owner" id="ownerDashboardBtn" class="owner-dashboard-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(102,126,234,0.4);">
+              <i class="fas fa-crown"></i> <%= lang === 'de' ? 'Owner Dashboard' : lang === 'en' ? 'Owner Dashboard' : lang === 'he' ? 'לוח בקרת הבעלים' : lang === 'ja' ? 'オーナーダッシュボード' : lang === 'ru' ? 'Панель владельца' : lang === 'pt' ? 'Painel do Proprietário' : lang === 'es' ? 'Panel del Propietario' : lang === 'id' ? 'Panel Pemilik' : lang === 'zh' ? '所有者仪表板' : lang === 'ar' ? 'لوحة المالك' : 'Owner Dashboard' %>
+            </a>
+          <% } %>
+          <% if (user && (user.id === '1048900200497954868' || user.id === '1159182333316968530')) { %>
+            <a href="/founder" id="founderDashboardBtn" class="founder-dashboard-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 4px 12px rgba(240,147,251,0.4);">
+              <i class="fas fa-user-shield"></i> <%= lang === 'de' ? 'Founder Panel' : lang === 'en' ? 'Founder Panel' : lang === 'he' ? 'לוח מייסדים' : lang === 'ja' ? '創設者パネル' : lang === 'ru' ? 'Панель основателя' : lang === 'pt' ? 'Painel de Fundador' : lang === 'es' ? 'Panel de Fundador' : lang === 'id' ? 'Panel Pendiri' : lang === 'zh' ? '创始人面板' : lang === 'ar' ? 'لوحة المؤسس' : 'Founder Panel' %>
+            </a>
+          <% } %>
+        </div>
 
-  <% if (servers && servers.length > 0) { %>
-    <form method="POST" action="/select-server" id="serverForm">
-      <div class="server-grid">
-        <% servers.forEach(server => { %>
-          <label class="server-card <%= currentGuild === server.id ? 'selected' : '' %> <%= !server.hasBot ? 'no-bot' : '' %>" data-has-bot="<%= server.hasBot ? 'true' : 'false' %>" data-server-id="<%= server.id %>">
-            <input type="radio" name="guildId" value="<%= server.id %>" <%= currentGuild === server.id ? 'checked' : '' %> <%= !server.hasBot ? 'disabled' : '' %> required>
-            <div class="server-header">
-              <div class="server-icon">
-                <% if (server.icon) { %>
-                  <img src="<%= server.icon %>" alt="<%= server.name %>">
-                <% } else { %>
-                  🛡️
-                <% } %>
-              </div>
-              <div>
-                <div class="server-name">
-                  <%= server.name %>
-                  <% if (currentGuild === server.id) { %>
-                    <span class="current-badge"><%= t.web.current %></span>
-                  <% } %>
-                  <% if (!server.hasBot) { %>
-                    <span class="current-badge" style="background: #ff4444; color: #fff;">Bot fehlt</span>
-                  <% } %>
-                </div>
-                <div class="server-id"><%= server.id %></div>
-              </div>
+        <% if (servers && servers.length > 0) { %>
+          <form method="POST" action="/select-server" id="serverForm">
+            <div class="server-grid">
+              <% servers.forEach(server => { %>
+                <label class="server-card <%= currentGuild === server.id ? 'selected' : '' %> <%= !server.hasBot ? 'no-bot' : '' %>" data-has-bot="<%= server.hasBot ? 'true' : 'false' %>" data-server-id="<%= server.id %>">
+                  <input type="radio" name="guildId" value="<%= server.id %>" <%= currentGuild === server.id ? 'checked' : '' %> <%= !server.hasBot ? 'disabled' : '' %> required>
+                  <div class="server-header">
+                    <div class="server-icon">
+                      <% if (server.icon) { %>
+                        <img src="<%= server.icon %>" alt="<%= server.name %>">
+                      <% } else { %>
+                        🛡️
+                      <% } %>
+                    </div>
+                    <div>
+                      <div class="server-name">
+                        <%= server.name %>
+                        <% if (currentGuild === server.id) { %>
+                          <span class="current-badge"><%= t.web.current %></span>
+                        <% } %>
+                        <% if (!server.hasBot) { %>
+                          <span class="current-badge" style="background: #ff4444; color: #fff;">Bot fehlt</span>
+                        <% } %>
+                      </div>
+                      <div class="server-id"><%= server.id %></div>
+                    </div>
+                  </div>
+                </label>
+              <% }); %>
             </div>
-          </label>
-        <% }); %>
-      </div>
 
-    </form>
-  <% } else { %>
-    <div class="no-servers-hero">
-      <div class="no-servers-icon">
-        <i class="fab fa-discord"></i>
-      </div>
-      <h2 class="no-servers-title"><%
+          </form>
+        <% } else { %>
+          <div class="no-servers-hero">
+            <div class="no-servers-icon">
+              <i class="fab fa-discord"></i>
+            </div>
+            <h2 class="no-servers-title"><%
         const noServerTitles = {
           de: 'Bot noch nicht auf deinem Server?',
           en: 'Bot not on your server yet?',
@@ -964,6 +987,15 @@
       </div>
     </div>
   <% } %>
+      </main>
+    </div>
+  </div>
+
+  <div class="footer-wrapper">
+    <footer>
+      <p>Quantix Tickets © 2025 Quantix Development • Alle Rechte vorbehalten • Version <%= version %></p>
+    </footer>
+  </div>
 
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
@@ -997,10 +1029,6 @@
       %><%= loadingSubtexts[lang] || loadingSubtexts.de %></div>
     </div>
   </div>
-
-  <footer>
-    <p>Quantix Tickets © 2025 Quantix Development • Alle Rechte vorbehalten • Version <%= version %></p>
-  </footer>
 
   <script>
     // Auto-submit on card click
