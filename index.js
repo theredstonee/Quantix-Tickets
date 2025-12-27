@@ -1622,7 +1622,6 @@ function getDefaultSupportSchedule() {
     return acc;
   }, {});
 }
-
 function formatSupportTimePart(value) {
   return value.toString().padStart(2, '0');
 }
@@ -1664,7 +1663,6 @@ function parseSupportTimeRange(input) {
     end: `${formatSupportTimePart(endHour)}:${formatSupportTimePart(endMin)}`
   };
 }
-
 function buildSupportSchedule(schedule = {}) {
   const defaults = getDefaultSupportSchedule();
   const merged = {};
