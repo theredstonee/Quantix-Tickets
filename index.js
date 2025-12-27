@@ -1613,6 +1613,119 @@ client.on(Events.GuildCreate, async (guild) => {
   await sendWelcomeMessage(guild);
 });
 
+const SUPPORT_DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+function getDefaultSupportSchedule() {
+  const defaultDay = { enabled: true, start: '00:00', end: '23:59' };
+  return SUPPORT_DAY_KEYS.reduce((acc, day) => {
+    acc[day] = { ...defaultDay };
+    return acc;
+  }, {});
+}
+
+function buildSupportSchedule(schedule = {}) {
+  const defaults = getDefaultSupportSchedule();
+  const merged = {};
+
+  for (const day of SUPPORT_DAY_KEYS) {
+    const cfg = schedule[day] || {};
+    merged[day] = {
+      enabled: cfg.enabled !== undefined ? cfg.enabled : defaults[day].enabled,
+      start: cfg.start || defaults[day].start,
+      end: cfg.end || defaults[day].end
+    };
+  }
+
+  return merged;
+}
+
+function parseTimeToMinutes(timeString) {
+  if (!timeString || typeof timeString !== 'string') return null;
+  const [hours, minutes] = timeString.split(':').map(Number);
+  if (
+    Number.isNaN(hours) ||
+    Number.isNaN(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+  return hours * 60 + minutes;
+}
+
+function getCurrentTimeInfo(timezone = 'Europe/Berlin') {
+  const formatter = new Intl.DateTimeFormat('de-DE', {
+    timeZone: timezone,
+    hour: '2-digit',
+    minute: '2-digit',
+    weekday: 'long',
+    hour12: false
+  });
+
+  const parts = formatter.formatToParts(new Date());
+  const hourPart = parts.find(p => p.type === 'hour');
+  const minutePart = parts.find(p => p.type === 'minute');
+  const weekdayPart = parts.find(p => p.type === 'weekday');
+
+  const hours = parseInt(hourPart?.value || '0', 10);
+  const minutes = parseInt(minutePart?.value || '0', 10);
+
+  const weekdayMap = {
+    montag: 'monday',
+    dienstag: 'tuesday',
+    mittwoch: 'wednesday',
+    donnerstag: 'thursday',
+    freitag: 'friday',
+    samstag: 'saturday',
+    sonntag: 'sunday'
+  };
+
+  const weekday = weekdayMap[(weekdayPart?.value || '').toLowerCase()] || SUPPORT_DAY_KEYS[new Date().getDay()];
+
+  return {
+    day: weekday,
+    minutes: hours * 60 + minutes
+  };
+}
+
+function getTicketSupportStatus(cfg) {
+  if (!cfg || !cfg.ticketSupportTimes || cfg.ticketSupportTimes.enabled === false) {
+    return { enabled: false, outside: false };
+  }
+
+  const timezone = cfg.ticketSupportTimes.timezone || 'Europe/Berlin';
+  const schedule = buildSupportSchedule(cfg.ticketSupportTimes.schedule);
+  const { day, minutes } = getCurrentTimeInfo(timezone);
+  const dayConfig = schedule[day] || getDefaultSupportSchedule()[day];
+
+  if (!dayConfig.enabled) {
+    return { enabled: true, outside: true, dayConfig, day, timezone };
+  }
+
+  const startMinutes = parseTimeToMinutes(dayConfig.start);
+  const endMinutes = parseTimeToMinutes(dayConfig.end);
+  if (startMinutes === null || endMinutes === null) {
+    return { enabled: true, outside: false, dayConfig, day, timezone };
+  }
+
+  let isInside = false;
+  if (startMinutes <= endMinutes) {
+    isInside = minutes >= startMinutes && minutes <= endMinutes;
+  } else {
+    isInside = minutes >= startMinutes || minutes <= endMinutes;
+  }
+
+  return {
+    enabled: true,
+    outside: !isInside,
+    dayConfig,
+    day,
+    timezone
+  };
+}
+
 function buildTicketEmbed(cfg, i, topic, nr, priority = 0){
   const guildId = i.guild?.id || i.guildId;
   const ticketCfg = cfg.ticketEmbed || {};
@@ -1667,6 +1780,19 @@ function buildTicketEmbed(cfg, i, topic, nr, priority = 0){
     e.setThumbnail(avatarUrl);
   } else if(i.user.displayAvatarURL) {
     e.setThumbnail(i.user.displayAvatarURL({ size: 128 }));
+  }
+
+  const supportStatus = getTicketSupportStatus(cfg);
+  if (supportStatus.enabled && supportStatus.outside) {
+    const windowText = supportStatus.dayConfig?.enabled === false
+      ? 'Geschlossen'
+      : `${supportStatus.dayConfig?.start || '00:00'} - ${supportStatus.dayConfig?.end || '23:59'}`;
+
+    e.addFields({
+      name: '⚠️ Außerhalb der Supportzeiten',
+      value: `Achtung, Ticket außerhalb der Supportzeiten. Bitte gedulde dich länger bis es bearbeitet wird.\nHeutige Zeiten: ${windowText}`,
+      inline: false
+    });
   }
 
   return e;

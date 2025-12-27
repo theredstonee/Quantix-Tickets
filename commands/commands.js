@@ -155,6 +155,13 @@ function getCommandsList(userId, member, guildId) {
           premium: null
         },
         {
+          name: '/setup time',
+          description: 'Supportzeiten für die Ticket-Erstellung konfigurieren',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: null
+        },
+        {
           name: '/userlanguage',
           description: 'Persönliche Sprache ändern',
           permission: 'Alle',
