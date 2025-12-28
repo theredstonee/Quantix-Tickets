@@ -218,7 +218,6 @@ function buildSetupEmbed(cfg) {
   const categoryText = cfg.categoryId ? `<#${cfg.categoryId}>` : "Keine Kategorie ausgewählt";
   const panelChannelText = cfg.panelChannelId ? `<#${cfg.panelChannelId}>` : "Kein Panel-Channel ausgewählt";
   const transcriptText = cfg.transcriptChannelId ? `<#${cfg.transcriptChannelId}>` : "Kein Transcript-Channel ausgewählt";
-=======
   const categoryText = cfg.categoryId ? `<#${cfg.categoryId}>` : "Keine Kategorie ausgewählt";
   const panelChannelText = cfg.panelChannelId ? `<#${cfg.panelChannelId}>` : "Kein Panel-Channel ausgewählt";
   const logChannelText = (() => {
