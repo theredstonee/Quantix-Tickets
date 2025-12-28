@@ -1908,7 +1908,7 @@ function buildTicketEmbed(cfg, i, topic, nr, priority = 0){
       : `${supportStatus.dayConfig?.start || '00:00'} - ${supportStatus.dayConfig?.end || '23:59'}`;
 
     e.addFields({
-      name: '⚠️ Außerhalb der Supportzeiten',
+      name: '» ⚠️ Außerhalb der Supportzeiten «',
       value: `Achtung, Ticket außerhalb der Supportzeiten. Bitte gedulde dich länger bis es bearbeitet wird.\nHeutige Zeiten: ${windowText}`,
       inline: false
     });
@@ -2877,140 +2877,151 @@ client.on(Events.InteractionCreate, async i => {
       }
     }
 
-    // Support-Zeit Formular Buttons
-    if (i.isButton() && i.customId.startsWith('setup_time_edit:')) {
-      const guildId = i.guild?.id;
-      if (!guildId) return;
+// Support-Zeit Formular Buttons
+if (i.isButton() && i.customId.startsWith("setup_time_edit:")) {
+  const guildId = i.guild?.id;
+  if (!guildId) return;
 
-      if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-        return i.reply({ content: '❌ Du benötigst die Berechtigung **Server verwalten**, um Supportzeiten zu ändern.', ephemeral: true });
-      }
+  if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+    return i.reply({
+      content: "❌ Du benötigst die Berechtigung **Server verwalten**, um Supportzeiten zu ändern.",
+      ephemeral: true,
+    });
+  }
 
-      const day = i.customId.split(':')[1];
-      if (!SUPPORT_DAY_KEYS.includes(day)) {
-        return i.reply({ content: '❌ Ungültiger Tag.', ephemeral: true });
-      }
+  const day = i.customId.split(":")[1];
+  if (!SUPPORT_DAY_KEYS.includes(day)) {
+    return i.reply({ content: "❌ Ungültiger Tag.", ephemeral: true });
+  }
 
-      const cfg = readCfg(guildId);
-      const schedule = buildSupportSchedule(cfg.ticketSupportTimes?.schedule);
-      const dayCfg = schedule[day];
+  const cfg = readCfg(guildId);
+  const schedule = buildSupportSchedule(cfg.ticketSupportTimes?.schedule);
+  const dayCfg = schedule[day];
 
-      const labelMap = {
-        monday: 'Montag',
-        tuesday: 'Dienstag',
-        wednesday: 'Mittwoch',
-        thursday: 'Donnerstag',
-        friday: 'Freitag',
-        saturday: 'Samstag',
-        sunday: 'Sonntag'
-      };
+  const labelMap = {
+    monday: "Montag",
+    tuesday: "Dienstag",
+    wednesday: "Mittwoch",
+    thursday: "Donnerstag",
+    friday: "Freitag",
+    saturday: "Samstag",
+    sunday: "Sonntag",
+  };
 
-      const modal = new ModalBuilder()
-        .setCustomId(`setup_time_modal:${day}`)
-        .setTitle(`Supportzeit: ${labelMap[day]}`);
+  const modal = new ModalBuilder()
+    .setCustomId(`setup_time_modal:${day}`)
+    .setTitle(`Supportzeit: ${labelMap[day]}`);
 
-      const input = new TextInputBuilder()
-        .setCustomId('time_range')
-        .setLabel('Zeitfenster (z.B. 18:00-20:00 oder "geschlossen")')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(false)
-        .setMaxLength(25)
-        .setPlaceholder('18:00-20:00 | 24/7 | geschlossen')
-        .setValue(dayCfg.enabled ? `${dayCfg.start} - ${dayCfg.end}` : 'geschlossen');
+  const input = new TextInputBuilder()
+    .setCustomId("time_range")
+    .setLabel("Zeitfenster") // <= 45 Zeichen (FIX)
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false)
+    .setMaxLength(25)
+    .setPlaceholder('z.B. 18:00-20:00 | 24/7 | "geschlossen"')
+    .setValue(dayCfg.enabled ? `${dayCfg.start}-${dayCfg.end}` : "geschlossen");
 
-      modal.addComponents(new ActionRowBuilder().addComponents(input));
+  modal.addComponents(new ActionRowBuilder().addComponents(input));
 
-      return i.showModal(modal);
-    }
+  return i.showModal(modal);
+}
 
-    if (i.isButton() && i.customId === 'setup_time_toggle') {
-      const guildId = i.guild?.id;
-      if (!guildId) return;
+if (i.isButton() && i.customId === "setup_time_toggle") {
+  const guildId = i.guild?.id;
+  if (!guildId) return;
 
-      if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-        return i.reply({ content: '❌ Du benötigst die Berechtigung **Server verwalten**, um Supportzeiten zu ändern.', ephemeral: true });
-      }
+  if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+    return i.reply({
+      content: "❌ Du benötigst die Berechtigung **Server verwalten**, um Supportzeiten zu ändern.",
+      ephemeral: true,
+    });
+  }
 
-      const cfg = readCfg(guildId);
-      if (!cfg.ticketSupportTimes) {
-        cfg.ticketSupportTimes = {
-          enabled: true,
-          timezone: 'Europe/Berlin',
-          schedule: getDefaultSupportSchedule()
-        };
-      }
+  const cfg = readCfg(guildId);
+  if (!cfg.ticketSupportTimes) {
+    cfg.ticketSupportTimes = {
+      enabled: true,
+      timezone: "Europe/Berlin",
+      schedule: getDefaultSupportSchedule(),
+    };
+  }
 
-      cfg.ticketSupportTimes.enabled = cfg.ticketSupportTimes.enabled === false;
+  // Toggle korrekt: true <-> false
+  cfg.ticketSupportTimes.enabled = cfg.ticketSupportTimes.enabled === false ? true : false;
 
-      writeCfg(guildId, cfg);
+  writeCfg(guildId, cfg);
 
-      const embed = buildSupportTimeEmbed(cfg);
-      const components = buildSupportTimeComponents(cfg);
+  const embed = buildSupportTimeEmbed(cfg);
+  const components = buildSupportTimeComponents(cfg);
 
-      return i.update({ embeds: [embed], components });
-    }
+  return i.update({ embeds: [embed], components });
+}
 
-    if (i.isModalSubmit() && i.customId.startsWith('setup_time_modal:')) {
-      const guildId = i.guild?.id;
-      if (!guildId) return;
+if (i.isModalSubmit() && i.customId.startsWith("setup_time_modal:")) {
+  const guildId = i.guild?.id;
+  if (!guildId) return;
 
-      if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-        return i.reply({ content: '❌ Du benötigst die Berechtigung **Server verwalten**, um Supportzeiten zu ändern.', ephemeral: true });
-      }
+  if (!i.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+    return i.reply({
+      content: "❌ Du benötigst die Berechtigung **Server verwalten**, um Supportzeiten zu ändern.",
+      ephemeral: true,
+    });
+  }
 
-      const day = i.customId.split(':')[1];
-      if (!SUPPORT_DAY_KEYS.includes(day)) {
-        return i.reply({ content: '❌ Ungültiger Tag.', ephemeral: true });
-      }
+  const day = i.customId.split(":")[1];
+  if (!SUPPORT_DAY_KEYS.includes(day)) {
+    return i.reply({ content: "❌ Ungültiger Tag.", ephemeral: true });
+  }
 
-      const raw = i.fields.getTextInputValue('time_range')?.trim() || '';
-      if (!raw) {
-        return i.reply({ content: 'ℹ️ Keine Änderung vorgenommen (Feld war leer).', ephemeral: true });
-      }
+  const raw = i.fields.getTextInputValue("time_range")?.trim() || "";
+  if (!raw) {
+    return i.reply({ content: "ℹ️ Keine Änderung vorgenommen (Feld war leer).", ephemeral: true });
+  }
 
-      const parsed = parseSupportTimeRange(raw);
-      if (!parsed) {
-        return i.reply({
-          content: '❌ Ungültiges Format. Nutze z.B. `18:00-20:00`, `18:00 bis 20:00`, `24/7` oder `geschlossen`.',
-          ephemeral: true
-        });
-      }
+  const parsed = parseSupportTimeRange(raw);
+  if (!parsed) {
+    return i.reply({
+      content:
+        "❌ Ungültiges Format. Nutze z.B. `18:00-20:00`, `18:00 bis 20:00`, `24/7` oder `geschlossen`.",
+      ephemeral: true,
+    });
+  }
 
-      const cfg = readCfg(guildId);
-      if (!cfg.ticketSupportTimes) {
-        cfg.ticketSupportTimes = {
-          enabled: true,
-          timezone: 'Europe/Berlin',
-          schedule: getDefaultSupportSchedule()
-        };
-      }
+  const cfg = readCfg(guildId);
+  if (!cfg.ticketSupportTimes) {
+    cfg.ticketSupportTimes = {
+      enabled: true,
+      timezone: "Europe/Berlin",
+      schedule: getDefaultSupportSchedule(),
+    };
+  }
 
-      const schedule = buildSupportSchedule(cfg.ticketSupportTimes.schedule);
-      schedule[day] = parsed;
-      cfg.ticketSupportTimes.schedule = schedule;
+  const schedule = buildSupportSchedule(cfg.ticketSupportTimes.schedule);
+  schedule[day] = parsed;
+  cfg.ticketSupportTimes.schedule = schedule;
 
-      writeCfg(guildId, cfg);
+  writeCfg(guildId, cfg);
 
-      const labelMap = {
-        monday: 'Montag',
-        tuesday: 'Dienstag',
-        wednesday: 'Mittwoch',
-        thursday: 'Donnerstag',
-        friday: 'Freitag',
-        saturday: 'Samstag',
-        sunday: 'Sonntag'
-      };
+  const labelMap = {
+    monday: "Montag",
+    tuesday: "Dienstag",
+    wednesday: "Mittwoch",
+    thursday: "Donnerstag",
+    friday: "Freitag",
+    saturday: "Samstag",
+    sunday: "Sonntag",
+  };
 
-      const embed = buildSupportTimeEmbed(cfg);
-      const components = buildSupportTimeComponents(cfg);
+  const embed = buildSupportTimeEmbed(cfg);
+  const components = buildSupportTimeComponents(cfg);
 
-      return i.reply({
-        content: `✅ Supportzeit für **${labelMap[day]}** aktualisiert.`,
-        embeds: [embed],
-        components,
-        ephemeral: true
-      });
-    }
+  return i.reply({
+    content: `✅ Supportzeit für **${labelMap[day]}** aktualisiert.`,
+    embeds: [embed],
+    components,
+    ephemeral: true,
+  });
+}
 
     // Maintenance Enable Modal Handler
     if(i.isModalSubmit() && i.customId === 'maintenance_enable_modal') {
