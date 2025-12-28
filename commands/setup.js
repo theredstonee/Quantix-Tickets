@@ -8,6 +8,10 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  RoleSelectMenuBuilder,
+  ChannelSelectMenuBuilder,
+  StringSelectMenuBuilder,
+  ChannelType,
 } = require("discord.js");
 
 const { readCfg, writeCfg } = require("../database");
@@ -151,12 +155,295 @@ function getDayLabel(dayKey) {
   return DAY_OPTIONS.find((d) => d.key === dayKey)?.label || dayKey;
 }
 
+function buildPanelSelect(cfg) {
+  const topics = (cfg.topics || []).filter((t) => t && t.label && t.value);
+  const options = topics.length > 0
+    ? topics
+    : [{ label: "Keine Topics konfiguriert", value: "none", emoji: "⚠️" }];
+
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId("topic")
+      .setPlaceholder("Wähle dein Thema …")
+      .addOptions(
+        options.map((t) => ({
+          label: t.label,
+          value: t.value,
+          emoji: t.emoji || undefined,
+        }))
+      )
+  );
+}
+
+function buildPanelEmbed(cfg) {
+  const panelEmbed = cfg.panelEmbed || {};
+
+  const title = panelEmbed.title || cfg.panelTitle || "🎫 Ticket System";
+  const description =
+    panelEmbed.description ||
+    cfg.panelDescription ||
+    "Wähle unten ein Thema aus, um ein Ticket zu erstellen.";
+  const color = panelEmbed.color || cfg.panelColor || "#5865F2";
+  const footer = panelEmbed.footer || cfg.panelFooter || "Quantix Tickets";
+
+  const embed = new EmbedBuilder()
+    .setTitle(title)
+    .setDescription(description)
+    .setFooter({ text: footer });
+
+  if (/^#?[0-9a-fA-F]{6}$/.test(color)) {
+    embed.setColor(parseInt(color.replace("#", ""), 16));
+  }
+
+  return embed;
+}
+
+function buildSetupEmbed(cfg) {
+  const roleMentions = (Array.isArray(cfg.teamRoleId)
+    ? cfg.teamRoleId
+    : cfg.teamRoleId
+    ? [cfg.teamRoleId]
+    : [])
+    .filter(Boolean)
+    .map((id) => `<@&${id}>`)
+    .join(", ") || "Keine Rolle ausgewählt";
+
+  const categoryText = cfg.categoryId ? `<#${cfg.categoryId}>` : "Keine Kategorie ausgewählt";
+  const panelChannelText = cfg.panelChannelId ? `<#${cfg.panelChannelId}>` : "Kein Panel-Channel ausgewählt";
+  const logChannelText = (() => {
+    const ids = Array.isArray(cfg.logChannelId)
+      ? cfg.logChannelId
+      : cfg.logChannelId
+      ? [cfg.logChannelId]
+      : [];
+    if (!ids.length) return "Kein Log-Channel ausgewählt";
+    return ids.map((id) => `<#${id}>`).join(", ");
+  })();
+
+  return new EmbedBuilder()
+    .setColor(0x5865f2)
+    .setTitle("🚀 Setup & Konfiguration")
+    .setDescription(
+      "Richte den Bot in wenigen Schritten ein. Wähle Team-Rollen, Kategorie, Panel- und Log-Channel und sende anschließend das Ticket-Panel."
+    )
+    .addFields(
+      { name: "Team-Rollen", value: roleMentions, inline: false },
+      { name: "Ticket-Kategorie", value: categoryText, inline: false },
+      { name: "Panel-Channel", value: panelChannelText, inline: false },
+      { name: "Log-Channel", value: logChannelText, inline: false }
+    )
+    .setFooter({ text: "Quantix Tickets • Setup-Assistent" });
+}
+
+function buildSetupComponents(cfg) {
+  const roleIds = Array.isArray(cfg.teamRoleId)
+    ? cfg.teamRoleId.filter(Boolean)
+    : cfg.teamRoleId
+    ? [cfg.teamRoleId]
+    : [];
+
+  const logChannelIds = Array.isArray(cfg.logChannelId)
+    ? cfg.logChannelId.filter(Boolean)
+    : cfg.logChannelId
+    ? [cfg.logChannelId]
+    : [];
+
+  const rows = [
+    new ActionRowBuilder().addComponents(
+      new RoleSelectMenuBuilder()
+        .setCustomId("setup_roles")
+        .setPlaceholder("Wähle Support-Rolle(n)")
+        .setMinValues(0)
+        .setMaxValues(5)
+        .setDefaultRoles(roleIds.slice(0, 5))
+    ),
+    new ActionRowBuilder().addComponents(
+      new ChannelSelectMenuBuilder()
+        .setCustomId("setup_category")
+        .setPlaceholder("Wähle Ticket-Kategorie")
+        .setChannelTypes(ChannelType.GuildCategory)
+        .setMinValues(0)
+        .setMaxValues(1)
+        .setDefaultChannels(cfg.categoryId ? [cfg.categoryId] : [])
+    ),
+    new ActionRowBuilder().addComponents(
+      new ChannelSelectMenuBuilder()
+        .setCustomId("setup_panel_channel")
+        .setPlaceholder("Channel für Ticket-Panel")
+        .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+        .setMinValues(0)
+        .setMaxValues(1)
+        .setDefaultChannels(cfg.panelChannelId ? [cfg.panelChannelId] : [])
+    ),
+    new ActionRowBuilder().addComponents(
+      new ChannelSelectMenuBuilder()
+        .setCustomId("setup_log_channel")
+        .setPlaceholder("Log-Channel auswählen")
+        .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+        .setMinValues(0)
+        .setMaxValues(3)
+        .setDefaultChannels(logChannelIds.slice(0, 3))
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("setup_send_panel")
+        .setLabel("Panel senden")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji("📨"),
+      new ButtonBuilder()
+        .setCustomId("setup_refresh")
+        .setLabel("Aktualisieren")
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji("🔄")
+    ),
+  ];
+
+  return rows;
+}
+
 /**
  * Button + Modal Handling (damit du index.js:2914 entfernen kannst)
  * Rückgabe: true wenn handled, sonst false
  */
 async function handleComponent(interaction) {
-  // Buttons
+  const guildId = interaction.guildId;
+
+  const setupIds = [
+    "setup_roles",
+    "setup_category",
+    "setup_panel_channel",
+    "setup_log_channel",
+    "setup_send_panel",
+    "setup_refresh",
+  ];
+
+  const isSetupWizardInteraction =
+    ((interaction.isRoleSelectMenu && interaction.isRoleSelectMenu()) ||
+      (interaction.isChannelSelectMenu && interaction.isChannelSelectMenu()) ||
+      interaction.isButton()) &&
+    setupIds.includes(interaction.customId);
+
+  if (isSetupWizardInteraction) {
+    if (!guildId) return false;
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await interaction.reply({
+        content: "❌ Du benötigst die Berechtigung **Server verwalten**, um das Setup zu nutzen.",
+        ephemeral: true,
+      });
+      return true;
+    }
+
+    const cfg = readCfg(guildId);
+    const refresh = async (content) => {
+      const embed = buildSetupEmbed(cfg);
+      const components = buildSetupComponents(cfg);
+      if (interaction.deferred || interaction.replied) {
+        return interaction.editReply({ content, embeds: [embed], components });
+      }
+      return interaction.update({ content, embeds: [embed], components });
+    };
+
+    if (interaction.isRoleSelectMenu && interaction.isRoleSelectMenu()) {
+      if (interaction.customId !== "setup_roles") return false;
+      cfg.teamRoleId = interaction.values || [];
+      writeCfg(guildId, cfg);
+      await refresh("✅ Team-Rollen gespeichert.");
+      return true;
+    }
+
+    if (interaction.isChannelSelectMenu && interaction.isChannelSelectMenu()) {
+      if (interaction.customId === "setup_category") {
+        cfg.categoryId = interaction.values?.[0] || "";
+        writeCfg(guildId, cfg);
+        await refresh(cfg.categoryId ? "✅ Kategorie gespeichert." : "ℹ️ Kategorie entfernt.");
+        return true;
+      }
+
+      if (interaction.customId === "setup_panel_channel") {
+        cfg.panelChannelId = interaction.values?.[0] || "";
+        if (!cfg.panelChannelId) cfg.panelMessageId = "";
+        writeCfg(guildId, cfg);
+        await refresh(cfg.panelChannelId ? "✅ Panel-Channel gespeichert." : "ℹ️ Panel-Channel entfernt.");
+        return true;
+      }
+
+      if (interaction.customId === "setup_log_channel") {
+        cfg.logChannelId = interaction.values || [];
+        writeCfg(guildId, cfg);
+        await refresh(cfg.logChannelId.length ? "✅ Log-Channel gespeichert." : "ℹ️ Log-Channel entfernt.");
+        return true;
+      }
+    }
+
+    if (interaction.isButton()) {
+      if (interaction.customId === "setup_refresh") {
+        await refresh("🔄 Aktualisiert.");
+        return true;
+      }
+
+      if (interaction.customId === "setup_send_panel") {
+        await interaction.deferUpdate();
+
+        try {
+          const topics = (cfg.topics || []).filter((t) => t && t.label && t.value);
+          const errors = [];
+
+          if (!cfg.panelChannelId) errors.push("Bitte wähle einen Panel-Channel aus.");
+          if (!cfg.categoryId) errors.push("Bitte wähle eine Ticket-Kategorie aus.");
+          if (topics.length === 0) errors.push("Bitte konfiguriere mindestens ein Ticket-Thema im Dashboard.");
+
+          if (errors.length) {
+            await interaction.followUp({ content: `❌ Panel konnte nicht gesendet werden:\n- ${errors.join("\n- ")}`, ephemeral: true });
+            return true;
+          }
+
+          const channel = await interaction.guild.channels.fetch(cfg.panelChannelId).catch(() => null);
+
+          if (
+            !channel ||
+            ![
+              "GUILD_TEXT",
+              "GUILD_NEWS",
+              ChannelType.GuildText,
+              ChannelType.GuildAnnouncement,
+            ].includes(channel.type)
+          ) {
+            await interaction.followUp({ content: "❌ Panel-Channel ist ungültig oder nicht auffindbar.", ephemeral: true });
+            return true;
+          }
+
+          const embed = buildPanelEmbed(cfg);
+          const row = buildPanelSelect(cfg);
+          const msg = await channel.send({ embeds: [embed], components: [row] });
+
+          cfg.panelMessageId = msg.id;
+          cfg.panelChannelId = channel.id;
+          writeCfg(guildId, cfg);
+
+          await interaction.editReply({
+            content:
+              "Nutze die Menüs unten, um Rollen, Kategorien und Channels zu setzen. Drücke anschließend **Panel senden**.",
+            embeds: [buildSetupEmbed(cfg)],
+            components: buildSetupComponents(cfg),
+          });
+
+          await interaction.followUp({
+            content: `✅ Panel gesendet in ${channel.toString()}.`,
+            ephemeral: true,
+          });
+        } catch (err) {
+          console.error("Setup Panel Send Error:", err);
+          await interaction.followUp({
+            content: "❌ Fehler beim Senden des Panels. Bitte prüfe die Berechtigungen.",
+            ephemeral: true,
+          });
+        }
+        return true;
+      }
+    }
+  }
+
+  // Buttons für Supportzeiten
   if (interaction.isButton()) {
     if (!interaction.customId.startsWith("setup_time_")) return false;
 
@@ -169,7 +456,6 @@ async function handleComponent(interaction) {
       return true;
     }
 
-    const guildId = interaction.guildId;
     const cfg = readCfg(guildId);
 
     if (!cfg.ticketSupportTimes) {
@@ -298,9 +584,14 @@ async function handleComponent(interaction) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("setup")
-    .setDescription("Konfiguriere Ticket-Einstellungen")
+    .setDescription("Setup und Konfiguration für Tickets")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setDMPermission(false)
+    .addSubcommand((sub) =>
+      sub
+        .setName("wizard")
+        .setDescription("Interaktiver Setup-Assistent (Rollen, Kategorie, Panel, Logs)")
+    )
     .addSubcommand((sub) =>
       sub.setName("time").setDescription("Supportzeiten bearbeiten (UI mit Buttons)")
     )
@@ -364,13 +655,25 @@ module.exports = {
     if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
       return interaction.reply({
         content:
-          "❌ Du benötigst die Berechtigung **Server verwalten**, um die Supportzeiten zu ändern.",
+          "❌ Du benötigst die Berechtigung **Server verwalten**, um das Setup zu nutzen.",
         ephemeral: true,
       });
     }
 
     const guildId = interaction.guildId;
     const cfg = readCfg(guildId);
+
+    if (sub === "wizard") {
+      const embed = buildSetupEmbed(cfg);
+      const components = buildSetupComponents(cfg);
+
+      return interaction.reply({
+        content: "Nutze die Menüs unten, um Rollen, Kategorien und Channels zu setzen. Drücke anschließend **Panel senden**.",
+        embeds: [embed],
+        components,
+        ephemeral: true,
+      });
+    }
 
     if (sub === "time") {
       const embed = buildScheduleEmbed(cfg);

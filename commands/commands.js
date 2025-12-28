@@ -162,6 +162,13 @@ function getCommandsList(userId, member, guildId) {
           premium: null
         },
         {
+          name: '/setup wizard',
+          description: 'Interaktiver Setup-Assistent (Rollen, Kategorie, Panel, Logs)',
+          permission: 'Administrator',
+          canUse: isAdmin,
+          premium: null
+        },
+        {
           name: '/userlanguage',
           description: 'Persönliche Sprache ändern',
           permission: 'Alle',
