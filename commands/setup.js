@@ -5,6 +5,9 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } = require("discord.js");
 
 const { readCfg, writeCfg } = require("../database");
@@ -118,7 +121,9 @@ function parseTimeRange(input) {
     return { enabled: true, start: "00:00", end: "23:59" };
   }
 
-  const match = normalized.match(/(\d{1,2}):(\d{2})\s*(?:-|bis|–|—|to)\s*(\d{1,2}):(\d{2})/);
+  const match = normalized.match(
+    /(\d{1,2}):(\d{2})\s*(?:-|bis|–|—|to)\s*(\d{1,2}):(\d{2})/
+  );
   if (!match) return null;
 
   const [, sh, sm, eh, em] = match;
@@ -142,31 +147,215 @@ function parseTimeRange(input) {
   };
 }
 
+function getDayLabel(dayKey) {
+  return DAY_OPTIONS.find((d) => d.key === dayKey)?.label || dayKey;
+}
+
+/**
+ * Button + Modal Handling (damit du index.js:2914 entfernen kannst)
+ * Rückgabe: true wenn handled, sonst false
+ */
+async function handleComponent(interaction) {
+  // Buttons
+  if (interaction.isButton()) {
+    if (!interaction.customId.startsWith("setup_time_")) return false;
+
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await interaction.reply({
+        content:
+          "❌ Du benötigst die Berechtigung **Server verwalten**, um die Supportzeiten zu ändern.",
+        ephemeral: true,
+      });
+      return true;
+    }
+
+    const guildId = interaction.guildId;
+    const cfg = readCfg(guildId);
+
+    if (!cfg.ticketSupportTimes) {
+      cfg.ticketSupportTimes = {
+        enabled: true,
+        timezone: "Europe/Berlin",
+        schedule: getDefaultSupportSchedule(),
+      };
+    }
+
+    // Toggle
+    if (interaction.customId === "setup_time_toggle") {
+      const current = cfg.ticketSupportTimes.enabled !== false;
+      cfg.ticketSupportTimes.enabled = !current;
+      writeCfg(guildId, cfg);
+
+      const embed = buildScheduleEmbed(cfg);
+      const components = buildScheduleComponents(cfg);
+
+      await interaction.update({ embeds: [embed], components });
+      return true;
+    }
+
+    // Edit Day -> Modal
+    if (interaction.customId.startsWith("setup_time_edit:")) {
+      const dayKey = interaction.customId.split(":")[1];
+      const schedule = buildSupportSchedule(cfg.ticketSupportTimes.schedule);
+      const currentDay = schedule[dayKey];
+
+      const modal = new ModalBuilder()
+        .setCustomId(`setup_time_modal:${dayKey}`)
+        .setTitle(`Supportzeit: ${getDayLabel(dayKey)}`); // kurz halten
+
+      const input = new TextInputBuilder()
+        .setCustomId("time_range")
+        .setLabel("Zeitfenster") // <= 45 Zeichen (FIX)
+        .setStyle(TextInputStyle.Short)
+        .setRequired(false)
+        .setPlaceholder('z.B. 18:00-20:00, 24/7 oder "geschlossen"')
+        .setValue(currentDay?.enabled ? `${currentDay.start}-${currentDay.end}` : "geschlossen");
+
+      modal.addComponents(new ActionRowBuilder().addComponents(input));
+
+      await interaction.showModal(modal);
+      return true;
+    }
+
+    return false;
+  }
+
+  // Modal Submit
+  if (interaction.isModalSubmit()) {
+    if (!interaction.customId.startsWith("setup_time_modal:")) return false;
+
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await interaction.reply({
+        content:
+          "❌ Du benötigst die Berechtigung **Server verwalten**, um die Supportzeiten zu ändern.",
+        ephemeral: true,
+      });
+      return true;
+    }
+
+    const dayKey = interaction.customId.split(":")[1];
+    const raw = interaction.fields.getTextInputValue("time_range")?.trim();
+
+    const guildId = interaction.guildId;
+    const cfg = readCfg(guildId);
+
+    if (!cfg.ticketSupportTimes) {
+      cfg.ticketSupportTimes = {
+        enabled: true,
+        timezone: "Europe/Berlin",
+        schedule: getDefaultSupportSchedule(),
+      };
+    }
+
+    // leer -> nichts ändern
+    if (!raw) {
+      const embed = buildScheduleEmbed(cfg);
+      const components = buildScheduleComponents(cfg);
+
+      await interaction.reply({
+        content: "ℹ️ Keine Änderung vorgenommen (leeres Feld).",
+        embeds: [embed],
+        components,
+        ephemeral: true,
+      });
+      return true;
+    }
+
+    const parsed = parseTimeRange(raw);
+    if (!parsed) {
+      await interaction.reply({
+        content:
+          "❌ Ungültiges Format. Nutze z.B. `18:00-20:00`, `18:00 bis 20:00`, `24/7` oder `geschlossen`.",
+        ephemeral: true,
+      });
+      return true;
+    }
+
+    const schedule = buildSupportSchedule(cfg.ticketSupportTimes.schedule);
+    schedule[dayKey] = parsed;
+    cfg.ticketSupportTimes.schedule = schedule;
+
+    writeCfg(guildId, cfg);
+
+    const embed = buildScheduleEmbed(cfg);
+    const components = buildScheduleComponents(cfg);
+
+    await interaction.reply({
+      content: `✅ **${getDayLabel(dayKey)}** gespeichert: ${
+        parsed.enabled ? `${parsed.start} - ${parsed.end}` : "Geschlossen"
+      }`,
+      embeds: [embed],
+      components,
+      ephemeral: true,
+    });
+
+    return true;
+  }
+
+  return false;
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("setup")
     .setDescription("Konfiguriere Ticket-Einstellungen")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setDMPermission(false)
-    // UI öffnen (Buttons)
     .addSubcommand((sub) =>
-      sub
-        .setName("time")
-        .setDescription("Supportzeiten bearbeiten (UI mit Buttons)")
+      sub.setName("time").setDescription("Supportzeiten bearbeiten (UI mit Buttons)")
     )
-    // Direkt per Optionen speichern
     .addSubcommand((sub) =>
       sub
         .setName("time-set")
         .setDescription("Supportzeiten festlegen (24h-Format)")
-        .addStringOption((opt) => opt.setName("montag").setDescription("z.B. 18:00-20:00 oder geschlossen").setRequired(true))
-        .addStringOption((opt) => opt.setName("dienstag").setDescription("z.B. 18:00-20:00 oder geschlossen").setRequired(true))
-        .addStringOption((opt) => opt.setName("mittwoch").setDescription("z.B. 18:00-20:00 oder geschlossen").setRequired(true))
-        .addStringOption((opt) => opt.setName("donnerstag").setDescription("z.B. 18:00-20:00 oder geschlossen").setRequired(true))
-        .addStringOption((opt) => opt.setName("freitag").setDescription("z.B. 18:00-20:00 oder geschlossen").setRequired(true))
-        .addStringOption((opt) => opt.setName("samstag").setDescription("z.B. 18:00-20:00 oder geschlossen").setRequired(true))
-        .addStringOption((opt) => opt.setName("sonntag").setDescription("z.B. 18:00-20:00 oder geschlossen").setRequired(true))
-        .addBooleanOption((opt) => opt.setName("aktiv").setDescription("Supportzeiten aktivieren (Standard: an)").setRequired(false))
+        .addStringOption((opt) =>
+          opt
+            .setName("montag")
+            .setDescription("z.B. 18:00-20:00 oder geschlossen")
+            .setRequired(true)
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("dienstag")
+            .setDescription("z.B. 18:00-20:00 oder geschlossen")
+            .setRequired(true)
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("mittwoch")
+            .setDescription("z.B. 18:00-20:00 oder geschlossen")
+            .setRequired(true)
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("donnerstag")
+            .setDescription("z.B. 18:00-20:00 oder geschlossen")
+            .setRequired(true)
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("freitag")
+            .setDescription("z.B. 18:00-20:00 oder geschlossen")
+            .setRequired(true)
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("samstag")
+            .setDescription("z.B. 18:00-20:00 oder geschlossen")
+            .setRequired(true)
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("sonntag")
+            .setDescription("z.B. 18:00-20:00 oder geschlossen")
+            .setRequired(true)
+        )
+        .addBooleanOption((opt) =>
+          opt
+            .setName("aktiv")
+            .setDescription("Supportzeiten aktivieren (Standard: an)")
+            .setRequired(false)
+        )
     ),
 
   async execute(interaction) {
@@ -174,12 +363,13 @@ module.exports = {
 
     if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
       return interaction.reply({
-        content: "❌ Du benötigst die Berechtigung **Server verwalten**, um die Supportzeiten zu ändern.",
+        content:
+          "❌ Du benötigst die Berechtigung **Server verwalten**, um die Supportzeiten zu ändern.",
         ephemeral: true,
       });
     }
 
-    const guildId = interaction.guildId; // nur EINMAL deklarieren
+    const guildId = interaction.guildId;
     const cfg = readCfg(guildId);
 
     if (sub === "time") {
@@ -234,4 +424,7 @@ module.exports = {
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
+
+  // Export für interactionCreate (Buttons/Modals)
+  handleComponent,
 };
