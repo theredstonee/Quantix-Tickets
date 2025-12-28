@@ -208,6 +208,17 @@ function buildSetupEmbed(cfg) {
     .map((id) => `<@&${id}>`)
     .join(", ") || "Keine Rolle ausgewählt";
 
+  const allowedRoles = (Array.isArray(cfg.allowedTicketRoles)
+    ? cfg.allowedTicketRoles
+    : [])
+    .filter(Boolean)
+    .map((id) => `<@&${id}>`)
+    .join(", ") || "Alle dürfen Tickets erstellen";
+
+  const categoryText = cfg.categoryId ? `<#${cfg.categoryId}>` : "Keine Kategorie ausgewählt";
+  const panelChannelText = cfg.panelChannelId ? `<#${cfg.panelChannelId}>` : "Kein Panel-Channel ausgewählt";
+  const transcriptText = cfg.transcriptChannelId ? `<#${cfg.transcriptChannelId}>` : "Kein Transcript-Channel ausgewählt";
+=======
   const categoryText = cfg.categoryId ? `<#${cfg.categoryId}>` : "Keine Kategorie ausgewählt";
   const panelChannelText = cfg.panelChannelId ? `<#${cfg.panelChannelId}>` : "Kein Panel-Channel ausgewählt";
   const logChannelText = (() => {
@@ -228,6 +239,10 @@ function buildSetupEmbed(cfg) {
     )
     .addFields(
       { name: "Team-Rollen", value: roleMentions, inline: false },
+      { name: "Ticket-Erstellung erlaubt für", value: allowedRoles, inline: false },
+      { name: "Ticket-Kategorie", value: categoryText, inline: false },
+      { name: "Panel-Channel", value: panelChannelText, inline: false },
+      { name: "Transcript-Channel", value: transcriptText, inline: false },
       { name: "Ticket-Kategorie", value: categoryText, inline: false },
       { name: "Panel-Channel", value: panelChannelText, inline: false },
       { name: "Log-Channel", value: logChannelText, inline: false }
@@ -258,6 +273,14 @@ function buildSetupComponents(cfg) {
         .setDefaultRoles(roleIds.slice(0, 5))
     ),
     new ActionRowBuilder().addComponents(
+      new RoleSelectMenuBuilder()
+        .setCustomId("setup_allowed_roles")
+        .setPlaceholder("Wer darf Tickets erstellen? (leer = alle)")
+        .setMinValues(0)
+        .setMaxValues(5)
+        .setDefaultRoles((cfg.allowedTicketRoles || []).filter(Boolean).slice(0, 5))
+    ),
+    new ActionRowBuilder().addComponents(
       new ChannelSelectMenuBuilder()
         .setCustomId("setup_category")
         .setPlaceholder("Wähle Ticket-Kategorie")
@@ -277,6 +300,15 @@ function buildSetupComponents(cfg) {
     ),
     new ActionRowBuilder().addComponents(
       new ChannelSelectMenuBuilder()
+        .setCustomId("setup_transcript_channel")
+        .setPlaceholder("Transcript-Channel (optional)")
+        .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+        .setMinValues(0)
+        .setMaxValues(1)
+        .setDefaultChannels(cfg.transcriptChannelId ? [cfg.transcriptChannelId] : [])
+    ),
+    new ActionRowBuilder().addComponents(
+      new ChannelSelectMenuBuilder()
         .setCustomId("setup_log_channel")
         .setPlaceholder("Log-Channel auswählen")
         .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
@@ -290,6 +322,11 @@ function buildSetupComponents(cfg) {
         .setLabel("Panel senden")
         .setStyle(ButtonStyle.Success)
         .setEmoji("📨"),
+      new ButtonBuilder()
+        .setCustomId("setup_panel_text")
+        .setLabel("Panel-Text bearbeiten")
+        .setStyle(ButtonStyle.Primary)
+        .setEmoji("📝"),
       new ButtonBuilder()
         .setCustomId("setup_refresh")
         .setLabel("Aktualisieren")
@@ -312,6 +349,10 @@ async function handleComponent(interaction) {
     "setup_roles",
     "setup_category",
     "setup_panel_channel",
+    "setup_transcript_channel",
+    "setup_log_channel",
+    "setup_send_panel",
+    "setup_panel_text",
     "setup_log_channel",
     "setup_send_panel",
     "setup_refresh",
@@ -351,6 +392,15 @@ async function handleComponent(interaction) {
       return true;
     }
 
+    if (interaction.isRoleSelectMenu && interaction.isRoleSelectMenu()) {
+      if (interaction.customId === "setup_allowed_roles") {
+        cfg.allowedTicketRoles = interaction.values || [];
+        writeCfg(guildId, cfg);
+        await refresh(cfg.allowedTicketRoles.length ? "✅ Erlaubte Rollen gespeichert." : "ℹ️ Ticket-Erlaubnis auf alle gesetzt.");
+        return true;
+      }
+    }
+
     if (interaction.isChannelSelectMenu && interaction.isChannelSelectMenu()) {
       if (interaction.customId === "setup_category") {
         cfg.categoryId = interaction.values?.[0] || "";
@@ -364,6 +414,13 @@ async function handleComponent(interaction) {
         if (!cfg.panelChannelId) cfg.panelMessageId = "";
         writeCfg(guildId, cfg);
         await refresh(cfg.panelChannelId ? "✅ Panel-Channel gespeichert." : "ℹ️ Panel-Channel entfernt.");
+        return true;
+      }
+
+      if (interaction.customId === "setup_transcript_channel") {
+        cfg.transcriptChannelId = interaction.values?.[0] || "";
+        writeCfg(guildId, cfg);
+        await refresh(cfg.transcriptChannelId ? "✅ Transcript-Channel gespeichert." : "ℹ️ Transcript-Channel entfernt.");
         return true;
       }
 
@@ -440,6 +497,55 @@ async function handleComponent(interaction) {
         }
         return true;
       }
+
+      if (interaction.customId === "setup_panel_text") {
+        const panelEmbed = cfg.panelEmbed || {};
+        const modal = new ModalBuilder()
+          .setCustomId("setup_panel_text_modal")
+          .setTitle("Panel-Text bearbeiten");
+
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("panel_title")
+              .setLabel("Titel")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+              .setMaxLength(100)
+              .setValue(panelEmbed.title || cfg.panelTitle || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("panel_description")
+              .setLabel("Beschreibung")
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(false)
+              .setMaxLength(1024)
+              .setValue(panelEmbed.description || cfg.panelDescription || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("panel_footer")
+              .setLabel("Footer")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+              .setMaxLength(100)
+              .setValue(panelEmbed.footer || cfg.panelFooter || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("panel_color")
+              .setLabel("Farbe (Hex, z.B. #5865F2)")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+              .setMaxLength(7)
+              .setValue(panelEmbed.color || cfg.panelColor || "#5865F2")
+          )
+        );
+
+        await interaction.showModal(modal);
+        return true;
+      }
     }
   }
 
@@ -508,6 +614,60 @@ async function handleComponent(interaction) {
 
   // Modal Submit
   if (interaction.isModalSubmit()) {
+    if (interaction.customId === "setup_panel_text_modal") {
+      if (!guildId) return false;
+
+      if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+        await interaction.reply({
+          content: "❌ Du benötigst die Berechtigung **Server verwalten**, um das Setup zu nutzen.",
+          ephemeral: true,
+        });
+        return true;
+      }
+
+      const cfg = readCfg(guildId);
+      const title = interaction.fields.getTextInputValue("panel_title")?.trim() || "";
+      const description = interaction.fields.getTextInputValue("panel_description")?.trim() || "";
+      const footer = interaction.fields.getTextInputValue("panel_footer")?.trim() || "";
+      const color = interaction.fields.getTextInputValue("panel_color")?.trim() || "";
+
+      const nextEmbed = {
+        title: title.substring(0, 100),
+        description: description.substring(0, 1024),
+        footer: footer.substring(0, 100),
+        color: /^#?[0-9a-fA-F]{6}$/.test(color) ? (color.startsWith("#") ? color : `#${color}`) : "#5865F2",
+      };
+
+      cfg.panelEmbed = nextEmbed;
+      cfg.panelTitle = undefined;
+      cfg.panelDescription = undefined;
+      cfg.panelFooter = undefined;
+      cfg.panelColor = undefined;
+      writeCfg(guildId, cfg);
+
+      if (cfg.panelMessageId && cfg.panelChannelId) {
+        try {
+          const channel = await interaction.guild.channels.fetch(cfg.panelChannelId).catch(() => null);
+          if (channel) {
+            const msg = await channel.messages.fetch(cfg.panelMessageId).catch(() => null);
+            if (msg) {
+              await msg.edit({ embeds: [buildPanelEmbed(cfg)], components: [buildPanelSelect(cfg)] });
+            }
+          }
+        } catch (err) {
+          console.error("Panel update error:", err);
+        }
+      }
+
+      await interaction.reply({
+        content: "✅ Panel-Text aktualisiert.",
+        embeds: [buildSetupEmbed(cfg)],
+        components: buildSetupComponents(cfg),
+        ephemeral: true,
+      });
+      return true;
+    }
+
     if (!interaction.customId.startsWith("setup_time_modal:")) return false;
 
     if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
