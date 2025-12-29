@@ -218,8 +218,6 @@ function buildSetupEmbed(cfg) {
   const categoryText = cfg.categoryId ? `<#${cfg.categoryId}>` : "Keine Kategorie ausgewählt";
   const panelChannelText = cfg.panelChannelId ? `<#${cfg.panelChannelId}>` : "Kein Panel-Channel ausgewählt";
   const transcriptText = cfg.transcriptChannelId ? `<#${cfg.transcriptChannelId}>` : "Kein Transcript-Channel ausgewählt";
-  const categoryText = cfg.categoryId ? `<#${cfg.categoryId}>` : "Keine Kategorie ausgewählt";
-  const panelChannelText = cfg.panelChannelId ? `<#${cfg.panelChannelId}>` : "Kein Panel-Channel ausgewählt";
   const logChannelText = (() => {
     const ids = Array.isArray(cfg.logChannelId)
       ? cfg.logChannelId
@@ -242,8 +240,6 @@ function buildSetupEmbed(cfg) {
       { name: "Ticket-Kategorie", value: categoryText, inline: false },
       { name: "Panel-Channel", value: panelChannelText, inline: false },
       { name: "Transcript-Channel", value: transcriptText, inline: false },
-      { name: "Ticket-Kategorie", value: categoryText, inline: false },
-      { name: "Panel-Channel", value: panelChannelText, inline: false },
       { name: "Log-Channel", value: logChannelText, inline: false }
     )
     .setFooter({ text: "Quantix Tickets • Setup-Assistent" });
@@ -264,56 +260,77 @@ function buildSetupComponents(cfg) {
 
   const rows = [
     new ActionRowBuilder().addComponents(
-      new RoleSelectMenuBuilder()
-        .setCustomId("setup_roles")
-        .setPlaceholder("Wähle Support-Rolle(n)")
-        .setMinValues(0)
-        .setMaxValues(5)
-        .setDefaultRoles(roleIds.slice(0, 5))
+      (() => {
+        const builder = new RoleSelectMenuBuilder()
+          .setCustomId("setup_roles")
+          .setPlaceholder("Wähle Support-Rolle(n)")
+          .setMinValues(0)
+          .setMaxValues(5);
+        const defaults = roleIds.slice(0, 5);
+        if (defaults.length) builder.setDefaultRoles(defaults);
+        return builder;
+      })()
     ),
     new ActionRowBuilder().addComponents(
-      new RoleSelectMenuBuilder()
-        .setCustomId("setup_allowed_roles")
-        .setPlaceholder("Wer darf Tickets erstellen? (leer = alle)")
-        .setMinValues(0)
-        .setMaxValues(5)
-        .setDefaultRoles((cfg.allowedTicketRoles || []).filter(Boolean).slice(0, 5))
+      (() => {
+        const allowed = (cfg.allowedTicketRoles || []).filter(Boolean).slice(0, 5);
+        const builder = new RoleSelectMenuBuilder()
+          .setCustomId("setup_allowed_roles")
+          .setPlaceholder("Wer darf Tickets erstellen? (leer = alle)")
+          .setMinValues(0)
+          .setMaxValues(5);
+        if (allowed.length) builder.setDefaultRoles(allowed);
+        return builder;
+      })()
     ),
     new ActionRowBuilder().addComponents(
-      new ChannelSelectMenuBuilder()
-        .setCustomId("setup_category")
-        .setPlaceholder("Wähle Ticket-Kategorie")
-        .setChannelTypes(ChannelType.GuildCategory)
-        .setMinValues(0)
-        .setMaxValues(1)
-        .setDefaultChannels(cfg.categoryId ? [cfg.categoryId] : [])
+      (() => {
+        const builder = new ChannelSelectMenuBuilder()
+          .setCustomId("setup_category")
+          .setPlaceholder("Wähle Ticket-Kategorie")
+          .setChannelTypes(ChannelType.GuildCategory)
+          .setMinValues(0)
+          .setMaxValues(1);
+        if (cfg.categoryId) builder.setDefaultChannels([cfg.categoryId]);
+        return builder;
+      })()
     ),
     new ActionRowBuilder().addComponents(
-      new ChannelSelectMenuBuilder()
-        .setCustomId("setup_panel_channel")
-        .setPlaceholder("Channel für Ticket-Panel")
-        .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-        .setMinValues(0)
-        .setMaxValues(1)
-        .setDefaultChannels(cfg.panelChannelId ? [cfg.panelChannelId] : [])
+      (() => {
+        const builder = new ChannelSelectMenuBuilder()
+          .setCustomId("setup_panel_channel")
+          .setPlaceholder("Channel für Ticket-Panel")
+          .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+          .setMinValues(0)
+          .setMaxValues(1);
+        if (cfg.panelChannelId) builder.setDefaultChannels([cfg.panelChannelId]);
+        return builder;
+      })()
     ),
     new ActionRowBuilder().addComponents(
-      new ChannelSelectMenuBuilder()
-        .setCustomId("setup_transcript_channel")
-        .setPlaceholder("Transcript-Channel (optional)")
-        .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-        .setMinValues(0)
-        .setMaxValues(1)
-        .setDefaultChannels(cfg.transcriptChannelId ? [cfg.transcriptChannelId] : [])
+      (() => {
+        const builder = new ChannelSelectMenuBuilder()
+          .setCustomId("setup_transcript_channel")
+          .setPlaceholder("Transcript-Channel (optional)")
+          .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+          .setMinValues(0)
+          .setMaxValues(1);
+        if (cfg.transcriptChannelId) builder.setDefaultChannels([cfg.transcriptChannelId]);
+        return builder;
+      })()
     ),
     new ActionRowBuilder().addComponents(
-      new ChannelSelectMenuBuilder()
-        .setCustomId("setup_log_channel")
-        .setPlaceholder("Log-Channel auswählen")
-        .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-        .setMinValues(0)
-        .setMaxValues(3)
-        .setDefaultChannels(logChannelIds.slice(0, 3))
+      (() => {
+        const builder = new ChannelSelectMenuBuilder()
+          .setCustomId("setup_log_channel")
+          .setPlaceholder("Log-Channel auswählen")
+          .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+          .setMinValues(0)
+          .setMaxValues(3);
+        const defaults = logChannelIds.slice(0, 3);
+        if (defaults.length) builder.setDefaultChannels(defaults);
+        return builder;
+      })()
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -352,8 +369,6 @@ async function handleComponent(interaction) {
     "setup_log_channel",
     "setup_send_panel",
     "setup_panel_text",
-    "setup_log_channel",
-    "setup_send_panel",
     "setup_refresh",
   ];
 
