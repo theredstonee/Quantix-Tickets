@@ -250,91 +250,7 @@ function buildSetupEmbed(cfg) {
 }
 
 function buildSetupComponents(cfg) {
-  const roleIds = (Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : cfg.teamRoleId ? [cfg.teamRoleId] : [])
-    .map((id) => sanitizeSnowflake(id))
-    .filter(Boolean);
-
-  const logChannelIds = (Array.isArray(cfg.logChannelId) ? cfg.logChannelId : cfg.logChannelId ? [cfg.logChannelId] : [])
-    .map((id) => sanitizeSnowflake(id))
-    .filter(Boolean);
-
-  const rows = [
-    new ActionRowBuilder().addComponents(
-      (() => {
-        const builder = new RoleSelectMenuBuilder()
-          .setCustomId("setup_roles")
-          .setPlaceholder("Wähle Support-Rolle(n)")
-          .setMinValues(0)
-          .setMaxValues(5);
-        const defaults = roleIds.slice(0, 5);
-        if (defaults.length) builder.setDefaultRoles(defaults);
-        return builder;
-      })()
-    ),
-    new ActionRowBuilder().addComponents(
-      (() => {
-        const allowed = (cfg.allowedTicketRoles || []).map((id) => sanitizeSnowflake(id)).filter(Boolean).slice(0, 5);
-        const builder = new RoleSelectMenuBuilder()
-          .setCustomId("setup_allowed_roles")
-          .setPlaceholder("Wer darf Tickets erstellen? (leer = alle)")
-          .setMinValues(0)
-          .setMaxValues(5);
-        if (allowed.length) builder.setDefaultRoles(allowed);
-        return builder;
-      })()
-    ),
-    new ActionRowBuilder().addComponents(
-      (() => {
-        const builder = new ChannelSelectMenuBuilder()
-          .setCustomId("setup_category")
-          .setPlaceholder("Wähle Ticket-Kategorie")
-          .setChannelTypes(ChannelType.GuildCategory)
-          .setMinValues(0)
-          .setMaxValues(1);
-        const categoryId = sanitizeSnowflake(cfg.categoryId);
-        if (categoryId) builder.setDefaultChannels([categoryId]);
-        return builder;
-      })()
-    ),
-    new ActionRowBuilder().addComponents(
-      (() => {
-        const builder = new ChannelSelectMenuBuilder()
-          .setCustomId("setup_panel_channel")
-          .setPlaceholder("Channel für Ticket-Panel")
-          .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-          .setMinValues(0)
-          .setMaxValues(1);
-        const panelId = sanitizeSnowflake(cfg.panelChannelId);
-        if (panelId) builder.setDefaultChannels([panelId]);
-        return builder;
-      })()
-    ),
-    new ActionRowBuilder().addComponents(
-      (() => {
-        const builder = new ChannelSelectMenuBuilder()
-          .setCustomId("setup_transcript_channel")
-          .setPlaceholder("Transcript-Channel (optional)")
-          .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-          .setMinValues(0)
-          .setMaxValues(1);
-        const transcriptId = sanitizeSnowflake(cfg.transcriptChannelId);
-        if (transcriptId) builder.setDefaultChannels([transcriptId]);
-        return builder;
-      })()
-    ),
-    new ActionRowBuilder().addComponents(
-      (() => {
-        const builder = new ChannelSelectMenuBuilder()
-          .setCustomId("setup_log_channel")
-          .setPlaceholder("Log-Channel auswählen")
-          .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
-          .setMinValues(0)
-          .setMaxValues(3);
-        const defaults = logChannelIds.slice(0, 3);
-        if (defaults.length) builder.setDefaultChannels(defaults);
-        return builder;
-      })()
-    ),
+  const buildActionRow = (page) =>
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("setup_send_panel")
@@ -350,11 +266,107 @@ function buildSetupComponents(cfg) {
         .setCustomId("setup_refresh")
         .setLabel("Aktualisieren")
         .setStyle(ButtonStyle.Secondary)
-        .setEmoji("🔄")
-    ),
-  ];
+        .setEmoji("🔄"),
+      new ButtonBuilder()
+        .setCustomId(page === 1 ? "setup_page:2" : "setup_page:1")
+        .setLabel(page === 1 ? "Seite 2 ▶" : "◀ Seite 1")
+        .setStyle(ButtonStyle.Secondary)
+    );
 
-  return rows;
+  const roleIds = (Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : cfg.teamRoleId ? [cfg.teamRoleId] : [])
+    .map((id) => sanitizeSnowflake(id))
+    .filter(Boolean);
+
+  const logChannelIds = (Array.isArray(cfg.logChannelId) ? cfg.logChannelId : cfg.logChannelId ? [cfg.logChannelId] : [])
+    .map((id) => sanitizeSnowflake(id))
+    .filter(Boolean);
+
+  const pages = {
+    1: [
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new RoleSelectMenuBuilder()
+            .setCustomId("setup_roles")
+            .setPlaceholder("Wähle Support-Rolle(n)")
+            .setMinValues(0)
+            .setMaxValues(5);
+          const defaults = roleIds.slice(0, 5);
+          if (defaults.length) builder.setDefaultRoles(defaults);
+          return builder;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const allowed = (cfg.allowedTicketRoles || []).map((id) => sanitizeSnowflake(id)).filter(Boolean).slice(0, 5);
+          const builder = new RoleSelectMenuBuilder()
+            .setCustomId("setup_allowed_roles")
+            .setPlaceholder("Wer darf Tickets erstellen? (leer = alle)")
+            .setMinValues(0)
+            .setMaxValues(5);
+          if (allowed.length) builder.setDefaultRoles(allowed);
+          return builder;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new ChannelSelectMenuBuilder()
+            .setCustomId("setup_category")
+            .setPlaceholder("Wähle Ticket-Kategorie")
+            .setChannelTypes(ChannelType.GuildCategory)
+            .setMinValues(0)
+            .setMaxValues(1);
+          const categoryId = sanitizeSnowflake(cfg.categoryId);
+          if (categoryId) builder.setDefaultChannels([categoryId]);
+          return builder;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new ChannelSelectMenuBuilder()
+            .setCustomId("setup_panel_channel")
+            .setPlaceholder("Channel für Ticket-Panel")
+            .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+            .setMinValues(0)
+            .setMaxValues(1);
+          const panelId = sanitizeSnowflake(cfg.panelChannelId);
+          if (panelId) builder.setDefaultChannels([panelId]);
+          return builder;
+        })()
+      ),
+      buildActionRow(1),
+    ],
+    2: [
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new ChannelSelectMenuBuilder()
+            .setCustomId("setup_transcript_channel")
+            .setPlaceholder("Transcript-Channel (optional)")
+            .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+            .setMinValues(0)
+            .setMaxValues(1);
+          const transcriptId = sanitizeSnowflake(cfg.transcriptChannelId);
+          if (transcriptId) builder.setDefaultChannels([transcriptId]);
+          return builder;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new ChannelSelectMenuBuilder()
+            .setCustomId("setup_log_channel")
+            .setPlaceholder("Log-Channel auswählen")
+            .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+            .setMinValues(0)
+            .setMaxValues(3);
+          const defaults = logChannelIds.slice(0, 3);
+          if (defaults.length) builder.setDefaultChannels(defaults);
+          return builder;
+        })()
+      ),
+      buildActionRow(2),
+    ],
+  };
+
+  return pages[cfg.__page || 1] || pages[1];
 }
 
 /**
@@ -363,6 +375,20 @@ function buildSetupComponents(cfg) {
  */
 async function handleComponent(interaction) {
   const guildId = interaction.guildId;
+  const getCurrentPage = () => {
+    try {
+      const row = interaction.message?.components?.find((r) =>
+        r.components?.some?.((c) => c.customId?.startsWith("setup_page:"))
+      );
+      const target = row?.components?.find((c) => c.customId?.startsWith("setup_page:"))?.customId?.split(":")[1];
+      if (target === "1") return 2;
+      if (target === "2") return 1;
+      return 1;
+    } catch {
+      return 1;
+    }
+  };
+  let currentPage = getCurrentPage();
 
   const setupIds = [
     "setup_roles",
@@ -394,6 +420,7 @@ async function handleComponent(interaction) {
     const cfg = readCfg(guildId);
     const refresh = async (content) => {
       const embed = buildSetupEmbed(cfg);
+      cfg.__page = currentPage;
       const components = buildSetupComponents(cfg);
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply({ content, embeds: [embed], components });
@@ -450,6 +477,21 @@ async function handleComponent(interaction) {
     }
 
     if (interaction.isButton()) {
+      if (interaction.customId.startsWith("setup_page:")) {
+        const target = interaction.customId.split(":")[1];
+        currentPage = target === "2" ? 2 : 1;
+        cfg.__page = currentPage;
+        const embed = buildSetupEmbed(cfg);
+        const components = buildSetupComponents(cfg);
+        await interaction.update({
+          content:
+            "Nutze die Menüs unten, um Rollen, Kategorien und Channels zu setzen. Drücke anschließend **Panel senden**.",
+          embeds: [embed],
+          components,
+        });
+        return true;
+      }
+
       if (interaction.customId === "setup_refresh") {
         await refresh("🔄 Aktualisiert.");
         return true;
@@ -494,6 +536,7 @@ async function handleComponent(interaction) {
           cfg.panelChannelId = channel.id;
           writeCfg(guildId, cfg);
 
+          cfg.__page = currentPage;
           await interaction.editReply({
             content:
               "Nutze die Menüs unten, um Rollen, Kategorien und Channels zu setzen. Drücke anschließend **Panel senden**.",
@@ -676,6 +719,7 @@ async function handleComponent(interaction) {
         }
       }
 
+      cfg.__page = 1;
       await interaction.reply({
         content: "✅ Panel-Text aktualisiert.",
         embeds: [buildSetupEmbed(cfg)],
@@ -842,6 +886,7 @@ module.exports = {
 
     if (sub === "wizard") {
       const embed = buildSetupEmbed(cfg);
+      cfg.__page = 1;
       const components = buildSetupComponents(cfg);
 
       return interaction.reply({
