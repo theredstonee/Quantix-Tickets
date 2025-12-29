@@ -375,20 +375,17 @@ function buildSetupComponents(cfg) {
  */
 async function handleComponent(interaction) {
   const guildId = interaction.guildId;
-  const getCurrentPage = () => {
-    try {
-      const row = interaction.message?.components?.find((r) =>
-        r.components?.some?.((c) => c.customId?.startsWith("setup_page:"))
-      );
-      const target = row?.components?.find((c) => c.customId?.startsWith("setup_page:"))?.customId?.split(":")[1];
-      if (target === "1") return 2;
-      if (target === "2") return 1;
-      return 1;
-    } catch {
-      return 1;
+  const setupPageFromCustomId = () => {
+    const id = interaction.customId || "";
+    if (id.startsWith("setup_page:")) {
+      const target = parseInt(id.split(":")[1], 10);
+      return Number.isFinite(target) ? target : 1;
     }
+    if (id === "setup_log_channel" || id === "setup_transcript_channel") return 2;
+    return 1;
   };
-  let currentPage = getCurrentPage();
+
+  let currentPage = setupPageFromCustomId();
 
   const setupIds = [
     "setup_roles",
@@ -399,13 +396,14 @@ async function handleComponent(interaction) {
     "setup_send_panel",
     "setup_panel_text",
     "setup_refresh",
+    "setup_page",
   ];
 
   const isSetupWizardInteraction =
     ((interaction.isRoleSelectMenu && interaction.isRoleSelectMenu()) ||
       (interaction.isChannelSelectMenu && interaction.isChannelSelectMenu()) ||
       interaction.isButton()) &&
-    setupIds.includes(interaction.customId);
+    (setupIds.includes(interaction.customId) || interaction.customId?.startsWith("setup_page:"));
 
   if (isSetupWizardInteraction) {
     if (!guildId) return false;
@@ -478,8 +476,8 @@ async function handleComponent(interaction) {
 
     if (interaction.isButton()) {
       if (interaction.customId.startsWith("setup_page:")) {
-        const target = interaction.customId.split(":")[1];
-        currentPage = target === "2" ? 2 : 1;
+        const target = parseInt(interaction.customId.split(":")[1], 10);
+        currentPage = Number.isFinite(target) ? target : 1;
         cfg.__page = currentPage;
         const embed = buildSetupEmbed(cfg);
         const components = buildSetupComponents(cfg);
