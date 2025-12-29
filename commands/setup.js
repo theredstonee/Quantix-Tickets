@@ -26,6 +26,12 @@ const DAY_OPTIONS = [
   { option: "sonntag", key: "sunday", label: "Sonntag", emoji: "📅" },
 ];
 
+function sanitizeSnowflake(id) {
+  if (!id) return null;
+  const match = String(id).match(/(\d{17,20})/);
+  return match ? match[1] : null;
+}
+
 function getDefaultSupportSchedule() {
   const defaultDay = { enabled: true, start: "00:00", end: "23:59" };
   return DAY_OPTIONS.reduce((acc, day) => {
@@ -199,33 +205,31 @@ function buildPanelEmbed(cfg) {
 }
 
 function buildSetupEmbed(cfg) {
-  const roleMentions = (Array.isArray(cfg.teamRoleId)
-    ? cfg.teamRoleId
-    : cfg.teamRoleId
-    ? [cfg.teamRoleId]
-    : [])
+  const roleMentions = (Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : cfg.teamRoleId ? [cfg.teamRoleId] : [])
+    .map((id) => sanitizeSnowflake(id))
     .filter(Boolean)
     .map((id) => `<@&${id}>`)
     .join(", ") || "Keine Rolle ausgewählt";
 
-  const allowedRoles = (Array.isArray(cfg.allowedTicketRoles)
-    ? cfg.allowedTicketRoles
-    : [])
+  const allowedRoles = (Array.isArray(cfg.allowedTicketRoles) ? cfg.allowedTicketRoles : [])
+    .map((id) => sanitizeSnowflake(id))
     .filter(Boolean)
     .map((id) => `<@&${id}>`)
     .join(", ") || "Alle dürfen Tickets erstellen";
 
-  const categoryText = cfg.categoryId ? `<#${cfg.categoryId}>` : "Keine Kategorie ausgewählt";
-  const panelChannelText = cfg.panelChannelId ? `<#${cfg.panelChannelId}>` : "Kein Panel-Channel ausgewählt";
-  const transcriptText = cfg.transcriptChannelId ? `<#${cfg.transcriptChannelId}>` : "Kein Transcript-Channel ausgewählt";
+  const categoryId = sanitizeSnowflake(cfg.categoryId);
+  const panelChannelId = sanitizeSnowflake(cfg.panelChannelId);
+  const transcriptId = sanitizeSnowflake(cfg.transcriptChannelId);
+
+  const categoryText = categoryId ? `<#${categoryId}>` : "Keine Kategorie ausgewählt";
+  const panelChannelText = panelChannelId ? `<#${panelChannelId}>` : "Kein Panel-Channel ausgewählt";
+  const transcriptText = transcriptId ? `<#${transcriptId}>` : "Kein Transcript-Channel ausgewählt";
   const logChannelText = (() => {
-    const ids = Array.isArray(cfg.logChannelId)
-      ? cfg.logChannelId
-      : cfg.logChannelId
-      ? [cfg.logChannelId]
-      : [];
+    const ids = Array.isArray(cfg.logChannelId) ? cfg.logChannelId : cfg.logChannelId ? [cfg.logChannelId] : [];
+    const sanitized = ids.map((id) => sanitizeSnowflake(id)).filter(Boolean);
     if (!ids.length) return "Kein Log-Channel ausgewählt";
-    return ids.map((id) => `<#${id}>`).join(", ");
+    if (!sanitized.length) return "Kein Log-Channel ausgewählt";
+    return sanitized.map((id) => `<#${id}>`).join(", ");
   })();
 
   return new EmbedBuilder()
@@ -246,17 +250,13 @@ function buildSetupEmbed(cfg) {
 }
 
 function buildSetupComponents(cfg) {
-  const roleIds = Array.isArray(cfg.teamRoleId)
-    ? cfg.teamRoleId.filter(Boolean)
-    : cfg.teamRoleId
-    ? [cfg.teamRoleId]
-    : [];
+  const roleIds = (Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : cfg.teamRoleId ? [cfg.teamRoleId] : [])
+    .map((id) => sanitizeSnowflake(id))
+    .filter(Boolean);
 
-  const logChannelIds = Array.isArray(cfg.logChannelId)
-    ? cfg.logChannelId.filter(Boolean)
-    : cfg.logChannelId
-    ? [cfg.logChannelId]
-    : [];
+  const logChannelIds = (Array.isArray(cfg.logChannelId) ? cfg.logChannelId : cfg.logChannelId ? [cfg.logChannelId] : [])
+    .map((id) => sanitizeSnowflake(id))
+    .filter(Boolean);
 
   const rows = [
     new ActionRowBuilder().addComponents(
@@ -273,7 +273,7 @@ function buildSetupComponents(cfg) {
     ),
     new ActionRowBuilder().addComponents(
       (() => {
-        const allowed = (cfg.allowedTicketRoles || []).filter(Boolean).slice(0, 5);
+        const allowed = (cfg.allowedTicketRoles || []).map((id) => sanitizeSnowflake(id)).filter(Boolean).slice(0, 5);
         const builder = new RoleSelectMenuBuilder()
           .setCustomId("setup_allowed_roles")
           .setPlaceholder("Wer darf Tickets erstellen? (leer = alle)")
@@ -291,7 +291,8 @@ function buildSetupComponents(cfg) {
           .setChannelTypes(ChannelType.GuildCategory)
           .setMinValues(0)
           .setMaxValues(1);
-        if (cfg.categoryId) builder.setDefaultChannels([cfg.categoryId]);
+        const categoryId = sanitizeSnowflake(cfg.categoryId);
+        if (categoryId) builder.setDefaultChannels([categoryId]);
         return builder;
       })()
     ),
@@ -303,7 +304,8 @@ function buildSetupComponents(cfg) {
           .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
           .setMinValues(0)
           .setMaxValues(1);
-        if (cfg.panelChannelId) builder.setDefaultChannels([cfg.panelChannelId]);
+        const panelId = sanitizeSnowflake(cfg.panelChannelId);
+        if (panelId) builder.setDefaultChannels([panelId]);
         return builder;
       })()
     ),
@@ -315,7 +317,8 @@ function buildSetupComponents(cfg) {
           .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
           .setMinValues(0)
           .setMaxValues(1);
-        if (cfg.transcriptChannelId) builder.setDefaultChannels([cfg.transcriptChannelId]);
+        const transcriptId = sanitizeSnowflake(cfg.transcriptChannelId);
+        if (transcriptId) builder.setDefaultChannels([transcriptId]);
         return builder;
       })()
     ),
