@@ -1,7 +1,11 @@
+const path = require('path');
+const fs = require('fs');
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const { t } = require('../translations');
 const { createStyledEmbed, createQuickEmbed } = require('../helpers');
 const { readCfg, writeCfg, loadTickets, saveTickets } = require('../database');
+
+const CONFIG_DIR = path.join(__dirname, '..', 'configs');
 
 function getTeamRole(guildId) {
   const cfg = readCfg(guildId);
