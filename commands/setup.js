@@ -32,6 +32,13 @@ function sanitizeSnowflake(id) {
   return match ? match[1] : null;
 }
 
+function sanitizeTopicValue(value) {
+  if (!value) return null;
+  const normalized = String(value).trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-_]/gi, "-");
+  const clean = normalized.replace(/-+/g, "-").replace(/^[-_]+|[-_]+$/g, "");
+  return clean || null;
+}
+
 function getDefaultSupportSchedule() {
   const defaultDay = { enabled: true, start: "00:00", end: "23:59" };
   return DAY_OPTIONS.reduce((acc, day) => {
@@ -224,6 +231,7 @@ function buildSetupEmbed(cfg) {
   const categoryText = categoryId ? `<#${categoryId}>` : "Keine Kategorie ausgewählt";
   const panelChannelText = panelChannelId ? `<#${panelChannelId}>` : "Kein Panel-Channel ausgewählt";
   const transcriptText = transcriptId ? `<#${transcriptId}>` : "Kein Transcript-Channel ausgewählt";
+  const topicsCount = Array.isArray(cfg.topics) ? cfg.topics.length : 0;
   const logChannelText = (() => {
     const ids = Array.isArray(cfg.logChannelId) ? cfg.logChannelId : cfg.logChannelId ? [cfg.logChannelId] : [];
     const sanitized = ids.map((id) => sanitizeSnowflake(id)).filter(Boolean);
@@ -244,6 +252,7 @@ function buildSetupEmbed(cfg) {
       { name: "Ticket-Kategorie", value: categoryText, inline: false },
       { name: "Panel-Channel", value: panelChannelText, inline: false },
       { name: "Transcript-Channel", value: transcriptText, inline: false },
+      { name: "Topics", value: topicsCount ? `${topicsCount} Thema/Themen` : "Keine Topics konfiguriert", inline: false },
       { name: "Log-Channel", value: logChannelText, inline: false }
     )
     .setFooter({ text: "Quantix Tickets • Setup-Assistent" });
@@ -268,8 +277,8 @@ function buildSetupComponents(cfg) {
         .setStyle(ButtonStyle.Secondary)
         .setEmoji("🔄"),
       new ButtonBuilder()
-        .setCustomId(page === 1 ? "setup_page:2" : "setup_page:1")
-        .setLabel(page === 1 ? "Seite 2 ▶" : "◀ Seite 1")
+        .setCustomId(page === 1 ? "setup_page:2" : page === 2 ? "setup_page:3" : "setup_page:1")
+        .setLabel(page === 1 ? "Seite 2 ▶" : page === 2 ? "Seite 3 ▶" : "◀ Seite 1")
         .setStyle(ButtonStyle.Secondary)
     );
 
@@ -280,6 +289,7 @@ function buildSetupComponents(cfg) {
   const logChannelIds = (Array.isArray(cfg.logChannelId) ? cfg.logChannelId : cfg.logChannelId ? [cfg.logChannelId] : [])
     .map((id) => sanitizeSnowflake(id))
     .filter(Boolean);
+  const topics = Array.isArray(cfg.topics) ? cfg.topics.filter((t) => t && t.value && t.label) : [];
 
   const pages = {
     1: [
@@ -364,6 +374,35 @@ function buildSetupComponents(cfg) {
       ),
       buildActionRow(2),
     ],
+    3: [
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const select = new StringSelectMenuBuilder()
+            .setCustomId("setup_topic_select")
+            .setPlaceholder("Wähle Topic zum Bearbeiten");
+          if (topics.length) {
+            select.addOptions(
+              topics.slice(0, 25).map((t) => ({
+                label: t.label?.substring(0, 50) || t.value,
+                value: t.value,
+                description: t.description?.substring(0, 100) || undefined,
+                emoji: t.emoji || undefined,
+                default: cfg.__selectedTopic === t.value,
+              }))
+            );
+          } else {
+            select.addOptions([{ label: "Keine Topics konfiguriert", value: "none", description: "Füge zuerst ein Topic hinzu", default: true }]);
+          }
+          return select;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId("setup_topic_add").setLabel("Topic hinzufügen").setStyle(ButtonStyle.Success).setEmoji("➕"),
+        new ButtonBuilder().setCustomId("setup_topic_edit").setLabel("Topic bearbeiten").setStyle(ButtonStyle.Primary).setEmoji("✏️"),
+        new ButtonBuilder().setCustomId("setup_topic_delete").setLabel("Topic löschen").setStyle(ButtonStyle.Danger).setEmoji("🗑️")
+      ),
+      buildActionRow(3),
+    ],
   };
 
   return pages[cfg.__page || 1] || pages[1];
@@ -396,6 +435,10 @@ async function handleComponent(interaction) {
     "setup_send_panel",
     "setup_panel_text",
     "setup_refresh",
+    "setup_topic_add",
+    "setup_topic_edit",
+    "setup_topic_delete",
+    "setup_topic_select",
     "setup_page",
   ];
 
@@ -487,6 +530,93 @@ async function handleComponent(interaction) {
           embeds: [embed],
           components,
         });
+        return true;
+      }
+
+      if (interaction.customId === "setup_topic_add") {
+        currentPage = 3;
+        cfg.__page = 3;
+        const modal = new ModalBuilder().setCustomId("setup_topic_add_modal").setTitle("Topic hinzufügen");
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId("topic_label").setLabel("Label").setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(80)
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId("topic_value").setLabel("Wert (unique, z.B. support)").setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(50)
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId("topic_emoji").setLabel("Emoji (optional)").setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(10)
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("topic_description")
+              .setLabel("Beschreibung (optional)")
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(false)
+              .setMaxLength(200)
+          )
+        );
+        await interaction.showModal(modal);
+        return true;
+      }
+
+      if (interaction.customId === "setup_topic_edit") {
+        currentPage = 3;
+        cfg.__page = 3;
+        const topics = Array.isArray(cfg.topics) ? cfg.topics : [];
+        const selected = topics.find((t) => t.value === cfg.__selectedTopic);
+        if (!selected) {
+          await interaction.reply({ content: "❌ Bitte zuerst ein Topic auswählen.", ephemeral: true });
+          return true;
+        }
+
+        const modal = new ModalBuilder().setCustomId("setup_topic_edit_modal").setTitle("Topic bearbeiten");
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("topic_label")
+              .setLabel("Label")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+              .setMaxLength(80)
+              .setValue(selected.label || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("topic_emoji")
+              .setLabel("Emoji (optional)")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+              .setMaxLength(10)
+              .setValue(selected.emoji || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("topic_description")
+              .setLabel("Beschreibung (optional)")
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(false)
+              .setMaxLength(200)
+              .setValue(selected.description || "")
+          )
+        );
+        await interaction.showModal(modal);
+        return true;
+      }
+
+      if (interaction.customId === "setup_topic_delete") {
+        currentPage = 3;
+        cfg.__page = 3;
+        const topics = Array.isArray(cfg.topics) ? cfg.topics : [];
+        const filtered = topics.filter((t) => t.value !== cfg.__selectedTopic);
+        if (filtered.length === topics.length) {
+          await interaction.reply({ content: "❌ Kein Topic ausgewählt.", ephemeral: true });
+          return true;
+        }
+        cfg.topics = filtered;
+        cfg.__selectedTopic = filtered[0]?.value || null;
+        writeCfg(guildId, cfg);
+        await refresh("🗑️ Topic gelöscht.");
         return true;
       }
 
@@ -672,6 +802,66 @@ async function handleComponent(interaction) {
 
   // Modal Submit
   if (interaction.isModalSubmit()) {
+    if (interaction.customId === "setup_topic_add_modal" || interaction.customId === "setup_topic_edit_modal") {
+      currentPage = 3;
+      cfg.__page = 3;
+      if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+        await interaction.reply({
+          content: "❌ Du benötigst die Berechtigung **Server verwalten**, um das Setup zu nutzen.",
+          ephemeral: true,
+        });
+        return true;
+      }
+
+      const topics = Array.isArray(cfg.topics) ? cfg.topics : [];
+      const isEdit = interaction.customId === "setup_topic_edit_modal";
+      const rawLabel = interaction.fields.getTextInputValue("topic_label")?.trim();
+      const rawEmoji = interaction.fields.getTextInputValue("topic_emoji")?.trim();
+      const rawDescription = interaction.fields.getTextInputValue("topic_description")?.trim();
+      const rawValue = isEdit ? cfg.__selectedTopic : interaction.fields.getTextInputValue("topic_value")?.trim();
+
+      const topicValue = sanitizeTopicValue(rawValue);
+      if (!topicValue) {
+        await interaction.reply({ content: "❌ Ungültiger Topic-Wert.", ephemeral: true });
+        return true;
+      }
+
+      const label = rawLabel?.substring(0, 80) || topicValue;
+      const emoji = rawEmoji?.substring(0, 10) || null;
+      const description = rawDescription?.substring(0, 200) || null;
+
+      if (!isEdit && topics.some((t) => t.value === topicValue)) {
+        await interaction.reply({ content: "❌ Topic-Wert bereits vorhanden.", ephemeral: true });
+        return true;
+      }
+
+      let updatedTopics = topics;
+      if (isEdit) {
+        const existing = topics.find((t) => t.value === topicValue);
+        if (!existing) {
+          await interaction.reply({ content: "❌ Kein Topic ausgewählt.", ephemeral: true });
+          return true;
+        }
+        updatedTopics = topics.map((t) =>
+          t.value === topicValue ? { ...t, label, emoji, description } : t
+        );
+      } else {
+        updatedTopics = [...topics, { label, value: topicValue, emoji, description }];
+        cfg.__selectedTopic = topicValue;
+      }
+
+      cfg.topics = updatedTopics;
+      writeCfg(guildId, cfg);
+
+      await interaction.reply({
+        content: isEdit ? "✅ Topic aktualisiert." : "✅ Topic hinzugefügt.",
+        embeds: [buildSetupEmbed(cfg)],
+        components: buildSetupComponents(cfg),
+        ephemeral: true,
+      });
+      return true;
+    }
+
     if (interaction.customId === "setup_panel_text_modal") {
       if (!guildId) return false;
 
