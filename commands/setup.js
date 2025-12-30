@@ -8,6 +8,10 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  RoleSelectMenuBuilder,
+  ChannelSelectMenuBuilder,
+  StringSelectMenuBuilder,
+  ChannelType,
 } = require("discord.js");
 
 const { readCfg, writeCfg } = require("../database");
@@ -21,6 +25,19 @@ const DAY_OPTIONS = [
   { option: "samstag", key: "saturday", label: "Samstag", emoji: "📅" },
   { option: "sonntag", key: "sunday", label: "Sonntag", emoji: "📅" },
 ];
+
+function sanitizeSnowflake(id) {
+  if (!id) return null;
+  const match = String(id).match(/(\d{17,20})/);
+  return match ? match[1] : null;
+}
+
+function sanitizeTopicValue(value) {
+  if (!value) return null;
+  const normalized = String(value).trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-_]/gi, "-");
+  const clean = normalized.replace(/-+/g, "-").replace(/^[-_]+|[-_]+$/g, "");
+  return clean || null;
+}
 
 function getDefaultSupportSchedule() {
   const defaultDay = { enabled: true, start: "00:00", end: "23:59" };
@@ -151,12 +168,576 @@ function getDayLabel(dayKey) {
   return DAY_OPTIONS.find((d) => d.key === dayKey)?.label || dayKey;
 }
 
+function buildPanelSelect(cfg) {
+  const topics = (cfg.topics || []).filter((t) => t && t.label && t.value);
+  const options = topics.length > 0
+    ? topics
+    : [{ label: "Keine Topics konfiguriert", value: "none", emoji: "⚠️" }];
+
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId("topic")
+      .setPlaceholder("Wähle dein Thema …")
+      .addOptions(
+        options.map((t) => ({
+          label: t.label,
+          value: t.value,
+          emoji: t.emoji || undefined,
+        }))
+      )
+  );
+}
+
+function buildPanelEmbed(cfg) {
+  const panelEmbed = cfg.panelEmbed || {};
+
+  const title = panelEmbed.title || cfg.panelTitle || "🎫 Ticket System";
+  const description =
+    panelEmbed.description ||
+    cfg.panelDescription ||
+    "Wähle unten ein Thema aus, um ein Ticket zu erstellen.";
+  const color = panelEmbed.color || cfg.panelColor || "#5865F2";
+  const footer = panelEmbed.footer || cfg.panelFooter || "Quantix Tickets";
+
+  const embed = new EmbedBuilder()
+    .setTitle(title)
+    .setDescription(description)
+    .setFooter({ text: footer });
+
+  if (/^#?[0-9a-fA-F]{6}$/.test(color)) {
+    embed.setColor(parseInt(color.replace("#", ""), 16));
+  }
+
+  return embed;
+}
+
+function buildSetupEmbed(cfg) {
+  const roleMentions = (Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : cfg.teamRoleId ? [cfg.teamRoleId] : [])
+    .map((id) => sanitizeSnowflake(id))
+    .filter(Boolean)
+    .map((id) => `<@&${id}>`)
+    .join(", ") || "Keine Rolle ausgewählt";
+
+  const allowedRoles = (Array.isArray(cfg.allowedTicketRoles) ? cfg.allowedTicketRoles : [])
+    .map((id) => sanitizeSnowflake(id))
+    .filter(Boolean)
+    .map((id) => `<@&${id}>`)
+    .join(", ") || "Alle dürfen Tickets erstellen";
+
+  const categoryId = sanitizeSnowflake(cfg.categoryId);
+  const panelChannelId = sanitizeSnowflake(cfg.panelChannelId);
+  const transcriptId = sanitizeSnowflake(cfg.transcriptChannelId);
+
+  const categoryText = categoryId ? `<#${categoryId}>` : "Keine Kategorie ausgewählt";
+  const panelChannelText = panelChannelId ? `<#${panelChannelId}>` : "Kein Panel-Channel ausgewählt";
+  const transcriptText = transcriptId ? `<#${transcriptId}>` : "Kein Transcript-Channel ausgewählt";
+  const topicsCount = Array.isArray(cfg.topics) ? cfg.topics.length : 0;
+  const logChannelText = (() => {
+    const ids = Array.isArray(cfg.logChannelId) ? cfg.logChannelId : cfg.logChannelId ? [cfg.logChannelId] : [];
+    const sanitized = ids.map((id) => sanitizeSnowflake(id)).filter(Boolean);
+    if (!ids.length) return "Kein Log-Channel ausgewählt";
+    if (!sanitized.length) return "Kein Log-Channel ausgewählt";
+    return sanitized.map((id) => `<#${id}>`).join(", ");
+  })();
+
+  return new EmbedBuilder()
+    .setColor(0x5865f2)
+    .setTitle("🚀 Setup & Konfiguration")
+    .setDescription(
+      "Richte den Bot in wenigen Schritten ein. Wähle Team-Rollen, Kategorie, Panel- und Log-Channel und sende anschließend das Ticket-Panel."
+    )
+    .addFields(
+      { name: "Team-Rollen", value: roleMentions, inline: false },
+      { name: "Ticket-Erstellung erlaubt für", value: allowedRoles, inline: false },
+      { name: "Ticket-Kategorie", value: categoryText, inline: false },
+      { name: "Panel-Channel", value: panelChannelText, inline: false },
+      { name: "Transcript-Channel", value: transcriptText, inline: false },
+      { name: "Topics", value: topicsCount ? `${topicsCount} Thema/Themen` : "Keine Topics konfiguriert", inline: false },
+      { name: "Log-Channel", value: logChannelText, inline: false }
+    )
+    .setFooter({ text: "Quantix Tickets • Setup-Assistent" });
+}
+
+function buildSetupComponents(cfg) {
+  const buildActionRow = (page) =>
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("setup_send_panel")
+        .setLabel("Panel senden")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji("📨"),
+      new ButtonBuilder()
+        .setCustomId("setup_panel_text")
+        .setLabel("Panel-Text bearbeiten")
+        .setStyle(ButtonStyle.Primary)
+        .setEmoji("📝"),
+      new ButtonBuilder()
+        .setCustomId("setup_refresh")
+        .setLabel("Aktualisieren")
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji("🔄"),
+      new ButtonBuilder()
+        .setCustomId(page === 1 ? "setup_page:2" : page === 2 ? "setup_page:3" : "setup_page:1")
+        .setLabel(page === 1 ? "Seite 2 ▶" : page === 2 ? "Seite 3 ▶" : "◀ Seite 1")
+        .setStyle(ButtonStyle.Secondary)
+    );
+
+  const roleIds = (Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : cfg.teamRoleId ? [cfg.teamRoleId] : [])
+    .map((id) => sanitizeSnowflake(id))
+    .filter(Boolean);
+
+  const logChannelIds = (Array.isArray(cfg.logChannelId) ? cfg.logChannelId : cfg.logChannelId ? [cfg.logChannelId] : [])
+    .map((id) => sanitizeSnowflake(id))
+    .filter(Boolean);
+  const topics = Array.isArray(cfg.topics) ? cfg.topics.filter((t) => t && t.value && t.label) : [];
+
+  const pages = {
+    1: [
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new RoleSelectMenuBuilder()
+            .setCustomId("setup_roles")
+            .setPlaceholder("Wähle Support-Rolle(n)")
+            .setMinValues(0)
+            .setMaxValues(5);
+          const defaults = roleIds.slice(0, 5);
+          if (defaults.length) builder.setDefaultRoles(defaults);
+          return builder;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const allowed = (cfg.allowedTicketRoles || []).map((id) => sanitizeSnowflake(id)).filter(Boolean).slice(0, 5);
+          const builder = new RoleSelectMenuBuilder()
+            .setCustomId("setup_allowed_roles")
+            .setPlaceholder("Wer darf Tickets erstellen? (leer = alle)")
+            .setMinValues(0)
+            .setMaxValues(5);
+          if (allowed.length) builder.setDefaultRoles(allowed);
+          return builder;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new ChannelSelectMenuBuilder()
+            .setCustomId("setup_category")
+            .setPlaceholder("Wähle Ticket-Kategorie")
+            .setChannelTypes(ChannelType.GuildCategory)
+            .setMinValues(0)
+            .setMaxValues(1);
+          const categoryId = sanitizeSnowflake(cfg.categoryId);
+          if (categoryId) builder.setDefaultChannels([categoryId]);
+          return builder;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new ChannelSelectMenuBuilder()
+            .setCustomId("setup_panel_channel")
+            .setPlaceholder("Channel für Ticket-Panel")
+            .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+            .setMinValues(0)
+            .setMaxValues(1);
+          const panelId = sanitizeSnowflake(cfg.panelChannelId);
+          if (panelId) builder.setDefaultChannels([panelId]);
+          return builder;
+        })()
+      ),
+      buildActionRow(1),
+    ],
+    2: [
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new ChannelSelectMenuBuilder()
+            .setCustomId("setup_transcript_channel")
+            .setPlaceholder("Transcript-Channel (optional)")
+            .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+            .setMinValues(0)
+            .setMaxValues(1);
+          const transcriptId = sanitizeSnowflake(cfg.transcriptChannelId);
+          if (transcriptId) builder.setDefaultChannels([transcriptId]);
+          return builder;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const builder = new ChannelSelectMenuBuilder()
+            .setCustomId("setup_log_channel")
+            .setPlaceholder("Log-Channel auswählen")
+            .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+            .setMinValues(0)
+            .setMaxValues(3);
+          const defaults = logChannelIds.slice(0, 3);
+          if (defaults.length) builder.setDefaultChannels(defaults);
+          return builder;
+        })()
+      ),
+      buildActionRow(2),
+    ],
+    3: [
+      new ActionRowBuilder().addComponents(
+        (() => {
+          const select = new StringSelectMenuBuilder()
+            .setCustomId("setup_topic_select")
+            .setPlaceholder("Wähle Topic zum Bearbeiten");
+          if (topics.length) {
+            select.addOptions(
+              topics.slice(0, 25).map((t) => ({
+                label: t.label?.substring(0, 50) || t.value,
+                value: t.value,
+                description: t.description?.substring(0, 100) || undefined,
+                emoji: t.emoji || undefined,
+                default: cfg.__selectedTopic === t.value,
+              }))
+            );
+          } else {
+            select.addOptions([{ label: "Keine Topics konfiguriert", value: "none", description: "Füge zuerst ein Topic hinzu", default: true }]);
+          }
+          return select;
+        })()
+      ),
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId("setup_topic_add").setLabel("Topic hinzufügen").setStyle(ButtonStyle.Success).setEmoji("➕"),
+        new ButtonBuilder().setCustomId("setup_topic_edit").setLabel("Topic bearbeiten").setStyle(ButtonStyle.Primary).setEmoji("✏️"),
+        new ButtonBuilder().setCustomId("setup_topic_delete").setLabel("Topic löschen").setStyle(ButtonStyle.Danger).setEmoji("🗑️")
+      ),
+      buildActionRow(3),
+    ],
+  };
+
+  return pages[cfg.__page || 1] || pages[1];
+}
+
 /**
  * Button + Modal Handling (damit du index.js:2914 entfernen kannst)
  * Rückgabe: true wenn handled, sonst false
  */
 async function handleComponent(interaction) {
-  // Buttons
+  const guildId = interaction.guildId;
+  const setupPageFromCustomId = () => {
+    const id = interaction.customId || "";
+    if (id.startsWith("setup_page:")) {
+      const target = parseInt(id.split(":")[1], 10);
+      return Number.isFinite(target) ? target : 1;
+    }
+    if (id === "setup_log_channel" || id === "setup_transcript_channel") return 2;
+    return 1;
+  };
+
+  let currentPage = setupPageFromCustomId();
+
+  const setupIds = [
+    "setup_roles",
+    "setup_category",
+    "setup_panel_channel",
+    "setup_transcript_channel",
+    "setup_log_channel",
+    "setup_send_panel",
+    "setup_panel_text",
+    "setup_refresh",
+    "setup_topic_add",
+    "setup_topic_edit",
+    "setup_topic_delete",
+    "setup_topic_select",
+    "setup_page",
+  ];
+
+  const isSetupWizardInteraction =
+    ((interaction.isRoleSelectMenu && interaction.isRoleSelectMenu()) ||
+      (interaction.isChannelSelectMenu && interaction.isChannelSelectMenu()) ||
+      interaction.isButton()) &&
+    (setupIds.includes(interaction.customId) || interaction.customId?.startsWith("setup_page:"));
+
+  if (isSetupWizardInteraction) {
+    if (!guildId) return false;
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await interaction.reply({
+        content: "❌ Du benötigst die Berechtigung **Server verwalten**, um das Setup zu nutzen.",
+        ephemeral: true,
+      });
+      return true;
+    }
+
+    const cfg = readCfg(guildId);
+    const refresh = async (content) => {
+      const embed = buildSetupEmbed(cfg);
+      cfg.__page = currentPage;
+      const components = buildSetupComponents(cfg);
+      if (interaction.deferred || interaction.replied) {
+        return interaction.editReply({ content, embeds: [embed], components });
+      }
+      return interaction.update({ content, embeds: [embed], components });
+    };
+
+    if (interaction.isRoleSelectMenu && interaction.isRoleSelectMenu()) {
+      if (interaction.customId !== "setup_roles") return false;
+      cfg.teamRoleId = interaction.values || [];
+      writeCfg(guildId, cfg);
+      await refresh("✅ Team-Rollen gespeichert.");
+      return true;
+    }
+
+    if (interaction.isRoleSelectMenu && interaction.isRoleSelectMenu()) {
+      if (interaction.customId === "setup_allowed_roles") {
+        cfg.allowedTicketRoles = interaction.values || [];
+        writeCfg(guildId, cfg);
+        await refresh(cfg.allowedTicketRoles.length ? "✅ Erlaubte Rollen gespeichert." : "ℹ️ Ticket-Erlaubnis auf alle gesetzt.");
+        return true;
+      }
+    }
+
+    if (interaction.isChannelSelectMenu && interaction.isChannelSelectMenu()) {
+      if (interaction.customId === "setup_category") {
+        cfg.categoryId = interaction.values?.[0] || "";
+        writeCfg(guildId, cfg);
+        await refresh(cfg.categoryId ? "✅ Kategorie gespeichert." : "ℹ️ Kategorie entfernt.");
+        return true;
+      }
+
+      if (interaction.customId === "setup_panel_channel") {
+        cfg.panelChannelId = interaction.values?.[0] || "";
+        if (!cfg.panelChannelId) cfg.panelMessageId = "";
+        writeCfg(guildId, cfg);
+        await refresh(cfg.panelChannelId ? "✅ Panel-Channel gespeichert." : "ℹ️ Panel-Channel entfernt.");
+        return true;
+      }
+
+      if (interaction.customId === "setup_transcript_channel") {
+        cfg.transcriptChannelId = interaction.values?.[0] || "";
+        writeCfg(guildId, cfg);
+        await refresh(cfg.transcriptChannelId ? "✅ Transcript-Channel gespeichert." : "ℹ️ Transcript-Channel entfernt.");
+        return true;
+      }
+
+      if (interaction.customId === "setup_log_channel") {
+        cfg.logChannelId = interaction.values || [];
+        writeCfg(guildId, cfg);
+        await refresh(cfg.logChannelId.length ? "✅ Log-Channel gespeichert." : "ℹ️ Log-Channel entfernt.");
+        return true;
+      }
+    }
+
+    if (interaction.isButton()) {
+      if (interaction.customId.startsWith("setup_page:")) {
+        const target = parseInt(interaction.customId.split(":")[1], 10);
+        currentPage = Number.isFinite(target) ? target : 1;
+        cfg.__page = currentPage;
+        const embed = buildSetupEmbed(cfg);
+        const components = buildSetupComponents(cfg);
+        await interaction.update({
+          content:
+            "Nutze die Menüs unten, um Rollen, Kategorien und Channels zu setzen. Drücke anschließend **Panel senden**.",
+          embeds: [embed],
+          components,
+        });
+        return true;
+      }
+
+      if (interaction.customId === "setup_topic_add") {
+        currentPage = 3;
+        cfg.__page = 3;
+        const modal = new ModalBuilder().setCustomId("setup_topic_add_modal").setTitle("Topic hinzufügen");
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId("topic_label").setLabel("Label").setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(80)
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId("topic_value").setLabel("Wert (unique, z.B. support)").setStyle(TextInputStyle.Short).setRequired(true).setMaxLength(50)
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId("topic_emoji").setLabel("Emoji (optional)").setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(10)
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("topic_description")
+              .setLabel("Beschreibung (optional)")
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(false)
+              .setMaxLength(200)
+          )
+        );
+        await interaction.showModal(modal);
+        return true;
+      }
+
+      if (interaction.customId === "setup_topic_edit") {
+        currentPage = 3;
+        cfg.__page = 3;
+        const topics = Array.isArray(cfg.topics) ? cfg.topics : [];
+        const selected = topics.find((t) => t.value === cfg.__selectedTopic);
+        if (!selected) {
+          await interaction.reply({ content: "❌ Bitte zuerst ein Topic auswählen.", ephemeral: true });
+          return true;
+        }
+
+        const modal = new ModalBuilder().setCustomId("setup_topic_edit_modal").setTitle("Topic bearbeiten");
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("topic_label")
+              .setLabel("Label")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+              .setMaxLength(80)
+              .setValue(selected.label || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("topic_emoji")
+              .setLabel("Emoji (optional)")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+              .setMaxLength(10)
+              .setValue(selected.emoji || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("topic_description")
+              .setLabel("Beschreibung (optional)")
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(false)
+              .setMaxLength(200)
+              .setValue(selected.description || "")
+          )
+        );
+        await interaction.showModal(modal);
+        return true;
+      }
+
+      if (interaction.customId === "setup_topic_delete") {
+        currentPage = 3;
+        cfg.__page = 3;
+        const topics = Array.isArray(cfg.topics) ? cfg.topics : [];
+        const filtered = topics.filter((t) => t.value !== cfg.__selectedTopic);
+        if (filtered.length === topics.length) {
+          await interaction.reply({ content: "❌ Kein Topic ausgewählt.", ephemeral: true });
+          return true;
+        }
+        cfg.topics = filtered;
+        cfg.__selectedTopic = filtered[0]?.value || null;
+        writeCfg(guildId, cfg);
+        await refresh("🗑️ Topic gelöscht.");
+        return true;
+      }
+
+      if (interaction.customId === "setup_refresh") {
+        await refresh("🔄 Aktualisiert.");
+        return true;
+      }
+
+      if (interaction.customId === "setup_send_panel") {
+        await interaction.deferUpdate();
+
+        try {
+          const topics = (cfg.topics || []).filter((t) => t && t.label && t.value);
+          const errors = [];
+
+          if (!cfg.panelChannelId) errors.push("Bitte wähle einen Panel-Channel aus.");
+          if (!cfg.categoryId) errors.push("Bitte wähle eine Ticket-Kategorie aus.");
+          if (topics.length === 0) errors.push("Bitte konfiguriere mindestens ein Ticket-Thema im Dashboard.");
+
+          if (errors.length) {
+            await interaction.followUp({ content: `❌ Panel konnte nicht gesendet werden:\n- ${errors.join("\n- ")}`, ephemeral: true });
+            return true;
+          }
+
+          const channel = await interaction.guild.channels.fetch(cfg.panelChannelId).catch(() => null);
+
+          if (
+            !channel ||
+            ![
+              "GUILD_TEXT",
+              "GUILD_NEWS",
+              ChannelType.GuildText,
+              ChannelType.GuildAnnouncement,
+            ].includes(channel.type)
+          ) {
+            await interaction.followUp({ content: "❌ Panel-Channel ist ungültig oder nicht auffindbar.", ephemeral: true });
+            return true;
+          }
+
+          const embed = buildPanelEmbed(cfg);
+          const row = buildPanelSelect(cfg);
+          const msg = await channel.send({ embeds: [embed], components: [row] });
+
+          cfg.panelMessageId = msg.id;
+          cfg.panelChannelId = channel.id;
+          writeCfg(guildId, cfg);
+
+          cfg.__page = currentPage;
+          await interaction.editReply({
+            content:
+              "Nutze die Menüs unten, um Rollen, Kategorien und Channels zu setzen. Drücke anschließend **Panel senden**.",
+            embeds: [buildSetupEmbed(cfg)],
+            components: buildSetupComponents(cfg),
+          });
+
+          await interaction.followUp({
+            content: `✅ Panel gesendet in ${channel.toString()}.`,
+            ephemeral: true,
+          });
+        } catch (err) {
+          console.error("Setup Panel Send Error:", err);
+          await interaction.followUp({
+            content: "❌ Fehler beim Senden des Panels. Bitte prüfe die Berechtigungen.",
+            ephemeral: true,
+          });
+        }
+        return true;
+      }
+
+      if (interaction.customId === "setup_panel_text") {
+        const panelEmbed = cfg.panelEmbed || {};
+        const modal = new ModalBuilder()
+          .setCustomId("setup_panel_text_modal")
+          .setTitle("Panel-Text bearbeiten");
+
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("panel_title")
+              .setLabel("Titel")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+              .setMaxLength(100)
+              .setValue(panelEmbed.title || cfg.panelTitle || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("panel_description")
+              .setLabel("Beschreibung")
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(false)
+              .setMaxLength(1024)
+              .setValue(panelEmbed.description || cfg.panelDescription || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("panel_footer")
+              .setLabel("Footer")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+              .setMaxLength(100)
+              .setValue(panelEmbed.footer || cfg.panelFooter || "")
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("panel_color")
+              .setLabel("Farbe (Hex, z.B. #5865F2)")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+              .setMaxLength(7)
+              .setValue(panelEmbed.color || cfg.panelColor || "#5865F2")
+          )
+        );
+
+        await interaction.showModal(modal);
+        return true;
+      }
+    }
+  }
+
+  // Buttons für Supportzeiten
   if (interaction.isButton()) {
     if (!interaction.customId.startsWith("setup_time_")) return false;
 
@@ -169,7 +750,6 @@ async function handleComponent(interaction) {
       return true;
     }
 
-    const guildId = interaction.guildId;
     const cfg = readCfg(guildId);
 
     if (!cfg.ticketSupportTimes) {
@@ -222,6 +802,121 @@ async function handleComponent(interaction) {
 
   // Modal Submit
   if (interaction.isModalSubmit()) {
+    if (interaction.customId === "setup_topic_add_modal" || interaction.customId === "setup_topic_edit_modal") {
+      currentPage = 3;
+      cfg.__page = 3;
+      if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+        await interaction.reply({
+          content: "❌ Du benötigst die Berechtigung **Server verwalten**, um das Setup zu nutzen.",
+          ephemeral: true,
+        });
+        return true;
+      }
+
+      const topics = Array.isArray(cfg.topics) ? cfg.topics : [];
+      const isEdit = interaction.customId === "setup_topic_edit_modal";
+      const rawLabel = interaction.fields.getTextInputValue("topic_label")?.trim();
+      const rawEmoji = interaction.fields.getTextInputValue("topic_emoji")?.trim();
+      const rawDescription = interaction.fields.getTextInputValue("topic_description")?.trim();
+      const rawValue = isEdit ? cfg.__selectedTopic : interaction.fields.getTextInputValue("topic_value")?.trim();
+
+      const topicValue = sanitizeTopicValue(rawValue);
+      if (!topicValue) {
+        await interaction.reply({ content: "❌ Ungültiger Topic-Wert.", ephemeral: true });
+        return true;
+      }
+
+      const label = rawLabel?.substring(0, 80) || topicValue;
+      const emoji = rawEmoji?.substring(0, 10) || null;
+      const description = rawDescription?.substring(0, 200) || null;
+
+      if (!isEdit && topics.some((t) => t.value === topicValue)) {
+        await interaction.reply({ content: "❌ Topic-Wert bereits vorhanden.", ephemeral: true });
+        return true;
+      }
+
+      let updatedTopics = topics;
+      if (isEdit) {
+        const existing = topics.find((t) => t.value === topicValue);
+        if (!existing) {
+          await interaction.reply({ content: "❌ Kein Topic ausgewählt.", ephemeral: true });
+          return true;
+        }
+        updatedTopics = topics.map((t) =>
+          t.value === topicValue ? { ...t, label, emoji, description } : t
+        );
+      } else {
+        updatedTopics = [...topics, { label, value: topicValue, emoji, description }];
+        cfg.__selectedTopic = topicValue;
+      }
+
+      cfg.topics = updatedTopics;
+      writeCfg(guildId, cfg);
+
+      await interaction.reply({
+        content: isEdit ? "✅ Topic aktualisiert." : "✅ Topic hinzugefügt.",
+        embeds: [buildSetupEmbed(cfg)],
+        components: buildSetupComponents(cfg),
+        ephemeral: true,
+      });
+      return true;
+    }
+
+    if (interaction.customId === "setup_panel_text_modal") {
+      if (!guildId) return false;
+
+      if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+        await interaction.reply({
+          content: "❌ Du benötigst die Berechtigung **Server verwalten**, um das Setup zu nutzen.",
+          ephemeral: true,
+        });
+        return true;
+      }
+
+      const cfg = readCfg(guildId);
+      const title = interaction.fields.getTextInputValue("panel_title")?.trim() || "";
+      const description = interaction.fields.getTextInputValue("panel_description")?.trim() || "";
+      const footer = interaction.fields.getTextInputValue("panel_footer")?.trim() || "";
+      const color = interaction.fields.getTextInputValue("panel_color")?.trim() || "";
+
+      const nextEmbed = {
+        title: title.substring(0, 100),
+        description: description.substring(0, 1024),
+        footer: footer.substring(0, 100),
+        color: /^#?[0-9a-fA-F]{6}$/.test(color) ? (color.startsWith("#") ? color : `#${color}`) : "#5865F2",
+      };
+
+      cfg.panelEmbed = nextEmbed;
+      cfg.panelTitle = undefined;
+      cfg.panelDescription = undefined;
+      cfg.panelFooter = undefined;
+      cfg.panelColor = undefined;
+      writeCfg(guildId, cfg);
+
+      if (cfg.panelMessageId && cfg.panelChannelId) {
+        try {
+          const channel = await interaction.guild.channels.fetch(cfg.panelChannelId).catch(() => null);
+          if (channel) {
+            const msg = await channel.messages.fetch(cfg.panelMessageId).catch(() => null);
+            if (msg) {
+              await msg.edit({ embeds: [buildPanelEmbed(cfg)], components: [buildPanelSelect(cfg)] });
+            }
+          }
+        } catch (err) {
+          console.error("Panel update error:", err);
+        }
+      }
+
+      cfg.__page = 1;
+      await interaction.reply({
+        content: "✅ Panel-Text aktualisiert.",
+        embeds: [buildSetupEmbed(cfg)],
+        components: buildSetupComponents(cfg),
+        ephemeral: true,
+      });
+      return true;
+    }
+
     if (!interaction.customId.startsWith("setup_time_modal:")) return false;
 
     if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
@@ -298,9 +993,14 @@ async function handleComponent(interaction) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("setup")
-    .setDescription("Konfiguriere Ticket-Einstellungen")
+    .setDescription("Setup und Konfiguration für Tickets")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setDMPermission(false)
+    .addSubcommand((sub) =>
+      sub
+        .setName("wizard")
+        .setDescription("Interaktiver Setup-Assistent (Rollen, Kategorie, Panel, Logs)")
+    )
     .addSubcommand((sub) =>
       sub.setName("time").setDescription("Supportzeiten bearbeiten (UI mit Buttons)")
     )
@@ -364,13 +1064,26 @@ module.exports = {
     if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
       return interaction.reply({
         content:
-          "❌ Du benötigst die Berechtigung **Server verwalten**, um die Supportzeiten zu ändern.",
+          "❌ Du benötigst die Berechtigung **Server verwalten**, um das Setup zu nutzen.",
         ephemeral: true,
       });
     }
 
     const guildId = interaction.guildId;
     const cfg = readCfg(guildId);
+
+    if (sub === "wizard") {
+      const embed = buildSetupEmbed(cfg);
+      cfg.__page = 1;
+      const components = buildSetupComponents(cfg);
+
+      return interaction.reply({
+        content: "Nutze die Menüs unten, um Rollen, Kategorien und Channels zu setzen. Drücke anschließend **Panel senden**.",
+        embeds: [embed],
+        components,
+        ephemeral: true,
+      });
+    }
 
     if (sub === "time") {
       const embed = buildScheduleEmbed(cfg);
