@@ -1,6 +1,6 @@
 # 🎫 Quantix Tickets Bot
 
-**Version:** Beta 0.3.5
+**Version:** Release 1.5.3
 
 Ein professioneller Multi-Server Discord-Ticket-Bot mit Web-Dashboard, Multi-Language-Support und dynamischen Formularen für Discord-Server.
 
