@@ -1,12 +1,11 @@
 const path = require('path');
 const fs = require('fs');
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 const { t } = require('../translations');
-const { createStyledEmbed, createQuickEmbed } = require('../helpers');
+const { createStyledEmbed } = require('../helpers');
 const { readCfg, writeCfg, loadTickets, saveTickets } = require('../database');
 
 const CONFIG_DIR = path.join(__dirname, '..', 'configs');
-const PREFIX = '🎫│';
 
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün' },
@@ -16,561 +15,414 @@ const PRIORITY_STATES = [
 
 function getTeamRole(guildId) {
   const cfg = readCfg(guildId);
-  if (Array.isArray(cfg.teamRoleId)) {
-    return cfg.teamRoleId.length > 0 ? cfg.teamRoleId[0] : null;
-  }
+  if (Array.isArray(cfg.teamRoleId)) return cfg.teamRoleId.length > 0 ? cfg.teamRoleId[0] : null;
   return cfg.teamRoleId || null;
 }
 
 function getAllTeamRoles(guildId) {
   const cfg = readCfg(guildId);
   const roles = new Set();
-
-  // Legacy teamRoleId
-  if (Array.isArray(cfg.teamRoleId)) {
-    cfg.teamRoleId.forEach(r => r && roles.add(r));
-  } else if (cfg.teamRoleId) {
-    roles.add(cfg.teamRoleId);
-  }
-
-  // Priority roles
-  if (cfg.priorityRoles) {
-    Object.values(cfg.priorityRoles).forEach(roleList => {
-      if (Array.isArray(roleList)) {
-        roleList.forEach(r => r && roles.add(r));
-      }
-    });
-  }
-
+  if (Array.isArray(cfg.teamRoleId)) cfg.teamRoleId.forEach(r => r && roles.add(r));
+  else if (cfg.teamRoleId) roles.add(cfg.teamRoleId);
+  if (cfg.priorityRoles) Object.values(cfg.priorityRoles).forEach(roleList => {
+    if (Array.isArray(roleList)) roleList.forEach(r => r && roles.add(r));
+  });
   return Array.from(roles);
 }
 
 function hasAnyTeamRole(member, guildId) {
   if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
-
-  const teamRoles = getAllTeamRoles(guildId);
-  return teamRoles.some(roleId => member.roles.cache.has(roleId));
+  return getAllTeamRoles(guildId).some(roleId => member.roles.cache.has(roleId));
 }
 
 function logEvent(guild, message) {
   const cfg = readCfg(guild.id);
   if (!cfg.logChannelId) return;
-
-  const logChannel = guild.channels.cache.get(cfg.logChannelId);
-  if (logChannel && logChannel.isTextBased()) {
-    logChannel.send(message).catch(console.error);
-  }
-}
-
-function getCounterPath(guildId) {
-  return path.join(CONFIG_DIR, `${guildId}_counter.json`);
+  const ch = guild.channels.cache.get(cfg.logChannelId);
+  if (ch?.isTextBased()) ch.send(message).catch(console.error);
 }
 
 function nextTicket(guildId) {
-  const counterPath = getCounterPath(guildId);
-  if (!fs.existsSync(counterPath)) {
-    fs.writeFileSync(counterPath, JSON.stringify({ last: 0 }, null, 2), 'utf8');
-  }
+  const counterPath = path.join(CONFIG_DIR, `${guildId}_counter.json`);
+  if (!fs.existsSync(counterPath)) fs.writeFileSync(counterPath, JSON.stringify({ last: 0 }, null, 2), 'utf8');
   const counter = JSON.parse(fs.readFileSync(counterPath, 'utf8'));
   counter.last++;
   fs.writeFileSync(counterPath, JSON.stringify(counter, null, 2), 'utf8');
   return counter.last;
 }
 
-function getPriorityRoles(guildId, priority) {
-  const cfg = readCfg(guildId);
-  if (!cfg.priorityRoles) return [];
-  const roles = cfg.priorityRoles[priority.toString()];
-  return Array.isArray(roles) ? roles : [];
-}
-
 function getHierarchicalPriorityRoles(guildId, priority = 0) {
   const cfg = readCfg(guildId);
   const roles = new Set();
-
   if (!cfg.priorityRoles) {
-    if (Array.isArray(cfg.teamRoleId)) {
-      return cfg.teamRoleId.filter(r => r && r.trim());
-    }
+    if (Array.isArray(cfg.teamRoleId)) return cfg.teamRoleId.filter(r => r?.trim());
     return cfg.teamRoleId ? [cfg.teamRoleId] : [];
   }
-
-  // Hierarchisch: Rot (2) sieht 2+1+0, Orange (1) sieht 1+0, Grün (0) sieht nur 0
   for (let level = priority; level >= 0; level--) {
     const levelRoles = cfg.priorityRoles[level.toString()] || [];
-    if (Array.isArray(levelRoles)) {
-      levelRoles.forEach(r => roles.add(r));
-    }
+    if (Array.isArray(levelRoles)) levelRoles.forEach(r => roles.add(r));
   }
-
-  return Array.from(roles).filter(r => r && r.trim());
+  return Array.from(roles).filter(r => r?.trim());
 }
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('ticket')
     .setDescription('Ticket management commands')
-    // ===== EXISTING SUBCOMMANDS =====
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('add')
-        .setDescription('Add a user to the current ticket')
-        .addUserOption(option =>
-          option
-            .setName('user')
-            .setDescription('The user to add to the ticket')
-            .setRequired(true)
-        )
-    )
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('hide')
-        .setDescription('Hide the ticket from all team members (claimer only)')
-    )
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('unhide')
-        .setDescription('Unhide the ticket and restore team access (claimer only)')
-    )
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('split')
-        .setDescription('Split ticket into a new ticket')
-        .addStringOption(option =>
-          option
-            .setName('reason')
-            .setDescription('Reason/topic for the new ticket')
-            .setRequired(true)
-        )
-    )
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('open-as')
-        .setDescription('Open a ticket on behalf of another user (Team only)')
-        .addUserOption(option =>
-          option
-            .setName('user')
-            .setDescription('The user who will be the ticket creator')
-            .setRequired(true)
-        )
-        .addStringOption(option =>
-          option
-            .setName('topic')
-            .setDescription('Ticket topic/reason')
-            .setRequired(true)
-        )
-    )
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('blacklist-add')
-        .setDescription('Add a user to the ticket blacklist')
-        .addUserOption(option =>
-          option
-            .setName('user')
-            .setDescription('User to blacklist')
-            .setRequired(true))
-        .addStringOption(option =>
-          option
-            .setName('reason')
-            .setDescription('Reason for blacklisting')
-            .setRequired(true))
-        .addBooleanOption(option =>
-          option
-            .setName('permanent')
-            .setDescription('Permanent blacklist (default: true)')
-            .setRequired(false))
-        .addIntegerOption(option =>
-          option
-            .setName('days')
-            .setDescription('Days to blacklist (if not permanent)')
-            .setRequired(false)
-            .setMinValue(1)
-            .setMaxValue(365)))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('blacklist-remove')
-        .setDescription('Remove a user from the ticket blacklist')
-        .addUserOption(option =>
-          option
-            .setName('user')
-            .setDescription('User to unblacklist')
-            .setRequired(true)))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('blacklist-list')
-        .setDescription('List all blacklisted users'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('blacklist-check')
-        .setDescription('Check if a user is blacklisted')
-        .addUserOption(option =>
-          option
-            .setName('user')
-            .setDescription('User to check')
-            .setRequired(true)))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('forward')
-        .setDescription('Forward ticket to another team member or role')
-        .addUserOption(option =>
-          option
-            .setName('user')
-            .setDescription('User to forward the ticket to')
-            .setRequired(false))
-        .addRoleOption(option =>
-          option
-            .setName('role')
-            .setDescription('Role to forward the ticket to')
-            .setRequired(false)))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('note-add')
-        .setDescription('Add an internal note to this ticket (team only)')
-        .addStringOption(option =>
-          option
-            .setName('note')
-            .setDescription('The note content')
-            .setRequired(true)
-            .setMaxLength(1000)))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('note-list')
-        .setDescription('List all internal notes for this ticket (team only)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('tag-add')
-        .setDescription('Add a tag to this ticket (Premium)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('tag-remove')
-        .setDescription('Remove a tag from this ticket (Premium)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('tag-list')
-        .setDescription('List all available tags (Premium)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('department-forward')
-        .setDescription('Forward ticket to another department (Premium)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('department-list')
-        .setDescription('List all departments (Premium)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('pause')
-        .setDescription('Pause the auto-close timer for this ticket/application'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('resume')
-        .setDescription('Resume the auto-close timer for this ticket/application'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('block')
-        .setDescription('Block the ticket - nobody can write messages'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('unblock')
-        .setDescription('Unblock the ticket - restore write permissions'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('rename')
-        .setDescription('Rename this ticket channel')
-        .addStringOption(option =>
-          option.setName('name')
-            .setDescription('New channel name')
-            .setRequired(true)
-            .setMaxLength(100)))
-    // ===== NEW SUBCOMMANDS =====
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('claim')
-        .setDescription('Claim this ticket (Team only)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('unclaim')
-        .setDescription('Release this ticket so other team members can claim it'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('close')
-        .setDescription('Close this ticket immediately (Team only)')
-        .addStringOption(option =>
-          option
-            .setName('reason')
-            .setDescription('Reason for closing the ticket')
-            .setRequired(false)
-            .setMaxLength(500)))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('request-close')
-        .setDescription('Request to close this ticket (requires approval)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('elevate')
-        .setDescription('Increase ticket priority (Team only)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('lower')
-        .setDescription('Decrease ticket priority (Team only)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('merge')
-        .setDescription('Merge another ticket into this one (Team only)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('voice-start')
-        .setDescription('Create a voice channel for this ticket (Team only)'))
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('voice-end')
-        .setDescription('Delete the voice channel for this ticket (Team only)')),
+    
+    // ===== STANDALONE SUBCOMMANDS (17) =====
+    .addSubcommand(s => s.setName('claim').setDescription('Claim this ticket (Team only)'))
+    .addSubcommand(s => s.setName('unclaim').setDescription('Release this ticket for other team members'))
+    .addSubcommand(s => s.setName('close').setDescription('Close this ticket (Team only)')
+      .addStringOption(o => o.setName('reason').setDescription('Reason for closing').setRequired(false).setMaxLength(500)))
+    .addSubcommand(s => s.setName('request-close').setDescription('Request to close this ticket'))
+    .addSubcommand(s => s.setName('elevate').setDescription('Increase ticket priority (Team only)'))
+    .addSubcommand(s => s.setName('lower').setDescription('Decrease ticket priority (Team only)'))
+    .addSubcommand(s => s.setName('merge').setDescription('Merge another ticket into this one (Team only)'))
+    .addSubcommand(s => s.setName('add').setDescription('Add a user to the ticket')
+      .addUserOption(o => o.setName('user').setDescription('User to add').setRequired(true)))
+    .addSubcommand(s => s.setName('hide').setDescription('Hide ticket from team (claimer only)'))
+    .addSubcommand(s => s.setName('unhide').setDescription('Unhide ticket (claimer only)'))
+    .addSubcommand(s => s.setName('split').setDescription('Split into new ticket')
+      .addStringOption(o => o.setName('reason').setDescription('Reason for split').setRequired(true)))
+    .addSubcommand(s => s.setName('forward').setDescription('Forward ticket')
+      .addUserOption(o => o.setName('user').setDescription('User').setRequired(false))
+      .addRoleOption(o => o.setName('role').setDescription('Role').setRequired(false)))
+    .addSubcommand(s => s.setName('pause').setDescription('Pause auto-close timer'))
+    .addSubcommand(s => s.setName('resume').setDescription('Resume auto-close timer'))
+    .addSubcommand(s => s.setName('block').setDescription('Block ticket messages'))
+    .addSubcommand(s => s.setName('unblock').setDescription('Unblock ticket messages'))
+    .addSubcommand(s => s.setName('rename').setDescription('Rename ticket channel')
+      .addStringOption(o => o.setName('name').setDescription('New name').setRequired(true).setMaxLength(100)))
+    
+    // ===== SUBCOMMAND GROUP: BLACKLIST (1 group with 4 subs) =====
+    .addSubcommandGroup(g => g.setName('blacklist').setDescription('Manage blacklist')
+      .addSubcommand(s => s.setName('add').setDescription('Add user to blacklist')
+        .addUserOption(o => o.setName('user').setDescription('User').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(true))
+        .addBooleanOption(o => o.setName('permanent').setDescription('Permanent?'))
+        .addIntegerOption(o => o.setName('days').setDescription('Days').setMinValue(1).setMaxValue(365)))
+      .addSubcommand(s => s.setName('remove').setDescription('Remove from blacklist')
+        .addUserOption(o => o.setName('user').setDescription('User').setRequired(true)))
+      .addSubcommand(s => s.setName('list').setDescription('List blacklisted users'))
+      .addSubcommand(s => s.setName('check').setDescription('Check if blacklisted')
+        .addUserOption(o => o.setName('user').setDescription('User').setRequired(true))))
+    
+    // ===== SUBCOMMAND GROUP: NOTE (1 group with 2 subs) =====
+    .addSubcommandGroup(g => g.setName('note').setDescription('Manage notes')
+      .addSubcommand(s => s.setName('add').setDescription('Add internal note')
+        .addStringOption(o => o.setName('content').setDescription('Note content').setRequired(true).setMaxLength(1000)))
+      .addSubcommand(s => s.setName('list').setDescription('List notes')))
+    
+    // ===== SUBCOMMAND GROUP: VOICE (1 group with 2 subs) =====
+    .addSubcommandGroup(g => g.setName('voice').setDescription('Manage voice support')
+      .addSubcommand(s => s.setName('start').setDescription('Create voice channel'))
+      .addSubcommand(s => s.setName('end').setDescription('Delete voice channel')))
+    
+    // ===== SUBCOMMAND GROUP: TAG =====
+    .addSubcommandGroup(g => g.setName('tag').setDescription('Manage ticket tags')
+      .addSubcommand(s => s.setName('add').setDescription('Add a tag to this ticket'))
+      .addSubcommand(s => s.setName('remove').setDescription('Remove a tag from this ticket'))
+      .addSubcommand(s => s.setName('list').setDescription('List all available tags')))
+    
+    // ===== SUBCOMMAND GROUP: DEPARTMENT =====
+    .addSubcommandGroup(g => g.setName('department').setDescription('Manage ticket departments')
+      .addSubcommand(s => s.setName('forward').setDescription('Forward ticket to another department'))
+      .addSubcommand(s => s.setName('list').setDescription('List all departments'))),
 
   async execute(interaction) {
-    const subcommand = interaction.options.getSubcommand();
     const guildId = interaction.guild.id;
+    const group = interaction.options.getSubcommandGroup(false);
+    const sub = interaction.options.getSubcommand();
 
-    // ===== SUBCOMMAND: CLAIM =====
-    if (subcommand === 'claim') {
+    // ===== GROUP: BLACKLIST =====
+    if (group === 'blacklist') {
       const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', description: 'Nur Team-Mitglieder.', color: '#ED4245' })], ephemeral: true });
 
-      if (!isTeam) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur Team-Mitglieder können Tickets übernehmen.',
-          color: '#ED4245'
+      if (sub === 'add') {
+        const user = interaction.options.getUser('user');
+        const reason = interaction.options.getString('reason');
+        const isPermanent = interaction.options.getBoolean('permanent') !== false;
+        const days = interaction.options.getInteger('days') || 30;
+
+        const cfg = readCfg(guildId);
+        if (!cfg.ticketBlacklist) cfg.ticketBlacklist = [];
+        if (cfg.ticketBlacklist.find(b => b.userId === user.id)) return interaction.reply({ content: `❌ ${user.tag} ist bereits auf der Blacklist.`, ephemeral: true });
+
+        cfg.ticketBlacklist.push({
+          userId: user.id, username: user.tag, reason, isPermanent,
+          addedBy: interaction.user.id, addedAt: new Date().toISOString(),
+          expiresAt: isPermanent ? null : new Date(Date.now() + days * 86400000).toISOString()
         });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
+        writeCfg(guildId, cfg);
+
+        await interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Blacklist', description: `<@${user.id}> hinzugefügt.\nGrund: ${reason}\nDauer: ${isPermanent ? '♾️ Permanent' : `${days} Tage`}`, color: '#ED4245' })] });
+        logEvent(interaction.guild, `🚫 <@${user.id}> auf Blacklist von <@${interaction.user.id}> | ${reason}`);
       }
+      if (sub === 'remove') {
+        const user = interaction.options.getUser('user');
+        const cfg = readCfg(guildId);
+        if (!cfg.ticketBlacklist) cfg.ticketBlacklist = [];
+        const idx = cfg.ticketBlacklist.findIndex(b => b.userId === user.id);
+        if (idx === -1) return interaction.reply({ content: `❌ ${user.tag} ist nicht auf der Blacklist.`, ephemeral: true });
+        cfg.ticketBlacklist.splice(idx, 1);
+        writeCfg(guildId, cfg);
+        await interaction.reply({ embeds: [createStyledEmbed({ emoji: '✅', title: 'Blacklist', description: `<@${user.id}> entfernt.`, color: '#57F287' })] });
+        logEvent(interaction.guild, `✅ <@${user.id}> von Blacklist entfernt von <@${interaction.user.id}>`);
+      }
+      if (sub === 'list') {
+        const cfg = readCfg(guildId);
+        const list = cfg.ticketBlacklist || [];
+        if (!list.length) return interaction.reply({ content: '📋 Blacklist ist leer.', ephemeral: true });
+        await interaction.reply({ embeds: [createStyledEmbed({ emoji: '📋', title: 'Blacklist', description: list.map((b, i) => `**${i + 1}.** <@${b.userId}> - ${b.reason}`).join('\n'), color: '#ED4245' })], ephemeral: true });
+      }
+      if (sub === 'check') {
+        const user = interaction.options.getUser('user');
+        const cfg = readCfg(guildId);
+        const entry = (cfg.ticketBlacklist || []).find(b => b.userId === user.id);
+        if (!entry) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '✅', title: 'Nicht auf Blacklist', description: `<@${user.id}>`, color: '#57F287' })], ephemeral: true });
+        await interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Auf Blacklist', description: `<@${user.id}>\nGrund: ${entry.reason}\n${entry.isPermanent ? '♾️ Permanent' : `Bis: <t:${Math.floor(new Date(entry.expiresAt).getTime() / 1000)}:R>`}`, color: '#ED4245' })], ephemeral: true });
+      }
+      return;
+    }
+
+    // ===== GROUP: NOTE =====
+    if (group === 'note') {
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
 
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
 
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
+      if (sub === 'add') {
+        const content = interaction.options.getString('content');
+        if (!ticket.notes) ticket.notes = [];
+        ticket.notes.push({ id: ticket.notes.length + 1, content, author: interaction.user.id, createdAt: Date.now() });
+        saveTickets(guildId, tickets);
+        await interaction.reply({ embeds: [createStyledEmbed({ emoji: '📝', title: 'Notiz hinzugefügt', description: content.substring(0, 200), color: '#5865F2' })], ephemeral: true });
+        logEvent(interaction.guild, `📝 Notiz zu Ticket #${ticket.id} von <@${interaction.user.id}>`);
+      }
+      if (sub === 'list') {
+        const notes = ticket.notes || [];
+        if (!notes.length) return interaction.reply({ content: '📝 Keine Notizen.', ephemeral: true });
+        await interaction.reply({ embeds: [createStyledEmbed({ emoji: '📝', title: `Notizen #${ticket.id}`, description: notes.map((n, i) => `**${i + 1}.** <@${n.author}>: ${n.content}`).join('\n\n').substring(0, 4000), color: '#5865F2' })], ephemeral: true });
+      }
+      return;
+    }
+
+    // ===== GROUP: VOICE =====
+    if (group === 'voice') {
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
+
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+
+      if (sub === 'start') {
+        if (ticket.voiceChannelId) return interaction.reply({ content: `ℹ️ Voice existiert: <#${ticket.voiceChannelId}>`, ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
+        try {
+          const { createVoiceChannel } = require('../voice-support');
+          const vc = await createVoiceChannel(interaction.guild, ticket, guildId);
+          if (!vc) throw new Error('Failed');
+          ticket.voiceChannelId = vc.id;
+          saveTickets(guildId, tickets);
+          await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '🎤', title: 'Voice erstellt', description: `<#${vc.id}>`, color: '#57F287' })] });
+          await interaction.editReply({ content: `✅ <#${vc.id}>` });
+          logEvent(interaction.guild, `🎤 Voice für #${ticket.id} von <@${interaction.user.id}>`);
+        } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
+      }
+      if (sub === 'end') {
+        if (!ticket.voiceChannelId) return interaction.reply({ content: '❌ Kein Voice-Channel.', ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
+        try {
+          const { deleteVoiceChannel } = require('../voice-support');
+          await deleteVoiceChannel(interaction.guild, ticket.voiceChannelId, guildId);
+          await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '🔇', title: 'Voice beendet', color: '#ED4245' })] });
+          await interaction.editReply({ content: '✅ Voice beendet.' });
+          logEvent(interaction.guild, `🔇 Voice für #${ticket.id} beendet von <@${interaction.user.id}>`);
+        } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
+      }
+      return;
+    }
+
+    // ===== GROUP: TAG =====
+    if (group === 'tag') {
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
+
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+
+      const cfg = readCfg(guildId);
+      const availableTags = cfg.ticketTags || [];
+
+      if (sub === 'add') {
+        if (!availableTags.length) return interaction.reply({ content: '❌ Keine Tags konfiguriert. Erstelle Tags im Dashboard.', ephemeral: true });
+
+        const opts = availableTags.slice(0, 25).map(t => ({ label: t.name, description: t.description || '', value: t.id || t.name, emoji: t.emoji }));
+
+        await interaction.reply({
+          embeds: [createStyledEmbed({ emoji: '🏷️', title: 'Tag hinzufügen', description: 'Wähle einen Tag für dieses Ticket.', color: '#5865F2' })],
+          components: [new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId(`tag_add_select:${ticket.id}`).setPlaceholder('Tag wählen...').addOptions(opts))],
+          ephemeral: true
         });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
       }
 
-      if (ticket.claimer) {
-        const alreadyClaimedEmbed = createStyledEmbed({
-          emoji: '⚠️',
-          title: 'Bereits übernommen',
-          description: `Dieses Ticket wurde bereits von <@${ticket.claimer}> übernommen.`,
-          fields: [
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Claimer', value: `<@${ticket.claimer}>`, inline: true }
-          ],
-          color: '#FEE75C'
+      if (sub === 'remove') {
+        const ticketTags = ticket.tags || [];
+        if (!ticketTags.length) return interaction.reply({ content: 'ℹ️ Dieses Ticket hat keine Tags.', ephemeral: true });
+
+        const opts = ticketTags.slice(0, 25).map(t => ({ label: t.name || t, value: t.id || t.name || t }));
+
+        await interaction.reply({
+          embeds: [createStyledEmbed({ emoji: '🏷️', title: 'Tag entfernen', description: 'Wähle einen Tag zum Entfernen.', color: '#ED4245' })],
+          components: [new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId(`tag_remove_select:${ticket.id}`).setPlaceholder('Tag wählen...').addOptions(opts))],
+          ephemeral: true
         });
-        return interaction.reply({ embeds: [alreadyClaimedEmbed], ephemeral: true });
       }
+
+      if (sub === 'list') {
+        const ticketTags = ticket.tags || [];
+        const tagList = ticketTags.length ? ticketTags.map(t => `• ${t.emoji || '🏷️'} ${t.name || t}`).join('\n') : 'Keine Tags';
+        const availableList = availableTags.length ? availableTags.map(t => `• ${t.emoji || '🏷️'} ${t.name}`).join('\n') : 'Keine Tags konfiguriert';
+
+        await interaction.reply({
+          embeds: [createStyledEmbed({
+            emoji: '🏷️',
+            title: 'Tags',
+            fields: [
+              { name: 'Ticket-Tags', value: tagList, inline: true },
+              { name: 'Verfügbare Tags', value: availableList, inline: true }
+            ],
+            color: '#5865F2'
+          })],
+          ephemeral: true
+        });
+      }
+      return;
+    }
+
+    // ===== GROUP: DEPARTMENT =====
+    if (group === 'department') {
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
+
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+
+      const cfg = readCfg(guildId);
+      const departments = cfg.departments || [];
+
+      if (sub === 'forward') {
+        if (!departments.length) return interaction.reply({ content: '❌ Keine Abteilungen konfiguriert. Erstelle Abteilungen im Dashboard.', ephemeral: true });
+
+        const opts = departments.slice(0, 25).map(d => ({ label: d.name, description: d.description || '', value: d.id || d.name, emoji: d.emoji }));
+
+        await interaction.reply({
+          embeds: [createStyledEmbed({ emoji: '🏢', title: 'An Abteilung weiterleiten', description: 'Wähle eine Abteilung.', color: '#5865F2' })],
+          components: [new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId(`department_forward_select:${ticket.id}`).setPlaceholder('Abteilung wählen...').addOptions(opts))],
+          ephemeral: true
+        });
+      }
+
+      if (sub === 'list') {
+        const deptList = departments.length ? departments.map(d => `• ${d.emoji || '🏢'} **${d.name}**${d.description ? ` - ${d.description}` : ''}`).join('\n') : 'Keine Abteilungen konfiguriert';
+
+        await interaction.reply({
+          embeds: [createStyledEmbed({
+            emoji: '🏢',
+            title: 'Abteilungen',
+            description: deptList,
+            color: '#5865F2'
+          })],
+          ephemeral: true
+        });
+      }
+      return;
+    }
+
+    // ===== STANDALONE: CLAIM =====
+    if (sub === 'claim') {
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
+
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      if (ticket.claimer) return interaction.reply({ content: `⚠️ Bereits von <@${ticket.claimer}> übernommen.`, ephemeral: true });
 
       await interaction.deferReply({ ephemeral: true });
-
       try {
         ticket.claimer = interaction.user.id;
         ticket.claimedAt = Date.now();
         saveTickets(guildId, tickets);
 
-        // Update channel permissions
-        const permissions = [
+        const perms = [
           { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
           { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
           { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
         ];
-
-        if (ticket.addedUsers && Array.isArray(ticket.addedUsers)) {
-          ticket.addedUsers.forEach(uid => {
-            permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
-          });
+        (ticket.addedUsers || []).forEach(uid => perms.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }));
+        
+        for (const roleId of getHierarchicalPriorityRoles(guildId, ticket.priority || 0)) {
+          if (roleId?.trim()) perms.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel], deny: [PermissionsBitField.Flags.SendMessages] });
         }
+        await interaction.channel.permissionOverwrites.set(perms);
 
-        // Priority roles: Can see but not write
-        const currentPriority = ticket.priority || 0;
-        const hierarchicalRoles = getHierarchicalPriorityRoles(guildId, currentPriority);
-        for (const roleId of hierarchicalRoles) {
-          if (roleId && roleId.trim()) {
-            try {
-              await interaction.guild.roles.fetch(roleId);
-              permissions.push({
-                id: roleId,
-                allow: [PermissionsBitField.Flags.ViewChannel],
-                deny: [PermissionsBitField.Flags.SendMessages]
-              });
-            } catch {
-              console.error('Priority-Rolle nicht gefunden:', roleId);
-            }
-          }
-        }
-
-        await interaction.channel.permissionOverwrites.set(permissions);
-
-        // Public message in channel
-        const claimEmbed = createStyledEmbed({
-          emoji: '✨',
-          title: 'Ticket übernommen',
-          description: `<@${interaction.user.id}> hat das Ticket übernommen und wird sich um dein Anliegen kümmern.`,
-          fields: [
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Übernommen von', value: `<@${interaction.user.id}>`, inline: true },
-            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          ],
-          color: '#57F287'
-        });
-
-        await interaction.channel.send({ embeds: [claimEmbed] });
-        await interaction.editReply({ content: '✅ Ticket erfolgreich übernommen!' });
-
-        logEvent(interaction.guild, t(guildId, 'logs.ticket_claimed', { id: ticket.id, user: `<@${interaction.user.id}>` }) || `✨ Ticket #${ticket.id} wurde von <@${interaction.user.id}> übernommen`);
-      } catch (err) {
-        console.error('Error claiming ticket:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Übernehmen des Tickets.' });
-      }
+        await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '✨', title: 'Ticket übernommen', description: `<@${interaction.user.id}> kümmert sich um dein Anliegen.`, color: '#57F287' })] });
+        await interaction.editReply({ content: '✅ Übernommen!' });
+        logEvent(interaction.guild, `✨ #${ticket.id} von <@${interaction.user.id}> übernommen`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
     }
 
-    // ===== SUBCOMMAND: UNCLAIM =====
-    if (subcommand === 'unclaim') {
+    // ===== STANDALONE: UNCLAIM =====
+    if (sub === 'unclaim') {
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
-
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      if (!ticket.claimer) {
-        const notClaimedEmbed = createStyledEmbed({
-          emoji: 'ℹ️',
-          title: 'Nicht übernommen',
-          description: 'Dieses Ticket wurde noch nicht übernommen.',
-          color: '#FEE75C'
-        });
-        return interaction.reply({ embeds: [notClaimedEmbed], ephemeral: true });
-      }
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      if (!ticket.claimer) return interaction.reply({ content: 'ℹ️ Nicht übernommen.', ephemeral: true });
 
       const isTeam = hasAnyTeamRole(interaction.member, guildId);
-      const isClaimer = ticket.claimer === interaction.user.id;
-
-      if (!isTeam && !isClaimer) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur der Claimer oder Team-Mitglieder können das Ticket freigeben.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
+      if (!isTeam && ticket.claimer !== interaction.user.id) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
 
       await interaction.deferReply({ ephemeral: true });
-
       try {
-        const previousClaimer = ticket.claimer;
+        const prev = ticket.claimer;
         ticket.claimer = null;
-        ticket.unclaimedAt = Date.now();
-        ticket.unclaimedBy = interaction.user.id;
         saveTickets(guildId, tickets);
 
-        // Restore team permissions
-        const cfg = readCfg(guildId);
-        const permissions = [
+        const perms = [
           { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
           { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
         ];
+        getAllTeamRoles(guildId).forEach(r => r && perms.push({ id: r, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }));
+        (ticket.addedUsers || []).forEach(uid => perms.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }));
+        await interaction.channel.permissionOverwrites.set(perms);
 
-        // Team roles
-        const teamRoles = getAllTeamRoles(guildId);
-        for (const roleId of teamRoles) {
-          if (roleId && roleId.trim()) {
-            permissions.push({
-              id: roleId,
-              allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages]
-            });
-          }
-        }
-
-        // Added users
-        if (ticket.addedUsers && Array.isArray(ticket.addedUsers)) {
-          ticket.addedUsers.forEach(uid => {
-            permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
-          });
-        }
-
-        await interaction.channel.permissionOverwrites.set(permissions);
-
-        // Public message
-        const unclaimEmbed = createStyledEmbed({
-          emoji: '🔓',
-          title: 'Ticket freigegeben',
-          description: `Das Ticket wurde von <@${interaction.user.id}> freigegeben und kann nun von anderen Team-Mitgliedern übernommen werden.`,
-          fields: [
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Vorheriger Claimer', value: `<@${previousClaimer}>`, inline: true },
-            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          ],
-          color: '#5865F2'
-        });
-
-        await interaction.channel.send({ embeds: [unclaimEmbed] });
-        await interaction.editReply({ content: '✅ Ticket erfolgreich freigegeben!' });
-
-        logEvent(interaction.guild, `🔓 Ticket #${ticket.id} wurde von <@${interaction.user.id}> freigegeben`);
-      } catch (err) {
-        console.error('Error unclaiming ticket:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Freigeben des Tickets.' });
-      }
+        await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '🔓', title: 'Ticket freigegeben', description: `Von <@${prev}> freigegeben.`, color: '#5865F2' })] });
+        await interaction.editReply({ content: '✅ Freigegeben!' });
+        logEvent(interaction.guild, `🔓 #${ticket.id} freigegeben von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
     }
 
-    // ===== SUBCOMMAND: CLOSE =====
-    if (subcommand === 'close') {
+    // ===== STANDALONE: CLOSE =====
+    if (sub === 'close') {
       const reason = interaction.options.getString('reason') || 'Kein Grund angegeben';
-      const isTeam = hasAnyTeamRole(interaction.member, guildId);
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
 
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      const isClaimer = ticket.claimer === interaction.user.id;
-
-      if (!isTeam && !isClaimer) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur Team-Mitglieder oder der Claimer können das Ticket direkt schließen.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
-
-      if (ticket.archived) {
-        const archivedEmbed = createStyledEmbed({
-          emoji: '📦',
-          title: 'Ticket archiviert',
-          description: 'Dieses Ticket ist bereits archiviert.',
-          color: '#FFA500'
-        });
-        return interaction.reply({ embeds: [archivedEmbed], ephemeral: true });
-      }
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam && ticket.claimer !== interaction.user.id) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
+      if (ticket.archived) return interaction.reply({ content: '📦 Bereits archiviert.', ephemeral: true });
 
       await interaction.deferReply({ ephemeral: true });
-
       try {
         ticket.status = 'geschlossen';
         ticket.closedAt = Date.now();
@@ -580,1287 +432,373 @@ module.exports = {
 
         const cfg = readCfg(guildId);
 
-        // Close embed with reason
-        const closeEmbed = createStyledEmbed({
-          emoji: '🔐',
-          title: 'Ticket geschlossen',
-          description: `Dieses Ticket wurde von <@${interaction.user.id}> geschlossen.`,
-          fields: [
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Geschlossen von', value: `<@${interaction.user.id}>`, inline: true },
-            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
-            { name: 'Grund', value: reason, inline: false }
-          ],
-          color: '#ED4245',
-          footer: 'Quantix Tickets • Ticket geschlossen'
-        });
+        await interaction.channel.send({ embeds: [createStyledEmbed({
+          emoji: '🔐', title: 'Ticket geschlossen',
+          description: `Von <@${interaction.user.id}> geschlossen.`,
+          fields: [{ name: 'Grund', value: reason }],
+          color: '#ED4245'
+        })] });
 
-        await interaction.channel.send({ embeds: [closeEmbed] });
-
-        // Try to create transcript
+        // Update transcript
         try {
-          const transcriptDir = path.join(__dirname, '..', 'transcripts', guildId);
-          if (!fs.existsSync(transcriptDir)) {
-            fs.mkdirSync(transcriptDir, { recursive: true });
-          }
+          const dir = path.join(__dirname, '..', 'transcripts', guildId);
+          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+          const txt = path.join(dir, `transcript_${ticket.id}.txt`);
+          fs.appendFileSync(txt, `\n=== GESCHLOSSEN ===\nVon: ${interaction.user.tag}\nGrund: ${reason}\nZeit: ${new Date().toLocaleString('de-DE')}\n`, 'utf8');
+          const html = path.join(dir, `transcript_${ticket.id}.html`);
+          if (fs.existsSync(html)) fs.appendFileSync(html, `<div style="background:#d92b2b;padding:10px;margin-top:20px;border-radius:8px;"><b>🔐 Geschlossen</b><br>Von: ${interaction.user.tag}<br>Grund: ${reason}</div>`, 'utf8');
+        } catch (e) { console.error('Transcript error:', e); }
 
-          const txtPath = path.join(transcriptDir, `transcript_${ticket.id}.txt`);
-          
-          // Append close reason to transcript
-          const closeEntry = `\n\n=== TICKET GESCHLOSSEN ===\nGeschlossen von: ${interaction.user.tag} (${interaction.user.id})\nZeitpunkt: ${new Date().toLocaleString('de-DE')}\nGrund: ${reason}\n`;
-          fs.appendFileSync(txtPath, closeEntry, 'utf8');
-
-          // Also append to HTML if exists
-          const htmlPath = path.join(transcriptDir, `transcript_${ticket.id}.html`);
-          if (fs.existsSync(htmlPath)) {
-            const htmlCloseEntry = `<div class="msg" style="background:#d92b2b;margin-top:20px;"><strong>🔐 Ticket geschlossen</strong><br>Geschlossen von: ${interaction.user.tag}<br>Zeitpunkt: ${new Date().toLocaleString('de-DE')}<br>Grund: ${reason}</div>`;
-            fs.appendFileSync(htmlPath, htmlCloseEntry, 'utf8');
-          }
-        } catch (transcriptErr) {
-          console.error('Error updating transcript with close reason:', transcriptErr);
-        }
-
-        // Send DM to creator with close reason
+        // DM to creator
         try {
           const creator = await interaction.client.users.fetch(ticket.userId).catch(() => null);
-          if (creator) {
-            const dmEmbed = createStyledEmbed({
-              emoji: '🔐',
-              title: 'Dein Ticket wurde geschlossen',
-              description: `Dein Ticket **#${ticket.id}** auf **${interaction.guild.name}** wurde geschlossen.`,
-              fields: [
-                { name: 'Geschlossen von', value: `<@${interaction.user.id}>`, inline: true },
-                { name: 'Grund', value: reason, inline: false }
-              ],
-              color: '#ED4245',
-              footer: interaction.guild.name
-            });
+          if (creator) await creator.send({ embeds: [createStyledEmbed({ emoji: '🔐', title: 'Ticket geschlossen', description: `Dein Ticket #${ticket.id} auf **${interaction.guild.name}** wurde geschlossen.\n\n**Grund:** ${reason}`, color: '#ED4245', footer: interaction.guild.name })] }).catch(() => {});
+        } catch (e) {}
 
-            await creator.send({ embeds: [dmEmbed] }).catch(() => {});
-          }
-        } catch (dmErr) {
-          console.log('Could not send close DM:', dmErr.message);
-        }
+        await interaction.editReply({ content: '✅ Wird geschlossen...' });
+        logEvent(interaction.guild, `🔐 #${ticket.id} geschlossen von <@${interaction.user.id}> | ${reason}`);
 
-        await interaction.editReply({ content: '✅ Ticket wird geschlossen...' });
-
-        logEvent(interaction.guild, `🔐 Ticket #${ticket.id} wurde von <@${interaction.user.id}> geschlossen | Grund: ${reason}`);
-
-        // Archive or delete after delay
         setTimeout(async () => {
           if (cfg.archiveEnabled && cfg.archiveCategoryId) {
             try {
-              const archivePermissions = [
-                { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] }
-              ];
-
-              const teamRoles = getAllTeamRoles(guildId);
-              for (const roleId of teamRoles) {
-                if (roleId && roleId.trim()) {
-                  archivePermissions.push({
-                    id: roleId,
-                    allow: [PermissionsBitField.Flags.ViewChannel],
-                    deny: [PermissionsBitField.Flags.SendMessages]
-                  });
-                }
-              }
-
-              await interaction.channel.permissionOverwrites.set(archivePermissions);
+              const perms = [{ id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] }];
+              getAllTeamRoles(guildId).forEach(r => r && perms.push({ id: r, allow: [PermissionsBitField.Flags.ViewChannel], deny: [PermissionsBitField.Flags.SendMessages] }));
+              await interaction.channel.permissionOverwrites.set(perms);
               await interaction.channel.setParent(cfg.archiveCategoryId, { lockPermissions: false });
-
-              const newName = `closed-${interaction.channel.name}`;
-              await interaction.channel.setName(newName);
-
+              await interaction.channel.setName(`closed-${interaction.channel.name}`);
               ticket.archived = true;
-              ticket.archivedAt = Date.now();
               saveTickets(guildId, tickets);
-            } catch (archiveErr) {
-              console.error('Archive error:', archiveErr);
-              await interaction.channel.delete().catch(() => {});
-            }
+            } catch (e) { await interaction.channel.delete().catch(() => {}); }
           } else {
             await interaction.channel.delete().catch(() => {});
           }
         }, 5000);
-
-      } catch (err) {
-        console.error('Error closing ticket:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Schließen des Tickets.' });
-      }
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
     }
 
-    // ===== SUBCOMMAND: REQUEST-CLOSE =====
-    if (subcommand === 'request-close') {
+    // ===== STANDALONE: REQUEST-CLOSE =====
+    if (sub === 'request-close') {
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
-
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      if (ticket.archived) {
-        const archivedEmbed = createStyledEmbed({
-          emoji: '📦',
-          title: 'Ticket archiviert',
-          description: 'Dieses Ticket ist bereits archiviert.',
-          color: '#FFA500'
-        });
-        return interaction.reply({ embeds: [archivedEmbed], ephemeral: true });
-      }
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      if (ticket.archived) return interaction.reply({ content: '📦 Archiviert.', ephemeral: true });
 
       const isCreator = ticket.userId === interaction.user.id;
-      const isAddedUser = ticket.addedUsers && ticket.addedUsers.includes(interaction.user.id);
-      const isTeam = hasAnyTeamRole(interaction.member, guildId);
-      const isClaimer = ticket.claimer === interaction.user.id;
+      const type = isCreator ? 'user' : 'team';
 
-      const requesterType = (isCreator || isAddedUser) ? 'user' : 'team';
-
-      // Save close request
-      ticket.closeRequest = {
-        requestedBy: interaction.user.id,
-        requesterType: requesterType,
-        requestedAt: Date.now(),
-        status: 'pending'
-      };
+      ticket.closeRequest = { requestedBy: interaction.user.id, requesterType: type, requestedAt: Date.now(), status: 'pending' };
       saveTickets(guildId, tickets);
 
-      // Build ping mentions
-      let pingMentions = '';
-      if (requesterType === 'user') {
-        if (ticket.claimer) {
-          pingMentions = `<@${ticket.claimer}>`;
-        } else {
-          const teamRoles = getAllTeamRoles(guildId);
-          pingMentions = teamRoles.map(roleId => `<@&${roleId}>`).join(' ');
-        }
-      } else {
-        pingMentions = `<@${ticket.userId}>`;
-      }
+      const ping = type === 'user' ? (ticket.claimer ? `<@${ticket.claimer}>` : getAllTeamRoles(guildId).map(r => `<@&${r}>`).join(' ')) : `<@${ticket.userId}>`;
 
-      // Create request embed
-      const requestEmbed = createStyledEmbed({
-        emoji: '📩',
-        title: 'Schließungsanfrage',
-        description: `<@${interaction.user.id}> möchte dieses Ticket schließen.`,
-        fields: [
-          { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-          { name: 'Angefragt von', value: `<@${interaction.user.id}>`, inline: true },
-          { name: 'Genehmigung erforderlich von', value: requesterType === 'user' ? 'Team/Claimer' : 'Ticket-Ersteller', inline: true }
-        ],
-        color: '#FEE75C'
+      const msg = await interaction.channel.send({
+        content: ping,
+        embeds: [createStyledEmbed({ emoji: '📩', title: 'Schließungsanfrage', description: `<@${interaction.user.id}> möchte schließen.`, color: '#FEE75C' })],
+        components: [new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('approve_close_request').setLabel('Genehmigen').setStyle(ButtonStyle.Success).setEmoji('✅'),
+          new ButtonBuilder().setCustomId('deny_close_request').setLabel('Ablehnen').setStyle(ButtonStyle.Danger).setEmoji('❌')
+        )]
       });
 
-      const approveButton = new ButtonBuilder()
-        .setCustomId('approve_close_request')
-        .setLabel('Genehmigen')
-        .setStyle(ButtonStyle.Success)
-        .setEmoji('✅');
-
-      const denyButton = new ButtonBuilder()
-        .setCustomId('deny_close_request')
-        .setLabel('Ablehnen')
-        .setStyle(ButtonStyle.Danger)
-        .setEmoji('❌');
-
-      const buttonRow = new ActionRowBuilder().addComponents(approveButton, denyButton);
-
-      const requestMessage = await interaction.channel.send({
-        content: pingMentions,
-        embeds: [requestEmbed],
-        components: [buttonRow]
-      });
-
-      // Store message ID
-      ticket.closeRequest.messageId = requestMessage.id;
+      ticket.closeRequest.messageId = msg.id;
       saveTickets(guildId, tickets);
-
-      const confirmEmbed = createStyledEmbed({
-        emoji: '📩',
-        title: 'Schließungsanfrage gesendet',
-        description: requesterType === 'user'
-          ? 'Ein Team-Mitglied oder Claimer muss die Anfrage genehmigen.'
-          : 'Der Ticket-Ersteller muss die Anfrage genehmigen.',
-        color: '#57F287'
-      });
-
-      await interaction.reply({ embeds: [confirmEmbed], ephemeral: true });
-
-      logEvent(interaction.guild, `📩 Schließungsanfrage für Ticket #${ticket.id} von <@${interaction.user.id}>`);
+      await interaction.reply({ content: '📩 Anfrage gesendet!', ephemeral: true });
+      logEvent(interaction.guild, `📩 Schließungsanfrage #${ticket.id} von <@${interaction.user.id}>`);
     }
 
-    // ===== SUBCOMMAND: ELEVATE =====
-    if (subcommand === 'elevate') {
+    // ===== STANDALONE: ELEVATE =====
+    if (sub === 'elevate') {
       const isTeam = hasAnyTeamRole(interaction.member, guildId);
-
-      if (!isTeam) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur Team-Mitglieder können die Priorität ändern.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
 
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
 
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      const currentPriority = ticket.priority || 0;
-
-      if (currentPriority >= 2) {
-        const maxPriorityEmbed = createStyledEmbed({
-          emoji: '🔴',
-          title: 'Maximale Priorität erreicht',
-          description: 'Dieses Ticket hat bereits die höchste Priorität (Rot).',
-          fields: [
-            { name: 'Aktuelle Priorität', value: `${PRIORITY_STATES[currentPriority].dot} ${PRIORITY_STATES[currentPriority].label}`, inline: true }
-          ],
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [maxPriorityEmbed], ephemeral: true });
-      }
+      const cur = ticket.priority || 0;
+      if (cur >= 2) return interaction.reply({ content: '🔴 Bereits höchste Priorität.', ephemeral: true });
 
       await interaction.deferReply({ ephemeral: true });
-
       try {
-        const newPriority = currentPriority + 1;
-        ticket.priority = newPriority;
+        const next = cur + 1;
+        ticket.priority = next;
         saveTickets(guildId, tickets);
 
-        // Update channel name with priority indicator
-        const oldName = interaction.channel.name;
-        let newName = oldName.replace(/^(🟢|🟠|🔴)/, '').trim();
-        newName = `${PRIORITY_STATES[newPriority].dot}${newName}`;
-        await interaction.channel.setName(newName).catch(() => {});
+        let name = interaction.channel.name.replace(/^(🟢|🟠|🔴)/, '').trim();
+        await interaction.channel.setName(`${PRIORITY_STATES[next].dot}${name}`).catch(() => {});
 
-        // Update permissions for new priority roles
-        const newRoles = getHierarchicalPriorityRoles(guildId, newPriority);
-        for (const roleId of newRoles) {
-          if (roleId && roleId.trim()) {
-            await interaction.channel.permissionOverwrites.edit(roleId, {
-              ViewChannel: true,
-              SendMessages: ticket.claimer ? false : true
-            }).catch(() => {});
-          }
+        for (const r of getHierarchicalPriorityRoles(guildId, next)) {
+          if (r?.trim()) await interaction.channel.permissionOverwrites.edit(r, { ViewChannel: true, SendMessages: ticket.claimer ? false : true }).catch(() => {});
         }
 
-        const priorityEmbed = createStyledEmbed({
-          emoji: '⬆️',
-          title: 'Priorität erhöht',
-          description: `Die Priorität wurde von <@${interaction.user.id}> erhöht.`,
-          fields: [
-            { name: 'Vorher', value: `${PRIORITY_STATES[currentPriority].dot} ${PRIORITY_STATES[currentPriority].label}`, inline: true },
-            { name: 'Jetzt', value: `${PRIORITY_STATES[newPriority].dot} ${PRIORITY_STATES[newPriority].label}`, inline: true },
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true }
-          ],
-          color: PRIORITY_STATES[newPriority].embedColor
-        });
-
-        await interaction.channel.send({ embeds: [priorityEmbed] });
-        await interaction.editReply({ content: `✅ Priorität auf ${PRIORITY_STATES[newPriority].label} erhöht!` });
-
-        logEvent(interaction.guild, `⬆️ Ticket #${ticket.id} Priorität erhöht auf ${PRIORITY_STATES[newPriority].label} von <@${interaction.user.id}>`);
-      } catch (err) {
-        console.error('Error elevating priority:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Erhöhen der Priorität.' });
-      }
+        await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '⬆️', title: 'Priorität erhöht', fields: [{ name: 'Jetzt', value: `${PRIORITY_STATES[next].dot} ${PRIORITY_STATES[next].label}`, inline: true }], color: PRIORITY_STATES[next].embedColor })] });
+        await interaction.editReply({ content: `✅ ${PRIORITY_STATES[next].label}` });
+        logEvent(interaction.guild, `⬆️ #${ticket.id} → ${PRIORITY_STATES[next].label} von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
     }
 
-    // ===== SUBCOMMAND: LOWER =====
-    if (subcommand === 'lower') {
+    // ===== STANDALONE: LOWER =====
+    if (sub === 'lower') {
       const isTeam = hasAnyTeamRole(interaction.member, guildId);
-
-      if (!isTeam) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur Team-Mitglieder können die Priorität ändern.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
 
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
 
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      const currentPriority = ticket.priority || 0;
-
-      if (currentPriority <= 0) {
-        const minPriorityEmbed = createStyledEmbed({
-          emoji: '🟢',
-          title: 'Minimale Priorität erreicht',
-          description: 'Dieses Ticket hat bereits die niedrigste Priorität (Grün).',
-          fields: [
-            { name: 'Aktuelle Priorität', value: `${PRIORITY_STATES[currentPriority].dot} ${PRIORITY_STATES[currentPriority].label}`, inline: true }
-          ],
-          color: '#57F287'
-        });
-        return interaction.reply({ embeds: [minPriorityEmbed], ephemeral: true });
-      }
+      const cur = ticket.priority || 0;
+      if (cur <= 0) return interaction.reply({ content: '🟢 Bereits niedrigste Priorität.', ephemeral: true });
 
       await interaction.deferReply({ ephemeral: true });
-
       try {
-        const newPriority = currentPriority - 1;
-        ticket.priority = newPriority;
+        const next = cur - 1;
+        ticket.priority = next;
         saveTickets(guildId, tickets);
 
-        // Update channel name with priority indicator
-        const oldName = interaction.channel.name;
-        let newName = oldName.replace(/^(🟢|🟠|🔴)/, '').trim();
-        newName = `${PRIORITY_STATES[newPriority].dot}${newName}`;
-        await interaction.channel.setName(newName).catch(() => {});
+        let name = interaction.channel.name.replace(/^(🟢|🟠|🔴)/, '').trim();
+        await interaction.channel.setName(`${PRIORITY_STATES[next].dot}${name}`).catch(() => {});
 
-        const priorityEmbed = createStyledEmbed({
-          emoji: '⬇️',
-          title: 'Priorität gesenkt',
-          description: `Die Priorität wurde von <@${interaction.user.id}> gesenkt.`,
-          fields: [
-            { name: 'Vorher', value: `${PRIORITY_STATES[currentPriority].dot} ${PRIORITY_STATES[currentPriority].label}`, inline: true },
-            { name: 'Jetzt', value: `${PRIORITY_STATES[newPriority].dot} ${PRIORITY_STATES[newPriority].label}`, inline: true },
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true }
-          ],
-          color: PRIORITY_STATES[newPriority].embedColor
-        });
-
-        await interaction.channel.send({ embeds: [priorityEmbed] });
-        await interaction.editReply({ content: `✅ Priorität auf ${PRIORITY_STATES[newPriority].label} gesenkt!` });
-
-        logEvent(interaction.guild, `⬇️ Ticket #${ticket.id} Priorität gesenkt auf ${PRIORITY_STATES[newPriority].label} von <@${interaction.user.id}>`);
-      } catch (err) {
-        console.error('Error lowering priority:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Senken der Priorität.' });
-      }
+        await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '⬇️', title: 'Priorität gesenkt', fields: [{ name: 'Jetzt', value: `${PRIORITY_STATES[next].dot} ${PRIORITY_STATES[next].label}`, inline: true }], color: PRIORITY_STATES[next].embedColor })] });
+        await interaction.editReply({ content: `✅ ${PRIORITY_STATES[next].label}` });
+        logEvent(interaction.guild, `⬇️ #${ticket.id} → ${PRIORITY_STATES[next].label} von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
     }
 
-    // ===== SUBCOMMAND: MERGE =====
-    if (subcommand === 'merge') {
+    // ===== STANDALONE: MERGE =====
+    if (sub === 'merge') {
       const isTeam = hasAnyTeamRole(interaction.member, guildId);
-
-      if (!isTeam) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur Team-Mitglieder können Tickets zusammenführen.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
 
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
 
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
+      const open = tickets.filter(t => t.status === 'offen' && t.id !== ticket.id && !t.isApplication);
+      if (!open.length) return interaction.reply({ content: '❌ Keine anderen Tickets.', ephemeral: true });
 
-      // Find other open tickets
-      const openTickets = tickets.filter(t =>
-        t.status === 'offen' &&
-        t.id !== ticket.id &&
-        !t.isApplication &&
-        t.status !== 'merged'
-      );
+      const opts = open.slice(0, 25).map(t => ({ label: `#${t.id}`, description: `${t.topic || 'Kein Thema'}`.substring(0, 100), value: `${t.id}` }));
 
-      if (openTickets.length === 0) {
-        const noTicketsEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Keine Tickets verfügbar',
-          description: 'Es gibt keine anderen offenen Tickets zum Zusammenführen.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketsEmbed], ephemeral: true });
-      }
-
-      // Create select menu
-      const ticketOptions = openTickets.slice(0, 25).map(t => ({
-        label: `Ticket #${t.id}`,
-        description: `${t.topic || 'Kein Thema'} - ${t.username || 'Unbekannt'}`.substring(0, 100),
-        value: `${t.id}`
-      }));
-
-      const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`merge_ticket_select:${ticket.id}`)
-        .setPlaceholder('Wähle ein Ticket zum Zusammenführen...')
-        .addOptions(ticketOptions);
-
-      const selectRow = new ActionRowBuilder().addComponents(selectMenu);
-
-      const mergeEmbed = createStyledEmbed({
-        emoji: '🔗',
-        title: 'Tickets zusammenführen',
-        description: 'Wähle das Ticket, das in dieses Ticket zusammengeführt werden soll.\n\nDas ausgewählte Ticket wird archiviert und alle Benutzer, Notizen und ein Nachrichten-Log werden übernommen.',
-        fields: [
-          { name: 'Ziel-Ticket', value: `#${ticket.id}`, inline: true }
-        ],
-        color: '#5865F2'
+      await interaction.reply({
+        embeds: [createStyledEmbed({ emoji: '🔗', title: 'Merge', description: 'Wähle ein Ticket zum Zusammenführen.', color: '#5865F2' })],
+        components: [new ActionRowBuilder().addComponents(new StringSelectMenuBuilder().setCustomId(`merge_ticket_select:${ticket.id}`).setPlaceholder('Ticket wählen...').addOptions(opts))],
+        ephemeral: true
       });
-
-      await interaction.reply({ embeds: [mergeEmbed], components: [selectRow], ephemeral: true });
     }
 
-    // ===== SUBCOMMAND: VOICE-START =====
-    if (subcommand === 'voice-start') {
+    // ===== STANDALONE: ADD =====
+    if (sub === 'add') {
       const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
 
-      if (!isTeam) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur Team-Mitglieder können Voice-Channels erstellen.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
+      const user = interaction.options.getUser('user');
+      const member = interaction.options.getMember('user');
+      if (!member) return interaction.reply({ content: `❌ ${user.tag} nicht auf Server.`, ephemeral: true });
 
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
 
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      if (ticket.voiceChannelId) {
-        const existsEmbed = createStyledEmbed({
-          emoji: 'ℹ️',
-          title: 'Voice-Channel existiert bereits',
-          description: `Für dieses Ticket existiert bereits ein Voice-Channel: <#${ticket.voiceChannelId}>`,
-          color: '#FEE75C'
-        });
-        return interaction.reply({ embeds: [existsEmbed], ephemeral: true });
-      }
-
-      await interaction.deferReply({ ephemeral: true });
-
-      try {
-        const { createVoiceChannel } = require('../voice-support');
-        const voiceChannel = await createVoiceChannel(interaction.guild, ticket, guildId);
-
-        if (!voiceChannel) {
-          throw new Error('Voice channel creation failed');
-        }
-
-        // Update ticket
-        const ticketIndex = tickets.findIndex(t => t.id === ticket.id);
-        tickets[ticketIndex].voiceChannelId = voiceChannel.id;
-        saveTickets(guildId, tickets);
-
-        const successEmbed = createStyledEmbed({
-          emoji: '🎤',
-          title: 'Voice-Support erstellt',
-          description: `Voice-Channel wurde erfolgreich erstellt!`,
-          fields: [
-            { name: 'Channel', value: `<#${voiceChannel.id}>`, inline: true },
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true }
-          ],
-          color: '#57F287'
-        });
-
-        await interaction.channel.send({ embeds: [successEmbed] });
-        await interaction.editReply({ content: `✅ Voice-Channel erstellt: <#${voiceChannel.id}>` });
-
-        logEvent(interaction.guild, `🎤 Voice-Channel für Ticket #${ticket.id} erstellt von <@${interaction.user.id}>`);
-      } catch (err) {
-        console.error('Error creating voice channel:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Erstellen des Voice-Channels.' });
-      }
-    }
-
-    // ===== SUBCOMMAND: VOICE-END =====
-    if (subcommand === 'voice-end') {
-      const isTeam = hasAnyTeamRole(interaction.member, guildId);
-
-      if (!isTeam) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur Team-Mitglieder können Voice-Channels beenden.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
-
-      const tickets = loadTickets(guildId);
-      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
-
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      if (!ticket.voiceChannelId) {
-        const noVoiceEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Voice-Channel',
-          description: 'Für dieses Ticket existiert kein Voice-Channel.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noVoiceEmbed], ephemeral: true });
-      }
-
-      await interaction.deferReply({ ephemeral: true });
-
-      try {
-        const { deleteVoiceChannel } = require('../voice-support');
-        await deleteVoiceChannel(interaction.guild, ticket.voiceChannelId, guildId);
-
-        const successEmbed = createStyledEmbed({
-          emoji: '🔇',
-          title: 'Voice-Support beendet',
-          description: 'Der Voice-Channel wurde gelöscht.',
-          fields: [
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Beendet von', value: `<@${interaction.user.id}>`, inline: true }
-          ],
-          color: '#ED4245'
-        });
-
-        await interaction.channel.send({ embeds: [successEmbed] });
-        await interaction.editReply({ content: '✅ Voice-Channel beendet!' });
-
-        logEvent(interaction.guild, `🔇 Voice-Channel für Ticket #${ticket.id} beendet von <@${interaction.user.id}>`);
-      } catch (err) {
-        console.error('Error ending voice channel:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Beenden des Voice-Channels.' });
-      }
-    }
-
-    // ===== SUBCOMMAND: ADD =====
-    if (subcommand === 'add') {
-      const targetUser = interaction.options.getUser('user');
-      const targetMember = interaction.options.getMember('user');
-
-      // Check if user is team member
-      const isTeam = hasAnyTeamRole(interaction.member, guildId);
-
-      if (!isTeam) {
-        const TEAM_ROLE = getTeamRole(guildId);
-        const teamRole = TEAM_ROLE ? await interaction.guild.roles.fetch(TEAM_ROLE).catch(() => null) : null;
-
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur Team-Mitglieder können Benutzer zu Tickets hinzufügen.',
-          fields: [
-            { name: 'Benötigte Rolle', value: teamRole ? `<@&${TEAM_ROLE}>` : 'Nicht konfiguriert', inline: true }
-          ],
-          color: '#ED4245'
-        });
-
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
-
-      // Check if target user is a member of the guild
-      if (!targetMember) {
-        const notMemberEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Benutzer nicht gefunden',
-          description: 'Dieser Benutzer ist nicht auf diesem Server.',
-          fields: [
-            { name: 'User', value: `${targetUser.tag}`, inline: true }
-          ],
-          color: '#ED4245'
-        });
-
-        return interaction.reply({ embeds: [notMemberEmbed], ephemeral: true });
-      }
-
-      // Load tickets and find current ticket
-      const log = loadTickets(guildId);
-      const ticket = log.find(t => t.channelId === interaction.channel.id);
-
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Für diesen Channel wurde kein Ticket-Datensatz gefunden.',
-          color: '#ED4245'
-        });
-
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      // Initialize addedUsers array if not exists
       if (!ticket.addedUsers) ticket.addedUsers = [];
-
-      // Check if user already has access
-      if (ticket.addedUsers.includes(targetUser.id) || ticket.userId === targetUser.id || ticket.claimer === targetUser.id) {
-        const alreadyAccessEmbed = createStyledEmbed({
-          emoji: 'ℹ️',
-          title: 'Bereits vorhanden',
-          description: `<@${targetUser.id}> hat bereits Zugriff auf dieses Ticket.`,
-          fields: [
-            { name: 'User', value: `<@${targetUser.id}>`, inline: true },
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true }
-          ],
-          color: '#FEE75C'
-        });
-
-        return interaction.reply({ embeds: [alreadyAccessEmbed], ephemeral: true });
-      }
+      if (ticket.addedUsers.includes(user.id) || ticket.userId === user.id) return interaction.reply({ content: `ℹ️ <@${user.id}> hat bereits Zugriff.`, ephemeral: true });
 
       try {
-        // Add user to ticket
-        ticket.addedUsers.push(targetUser.id);
-        saveTickets(guildId, log);
-
-        // Update channel permissions
-        await interaction.channel.permissionOverwrites.edit(targetUser.id, {
-          ViewChannel: true,
-          SendMessages: true
-        });
-
-        // Send ephemeral success message to team member
-        const successEmbed = createStyledEmbed({
-          emoji: '✅',
-          title: 'Benutzer hinzugefügt',
-          description: `<@${targetUser.id}> wurde erfolgreich zum Ticket hinzugefügt.`,
-          fields: [
-            { name: 'Hinzugefügt', value: `<@${targetUser.id}>`, inline: true },
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Von', value: `<@${interaction.user.id}>`, inline: true }
-          ],
-          color: '#57F287'
-        });
-
-        await interaction.reply({ embeds: [successEmbed], ephemeral: true });
-
-        // Send public announcement in ticket channel
-        const publicEmbed = createStyledEmbed({
-          emoji: '👥',
-          title: 'Neuer Benutzer hinzugefügt',
-          description: `<@${targetUser.id}> wurde von <@${interaction.user.id}> zum Ticket hinzugefügt und kann nun hier schreiben.`,
-          fields: [
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          ],
-          color: '#57F287'
-        });
-
-        await interaction.channel.send({ embeds: [publicEmbed] });
-
-        // Log event
-        logEvent(interaction.guild, t(guildId, 'logs.user_added', { user: `<@${targetUser.id}>`, id: ticket.id }));
-
-      } catch (err) {
-        console.error('Fehler beim Hinzufügen:', err);
-
-        const errorEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Fehler beim Hinzufügen',
-          description: 'Der Benutzer konnte nicht hinzugefügt werden.',
-          fields: [
-            { name: 'Fehlerdetails', value: `\`\`\`${err.message}\`\`\``, inline: false }
-          ],
-          color: '#ED4245'
-        });
-
-        return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
-      }
+        ticket.addedUsers.push(user.id);
+        saveTickets(guildId, tickets);
+        await interaction.channel.permissionOverwrites.edit(user.id, { ViewChannel: true, SendMessages: true });
+        await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '👥', title: 'User hinzugefügt', description: `<@${user.id}> von <@${interaction.user.id}>`, color: '#57F287' })] });
+        await interaction.reply({ content: `✅ <@${user.id}> hinzugefügt!`, ephemeral: true });
+        logEvent(interaction.guild, `👥 <@${user.id}> zu #${ticket.id} von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.reply({ content: '❌ Fehler.', ephemeral: true }); }
     }
 
-    // ===== SUBCOMMAND: HIDE =====
-    if (subcommand === 'hide') {
-      // Defer reply immediately to prevent timeout
+    // ===== STANDALONE: HIDE =====
+    if (sub === 'hide') {
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      if (ticket.claimer !== interaction.user.id) return interaction.reply({ content: '🚫 Nur Claimer!', ephemeral: true });
+
       await interaction.deferReply();
-
-      // Load tickets and find current ticket
-      const log = loadTickets(guildId);
-      const ticket = log.find(t => t.channelId === interaction.channel.id);
-
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Für diesen Channel wurde kein Ticket-Datensatz gefunden.',
-          color: '#ED4245'
-        });
-
-        return interaction.editReply({ embeds: [noTicketEmbed] });
-      }
-
-      // Check if user is the claimer
-      if (ticket.claimer !== interaction.user.id) {
-        const notClaimerEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur der Claimer kann dieses Ticket verstecken!',
-          fields: [
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Claimer', value: ticket.claimer ? `<@${ticket.claimer}>` : 'Nicht geclaimt', inline: true }
-          ],
-          color: '#ED4245'
-        });
-
-        return interaction.editReply({ embeds: [notClaimerEmbed] });
-      }
-
       try {
-        // Get all team roles
-        const teamRoles = getAllTeamRoles(guildId);
-
-        // Store hidden state in ticket
         ticket.hidden = true;
-        ticket.hiddenAt = Date.now();
-        ticket.hiddenBy = interaction.user.id;
-        saveTickets(guildId, log);
-
-        // Hide channel from all team roles
-        for (const roleId of teamRoles) {
-          await interaction.channel.permissionOverwrites.edit(roleId, {
-            ViewChannel: false
-          }).catch(err => console.error(`Failed to hide from role ${roleId}:`, err));
+        saveTickets(guildId, tickets);
+        for (const r of getAllTeamRoles(guildId)) await interaction.channel.permissionOverwrites.edit(r, { ViewChannel: false }).catch(() => {});
+        for (const u of [ticket.userId, ticket.claimer, ...(ticket.addedUsers || [])]) {
+          if (u) await interaction.channel.permissionOverwrites.edit(u, { ViewChannel: true, SendMessages: true }).catch(() => {});
         }
-
-        // Ensure creator, claimer, and added users can still see
-        const allowedUsers = [ticket.userId, ticket.claimer];
-        if (ticket.addedUsers) {
-          allowedUsers.push(...ticket.addedUsers);
-        }
-
-        for (const userId of allowedUsers) {
-          if (userId) {
-            await interaction.channel.permissionOverwrites.edit(userId, {
-              ViewChannel: true,
-              SendMessages: true
-            }).catch(err => console.error(`Failed to show for user ${userId}:`, err));
-          }
-        }
-
-        const successEmbed = createStyledEmbed({
-          emoji: '🔒',
-          title: 'Ticket versteckt',
-          description: 'Dieses Ticket ist jetzt für alle Team-Mitglieder unsichtbar.',
-          fields: [
-            { name: 'Sichtbar für', value: 'Ersteller, Claimer und hinzugefügte Benutzer', inline: false },
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Versteckt von', value: `<@${interaction.user.id}>`, inline: true },
-            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          ],
-          color: '#FEE75C'
-        });
-
-        await interaction.editReply({ embeds: [successEmbed] });
-
-        // Log event
-        logEvent(interaction.guild, `🔒 **Ticket versteckt:** <@${interaction.user.id}> hat Ticket #${ticket.id} versteckt`);
-
-      } catch (err) {
-        console.error('Fehler beim Verstecken:', err);
-
-        const errorEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Fehler beim Verstecken',
-          description: 'Das Ticket konnte nicht versteckt werden.',
-          fields: [
-            { name: 'Fehlerdetails', value: `\`\`\`${err.message}\`\`\``, inline: false }
-          ],
-          color: '#ED4245'
-        });
-
-        return interaction.editReply({ embeds: [errorEmbed] });
-      }
+        await interaction.editReply({ embeds: [createStyledEmbed({ emoji: '🔒', title: 'Versteckt', color: '#FEE75C' })] });
+        logEvent(interaction.guild, `🔒 #${ticket.id} versteckt von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
     }
 
-    // ===== SUBCOMMAND: UNHIDE =====
-    if (subcommand === 'unhide') {
+    // ===== STANDALONE: UNHIDE =====
+    if (sub === 'unhide') {
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      if (ticket.claimer !== interaction.user.id) return interaction.reply({ content: '🚫 Nur Claimer!', ephemeral: true });
+      if (!ticket.hidden) return interaction.reply({ content: 'ℹ️ Nicht versteckt.', ephemeral: true });
+
       await interaction.deferReply();
-
-      const log = loadTickets(guildId);
-      const ticket = log.find(t => t.channelId === interaction.channel.id);
-
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Für diesen Channel wurde kein Ticket-Datensatz gefunden.',
-          color: '#ED4245'
-        });
-        return interaction.editReply({ embeds: [noTicketEmbed] });
-      }
-
-      if (ticket.claimer !== interaction.user.id) {
-        const notClaimerEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur der Claimer kann dieses Ticket einblenden!',
-          color: '#ED4245'
-        });
-        return interaction.editReply({ embeds: [notClaimerEmbed] });
-      }
-
-      if (!ticket.hidden) {
-        const notHiddenEmbed = createStyledEmbed({
-          emoji: 'ℹ️',
-          title: 'Ticket bereits sichtbar',
-          description: 'Dieses Ticket ist bereits für alle Team-Mitglieder sichtbar.',
-          color: '#FEE75C'
-        });
-        return interaction.editReply({ embeds: [notHiddenEmbed] });
-      }
-
       try {
-        const cfg = readCfg(guildId);
-        const priority = ticket.priority || 0;
-        const priorityRoles = cfg.priorityRoles?.[priority.toString()] || [];
-
         ticket.hidden = false;
-        ticket.unhiddenAt = Date.now();
-        ticket.unhiddenBy = interaction.user.id;
-        saveTickets(guildId, log);
-
-        const rolesToRestore = Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : [cfg.teamRoleId];
-        if (priorityRoles.length > 0) {
-          rolesToRestore.push(...priorityRoles);
-        }
-
-        for (const roleId of rolesToRestore) {
-          if (roleId) {
-            await interaction.channel.permissionOverwrites.edit(roleId, {
-              ViewChannel: true,
-              SendMessages: true,
-              ReadMessageHistory: true
-            }).catch(err => console.error(`Failed to unhide for role ${roleId}:`, err));
-          }
-        }
-
-        const successEmbed = createStyledEmbed({
-          emoji: '👁️',
-          title: 'Ticket wieder sichtbar',
-          description: 'Dieses Ticket ist jetzt wieder für alle Team-Mitglieder sichtbar.',
-          fields: [
-            { name: 'Ticket', value: `#${ticket.id}`, inline: true },
-            { name: 'Eingeblendet von', value: `<@${interaction.user.id}>`, inline: true }
-          ],
-          color: '#57F287'
-        });
-
-        await interaction.editReply({ embeds: [successEmbed] });
-        logEvent(interaction.guild, `👁️ Ticket #${ticket.id} von <@${interaction.user.id}> wieder sichtbar gemacht`);
-      } catch (err) {
-        console.error('Fehler beim Einblenden:', err);
-        const errorEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Fehler beim Einblenden',
-          description: err.message,
-          color: '#ED4245'
-        });
-        return interaction.editReply({ embeds: [errorEmbed] });
-      }
+        saveTickets(guildId, tickets);
+        const cfg = readCfg(guildId);
+        const roles = [...(Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : [cfg.teamRoleId]), ...(cfg.priorityRoles?.[ticket.priority?.toString()] || [])];
+        for (const r of roles) if (r) await interaction.channel.permissionOverwrites.edit(r, { ViewChannel: true, SendMessages: true }).catch(() => {});
+        await interaction.editReply({ embeds: [createStyledEmbed({ emoji: '👁️', title: 'Sichtbar', color: '#57F287' })] });
+        logEvent(interaction.guild, `👁️ #${ticket.id} sichtbar von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
     }
 
-    // ===== SUBCOMMAND: SPLIT =====
-    if (subcommand === 'split') {
-      const reason = interaction.options.getString('reason');
+    // ===== STANDALONE: SPLIT =====
+    if (sub === 'split') {
       const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
 
-      if (!isTeam) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Zugriff verweigert',
-          description: 'Nur Team-Mitglieder können Tickets splitten!',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
-
-      const log = loadTickets(guildId);
-      const ticket = log.find(t => t.channelId === interaction.channel.id);
-
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Für diesen Channel wurde kein Ticket-Datensatz gefunden.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
+      const reason = interaction.options.getString('reason');
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
 
       await interaction.deferReply();
-
       try {
-        const cfg = readCfg(guildId);
-        const counterPath = path.join(CONFIG_DIR, `${guildId}_counter.json`);
-        let counter = { count: 0 };
-        if (fs.existsSync(counterPath)) {
-          counter = JSON.parse(fs.readFileSync(counterPath, 'utf8'));
-        }
-        counter.count++;
-        fs.writeFileSync(counterPath, JSON.stringify(counter, null, 2));
-
-        const newTicketNumber = counter.count;
-        const channelName = `ticket-${newTicketNumber}`;
-
-        const newChannel = await interaction.guild.channels.create({
-          name: channelName,
-          type: 0,
-          parent: interaction.channel.parentId,
+        const num = nextTicket(guildId);
+        const ch = await interaction.guild.channels.create({
+          name: `ticket-${num}`, type: 0, parent: interaction.channel.parentId,
           permissionOverwrites: [
             { id: interaction.guild.id, deny: ['ViewChannel'] },
-            { id: ticket.userId, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] },
-            { id: interaction.user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] }
+            { id: ticket.userId, allow: ['ViewChannel', 'SendMessages'] },
+            { id: interaction.user.id, allow: ['ViewChannel', 'SendMessages'] }
           ]
         });
+        for (const r of getAllTeamRoles(guildId)) await ch.permissionOverwrites.edit(r, { ViewChannel: true, SendMessages: true }).catch(() => {});
 
-        const teamRoles = getAllTeamRoles(guildId);
-        for (const roleId of teamRoles) {
-          await newChannel.permissionOverwrites.edit(roleId, {
-            ViewChannel: true,
-            SendMessages: true,
-            ReadMessageHistory: true
-          }).catch(() => {});
-        }
-
-        const newTicket = {
-          id: newTicketNumber,
-          channelId: newChannel.id,
-          userId: ticket.userId,
-          topic: reason,
-          status: 'open',
-          claimed: true,
-          claimer: interaction.user.id,
-          priority: ticket.priority || 0,
-          createdAt: new Date().toISOString(),
-          splitFrom: ticket.id,
-          addedUsers: ticket.addedUsers || []
-        };
-
+        tickets.push({ id: num, channelId: ch.id, userId: ticket.userId, topic: reason, status: 'open', claimer: interaction.user.id, priority: ticket.priority || 0, createdAt: new Date().toISOString(), splitFrom: ticket.id, addedUsers: ticket.addedUsers || [] });
         if (!ticket.splitTo) ticket.splitTo = [];
-        ticket.splitTo.push(newTicketNumber);
-
-        log.push(newTicket);
-        saveTickets(guildId, log);
-
-        const newTicketEmbed = createStyledEmbed({
-          emoji: '🔀',
-          title: `Ticket #${newTicketNumber} (Split)`,
-          description: `Dieses Ticket wurde aus Ticket #${ticket.id} abgespalten.\n\nGrund: ${reason}\n\nUrsprüngliches Ticket: <#${ticket.channelId}>\nErsteller: <@${ticket.userId}>`,
-          fields: [
-            { name: 'Split von', value: `<@${interaction.user.id}>`, inline: true },
-            { name: 'Erstellt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          ],
-          color: '#5865F2',
-          footer: 'Quantix Tickets • Ticket Split'
-        });
-
-        await newChannel.send({ content: `<@${ticket.userId}>`, embeds: [newTicketEmbed] });
-
-        const splitNotifyEmbed = createStyledEmbed({
-          emoji: '🔀',
-          title: 'Ticket wurde gesplittet',
-          description: `Ein neues Ticket wurde aus diesem Ticket erstellt.\n\nNeues Ticket: <#${newChannel.id}> (#${newTicketNumber})\nGrund: ${reason}`,
-          fields: [
-            { name: 'Gesplittet von', value: `<@${interaction.user.id}>`, inline: true }
-          ],
-          color: '#5865F2'
-        });
-
-        await interaction.editReply({ embeds: [splitNotifyEmbed] });
-        logEvent(interaction.guild, `🔀 Ticket #${ticket.id} in #${newTicketNumber} gesplittet von <@${interaction.user.id}> (Grund: ${reason})`);
-      } catch (err) {
-        console.error('Fehler beim Splitten:', err);
-        const errorEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Fehler beim Splitten',
-          description: err.message,
-          color: '#ED4245'
-        });
-        return interaction.editReply({ embeds: [errorEmbed] });
-      }
-    }
-
-    // ===== SUBCOMMAND: BLOCK =====
-    if (subcommand === 'block') {
-      const isTeam = hasAnyTeamRole(interaction.member, guildId);
-      const tickets = loadTickets(guildId);
-      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
-
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      const isClaimer = ticket.claimer === interaction.user.id;
-      if (!isTeam && !isClaimer) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Keine Berechtigung',
-          description: 'Nur Team-Mitglieder oder der Claimer können das Ticket sperren.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
-
-      if (ticket.blocked) {
-        const alreadyBlockedEmbed = createStyledEmbed({
-          emoji: '🔒',
-          title: 'Bereits gesperrt',
-          description: 'Dieses Ticket ist bereits gesperrt.',
-          color: '#FEE75C'
-        });
-        return interaction.reply({ embeds: [alreadyBlockedEmbed], ephemeral: true });
-      }
-
-      await interaction.reply({ content: '🔒 Ticket wird gesperrt...', ephemeral: true });
-
-      try {
-        await interaction.channel.permissionOverwrites.edit(interaction.guild.id, { SendMessages: false });
-
-        const ticketIndex = tickets.findIndex(t => t.channelId === interaction.channel.id);
-        tickets[ticketIndex].blocked = true;
-        tickets[ticketIndex].blockedAt = Date.now();
-        tickets[ticketIndex].blockedBy = interaction.user.id;
+        ticket.splitTo.push(num);
         saveTickets(guildId, tickets);
 
-        const blockEmbed = createStyledEmbed({
-          emoji: '🔒',
-          title: 'Ticket gesperrt',
-          description: 'Dieses Ticket wurde gesperrt.\n\nEs können keine Nachrichten mehr gesendet werden.',
-          fields: [
-            { name: 'Ticket', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
-            { name: 'Gesperrt von', value: `<@${interaction.user.id}>`, inline: true },
-            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          ],
-          color: '#ED4245',
-          footer: 'Quantix Tickets • Ticket gesperrt'
-        });
-
-        await interaction.channel.send({ embeds: [blockEmbed] });
-        logEvent(interaction.guild, `🔒 Ticket #${ticket.id} wurde von <@${interaction.user.id}> gesperrt`);
-        await interaction.editReply({ content: '✅ Ticket wurde gesperrt!' });
-      } catch (err) {
-        console.error('Error blocking ticket:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Sperren des Tickets.' });
-      }
+        await ch.send({ content: `<@${ticket.userId}>`, embeds: [createStyledEmbed({ emoji: '🔀', title: `Split #${num}`, description: `Aus #${ticket.id}\n**Grund:** ${reason}`, color: '#5865F2' })] });
+        await interaction.editReply({ embeds: [createStyledEmbed({ emoji: '🔀', title: 'Gesplittet', description: `<#${ch.id}>`, color: '#5865F2' })] });
+        logEvent(interaction.guild, `🔀 #${ticket.id} → #${num} von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
     }
 
-    // ===== SUBCOMMAND: UNBLOCK =====
-    if (subcommand === 'unblock') {
-      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+    // ===== STANDALONE: BLOCK =====
+    if (sub === 'block') {
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam && ticket.claimer !== interaction.user.id) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
+      if (ticket.blocked) return interaction.reply({ content: '🔒 Bereits gesperrt.', ephemeral: true });
 
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
+      await interaction.deferReply({ ephemeral: true });
+      try {
+        await interaction.channel.permissionOverwrites.edit(interaction.guild.id, { SendMessages: false });
+        ticket.blocked = true;
+        saveTickets(guildId, tickets);
+        await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '🔒', title: 'Gesperrt', color: '#ED4245' })] });
+        await interaction.editReply({ content: '✅ Gesperrt!' });
+        logEvent(interaction.guild, `🔒 #${ticket.id} gesperrt von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
+    }
 
-      const isClaimer = ticket.claimer === interaction.user.id;
-      if (!isTeam && !isClaimer) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Keine Berechtigung',
-          description: 'Nur Team-Mitglieder oder der Claimer können das Ticket entsperren.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
+    // ===== STANDALONE: UNBLOCK =====
+    if (sub === 'unblock') {
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam && ticket.claimer !== interaction.user.id) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
+      if (!ticket.blocked) return interaction.reply({ content: '🔓 Nicht gesperrt.', ephemeral: true });
 
-      if (!ticket.blocked) {
-        const notBlockedEmbed = createStyledEmbed({
-          emoji: '🔓',
-          title: 'Nicht gesperrt',
-          description: 'Dieses Ticket ist nicht gesperrt.',
-          color: '#F59E0B'
-        });
-        return interaction.reply({ embeds: [notBlockedEmbed], ephemeral: true });
-      }
-
-      await interaction.reply({ content: '🔓 Ticket wird entsperrt...', ephemeral: true });
-
+      await interaction.deferReply({ ephemeral: true });
       try {
         const cfg = readCfg(guildId);
-        const permissions = [
+        const perms = [
           { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
           { id: ticket.userId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }
         ];
-
-        if (ticket.addedUsers && Array.isArray(ticket.addedUsers)) {
-          ticket.addedUsers.forEach(uid => {
-            permissions.push({ id: uid, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
-          });
-        }
-
-        if (ticket.claimer) {
-          permissions.push({ id: ticket.claimer, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
-        }
-
-        if (!ticket.claimer) {
-          const teamRoleId = cfg.teamRoleId;
-          const teamRoleIds = Array.isArray(teamRoleId) ? teamRoleId : [teamRoleId];
-          for (const roleId of teamRoleIds) {
-            if (roleId && roleId.trim()) {
-              permissions.push({ id: roleId, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
-            }
-          }
-        }
-
-        await interaction.channel.permissionOverwrites.set(permissions);
-
-        const ticketIndex = tickets.findIndex(t => t.channelId === interaction.channel.id);
-        tickets[ticketIndex].blocked = false;
-        tickets[ticketIndex].unblockedAt = Date.now();
-        tickets[ticketIndex].unblockedBy = interaction.user.id;
+        (ticket.addedUsers || []).forEach(u => perms.push({ id: u, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }));
+        if (ticket.claimer) perms.push({ id: ticket.claimer, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+        else (Array.isArray(cfg.teamRoleId) ? cfg.teamRoleId : [cfg.teamRoleId]).forEach(r => r && perms.push({ id: r, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] }));
+        await interaction.channel.permissionOverwrites.set(perms);
+        ticket.blocked = false;
         saveTickets(guildId, tickets);
-
-        const unblockEmbed = createStyledEmbed({
-          emoji: '🔓',
-          title: 'Ticket entsperrt',
-          description: 'Dieses Ticket wurde entsperrt.\n\nNachrichten können wieder gesendet werden.',
-          fields: [
-            { name: 'Ticket', value: `#${String(ticket.id).padStart(5, '0')}`, inline: true },
-            { name: 'Entsperrt von', value: `<@${interaction.user.id}>`, inline: true },
-            { name: 'Zeitpunkt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-          ],
-          color: '#57F287',
-          footer: 'Quantix Tickets • Ticket entsperrt'
-        });
-
-        await interaction.channel.send({ embeds: [unblockEmbed] });
-        logEvent(interaction.guild, `🔓 Ticket #${ticket.id} wurde von <@${interaction.user.id}> entsperrt`);
-        await interaction.editReply({ content: '✅ Ticket wurde entsperrt!' });
-      } catch (err) {
-        console.error('Error unblocking ticket:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Entsperren des Tickets.' });
-      }
+        await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '🔓', title: 'Entsperrt', color: '#57F287' })] });
+        await interaction.editReply({ content: '✅ Entsperrt!' });
+        logEvent(interaction.guild, `🔓 #${ticket.id} entsperrt von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
     }
 
-    // ===== SUBCOMMAND: RENAME =====
-    if (subcommand === 'rename') {
-      const newName = interaction.options.getString('name');
-      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+    // ===== STANDALONE: RENAME =====
+    if (sub === 'rename') {
       const tickets = loadTickets(guildId);
       const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam && ticket.claimer !== interaction.user.id && ticket.userId !== interaction.user.id) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
 
-      if (!ticket) {
-        const noTicketEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Kein Ticket gefunden',
-          description: 'Dieser Channel ist kein Ticket.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noTicketEmbed], ephemeral: true });
-      }
-
-      const isClaimer = ticket.claimer === interaction.user.id;
-      const isCreator = ticket.userId === interaction.user.id;
-      if (!isTeam && !isClaimer && !isCreator) {
-        const noPermEmbed = createStyledEmbed({
-          emoji: '🚫',
-          title: 'Keine Berechtigung',
-          description: 'Nur Team-Mitglieder, der Claimer oder der Ticket-Ersteller können das Ticket umbenennen.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [noPermEmbed], ephemeral: true });
-      }
-
-      const sanitizedName = newName
-        .toLowerCase()
-        .replace(/[^a-z0-9äöüß\-_]/gi, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '')
-        .substring(0, 100);
-
-      if (!sanitizedName || sanitizedName.length < 1) {
-        const invalidNameEmbed = createStyledEmbed({
-          emoji: '❌',
-          title: 'Ungültiger Name',
-          description: 'Der Channel-Name enthält keine gültigen Zeichen.',
-          color: '#ED4245'
-        });
-        return interaction.reply({ embeds: [invalidNameEmbed], ephemeral: true });
-      }
+      const name = interaction.options.getString('name').toLowerCase().replace(/[^a-z0-9äöüß\-_]/gi, '-').replace(/-+/g, '-').substring(0, 100);
+      if (!name) return interaction.reply({ content: '❌ Ungültiger Name.', ephemeral: true });
 
       await interaction.deferReply({ ephemeral: true });
-
       try {
-        const oldName = interaction.channel.name;
-        await interaction.channel.setName(sanitizedName);
-
-        const ticketIndex = tickets.findIndex(t => t.channelId === interaction.channel.id);
-        tickets[ticketIndex].renamedAt = Date.now();
-        tickets[ticketIndex].renamedBy = interaction.user.id;
-        tickets[ticketIndex].previousName = oldName;
+        const old = interaction.channel.name;
+        await interaction.channel.setName(name);
+        ticket.previousName = old;
         saveTickets(guildId, tickets);
-
-        const renameEmbed = createStyledEmbed({
-          emoji: '✏️',
-          title: 'Ticket umbenannt',
-          description: `Der Channel wurde umbenannt.`,
-          fields: [
-            { name: 'Alter Name', value: `\`${oldName}\``, inline: true },
-            { name: 'Neuer Name', value: `\`${sanitizedName}\``, inline: true },
-            { name: 'Umbenannt von', value: `<@${interaction.user.id}>`, inline: true }
-          ],
-          color: '#5865F2',
-          footer: 'Quantix Tickets'
-        });
-
-        await interaction.channel.send({ embeds: [renameEmbed] });
-        logEvent(interaction.guild, `✏️ Ticket #${ticket.id} von \`${oldName}\` zu \`${sanitizedName}\` umbenannt von <@${interaction.user.id}>`);
-        await interaction.editReply({ content: `✅ Channel wurde zu \`${sanitizedName}\` umbenannt!` });
-      } catch (err) {
-        console.error('Error renaming ticket:', err);
-        await interaction.editReply({ content: '❌ Fehler beim Umbenennen des Tickets. Möglicherweise Rate-Limit erreicht.' });
-      }
+        await interaction.channel.send({ embeds: [createStyledEmbed({ emoji: '✏️', title: 'Umbenannt', fields: [{ name: 'Vorher', value: old, inline: true }, { name: 'Jetzt', value: name, inline: true }], color: '#5865F2' })] });
+        await interaction.editReply({ content: `✅ \`${name}\`` });
+        logEvent(interaction.guild, `✏️ #${ticket.id}: ${old} → ${name} von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler (Rate-Limit?).' }); }
     }
 
-    // Forward other subcommands to existing handlers or implement as needed
-    // (blacklist-*, forward, note-*, tag-*, department-*, pause, resume, open-as)
-    // These would follow the same pattern as above
-  },
+    // ===== STANDALONE: PAUSE =====
+    if (sub === 'pause') {
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      ticket.autoClosePaused = true;
+      saveTickets(guildId, tickets);
+      await interaction.reply({ embeds: [createStyledEmbed({ emoji: '⏸️', title: 'Auto-Close pausiert', color: '#FEE75C' })] });
+      logEvent(interaction.guild, `⏸️ #${ticket.id} Auto-Close pausiert von <@${interaction.user.id}>`);
+    }
+
+    // ===== STANDALONE: RESUME =====
+    if (sub === 'resume') {
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+      ticket.autoClosePaused = false;
+      saveTickets(guildId, tickets);
+      await interaction.reply({ embeds: [createStyledEmbed({ emoji: '▶️', title: 'Auto-Close fortgesetzt', color: '#57F287' })] });
+      logEvent(interaction.guild, `▶️ #${ticket.id} Auto-Close fortgesetzt von <@${interaction.user.id}>`);
+    }
+
+    // ===== STANDALONE: FORWARD =====
+    if (sub === 'forward') {
+      const isTeam = hasAnyTeamRole(interaction.member, guildId);
+      if (!isTeam) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Zugriff verweigert', color: '#ED4245' })], ephemeral: true });
+
+      const user = interaction.options.getUser('user');
+      const role = interaction.options.getRole('role');
+      if (!user && !role) return interaction.reply({ content: '❌ User oder Rolle angeben!', ephemeral: true });
+
+      const tickets = loadTickets(guildId);
+      const ticket = tickets.find(t => t.channelId === interaction.channel.id);
+      if (!ticket) return interaction.reply({ embeds: [createStyledEmbed({ emoji: '❌', title: 'Kein Ticket', color: '#ED4245' })], ephemeral: true });
+
+      await interaction.deferReply();
+      try {
+        if (user) await interaction.channel.permissionOverwrites.edit(user.id, { ViewChannel: true, SendMessages: true });
+        if (role) await interaction.channel.permissionOverwrites.edit(role.id, { ViewChannel: true, SendMessages: true });
+        saveTickets(guildId, tickets);
+        await interaction.editReply({ embeds: [createStyledEmbed({ emoji: '➡️', title: 'Weitergeleitet', description: `An ${user ? `<@${user.id}>` : ''}${user && role ? ' & ' : ''}${role ? `<@&${role.id}>` : ''}`, color: '#5865F2' })] });
+        logEvent(interaction.guild, `➡️ #${ticket.id} weitergeleitet von <@${interaction.user.id}>`);
+      } catch (e) { console.error(e); await interaction.editReply({ content: '❌ Fehler.' }); }
+    }
+  }
 };
