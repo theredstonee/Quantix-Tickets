@@ -56,6 +56,22 @@ const { hasFeature, isPremium, getPremiumInfo, getExpiringTrials, wasWarningSent
 const { createStyledEmbed, createQuickEmbed, createStyledMessage, componentsV2Available } = require('./helpers');
 const { readCfg, writeCfg, loadTickets, saveTickets, getNextTicketNumber } = require('./database');
 
+// ===== ORDER SYSTEM =====
+const {
+  ORDER_STATUS,
+  loadOrders,
+  saveOrders,
+  getOrderConfig,
+  saveOrderConfig,
+  getOrderTeamRoles,
+  hasOrderTeamRole,
+  logOrderEvent,
+  nextOrderNumber,
+  createOrderPanel,
+  updateOrderStatus,
+  generateOrderTranscript
+} = require('./commands/order');
+
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
   { dot: '🟢', embedColor: 0x2bd94a, label: 'Grün'   },
@@ -2885,6 +2901,109 @@ client.on(Events.InteractionCreate, async i => {
     } catch (err) {
       console.error('Setup component handler error:', err);
     }
+
+    // ===== ORDER FORM MODAL =====
+    if (i.isModalSubmit() && i.customId === 'order_form_modal') {
+      await i.deferReply({ ephemeral: true });
+      const guildId = i.guild.id;
+
+      try {
+        const orderCfg = getOrderConfig(guildId);
+        const cfg = readCfg(guildId);
+        const formFields = orderCfg.formFields || [{ id: 'order_description', label: 'Bestellung' }];
+
+        const formResponses = {};
+        for (const field of formFields) {
+          try {
+            formResponses[field.label] = i.fields.getTextInputValue(field.id);
+          } catch (e) {}
+        }
+        if (Object.keys(formResponses).length === 0) {
+          try { formResponses['Bestellung'] = i.fields.getTextInputValue('order_description'); } catch (e) {}
+        }
+
+        const orderNumber = nextOrderNumber(guildId);
+
+        const perms = [
+          { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+          { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] }
+        ];
+        const teamRoles = getOrderTeamRoles(guildId);
+        for (const r of teamRoles) {
+          if (r?.trim()) perms.push({ id: r, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] });
+        }
+
+        const channel = await i.guild.channels.create({
+          name: `bestellung-${orderNumber}`,
+          type: ChannelType.GuildText,
+          parent: orderCfg.categoryId || cfg.orderCategoryId,
+          permissionOverwrites: perms
+        });
+
+        const orderEmbed = createStyledEmbed({
+          emoji: '🛒',
+          title: `Bestellung #${orderNumber}`,
+          description: `Neue Bestellung von <@${i.user.id}>`,
+          fields: [
+            { name: 'Status', value: `${ORDER_STATUS.NEW.emoji} ${ORDER_STATUS.NEW.label}`, inline: true },
+            { name: 'Erstellt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
+            ...Object.entries(formResponses).map(([k, v]) => ({ name: k, value: (v || '-').substring(0, 1024), inline: false }))
+          ],
+          color: ORDER_STATUS.NEW.color
+        });
+
+        const statusRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('order_status_processing').setLabel('In Bearbeitung').setStyle(ButtonStyle.Primary).setEmoji('⚙️'),
+          new ButtonBuilder().setCustomId('order_status_shipped').setLabel('Versandt').setStyle(ButtonStyle.Success).setEmoji('📦'),
+          new ButtonBuilder().setCustomId('order_status_completed').setLabel('Abgeschlossen').setStyle(ButtonStyle.Success).setEmoji('✅'),
+          new ButtonBuilder().setCustomId('order_status_cancelled').setLabel('Stornieren').setStyle(ButtonStyle.Danger).setEmoji('❌')
+        );
+        const actionRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('order_finish').setLabel('Mit Datei abschließen').setStyle(ButtonStyle.Success).setEmoji('📄'),
+          new ButtonBuilder().setCustomId('order_add_user').setLabel('User hinzufügen').setStyle(ButtonStyle.Secondary).setEmoji('👥')
+        );
+
+        const msg = await channel.send({
+          content: `<@${i.user.id}> ${teamRoles.map(r => `<@&${r}>`).join(' ')}`,
+          embeds: [orderEmbed],
+          components: [statusRow, actionRow]
+        });
+
+        const orders = loadOrders(guildId);
+        orders.push({
+          id: orderNumber,
+          channelId: channel.id,
+          messageId: msg.id,
+          userId: i.user.id,
+          username: i.user.tag,
+          status: ORDER_STATUS.NEW.key,
+          formResponses,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          statusHistory: [{ status: ORDER_STATUS.NEW.key, changedBy: i.user.id, changedAt: Date.now() }],
+          addedUsers: []
+        });
+        saveOrders(guildId, orders);
+
+        try {
+          await i.user.send({
+            embeds: [createStyledEmbed({ emoji: '🛒', title: 'Bestellung erstellt!', description: `Bestellung **#${orderNumber}** erstellt!\nChannel: <#${channel.id}>`, color: '#57F287', footer: i.guild.name })]
+          }).catch(() => {});
+        } catch (e) {}
+
+        await i.editReply({
+          embeds: [createStyledEmbed({ emoji: '✅', title: 'Bestellung erstellt!', description: `<#${channel.id}>`, color: '#57F287' })]
+        });
+
+        logOrderEvent(i.guild, `🛒 Neue Bestellung #${orderNumber} von <@${i.user.id}>`);
+
+      } catch (err) {
+        console.error('Order creation error:', err);
+        await i.editReply({ content: '❌ Fehler beim Erstellen.' });
+      }
+      return;
+    }
+
     // Maintenance Enable Modal Handler
     if(i.isModalSubmit() && i.customId === 'maintenance_enable_modal') {
       try {
@@ -3167,6 +3286,36 @@ client.on(Events.InteractionCreate, async i => {
     // Department System Menu Handler
     if(i.isStringSelectMenu() && i.customId === 'department_forward_select') {
       return await handleDepartmentForward(i);
+    }
+
+    // ===== ORDER ADD USER SELECT =====
+    if (i.isUserSelectMenu && i.isUserSelectMenu() && i.customId.startsWith('order_add_user_select:')) {
+      const guildId = i.guild.id;
+      const orderId = parseInt(i.customId.split(':')[1]);
+      const selectedUser = i.users.first();
+
+      const orders = loadOrders(guildId);
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return i.update({ content: '❌ Bestellung nicht gefunden.', embeds: [], components: [] });
+
+      if (!order.addedUsers) order.addedUsers = [];
+      if (order.addedUsers.includes(selectedUser.id) || order.userId === selectedUser.id) {
+        return i.update({ embeds: [createStyledEmbed({ emoji: 'ℹ️', title: 'Bereits Zugriff', color: '#FEE75C' })], components: [] });
+      }
+
+      try {
+        const channel = i.guild.channels.cache.get(order.channelId);
+        if (channel) {
+          await channel.permissionOverwrites.edit(selectedUser.id, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true });
+          await channel.send({ embeds: [createStyledEmbed({ emoji: '👥', title: 'User hinzugefügt', description: `<@${selectedUser.id}> wurde hinzugefügt.`, color: '#57F287' })] });
+        }
+        order.addedUsers.push(selectedUser.id);
+        saveOrders(guildId, orders);
+        await i.update({ embeds: [createStyledEmbed({ emoji: '✅', title: 'Hinzugefügt', description: `<@${selectedUser.id}>`, color: '#57F287' })], components: [] });
+      } catch (e) {
+        await i.update({ content: '❌ Fehler.', embeds: [], components: [] });
+      }
+      return;
     }
 
     // Ticket Merge Select Menu Handler
@@ -5075,6 +5224,108 @@ client.on(Events.InteractionCreate, async i => {
           logButtonClick(i.user.id, i.customId);
         }
       }
+
+      // ===== ORDER SYSTEM BUTTONS =====
+      // ORDER CREATE BUTTON
+      if (i.customId === 'order_create') {
+        const guildId = i.guild.id;
+        const orderCfg = getOrderConfig(guildId);
+
+        if (orderCfg.paused) {
+          return i.reply({
+            embeds: [createStyledEmbed({ emoji: '⏸️', title: 'Bestellungen pausiert', description: 'Versuche es später erneut.', color: '#FEE75C' })],
+            ephemeral: true
+          });
+        }
+
+        const orders = loadOrders(guildId);
+        const existing = orders.find(o => o.userId === i.user.id && !['completed', 'cancelled', 'refunded'].includes(o.status));
+        if (existing) {
+          return i.reply({
+            embeds: [createStyledEmbed({ emoji: 'ℹ️', title: 'Offene Bestellung', description: `Du hast bereits eine offene Bestellung: <#${existing.channelId}>`, color: '#FEE75C' })],
+            ephemeral: true
+          });
+        }
+
+        const formFields = orderCfg.formFields || [{ id: 'order_description', label: 'Was möchtest du bestellen?', style: 'paragraph', required: true }];
+        const modal = new ModalBuilder().setCustomId('order_form_modal').setTitle('🛒 Neue Bestellung');
+
+        for (const field of formFields.slice(0, 5)) {
+          const input = new TextInputBuilder()
+            .setCustomId(field.id)
+            .setLabel(field.label)
+            .setStyle(field.style === 'paragraph' ? TextInputStyle.Paragraph : TextInputStyle.Short)
+            .setRequired(field.required !== false)
+            .setMaxLength(field.maxLength || (field.style === 'paragraph' ? 1000 : 100));
+          if (field.placeholder) input.setPlaceholder(field.placeholder);
+          modal.addComponents(new ActionRowBuilder().addComponents(input));
+        }
+
+        return i.showModal(modal);
+      }
+
+      // ORDER STATUS BUTTONS
+      if (i.customId.startsWith('order_status_')) {
+        const guildId = i.guild.id;
+        const newStatus = i.customId.replace('order_status_', '');
+
+        if (!hasOrderTeamRole(i.member, guildId)) {
+          return i.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Keine Berechtigung', color: '#ED4245' })], ephemeral: true });
+        }
+
+        const orders = loadOrders(guildId);
+        const order = orders.find(o => o.channelId === i.channel.id);
+        if (!order) return i.reply({ content: '❌ Keine Bestellung.', ephemeral: true });
+
+        await i.deferReply({ ephemeral: true });
+        await updateOrderStatus(i.guild, order, newStatus, i.user, guildId);
+        const info = Object.values(ORDER_STATUS).find(s => s.key === newStatus);
+        await i.editReply({ embeds: [createStyledEmbed({ emoji: '✅', title: 'Status geändert', description: `${info.emoji} ${info.label}`, color: info.color })] });
+        return;
+      }
+
+      // ORDER FINISH BUTTON
+      if (i.customId === 'order_finish') {
+        const guildId = i.guild.id;
+
+        if (!hasOrderTeamRole(i.member, guildId)) {
+          return i.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Keine Berechtigung', color: '#ED4245' })], ephemeral: true });
+        }
+
+        const orders = loadOrders(guildId);
+        const order = orders.find(o => o.channelId === i.channel.id);
+        if (!order) return i.reply({ content: '❌ Keine Bestellung.', ephemeral: true });
+
+        return i.reply({
+          embeds: [createStyledEmbed({ emoji: '📄', title: 'Mit Datei abschließen', description: 'Nutze `/order finish` mit einer Datei um die Bestellung abzuschließen und das Produkt zu senden.', color: '#5865F2' })],
+          ephemeral: true
+        });
+      }
+
+      // ORDER ADD USER BUTTON
+      if (i.customId === 'order_add_user') {
+        const guildId = i.guild.id;
+
+        if (!hasOrderTeamRole(i.member, guildId)) {
+          return i.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Keine Berechtigung', color: '#ED4245' })], ephemeral: true });
+        }
+
+        const orders = loadOrders(guildId);
+        const order = orders.find(o => o.channelId === i.channel.id);
+        if (!order) return i.reply({ content: '❌ Keine Bestellung.', ephemeral: true });
+
+        const { UserSelectMenuBuilder } = require('discord.js');
+        const select = new UserSelectMenuBuilder()
+          .setCustomId(`order_add_user_select:${order.id}`)
+          .setPlaceholder('User auswählen...');
+
+        return i.reply({
+          embeds: [createStyledEmbed({ emoji: '👥', title: 'User hinzufügen', color: '#5865F2' })],
+          components: [new ActionRowBuilder().addComponents(select)],
+          ephemeral: true
+        });
+      }
+      // ===== END ORDER SYSTEM BUTTONS =====
 
       // FAQ Button Handlers
       if(i.customId.startsWith('faq_solved:')){
