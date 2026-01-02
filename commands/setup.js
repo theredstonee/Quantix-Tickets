@@ -16,6 +16,13 @@ const {
 
 const { readCfg, writeCfg } = require("../database");
 
+// ===== ORDER SYSTEM IMPORTS =====
+const {
+  getOrderConfig,
+  saveOrderConfig,
+  createOrderPanel,
+} = require("./order");
+
 // ============================================================
 // CONSTANTS
 // ============================================================
@@ -29,6 +36,7 @@ const CATEGORIES = [
   { value: "formfields", label: "Formular-Felder", emoji: "📄", description: "Eingabefelder für Tickets" },
   { value: "autoclose", label: "Auto-Close", emoji: "⏰", description: "Automatisches Schließen" },
   { value: "supporttimes", label: "Support-Zeiten", emoji: "🕒", description: "Wochentags-Zeiten festlegen" },
+  { value: "orders", label: "Bestellsystem", emoji: "🛒", description: "Bestellungen konfigurieren" },
 ];
 
 const DAY_OPTIONS = [
@@ -166,6 +174,10 @@ function buildMainEmbed(cfg) {
   const panelChannelId = sanitizeSnowflake(cfg.panelChannelId);
   const topicsCount = Array.isArray(cfg.topics) ? cfg.topics.length : 0;
 
+  // Order System Status
+  const orderCfg = cfg.orderSystem || {};
+  const orderStatus = orderCfg.paused ? "⏸️ Pausiert" : (orderCfg.categoryId ? "✅ Aktiv" : "❌ Nicht konfiguriert");
+
   return new EmbedBuilder()
     .setColor(0x5865f2)
     .setTitle("⚙️ Setup & Konfiguration")
@@ -176,7 +188,8 @@ function buildMainEmbed(cfg) {
       { name: "📢 Panel-Channel", value: panelChannelId ? `<#${panelChannelId}>` : "❌ Nicht konfiguriert", inline: true },
       { name: "📋 Topics", value: topicsCount ? `${topicsCount} Thema(en)` : "❌ Keine Topics", inline: true },
       { name: "📄 Formular-Felder", value: `${(cfg.formFields || []).length} Feld(er)`, inline: true },
-      { name: "⏰ Auto-Close", value: cfg.autoClose?.enabled ? `✅ ${cfg.autoClose.inactiveHours || 72}h` : "❌ Deaktiviert", inline: true }
+      { name: "⏰ Auto-Close", value: cfg.autoClose?.enabled ? `✅ ${cfg.autoClose.inactiveHours || 72}h` : "❌ Deaktiviert", inline: true },
+      { name: "🛒 Bestellsystem", value: orderStatus, inline: true }
     )
     .setFooter({ text: "Quantix Tickets • Setup" })
     .setTimestamp();
@@ -354,6 +367,43 @@ function buildSupportTimesEmbed(cfg) {
   }
 
   return embed;
+}
+
+// ===== ORDER SYSTEM EMBED =====
+function buildOrdersEmbed(cfg) {
+  const orderCfg = cfg.orderSystem || {};
+  const ticketCfg = cfg;
+
+  const categoryId = sanitizeSnowflake(orderCfg.categoryId);
+  const logChannelId = sanitizeSnowflake(orderCfg.logChannelId || ticketCfg.logChannelId);
+  const transcriptChannelId = sanitizeSnowflake(orderCfg.transcriptChannelId || ticketCfg.transcriptChannelId);
+  const archiveCategoryId = sanitizeSnowflake(orderCfg.archiveCategoryId);
+  
+  const teamRoleId = orderCfg.teamRoleId || ticketCfg.teamRoleId;
+  const roleMentions = (Array.isArray(teamRoleId) ? teamRoleId : teamRoleId ? [teamRoleId] : [])
+    .map((id) => sanitizeSnowflake(id))
+    .filter(Boolean)
+    .map((id) => `<@&${id}>`)
+    .join(", ") || "(Ticket-Team)";
+
+  const formFieldsCount = (orderCfg.formFields || []).length;
+  const panelEmbed = orderCfg.panelEmbed || {};
+
+  return new EmbedBuilder()
+    .setColor(orderCfg.paused ? 0xf97316 : 0x5865f2)
+    .setTitle("🛒 Bestellsystem")
+    .setDescription("Konfiguriere das Bestellsystem für deinen Server.\nBestellungen funktionieren wie Tickets mit Status-Tracking und Transcripts.")
+    .addFields(
+      { name: "⏸️ Status", value: orderCfg.paused ? "⏸️ Pausiert" : "▶️ Aktiv", inline: true },
+      { name: "📁 Bestell-Kategorie", value: categoryId ? `<#${categoryId}>` : "❌ Nicht konfiguriert", inline: true },
+      { name: "👥 Team-Rolle", value: roleMentions, inline: true },
+      { name: "📋 Log-Channel", value: logChannelId ? `<#${logChannelId}>` : "❌ Nicht konfiguriert", inline: true },
+      { name: "📄 Transcript-Channel", value: transcriptChannelId ? `<#${transcriptChannelId}>` : "❌ Nicht konfiguriert", inline: true },
+      { name: "📦 Archiv-Kategorie", value: archiveCategoryId ? `<#${archiveCategoryId}>` : "❌ Löschen nach Abschluss", inline: true },
+      { name: "📝 Formular-Felder", value: formFieldsCount ? `${formFieldsCount} Feld(er)` : "1 Standard-Feld", inline: true },
+      { name: "🎨 Panel-Titel", value: panelEmbed.title || "🛒 Bestellsystem", inline: true }
+    )
+    .setFooter({ text: "Nutze /order panel um das Bestell-Panel zu senden" });
 }
 
 // ============================================================
@@ -652,6 +702,102 @@ function buildSupportTimesComponents(cfg) {
   ];
 }
 
+// ===== ORDER SYSTEM COMPONENTS =====
+function buildOrdersComponents(cfg) {
+  const orderCfg = cfg.orderSystem || {};
+
+  return [
+    buildCategoryMenu("orders"),
+    new ActionRowBuilder().addComponents(
+      (() => {
+        const builder = new ChannelSelectMenuBuilder()
+          .setCustomId("setup_order_category")
+          .setPlaceholder("📁 Bestell-Kategorie auswählen")
+          .setChannelTypes(ChannelType.GuildCategory)
+          .setMinValues(0)
+          .setMaxValues(1);
+        const categoryId = sanitizeSnowflake(orderCfg.categoryId);
+        if (categoryId) builder.setDefaultChannels([categoryId]);
+        return builder;
+      })()
+    ),
+    new ActionRowBuilder().addComponents(
+      (() => {
+        const teamRoleId = orderCfg.teamRoleId || cfg.teamRoleId;
+        const roleIds = (Array.isArray(teamRoleId) ? teamRoleId : teamRoleId ? [teamRoleId] : [])
+          .map((id) => sanitizeSnowflake(id))
+          .filter(Boolean);
+
+        const builder = new RoleSelectMenuBuilder()
+          .setCustomId("setup_order_team_role")
+          .setPlaceholder("👥 Team-Rolle für Bestellungen")
+          .setMinValues(0)
+          .setMaxValues(5);
+        if (roleIds.length) builder.setDefaultRoles(roleIds.slice(0, 5));
+        return builder;
+      })()
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("setup_order_page2").setLabel("Channels & Mehr ▶").setStyle(ButtonStyle.Primary).setEmoji("📢"),
+      new ButtonBuilder().setCustomId("setup_order_toggle").setLabel(orderCfg.paused ? "Fortsetzen" : "Pausieren").setStyle(orderCfg.paused ? ButtonStyle.Success : ButtonStyle.Danger).setEmoji(orderCfg.paused ? "▶️" : "⏸️"),
+      new ButtonBuilder().setCustomId("setup_back").setLabel("Zurück").setStyle(ButtonStyle.Secondary).setEmoji("◀️")
+    ),
+  ];
+}
+
+function buildOrdersPage2Components(cfg) {
+  const orderCfg = cfg.orderSystem || {};
+
+  return [
+    buildCategoryMenu("orders"),
+    new ActionRowBuilder().addComponents(
+      (() => {
+        const builder = new ChannelSelectMenuBuilder()
+          .setCustomId("setup_order_log_channel")
+          .setPlaceholder("📋 Log-Channel für Bestellungen")
+          .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+          .setMinValues(0)
+          .setMaxValues(1);
+        const logId = sanitizeSnowflake(orderCfg.logChannelId);
+        if (logId) builder.setDefaultChannels([logId]);
+        return builder;
+      })()
+    ),
+    new ActionRowBuilder().addComponents(
+      (() => {
+        const builder = new ChannelSelectMenuBuilder()
+          .setCustomId("setup_order_transcript_channel")
+          .setPlaceholder("📄 Transcript-Channel für Bestellungen")
+          .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+          .setMinValues(0)
+          .setMaxValues(1);
+        const transcriptId = sanitizeSnowflake(orderCfg.transcriptChannelId);
+        if (transcriptId) builder.setDefaultChannels([transcriptId]);
+        return builder;
+      })()
+    ),
+    new ActionRowBuilder().addComponents(
+      (() => {
+        const builder = new ChannelSelectMenuBuilder()
+          .setCustomId("setup_order_archive_category")
+          .setPlaceholder("📦 Archiv-Kategorie (optional)")
+          .setChannelTypes(ChannelType.GuildCategory)
+          .setMinValues(0)
+          .setMaxValues(1);
+        const archiveId = sanitizeSnowflake(orderCfg.archiveCategoryId);
+        if (archiveId) builder.setDefaultChannels([archiveId]);
+        return builder;
+      })()
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("setup_order_page1").setLabel("◀ Zurück").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("setup_order_panel_edit").setLabel("Panel bearbeiten").setStyle(ButtonStyle.Secondary).setEmoji("🎨"),
+      new ButtonBuilder().setCustomId("setup_order_form_fields").setLabel("Formular-Felder").setStyle(ButtonStyle.Secondary).setEmoji("📝"),
+      new ButtonBuilder().setCustomId("setup_back").setLabel("Hauptmenü").setStyle(ButtonStyle.Secondary).setEmoji("🏠")
+    ),
+  ];
+}
+
 function buildMainComponents() {
   return [
     buildCategoryMenu(null),
@@ -774,6 +920,10 @@ async function handleComponent(interaction) {
         embed = buildSupportTimesEmbed(cfg);
         components = buildSupportTimesComponents(cfg);
         break;
+      case "orders":
+        embed = buildOrdersEmbed(cfg);
+        components = buildOrdersComponents(cfg);
+        break;
       default:
         embed = buildMainEmbed(cfg);
         components = buildMainComponents();
@@ -834,6 +984,14 @@ async function handleComponent(interaction) {
       await interaction.update({ embeds: [buildPriorityEmbed(cfg)], components: buildPriorityComponents(cfg) });
       return true;
     }
+    // ===== ORDER TEAM ROLE =====
+    if (customId === "setup_order_team_role") {
+      if (!cfg.orderSystem) cfg.orderSystem = {};
+      cfg.orderSystem.teamRoleId = interaction.values || [];
+      writeCfg(guildId, cfg);
+      await interaction.update({ embeds: [buildOrdersEmbed(cfg)], components: buildOrdersComponents(cfg) });
+      return true;
+    }
   }
 
   if (interaction.isChannelSelectMenu()) {
@@ -862,6 +1020,35 @@ async function handleComponent(interaction) {
       await interaction.update({ embeds: [buildBasisEmbed(cfg)], components: buildBasisPage2Components(cfg) });
       return true;
     }
+    // ===== ORDER CHANNEL SELECTS =====
+    if (customId === "setup_order_category") {
+      if (!cfg.orderSystem) cfg.orderSystem = {};
+      cfg.orderSystem.categoryId = interaction.values?.[0] || "";
+      writeCfg(guildId, cfg);
+      await interaction.update({ embeds: [buildOrdersEmbed(cfg)], components: buildOrdersComponents(cfg) });
+      return true;
+    }
+    if (customId === "setup_order_log_channel") {
+      if (!cfg.orderSystem) cfg.orderSystem = {};
+      cfg.orderSystem.logChannelId = interaction.values?.[0] || "";
+      writeCfg(guildId, cfg);
+      await interaction.update({ embeds: [buildOrdersEmbed(cfg)], components: buildOrdersPage2Components(cfg) });
+      return true;
+    }
+    if (customId === "setup_order_transcript_channel") {
+      if (!cfg.orderSystem) cfg.orderSystem = {};
+      cfg.orderSystem.transcriptChannelId = interaction.values?.[0] || "";
+      writeCfg(guildId, cfg);
+      await interaction.update({ embeds: [buildOrdersEmbed(cfg)], components: buildOrdersPage2Components(cfg) });
+      return true;
+    }
+    if (customId === "setup_order_archive_category") {
+      if (!cfg.orderSystem) cfg.orderSystem = {};
+      cfg.orderSystem.archiveCategoryId = interaction.values?.[0] || "";
+      writeCfg(guildId, cfg);
+      await interaction.update({ embeds: [buildOrdersEmbed(cfg)], components: buildOrdersPage2Components(cfg) });
+      return true;
+    }
   }
 
   // ============================================================
@@ -873,6 +1060,77 @@ async function handleComponent(interaction) {
   }
   if (interaction.isButton() && customId === "setup_basis_page1") {
     await interaction.update({ embeds: [buildBasisEmbed(cfg)], components: buildBasisComponents(cfg) });
+    return true;
+  }
+
+  // ============================================================
+  // ORDER SYSTEM: Page Navigation & Toggle
+  // ============================================================
+  if (interaction.isButton() && customId === "setup_order_page2") {
+    await interaction.update({ embeds: [buildOrdersEmbed(cfg)], components: buildOrdersPage2Components(cfg) });
+    return true;
+  }
+  if (interaction.isButton() && customId === "setup_order_page1") {
+    await interaction.update({ embeds: [buildOrdersEmbed(cfg)], components: buildOrdersComponents(cfg) });
+    return true;
+  }
+  if (interaction.isButton() && customId === "setup_order_toggle") {
+    if (!cfg.orderSystem) cfg.orderSystem = {};
+    cfg.orderSystem.paused = !cfg.orderSystem.paused;
+    writeCfg(guildId, cfg);
+
+    // Update panel if exists
+    if (cfg.orderSystem.panelChannelId && cfg.orderSystem.panelMessageId) {
+      try {
+        const ch = interaction.guild.channels.cache.get(cfg.orderSystem.panelChannelId);
+        const msg = await ch?.messages.fetch(cfg.orderSystem.panelMessageId).catch(() => null);
+        if (msg) await msg.edit(createOrderPanel(guildId));
+      } catch (e) {}
+    }
+
+    await interaction.update({ embeds: [buildOrdersEmbed(cfg)], components: buildOrdersComponents(cfg) });
+    return true;
+  }
+
+  // ===== ORDER PANEL EDIT BUTTON =====
+  if (interaction.isButton() && customId === "setup_order_panel_edit") {
+    const orderCfg = cfg.orderSystem || {};
+    const panelEmbed = orderCfg.panelEmbed || {};
+
+    const modal = new ModalBuilder().setCustomId("setup_order_panel_modal").setTitle("Bestell-Panel bearbeiten");
+    modal.addComponents(
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder().setCustomId("order_panel_title").setLabel("Titel").setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(100).setValue(panelEmbed.title || "🛒 Bestellsystem")
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder().setCustomId("order_panel_description").setLabel("Beschreibung").setStyle(TextInputStyle.Paragraph).setRequired(false).setMaxLength(1024).setValue(panelEmbed.description || "Klicke auf den Button um eine Bestellung aufzugeben.")
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder().setCustomId("order_panel_color").setLabel("Farbe (Hex, z.B. #5865F2)").setStyle(TextInputStyle.Short).setRequired(false).setMaxLength(7).setValue(panelEmbed.color || "#5865F2")
+      )
+    );
+    await interaction.showModal(modal);
+    return true;
+  }
+
+  // ===== ORDER FORM FIELDS BUTTON =====
+  if (interaction.isButton() && customId === "setup_order_form_fields") {
+    const orderCfg = cfg.orderSystem || {};
+    const formFields = orderCfg.formFields || [{ id: 'order_description', label: 'Was möchtest du bestellen?', style: 'paragraph', required: true }];
+
+    const modal = new ModalBuilder().setCustomId("setup_order_form_fields_modal").setTitle("Bestell-Formular bearbeiten");
+    modal.addComponents(
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId("order_form_json")
+          .setLabel("Felder (JSON-Format)")
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true)
+          .setPlaceholder('[{"id":"name","label":"Dein Name","style":"short","required":true}]')
+          .setValue(JSON.stringify(formFields, null, 2))
+      )
+    );
+    await interaction.showModal(modal);
     return true;
   }
 
@@ -1431,6 +1689,72 @@ async function handleComponent(interaction) {
         components: buildSupportTimesComponents(cfg),
         ephemeral: true,
       });
+      return true;
+    }
+
+    // ===== ORDER PANEL MODAL =====
+    if (modalId === "setup_order_panel_modal") {
+      const title = interaction.fields.getTextInputValue("order_panel_title")?.trim() || "🛒 Bestellsystem";
+      const description = interaction.fields.getTextInputValue("order_panel_description")?.trim() || "Klicke auf den Button um eine Bestellung aufzugeben.";
+      const color = interaction.fields.getTextInputValue("order_panel_color")?.trim() || "#5865F2";
+
+      if (!cfg.orderSystem) cfg.orderSystem = {};
+      cfg.orderSystem.panelEmbed = {
+        title: title.substring(0, 100),
+        description: description.substring(0, 1024),
+        color: /^#?[0-9a-fA-F]{6}$/.test(color) ? (color.startsWith("#") ? color : `#${color}`) : "#5865F2",
+      };
+      writeCfg(guildId, cfg);
+
+      // Update existing panel if exists
+      if (cfg.orderSystem.panelChannelId && cfg.orderSystem.panelMessageId) {
+        try {
+          const channel = await interaction.guild.channels.fetch(cfg.orderSystem.panelChannelId).catch(() => null);
+          if (channel) {
+            const msg = await channel.messages.fetch(cfg.orderSystem.panelMessageId).catch(() => null);
+            if (msg) await msg.edit(createOrderPanel(guildId));
+          }
+        } catch (err) {
+          console.error("Order panel update error:", err);
+        }
+      }
+
+      await interaction.reply({ content: "✅ Bestell-Panel gespeichert!", embeds: [buildOrdersEmbed(cfg)], components: buildOrdersPage2Components(cfg), ephemeral: true });
+      return true;
+    }
+
+    // ===== ORDER FORM FIELDS MODAL =====
+    if (modalId === "setup_order_form_fields_modal") {
+      try {
+        const jsonString = interaction.fields.getTextInputValue("order_form_json");
+        const formFields = JSON.parse(jsonString);
+
+        if (!Array.isArray(formFields)) {
+          throw new Error("Must be an array");
+        }
+
+        for (const field of formFields) {
+          if (!field.id || !field.label) {
+            throw new Error('Each field needs "id" and "label"');
+          }
+        }
+
+        if (!cfg.orderSystem) cfg.orderSystem = {};
+        cfg.orderSystem.formFields = formFields;
+        writeCfg(guildId, cfg);
+
+        await interaction.reply({
+          content: `✅ ${formFields.length} Formular-Feld(er) gespeichert!`,
+          embeds: [buildOrdersEmbed(cfg)],
+          components: buildOrdersPage2Components(cfg),
+          ephemeral: true
+        });
+      } catch (err) {
+        await interaction.reply({
+          content: `❌ Ungültiges JSON: ${err.message}\n\n**Beispiel:**\n\`\`\`json\n[{"id":"name","label":"Dein Name","style":"short","required":true}]\n\`\`\``,
+          ephemeral: true
+        });
+      }
       return true;
     }
   }
