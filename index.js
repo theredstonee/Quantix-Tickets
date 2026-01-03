@@ -59,18 +59,28 @@ const { readCfg, writeCfg, loadTickets, saveTickets, getNextTicketNumber } = req
 // ===== ORDER SYSTEM =====
 const {
   ORDER_STATUS,
-  loadOrders,
-  saveOrders,
   getOrderConfig,
   saveOrderConfig,
   getOrderTeamRoles,
   hasOrderTeamRole,
+  getStatusInfo,
   logOrderEvent,
-  nextOrderNumber,
+  sendOrderDM,
   createOrderPanel,
-  updateOrderStatus,
+  createOrderEmbed,
+  handleStatusUpdate,
   generateOrderTranscript
 } = require('./commands/order');
+
+const {
+  getNextOrderNumber,
+  getOrder,
+  getOrderByChannel,
+  getOrders,
+  getOpenOrderByUser,
+  createOrder,
+  updateOrder
+} = require('./database');
 
 const PREFIX    = '🎫│';
 const PRIORITY_STATES = [
@@ -2922,8 +2932,6 @@ client.on(Events.InteractionCreate, async i => {
           try { formResponses['Bestellung'] = i.fields.getTextInputValue('order_description'); } catch (e) {}
         }
 
-        const orderNumber = nextOrderNumber(guildId);
-
         const perms = [
           { id: i.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
           { id: i.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] }
@@ -2933,61 +2941,44 @@ client.on(Events.InteractionCreate, async i => {
           if (r?.trim()) perms.push({ id: r, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory] });
         }
 
+        // Create order in database first to get the order number
+        const newOrder = createOrder(guildId, {
+          userId: i.user.id,
+          username: i.user.tag,
+          status: 'new',
+          formResponses,
+          addedUsers: [],
+          statusHistory: [{ status: 'new', changedBy: i.user.id, changedAt: Date.now() }]
+        });
+
+        if (!newOrder) {
+          await i.editReply({ content: '❌ Fehler beim Erstellen der Bestellung.' });
+          return;
+        }
+
         const channel = await i.guild.channels.create({
-          name: `bestellung-${orderNumber}`,
+          name: `bestellung-${newOrder.id}`,
           type: ChannelType.GuildText,
-          parent: orderCfg.categoryId || cfg.orderCategoryId,
+          parent: orderCfg.categoryId || cfg.categoryId,
           permissionOverwrites: perms
         });
 
-        const orderEmbed = createStyledEmbed({
-          emoji: '🛒',
-          title: `Bestellung #${orderNumber}`,
-          description: `Neue Bestellung von <@${i.user.id}>`,
-          fields: [
-            { name: 'Status', value: `${ORDER_STATUS.NEW.emoji} ${ORDER_STATUS.NEW.label}`, inline: true },
-            { name: 'Erstellt', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
-            ...Object.entries(formResponses).map(([k, v]) => ({ name: k, value: (v || '-').substring(0, 1024), inline: false }))
-          ],
-          color: ORDER_STATUS.NEW.color
-        });
-
-        const statusRow = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId('order_status_processing').setLabel('In Bearbeitung').setStyle(ButtonStyle.Primary).setEmoji('⚙️'),
-          new ButtonBuilder().setCustomId('order_status_shipped').setLabel('Versandt').setStyle(ButtonStyle.Success).setEmoji('📦'),
-          new ButtonBuilder().setCustomId('order_status_completed').setLabel('Abgeschlossen').setStyle(ButtonStyle.Success).setEmoji('✅'),
-          new ButtonBuilder().setCustomId('order_status_cancelled').setLabel('Stornieren').setStyle(ButtonStyle.Danger).setEmoji('❌')
-        );
-        const actionRow = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId('order_finish').setLabel('Mit Datei abschließen').setStyle(ButtonStyle.Success).setEmoji('📄'),
-          new ButtonBuilder().setCustomId('order_add_user').setLabel('User hinzufügen').setStyle(ButtonStyle.Secondary).setEmoji('👥')
-        );
-
+        // Create embed and buttons
+        const orderEmbed = createOrderEmbed(newOrder);
         const msg = await channel.send({
           content: `<@${i.user.id}> ${teamRoles.map(r => `<@&${r}>`).join(' ')}`,
-          embeds: [orderEmbed],
-          components: [statusRow, actionRow]
+          ...orderEmbed
         });
 
-        const orders = loadOrders(guildId);
-        orders.push({
-          id: orderNumber,
+        // Update order with channel and message ID
+        updateOrder(guildId, newOrder.id, {
           channelId: channel.id,
-          messageId: msg.id,
-          userId: i.user.id,
-          username: i.user.tag,
-          status: ORDER_STATUS.NEW.key,
-          formResponses,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          statusHistory: [{ status: ORDER_STATUS.NEW.key, changedBy: i.user.id, changedAt: Date.now() }],
-          addedUsers: []
+          messageId: msg.id
         });
-        saveOrders(guildId, orders);
 
         try {
           await i.user.send({
-            embeds: [createStyledEmbed({ emoji: '🛒', title: 'Bestellung erstellt!', description: `Bestellung **#${orderNumber}** erstellt!\nChannel: <#${channel.id}>`, color: '#57F287', footer: i.guild.name })]
+            embeds: [createStyledEmbed({ emoji: '🛒', title: 'Bestellung erstellt!', description: `Bestellung **#${newOrder.id}** erstellt!\nChannel: <#${channel.id}>`, color: '#57F287', footer: i.guild.name })]
           }).catch(() => {});
         } catch (e) {}
 
@@ -2995,7 +2986,7 @@ client.on(Events.InteractionCreate, async i => {
           embeds: [createStyledEmbed({ emoji: '✅', title: 'Bestellung erstellt!', description: `<#${channel.id}>`, color: '#57F287' })]
         });
 
-        logOrderEvent(i.guild, `🛒 Neue Bestellung #${orderNumber} von <@${i.user.id}>`);
+        await logOrderEvent(i.guild, `🛒 Neue Bestellung #${newOrder.id} von <@${i.user.id}>`);
 
       } catch (err) {
         console.error('Order creation error:', err);
@@ -3294,12 +3285,11 @@ client.on(Events.InteractionCreate, async i => {
       const orderId = parseInt(i.customId.split(':')[1]);
       const selectedUser = i.users.first();
 
-      const orders = loadOrders(guildId);
-      const order = orders.find(o => o.id === orderId);
+      const order = getOrder(guildId, orderId);
       if (!order) return i.update({ content: '❌ Bestellung nicht gefunden.', embeds: [], components: [] });
 
-      if (!order.addedUsers) order.addedUsers = [];
-      if (order.addedUsers.includes(selectedUser.id) || order.userId === selectedUser.id) {
+      const addedUsers = order.addedUsers || [];
+      if (addedUsers.includes(selectedUser.id) || order.userId === selectedUser.id) {
         return i.update({ embeds: [createStyledEmbed({ emoji: 'ℹ️', title: 'Bereits Zugriff', color: '#FEE75C' })], components: [] });
       }
 
@@ -3309,8 +3299,8 @@ client.on(Events.InteractionCreate, async i => {
           await channel.permissionOverwrites.edit(selectedUser.id, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true });
           await channel.send({ embeds: [createStyledEmbed({ emoji: '👥', title: 'User hinzugefügt', description: `<@${selectedUser.id}> wurde hinzugefügt.`, color: '#57F287' })] });
         }
-        order.addedUsers.push(selectedUser.id);
-        saveOrders(guildId, orders);
+        addedUsers.push(selectedUser.id);
+        updateOrder(guildId, orderId, { addedUsers });
         await i.update({ embeds: [createStyledEmbed({ emoji: '✅', title: 'Hinzugefügt', description: `<@${selectedUser.id}>`, color: '#57F287' })], components: [] });
       } catch (e) {
         await i.update({ content: '❌ Fehler.', embeds: [], components: [] });
@@ -5238,8 +5228,8 @@ client.on(Events.InteractionCreate, async i => {
           });
         }
 
-        const orders = loadOrders(guildId);
-        const existing = orders.find(o => o.userId === i.user.id && !['completed', 'cancelled', 'refunded'].includes(o.status));
+        // Check for existing open order
+        const existing = getOpenOrderByUser(guildId, i.user.id);
         if (existing) {
           return i.reply({
             embeds: [createStyledEmbed({ emoji: 'ℹ️', title: 'Offene Bestellung', description: `Du hast bereits eine offene Bestellung: <#${existing.channelId}>`, color: '#FEE75C' })],
@@ -5273,13 +5263,12 @@ client.on(Events.InteractionCreate, async i => {
           return i.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Keine Berechtigung', color: '#ED4245' })], ephemeral: true });
         }
 
-        const orders = loadOrders(guildId);
-        const order = orders.find(o => o.channelId === i.channel.id);
+        const order = getOrderByChannel(i.channel.id);
         if (!order) return i.reply({ content: '❌ Keine Bestellung.', ephemeral: true });
 
         await i.deferReply({ ephemeral: true });
-        await updateOrderStatus(i.guild, order, newStatus, i.user, guildId);
-        const info = Object.values(ORDER_STATUS).find(s => s.key === newStatus);
+        await handleStatusUpdate(i.guild, order, newStatus, i.user, i.client);
+        const info = getStatusInfo(newStatus);
         await i.editReply({ embeds: [createStyledEmbed({ emoji: '✅', title: 'Status geändert', description: `${info.emoji} ${info.label}`, color: info.color })] });
         return;
       }
@@ -5292,8 +5281,7 @@ client.on(Events.InteractionCreate, async i => {
           return i.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Keine Berechtigung', color: '#ED4245' })], ephemeral: true });
         }
 
-        const orders = loadOrders(guildId);
-        const order = orders.find(o => o.channelId === i.channel.id);
+        const order = getOrderByChannel(i.channel.id);
         if (!order) return i.reply({ content: '❌ Keine Bestellung.', ephemeral: true });
 
         return i.reply({
@@ -5310,8 +5298,7 @@ client.on(Events.InteractionCreate, async i => {
           return i.reply({ embeds: [createStyledEmbed({ emoji: '🚫', title: 'Keine Berechtigung', color: '#ED4245' })], ephemeral: true });
         }
 
-        const orders = loadOrders(guildId);
-        const order = orders.find(o => o.channelId === i.channel.id);
+        const order = getOrderByChannel(i.channel.id);
         if (!order) return i.reply({ content: '❌ Keine Bestellung.', ephemeral: true });
 
         const { UserSelectMenuBuilder } = require('discord.js');
